@@ -22,6 +22,14 @@ extension String {
     var matchTokens: [String] {
         normalizedForMatching.split(separator: " ").map(String.init)
     }
+
+    /// Checks whether the string is a valid email address.
+    var isValidEmail: Bool {
+        let trimmed = trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return false }
+        let pattern = #"^[A-Z0-9a-z._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,64}$"#
+        return trimmed.range(of: pattern, options: .regularExpression) != nil
+    }
 }
 
 enum Fuzzy {

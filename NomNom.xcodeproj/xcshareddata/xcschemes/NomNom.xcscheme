@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Scheme
-   LastUpgradeVersion = "1600"
-   version = "1.7">
+   LastUpgradeVersion = "2660"
+   version = "1.3">
    <BuildAction
       parallelizeBuildables = "YES"
       buildImplicitDependencies = "YES">
@@ -51,17 +51,10 @@
          </BuildableReference>
       </BuildableProductRunnable>
       <CommandLineArguments>
-         <!-- Skips the sign-in screen against the local stack: creates
-              cook@foodlog.test if it isn't there and signs straight in.
-              Compiled out of release builds, and refuses any host but
-              loopback. Untick in Product ▸ Scheme ▸ Edit Scheme ▸ Run ▸
-              Arguments to see the real sign-in form. -->
          <CommandLineArgument
             argument = "-dev-sign-in cook@foodlog.test"
             isEnabled = "YES">
          </CommandLineArgument>
-         <!-- Ticked on, these load a few months of made-up meals and open
-              the What-to-eat tab, so the ranking has something to show. -->
          <CommandLineArgument
             argument = "-seed-sample-data"
             isEnabled = "NO">
@@ -70,13 +63,6 @@
             argument = "-initial-tab 2"
             isEnabled = "NO">
          </CommandLineArgument>
-         <!-- Hot reload. InjectionLite recompiles a saved file using the
-              compile command it finds in the build log, but it only learns
-              where the logs are by watching a build land while the app is
-              already running — which never happens on a plain Run. This
-              hands it the path up front, as a UserDefaults key read out of
-              NSArgumentDomain. Any filename inside the directory will do:
-              only the parent is used, and the newest log there is scanned. -->
          <CommandLineArgument
             argument = "-HotReloadingBuildLogsDir $(BUILD_DIR)/../../Logs/Build/current.xcactivitylog"
             isEnabled = "YES">

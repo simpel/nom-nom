@@ -25,6 +25,14 @@ struct HouseholdMembersSection: View {
         return store.invites(forParty: party.id).filter(\.isPending)
     }
 
+    private var isEmailValid: Bool {
+        email.isValidEmail
+    }
+
+    private var showInvalidFormatError: Bool {
+        !email.trimmedName.isEmpty && !email.isValidEmail
+    }
+
     var body: some View {
         // MARK: - Add Household Member by Email
         Section {
@@ -36,7 +44,11 @@ struct HouseholdMembersSection: View {
                     .autocorrectionDisabled()
                     .focused($emailFocused)
                     .submitLabel(.send)
-                    .onSubmit(sendInvite)
+                    .onSubmit {
+                        if isEmailValid {
+                            sendInvite()
+                        }
+                    }
 
                 if isSending {
                     ProgressView()
@@ -45,13 +57,18 @@ struct HouseholdMembersSection: View {
                     Button("Send", action: sendInvite)
                         .buttonStyle(.borderedProminent)
                         .controlSize(.small)
-                        .disabled(email.trimmedName.isEmpty)
+                        .disabled(!isEmailValid || isSending)
                 }
             }
         } header: {
             Text("Add Household Member")
         } footer: {
-            Text("Enter an email address. This will send an email with an invite link to join your household.")
+            if showInvalidFormatError {
+                Text("Please enter a valid email address (e.g. name@example.com).")
+                    .foregroundStyle(.red)
+            } else {
+                Text("Enter an email address. This will send an email with an invite link to join your household.")
+            }
         }
 
         // MARK: - Active Household Members

@@ -26,7 +26,12 @@ struct PartyInviteView: View {
                 } header: {
                     Text("Invite by email")
                 } footer: {
-                    Text("If they have an account, the invite appears in their inbox immediately. If they don't have an account yet, the invite is claimed when they sign up with this email.")
+                    if !email.trimmedName.isEmpty && !email.isValidEmail {
+                        Text("Please enter a valid email address (e.g. name@example.com).")
+                            .foregroundStyle(.red)
+                    } else {
+                        Text("If they have an account, the invite appears in their inbox immediately. If they don't have an account yet, the invite is claimed when they sign up with this email.")
+                    }
                 }
             }
             .navigationTitle("Invite to \(party.name)")
@@ -41,7 +46,7 @@ struct PartyInviteView: View {
                         ProgressView()
                     } else {
                         Button("Send") { send() }
-                            .disabled(email.trimmedName.isEmpty)
+                            .disabled(!email.isValidEmail || isSending)
                     }
                 }
             }
