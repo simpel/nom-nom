@@ -22,7 +22,7 @@ enum DevSelfCheck {
     private static let log = Logger(subsystem: "NomNom", category: "selfcheck")
 
     static var isRequested: Bool {
-        ProcessInfo.processInfo.arguments.contains("-dev-selfcheck")
+        LaunchArgumentsParser.parse().devSelfCheck
     }
 
     private static var isLocalStack: Bool {

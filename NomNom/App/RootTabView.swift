@@ -54,14 +54,11 @@ struct RootTabView: View {
         guard !didApplyLaunchArguments else { return }
         didApplyLaunchArguments = true
 
-        let arguments = ProcessInfo.processInfo.arguments
-        if let flag = arguments.firstIndex(of: "-initial-tab"),
-           arguments.index(after: flag) < arguments.endIndex,
-           let tab = Int(arguments[arguments.index(after: flag)]),
-           (0...3).contains(tab) {
+        let config = LaunchArgumentsParser.parse()
+        if let tab = config.initialTab {
             selection = tab
         }
-        if arguments.contains("-seed-sample-data") {
+        if config.seedSampleData {
             await SampleData.populate(store)
         }
         await DevSelfCheck.runIfRequested(store)

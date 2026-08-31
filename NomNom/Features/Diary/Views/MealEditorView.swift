@@ -38,10 +38,7 @@ struct MealEditorView: View {
 
     private var currentDraft: FoodStore.MealDraft {
         let name = title.trimmedName
-        let tags = tagsText
-            .split(separator: ",")
-            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines).lowercased() }
-            .filter { !$0.isEmpty }
+        let tags = TagsParser.parse(tagsText)
 
         let photo: FoodStore.PhotoChange = {
             if let pickedData { return .replaced(pickedData) }
@@ -270,10 +267,7 @@ struct MealEditorView: View {
         let name = title.trimmedName
         guard !name.isEmpty else { return }
 
-        let tags = tagsText
-            .split(separator: ",")
-            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines).lowercased() }
-            .filter { !$0.isEmpty }
+        let tags = TagsParser.parse(tagsText)
 
         let photo: FoodStore.PhotoChange = {
             if let pickedData { return .replaced(pickedData) }

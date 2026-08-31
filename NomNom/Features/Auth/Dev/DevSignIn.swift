@@ -31,13 +31,7 @@ enum DevSignIn {
     static let defaultEmail = "cook@foodlog.test"
 
     static var requestedEmail: String? {
-        let arguments = ProcessInfo.processInfo.arguments
-        guard let flag = arguments.firstIndex(of: "-dev-sign-in") else { return nil }
-        let next = arguments.index(after: flag)
-        // A following argument that starts with "-" is the next flag, not an
-        // address, so `-dev-sign-in -seed-sample-data` means "the usual account".
-        guard next < arguments.endIndex, !arguments[next].hasPrefix("-") else { return defaultEmail }
-        return arguments[next]
+        LaunchArgumentsParser.parse().devSignInEmail
     }
 
     private static var isLocalStack: Bool {
