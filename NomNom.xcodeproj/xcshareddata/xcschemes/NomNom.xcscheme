@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Scheme
+   LastUpgradeVersion = "1600"
+   version = "1.7">
+   <BuildAction
+      parallelizeBuildables = "YES"
+      buildImplicitDependencies = "YES">
+      <BuildActionEntries>
+         <BuildActionEntry
+            buildForTesting = "YES"
+            buildForRunning = "YES"
+            buildForProfiling = "YES"
+            buildForArchiving = "YES"
+            buildForAnalyzing = "YES">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "FA0000010000000000000006"
+               BuildableName = "NomNom.app"
+               BlueprintName = "NomNom"
+               ReferencedContainer = "container:NomNom.xcodeproj">
+            </BuildableReference>
+         </BuildActionEntry>
+      </BuildActionEntries>
+   </BuildAction>
+   <TestAction
+      buildConfiguration = "Debug"
+      selectedDebuggerIdentifier = "Xcode.DebuggerFoundation.Debugger.LLDB"
+      selectedLauncherIdentifier = "Xcode.DebuggerFoundation.Launcher.LLDB"
+      shouldUseLaunchSchemeArgsEnv = "YES">
+      <Testables>
+      </Testables>
+   </TestAction>
+   <LaunchAction
+      buildConfiguration = "Debug"
+      selectedDebuggerIdentifier = "Xcode.DebuggerFoundation.Debugger.LLDB"
+      selectedLauncherIdentifier = "Xcode.DebuggerFoundation.Launcher.LLDB"
+      launchStyle = "0"
+      useCustomWorkingDirectory = "NO"
+      ignoresPersistentStateOnLaunch = "NO"
+      debugDocumentVersioning = "YES"
+      debugServiceExtension = "internal"
+      allowLocationSimulation = "YES">
+      <BuildableProductRunnable
+         runnableDebuggingMode = "0">
+         <BuildableReference
+            BuildableIdentifier = "primary"
+            BlueprintIdentifier = "FA0000010000000000000006"
+            BuildableName = "NomNom.app"
+            BlueprintName = "NomNom"
+            ReferencedContainer = "container:NomNom.xcodeproj">
+         </BuildableReference>
+      </BuildableProductRunnable>
+      <CommandLineArguments>
+         <!-- Skips the sign-in screen against the local stack: creates
+              cook@foodlog.test if it isn't there and signs straight in.
+              Compiled out of release builds, and refuses any host but
+              loopback. Untick in Product ▸ Scheme ▸ Edit Scheme ▸ Run ▸
+              Arguments to see the real sign-in form. -->
+         <CommandLineArgument
+            argument = "-dev-sign-in cook@foodlog.test"
+            isEnabled = "YES">
+         </CommandLineArgument>
+         <!-- Ticked on, these load a few months of made-up meals and open
+              the What-to-eat tab, so the ranking has something to show. -->
+         <CommandLineArgument
+            argument = "-seed-sample-data"
+            isEnabled = "NO">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "-initial-tab 2"
+            isEnabled = "NO">
+         </CommandLineArgument>
+         <!-- Hot reload. InjectionLite recompiles a saved file using the
+              compile command it finds in the build log, but it only learns
+              where the logs are by watching a build land while the app is
+              already running — which never happens on a plain Run. This
+              hands it the path up front, as a UserDefaults key read out of
+              NSArgumentDomain. Any filename inside the directory will do:
+              only the parent is used, and the newest log there is scanned. -->
+         <CommandLineArgument
+            argument = "-HotReloadingBuildLogsDir $(BUILD_DIR)/../../Logs/Build/current.xcactivitylog"
+            isEnabled = "YES">
+         </CommandLineArgument>
+      </CommandLineArguments>
+   </LaunchAction>
+   <ProfileAction
+      buildConfiguration = "Release"
+      shouldUseLaunchSchemeArgsEnv = "YES"
+      savedToolIdentifier = ""
+      useCustomWorkingDirectory = "NO"
+      debugDocumentVersioning = "YES">
+      <BuildableProductRunnable
+         runnableDebuggingMode = "0">
+         <BuildableReference
+            BuildableIdentifier = "primary"
+            BlueprintIdentifier = "FA0000010000000000000006"
+            BuildableName = "NomNom.app"
+            BlueprintName = "NomNom"
+            ReferencedContainer = "container:NomNom.xcodeproj">
+         </BuildableReference>
+      </BuildableProductRunnable>
+   </ProfileAction>
+   <AnalyzeAction
+      buildConfiguration = "Debug">
+   </AnalyzeAction>
+   <ArchiveAction
+      buildConfiguration = "Release"
+      revealArchiveInOrganizer = "YES">
+   </ArchiveAction>
+</Scheme>

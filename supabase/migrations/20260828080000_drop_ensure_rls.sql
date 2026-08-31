@@ -1,0 +1,52 @@
+-- ===========================================================================
+-- Remove `ensure_rls` / `public.rls_auto_enable()` from the hosted project.
+--
+-- Neither object was ever declared here. They are the verbatim snippet from
+-- Supabase's own docs, "Auto-enable RLS for new tables" on
+-- https://supabase.com/docs/guides/database/postgres/row-level-security,
+-- pasted straight into the hosted SQL editor at some point that nothing
+-- records — `track_commit_timestamp` is off, so the database cannot say when
+-- and no ticket mentions it. Found while resolving #10.
+--
+-- Dropping it rather than adopting it, for three reasons:
+--
+--   1. It protects nothing here. The baseline enables row level security
+--      explicitly on all eight tables and `rls_test.py` proves it 33 ways.
+--      Nothing in this project creates a table outside a migration, which is
+--      the only case the trigger fires on.
+--   2. It is the one security-advisor entry that could not be waved away as a
+--      false positive. The trigger functions are unreachable because PostgREST
+--      does not expose a `trigger` return — probe them over RPC and they answer
+--      `PGRST202`. This one returns `event_trigger`, which PostgREST *does*
+--      try to call: it answers `400 0A000 cannot display a value of type
+--      event_trigger`, having got past the schema cache and past the privilege
+--      check, since the function carries PUBLIC EXECUTE. Harmless in itself —
+--      it takes no argument and the only thing its body can do is turn RLS
+--      *on* — but a warning nobody can dismiss is a warning that hides the
+--      next real one.
+--   3. It is drift. This project's whole premise is that the migrations are
+--      the truth and hosted is derived from them, and a rebuilt project would
+--      not have had this. Note that #8's "no drift" was a check of migration
+--      *history*, which is why it could not have caught an object created
+--      outside one.
+--
+-- Which is also why this is a migration and not a `drop` typed at hosted:
+-- undeclaring something by hand is the mistake that created it.
+--
+-- No-op locally — the objects only ever existed on hosted.
+--
+-- To reinstate, do it in a forward migration, not the SQL editor, and revoke
+-- the PUBLIC EXECUTE the docs snippet leaves behind:
+--
+--   create or replace function public.rls_auto_enable() ... (docs snippet)
+--   revoke execute on function public.rls_auto_enable() from public;
+--   create event trigger ensure_rls on ddl_command_end
+--     when tag in ('CREATE TABLE', 'CREATE TABLE AS', 'SELECT INTO')
+--     execute function public.rls_auto_enable();
+-- ===========================================================================
+
+-- The event trigger first: it depends on the function, so the reverse order
+-- fails rather than cascading.
+drop event trigger if exists ensure_rls;
+
+drop function if exists public.rls_auto_enable();

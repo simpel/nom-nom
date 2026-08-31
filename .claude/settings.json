@@ -1,0 +1,40 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(dotnet test *)",
+      "Bash(pnpm run check-types)",
+      "Bash(pnpm run check-types *)",
+      "Bash(pnpm --filter web check-types *)",
+      "Bash(pnpm lint)",
+      "Bash(pnpm lint *)",
+      "Bash(pnpm --filter @repo/ai check-types *)",
+      "Bash(pnpm --filter web lint *)",
+      "Bash(pnpm --filter @repo/ai test *)",
+      "Bash(pnpm test)",
+      "Bash(pnpm test *)",
+      "Bash(pnpm --filter @repo/ui check-types *)",
+      "Bash(defaults read *)",
+      "Bash(pnpm --filter @repo/ui lint *)",
+      "Bash(pnpm --filter @repo/db check-types *)",
+      "Bash(dig *)",
+      "Bash(xcrun simctl list *)",
+      "Bash(pnpm --filter @repo/db test *)",
+      "Bash(xcodebuild -version)",
+      "mcp__context7__query-docs",
+      "mcp__context7__resolve-library-id",
+      "mcp__claude_ai_Atlassian__searchJiraIssuesUsingJql",
+      "mcp__claude_ai_Atlassian__atlassianUserInfo",
+      "mcp__claude_ai_Atlassian__getTransitionsForJiraIssue",
+      "mcp__claude_ai_Atlassian__getJiraIssue",
+      "mcp__claude-in-chrome__find",
+      "mcp__claude-in-chrome__tabs_context_mcp",
+      "mcp__claude-in-chrome__get_page_text",
+      "mcp__plugin_vercel_vercel__get_deployment_build_logs",
+      "mcp__plugin_vercel_vercel__get_runtime_logs",
+      "mcp__plugin_vercel_vercel__list_deployments",
+      "mcp__supabase__list_tables",
+      "mcp__supabase__list_migrations",
+      "mcp__supabase__get_project_url"
+    ]
+  }
+}

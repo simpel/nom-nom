@@ -1,0 +1,233 @@
+import Foundation
+import Observation
+import OSLog
+
+/// Everything the app knows, read from and written back to Postgres.
+@MainActor
+@Observable
+final class FoodStore {
+
+    let userID: UUID
+
+    var dishes: [Dish] = []
+    var meals: [Meal] = []
+    var eaters: [Eater] = []
+    var ratings: [MealRating] = []
+    var invites: [MealInvite] = []
+    var notifications: [AppNotification] = []
+    var profiles: [UUID: Profile] = [:]
+
+    // Dinner Parties
+    var parties: [Party] = []
+    var partyMembers: [PartyMember] = []
+    var partyInvites: [PartyInvite] = []
+    var mealParties: [MealParty] = []
+    var currentParty: Party? {
+        didSet {
+            let key = "selectedParty_\(userID.uuidString)"
+            if let id = currentParty?.id {
+                UserDefaults.standard.set(id.uuidString, forKey: key)
+            } else {
+                UserDefaults.standard.removeObject(forKey: key)
+            }
+        }
+    }
+
+    var isLoading = false
+    var hasLoaded = false
+    var errorMessage: String?
+
+    // Lookups
+    var mealsByDish: [UUID: [Meal]] = [:]
+    var ratingsByMeal: [UUID: [MealRating]] = [:]
+    var invitesByMeal: [UUID: [MealInvite]] = [:]
+    var mealPartiesByMeal: [UUID: [MealParty]] = [:]
+    var mealPartiesByParty: [UUID: [MealParty]] = [:]
+    var partyMembersByParty: [UUID: [PartyMember]] = [:]
+    var dishByID: [UUID: Dish] = [:]
+    var eaterByID: [UUID: Eater] = [:]
+    var mealByID: [UUID: Meal] = [:]
+    var partyByID: [UUID: Party] = [:]
+
+    static let log = Logger(subsystem: "NomNom", category: "store")
+
+    init(userID: UUID) {
+        self.userID = userID
+    }
+
+    // MARK: - Slices the views want
+
+    var myDishes: [Dish] { dishes.filter { $0.ownerID == userID } }
+
+    var myMeals: [Meal] { meals.filter { $0.createdBy == userID } }
+
+    /// Context-filtered meals: if a party is selected, returns all meals served to that party;
+    /// otherwise returns your personal diary meals ("Just me").
+    var activeMeals: [Meal] {
+        if let party = currentParty {
+            let mealIDs = Set((mealPartiesByParty[party.id] ?? []).map(\.mealID))
+            return meals.filter { mealIDs.contains($0.id) }
+        }
+        return myMeals
+    }
+
+    var myParties: [Party] {
+        let myPartyIDs = Set(partyMembers.filter { $0.userID == userID }.map(\.partyID))
+        return parties.filter { myPartyIDs.contains($0.id) }
+    }
+
+    var pendingPartyInvites: [PartyInvite] {
+        partyInvites.filter { $0.inviteeID == userID && $0.status == .pending }
+    }
+
+    var activeEaters: [Eater] { eaters.filter { $0.ownerID == userID && $0.isActive } }
+
+    var myEaters: [Eater] { eaters.filter { $0.ownerID == userID && $0.isActive } }
+
+    var myProfile: Profile? { profiles[userID] }
+
+    var isProfileSetup: Bool {
+        guard let p = myProfile else { return false }
+        return !p.firstName.trimmingCharacters(in: .whitespaces).isEmpty
+    }
+
+    var unreadCount: Int { notifications.filter(\.isUnread).count }
+
+    var invitedMeals: [Meal] {
+        let mine = Set(invites.filter { $0.inviteeID == userID }.map(\.mealID))
+        return meals.filter { mine.contains($0.id) && $0.createdBy != userID }
+    }
+
+    var awaitingMyRating: [Meal] {
+        invitedMeals.filter { meal in
+            !(ratingsByMeal[meal.id] ?? []).contains { $0.raterID == userID }
+        }
+    }
+
+    func dish(_ id: UUID) -> Dish? { dishByID[id] }
+    func eater(_ id: UUID) -> Eater? { eaterByID[id] }
+    func meal(_ id: UUID) -> Meal? { mealByID[id] }
+    func party(_ id: UUID) -> Party? { partyByID[id] }
+
+    func dishName(forMeal meal: Meal) -> String {
+        dishByID[meal.dishID]?.name ?? "Untitled"
+    }
+
+    func servings(of dishID: UUID) -> [Meal] {
+        mealsByDish[dishID] ?? []
+    }
+
+    func ratings(forMeal mealID: UUID) -> [MealRating] {
+        ratingsByMeal[mealID] ?? []
+    }
+
+    func invites(forMeal mealID: UUID) -> [MealInvite] {
+        invitesByMeal[mealID] ?? []
+    }
+
+    func parties(forMeal mealID: UUID) -> [Party] {
+        let pIDs = (mealPartiesByMeal[mealID] ?? []).map(\.partyID)
+        return pIDs.compactMap { partyByID[$0] }
+    }
+
+    func members(of partyID: UUID) -> [Profile] {
+        let uIDs = (partyMembersByParty[partyID] ?? []).map(\.userID)
+        return uIDs.compactMap { profiles[$0] }
+    }
+
+    func invites(forParty partyID: UUID) -> [PartyInvite] {
+        partyInvites.filter { $0.partyID == partyID }
+    }
+
+    func averageScore(forMeal mealID: UUID) -> Double? {
+        let scores = ratings(forMeal: mealID).map(\.reaction.score)
+        guard !scores.isEmpty else { return nil }
+        return scores.reduce(0, +) / Double(scores.count)
+    }
+
+    func verdictEntries(forMeal mealID: UUID) -> [(emoji: String, name: String, reaction: Reaction?)] {
+        let sorted = ratings(forMeal: mealID).sorted { lhs, rhs in
+            switch (lhs.source, rhs.source) {
+            case (.eater(let l), .eater(let r)):
+                return (eaterByID[l]?.sortIndex ?? 0) < (eaterByID[r]?.sortIndex ?? 0)
+            case (.eater, .account):
+                return true
+            case (.account, .eater):
+                return false
+            case (.account(let l), .account(let r)):
+                if l == userID { return true }
+                if r == userID { return false }
+                return (profiles[l]?.shownName ?? "") < (profiles[r]?.shownName ?? "")
+            }
+        }
+        return sorted.map { rating in
+            let who = label(for: rating.source)
+            return (emoji: who.emoji, name: who.name, reaction: rating.reaction)
+        }
+    }
+
+    var dishHistory: [UUID: DishHistory] {
+        var history: [UUID: DishHistory] = [:]
+        for dish in myDishes {
+            let servings = mealsByDish[dish.id] ?? []
+            history[dish.id] = DishHistory(timesServed: servings.count,
+                                          lastServed: servings.map(\.eatenOn).max())
+        }
+        return history
+    }
+
+    var suggestionInputs: SuggestionEngine.Inputs {
+        SuggestionEngine.Inputs(dishes: myDishes,
+                                mealsByDish: mealsByDish,
+                                ratingsByMeal: ratingsByMeal,
+                                roster: raterRoster)
+    }
+
+    func label(for ref: RaterRef) -> (emoji: String, name: String) {
+        switch ref {
+        case .eater(let id):
+            guard let eater = eaterByID[id] else { return ("🍽️", "Someone") }
+            return (eater.emoji, eater.name)
+        case .account(let id):
+            guard let profile = profiles[id] else {
+                return ("🧑", id == userID ? "Me" : "Someone")
+            }
+            return (profile.avatarEmoji, id == userID ? "Me" : profile.shownName)
+        }
+    }
+
+    var raterRoster: [(ref: RaterRef, emoji: String, name: String)] {
+        var roster = activeEaters.map { (ref: $0.raterRef, emoji: $0.emoji, name: $0.name) }
+        let me = label(for: .account(userID))
+        roster.append((ref: .account(userID), emoji: me.emoji, name: me.name))
+        return roster
+    }
+
+    // MARK: - Local patching
+
+    func upsertLocal(dish: Dish) {
+        if let index = dishes.firstIndex(where: { $0.id == dish.id }) {
+            dishes[index] = dish
+        } else {
+            dishes.append(dish)
+        }
+        dishByID[dish.id] = dish
+    }
+
+    func upsertLocal(meal: Meal) {
+        if let index = meals.firstIndex(where: { $0.id == meal.id }) {
+            meals[index] = meal
+        } else {
+            meals.append(meal)
+        }
+        mealByID[meal.id] = meal
+    }
+
+    func upsertLocal(rating: MealRating) {
+        if let index = ratings.firstIndex(where: { $0.id == rating.id }) {
+            ratings[index] = rating
+        } else {
+            ratings.append(rating)
+        }
+    }
+}
