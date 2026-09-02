@@ -31,10 +31,18 @@ struct CuisinePickerSection: View {
                                 showingCustomField = false
                             }
                         } label: {
-                            Text(cuisine.displayName)
-                                .font(.subheadline.weight(isSelected ? .semibold : .regular))
-                                .padding(.horizontal, 12)
-                                .padding(.vertical, 6)
+                            HStack(spacing: 6) {
+                                Image(cuisine.assetImageName)
+                                    .resizable()
+                                    .scaledToFill()
+                                    .frame(width: 18, height: 18)
+                                    .clipShape(Circle())
+
+                                Text(cuisine.displayName)
+                                    .font(.subheadline.weight(isSelected ? .semibold : .regular))
+                            }
+                            .padding(.horizontal, 10)
+                            .padding(.vertical, 5)
                                 .background(
                                     isSelected
                                         ? Color.accentColor.opacity(0.15)

@@ -20,6 +20,7 @@ struct MealDetailPhotoHeader: View {
                     .tag(index)
                 }
             }
+            .photoBottomScrim()
             .frame(height: 280)
             .tabViewStyle(.page)
             .clipShape(RoundedRectangle(cornerRadius: AppRadius.photo, style: .continuous))

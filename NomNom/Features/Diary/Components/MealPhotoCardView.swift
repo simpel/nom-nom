@@ -17,6 +17,7 @@ struct MealPhotoCardView: View {
                     MealPhoto(data: data, cornerRadius: AppRadius.photo)
                 }
             }
+            .photoBottomScrim()
             .frame(width: 144, height: 192)
             .clipShape(RoundedRectangle(cornerRadius: AppRadius.photo, style: .continuous))
             .shadow(color: Color.black.opacity(isDragging ? 0.35 : 0.20),

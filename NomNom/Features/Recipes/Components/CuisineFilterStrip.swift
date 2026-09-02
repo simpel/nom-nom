@@ -11,21 +11,25 @@ struct CuisineFilterStrip: View {
                 Button {
                     selectedCuisine = nil
                 } label: {
-                    Text("All Cuisines")
-                        .font(.subheadline.weight(selectedCuisine == nil ? .semibold : .regular))
-                        .padding(.horizontal, 14)
-                        .padding(.vertical, 7)
-                        .background(
-                            selectedCuisine == nil
-                                ? Color.primary
-                                : Color(uiColor: .secondarySystemGroupedBackground)
-                        )
-                        .foregroundStyle(
-                            selectedCuisine == nil
-                                ? Color(uiColor: .systemBackground)
-                                : Color.primary
-                        )
-                        .clipShape(Capsule())
+                    HStack(spacing: 6) {
+                        Image(systemName: "fork.knife")
+                            .font(.system(size: 11, weight: .semibold))
+                        Text("All Cuisines")
+                            .font(.subheadline.weight(selectedCuisine == nil ? .semibold : .regular))
+                    }
+                    .padding(.horizontal, 14)
+                    .padding(.vertical, 7)
+                    .background(
+                        selectedCuisine == nil
+                            ? Color.primary
+                            : Color(uiColor: .secondarySystemGroupedBackground)
+                    )
+                    .foregroundStyle(
+                        selectedCuisine == nil
+                            ? Color(uiColor: .systemBackground)
+                            : Color.primary
+                    )
+                    .clipShape(Capsule())
                 }
                 .buttonStyle(.plain)
 
@@ -40,21 +44,30 @@ struct CuisineFilterStrip: View {
                             selectedCuisine = raw
                         }
                     } label: {
-                        Text(displayName)
-                            .font(.subheadline.weight(isSelected ? .semibold : .regular))
-                            .padding(.horizontal, 14)
-                            .padding(.vertical, 7)
-                            .background(
-                                isSelected
-                                    ? Color.primary
-                                    : Color(uiColor: .secondarySystemGroupedBackground)
-                            )
-                            .foregroundStyle(
-                                isSelected
-                                    ? Color(uiColor: .systemBackground)
-                                    : Color.primary
-                            )
-                            .clipShape(Capsule())
+                        HStack(spacing: 6) {
+                            if let cuisineImage = Cuisine.assetImageName(for: raw) {
+                                Image(cuisineImage)
+                                    .resizable()
+                                    .scaledToFill()
+                                    .frame(width: 18, height: 18)
+                                    .clipShape(Circle())
+                            }
+                            Text(displayName)
+                                .font(.subheadline.weight(isSelected ? .semibold : .regular))
+                        }
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 6)
+                        .background(
+                            isSelected
+                                ? Color.primary
+                                : Color(uiColor: .secondarySystemGroupedBackground)
+                        )
+                        .foregroundStyle(
+                            isSelected
+                                ? Color(uiColor: .systemBackground)
+                                : Color.primary
+                        )
+                        .clipShape(Capsule())
                     }
                     .buttonStyle(.plain)
                 }

@@ -31,6 +31,17 @@ struct RecipeRowCard: View {
                     cardHeight: 58,
                     cornerRadius: AppRadius.photo
                 )
+            } else if let cuisineImage = Cuisine.assetImageName(for: recipe.cuisine) {
+                Image(cuisineImage)
+                    .resizable()
+                    .scaledToFill()
+                    .frame(width: 46, height: 58)
+                    .clipped()
+                    .clipShape(RoundedRectangle(cornerRadius: AppRadius.photo, style: .continuous))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: AppRadius.photo, style: .continuous)
+                            .strokeBorder(DS.Color.line, lineWidth: 0.5)
+                    )
             }
 
             VStack(alignment: .leading, spacing: 4) {

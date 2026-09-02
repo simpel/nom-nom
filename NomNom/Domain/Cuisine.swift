@@ -55,4 +55,28 @@ enum Cuisine: String, Codable, CaseIterable, Identifiable, Hashable {
         }
         return raw.capitalized
     }
+
+    var assetImageName: String {
+        switch self {
+        case .asian: return "Cuisines/asian"
+        case .mexican: return "Cuisines/mexican"
+        case .italian: return "Cuisines/italian"
+        case .nordic: return "Cuisines/swedish"
+        case .mediterranean: return "Cuisines/mediterranean"
+        case .indian: return "Cuisines/indian"
+        case .middleEastern: return "Cuisines/middle-eastern"
+        case .american: return "Cuisines/american"
+        case .french: return "Cuisines/french"
+        case .japanese: return "Cuisines/japanese"
+        case .thai: return "Cuisines/thai"
+        case .korean: return "Cuisines/korean"
+        case .greek: return "Cuisines/greek"
+        case .spanish: return "Cuisines/spanish"
+        }
+    }
+
+    static func assetImageName(for query: String?) -> String? {
+        guard let query, let cuisine = matching(from: query) else { return nil }
+        return cuisine.assetImageName
+    }
 }
