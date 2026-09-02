@@ -60,32 +60,43 @@ struct MealRatingBadge: View {
 
     @ViewBuilder
     private func ratedBadge(ratings: [MealRating]) -> some View {
-        let score = store.averageScore(forMeal: meal.id) ?? 0.5
-        let mood: (label: String, tint: Color) = {
-            if score >= 0.75 {
-                let label = ratings.count == 1 ? (ratings.first?.reaction.shortLabel ?? "Loved") : "\(Int((score * 100).rounded()))%"
-                return (label, .green)
-            } else if score >= 0.35 {
-                let label = ratings.count == 1 ? (ratings.first?.reaction.shortLabel ?? "Ok") : "\(Int((score * 100).rounded()))%"
-                return (label, .orange)
-            } else {
-                let label = ratings.count == 1 ? (ratings.first?.reaction.shortLabel ?? "Nope") : "\(Int((score * 100).rounded()))%"
-                return (label, .red)
+        let reaction: Reaction = {
+            if ratings.count == 1, let single = ratings.first?.reaction {
+                return single
             }
+            let score = store.averageScore(forMeal: meal.id) ?? 0.5
+            if score >= 0.8 { return .amazing }
+            if score >= 0.6 { return .good }
+            if score >= 0.4 { return .meh }
+            if score >= 0.2 { return .bad }
+            return .inedible
         }()
 
-        Text(mood.label)
-            .font(.system(size: 11, weight: .semibold))
-            .foregroundStyle(mood.tint)
-            .padding(.horizontal, 9)
-            .padding(.vertical, 4)
-            .background {
-                Capsule()
-                    .fill(mood.tint.opacity(0.14))
+        let label: String = {
+            if ratings.count == 1 {
+                return ratings.first?.reaction.shortLabel ?? reaction.shortLabel
             }
-            .overlay {
-                Capsule()
-                    .strokeBorder(mood.tint.opacity(0.28), lineWidth: 1)
-            }
+            let score = store.averageScore(forMeal: meal.id) ?? 0.5
+            return "\(Int((score * 100).rounded()))%"
+        }()
+
+        HStack(spacing: 4) {
+            Image(systemName: reaction.systemImage)
+                .font(.system(size: 10, weight: .semibold))
+            Text(label)
+                .font(.system(size: 11, weight: .semibold))
+        }
+        .foregroundStyle(reaction.text)
+        .padding(.horizontal, 9)
+        .padding(.vertical, 4)
+        .background {
+            Capsule()
+                .fill(reaction.fill.opacity(0.14))
+        }
+        .overlay {
+            Capsule()
+                .strokeBorder(reaction.fill.opacity(0.28), lineWidth: 1)
+        }
+        .accessibilityLabel("\(reaction.name): \(label)")
     }
 }

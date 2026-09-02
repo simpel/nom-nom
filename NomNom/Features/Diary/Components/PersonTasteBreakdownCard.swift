@@ -49,13 +49,17 @@ private struct RatingCountBadge: View {
     let count: Int
 
     var body: some View {
-        HStack(spacing: 3) {
+        HStack(spacing: 4) {
+            Image(systemName: reaction.systemImage)
+                .font(.system(size: 9, weight: .semibold))
             Text("\(reaction.numberLabel): \(count)")
                 .font(.caption2.weight(.semibold))
         }
-        .foregroundStyle(reaction.tint)
+        .foregroundStyle(reaction.text)
         .padding(.horizontal, 7)
         .padding(.vertical, 3)
-        .background(Capsule().fill(reaction.tint.opacity(0.14)))
+        .background(Capsule().fill(reaction.fill.opacity(0.14)))
+        .overlay(Capsule().strokeBorder(reaction.fill.opacity(0.28), lineWidth: 1))
+        .accessibilityLabel("\(reaction.name): \(count)")
     }
 }

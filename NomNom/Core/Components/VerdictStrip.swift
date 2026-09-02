@@ -28,18 +28,23 @@ struct VerdictStrip: View {
                     if let reaction = entry.reaction {
                         Text(reaction.numberLabel)
                             .font(.caption2.weight(.bold))
-                            .foregroundStyle(reaction.tint)
+                            .foregroundStyle(reaction.text)
                     } else {
-                        Text("–")
+                        Image(systemName: "circle.dashed")
                             .font(.caption2)
-                            .foregroundStyle(.secondary.opacity(0.4))
+                            .foregroundStyle(DS.Color.textTertiary)
                     }
                 }
                 .padding(.horizontal, 7)
                 .padding(.vertical, 3)
                 .background {
-                    Capsule().fill((entry.reaction?.tint ?? .gray).opacity(entry.reaction == nil ? 0.08 : 0.16))
+                    if let reaction = entry.reaction {
+                        Capsule().fill(reaction.fill.opacity(0.16))
+                    } else {
+                        Capsule().fill(DS.Color.sunken)
+                    }
                 }
+                .accessibilityLabel(entry.reaction != nil ? "\(entry.name): \(entry.reaction!.name)" : "\(entry.name): Unrated")
             }
         }
     }

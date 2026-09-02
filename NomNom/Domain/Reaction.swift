@@ -94,16 +94,29 @@ enum Reaction: Int, Codable, CaseIterable, Identifiable, Hashable, Comparable, T
         }
     }
 
-    var tint: Color {
+    var fill: Color {
         switch self {
-        case .inedible: return Color(red: 0.85, green: 0.22, blue: 0.22)
-        case .bad: return .orange
-        case .meh: return Color(red: 0.88, green: 0.72, blue: 0.15)
-        case .good: return .teal
-        case .great: return .mint
-        case .amazing: return .green
+        case .inedible: return Color("ds/reaction/inedible/fill")
+        case .bad: return Color("ds/reaction/bad/fill")
+        case .meh: return Color("ds/reaction/meh/fill")
+        case .good: return Color("ds/reaction/good/fill")
+        case .great: return Color("ds/reaction/great/fill")
+        case .amazing: return Color("ds/reaction/amazing/fill")
         }
     }
+
+    var text: Color {
+        switch self {
+        case .inedible: return Color("ds/reaction/inedible/text")
+        case .bad: return Color("ds/reaction/bad/text")
+        case .meh: return Color("ds/reaction/meh/text")
+        case .good: return Color("ds/reaction/good/text")
+        case .great: return Color("ds/reaction/great/text")
+        case .amazing: return Color("ds/reaction/amazing/text")
+        }
+    }
+
+    var tint: Color { fill }
 
     var isPositive: Bool { rawValue >= 4 }
     var isNegative: Bool { rawValue <= 1 }

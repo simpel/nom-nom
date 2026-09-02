@@ -40,13 +40,18 @@ struct MealDetailVerdictsCard: View {
                                         Text(reaction.shortLabel)
                                             .font(.subheadline.weight(.medium))
                                     }
-                                    .foregroundStyle(reaction.tint)
+                                    .foregroundStyle(reaction.text)
                                     .padding(.horizontal, 10)
                                     .padding(.vertical, 5)
                                     .background {
                                         Capsule()
-                                            .fill(reaction.tint.opacity(0.12))
+                                            .fill(reaction.fill.opacity(0.14))
                                     }
+                                    .overlay {
+                                        Capsule()
+                                            .strokeBorder(reaction.fill.opacity(0.28), lineWidth: 1)
+                                    }
+                                    .accessibilityLabel(reaction.name)
                                 }
 
                                 Image(systemName: "chevron.right")

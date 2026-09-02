@@ -39,19 +39,20 @@ struct PendingRatingCard: View {
                     } label: {
                         Text(reaction.numberLabel)
                             .font(.system(size: 13, weight: .bold, design: .rounded))
-                            .foregroundStyle(reaction.tint)
+                            .foregroundStyle(reaction.text)
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 8)
                             .background {
                                 RoundedRectangle(cornerRadius: AppRadius.button, style: .continuous)
-                                    .fill(reaction.tint.opacity(0.12))
+                                    .fill(reaction.fill.opacity(0.14))
                             }
                             .overlay {
                                 RoundedRectangle(cornerRadius: AppRadius.button, style: .continuous)
-                                    .strokeBorder(reaction.tint.opacity(0.25), lineWidth: 1)
+                                    .strokeBorder(reaction.fill.opacity(0.28), lineWidth: 1)
                             }
                     }
                     .buttonStyle(.plain)
+                    .accessibilityLabel(reaction.name)
                     .disabled(isSaving)
                 }
 

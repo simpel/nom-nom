@@ -34,15 +34,15 @@ struct ReactionPicker: View {
                     } label: {
                         Text(reaction.numberLabel)
                             .font(.system(size: 11, weight: isSelected ? .bold : .medium, design: .rounded))
-                            .foregroundStyle(isSelected ? reaction.tint : .secondary)
+                            .foregroundStyle(isSelected ? reaction.text : .secondary)
                             .frame(width: 28, height: 28)
                             .background {
                                 RoundedRectangle(cornerRadius: AppRadius.picker, style: .continuous)
-                                    .fill(isSelected ? reaction.tint.opacity(0.2) : Color(uiColor: .tertiarySystemFill))
+                                    .fill(isSelected ? reaction.fill.opacity(0.18) : Color(uiColor: .tertiarySystemFill))
                             }
                             .overlay {
                                 RoundedRectangle(cornerRadius: AppRadius.picker, style: .continuous)
-                                    .strokeBorder(isSelected ? reaction.tint : Color.clear, lineWidth: 1.5)
+                                    .strokeBorder(isSelected ? reaction.fill : Color.clear, lineWidth: 1.5)
                             }
                     }
                     .buttonStyle(.plain)

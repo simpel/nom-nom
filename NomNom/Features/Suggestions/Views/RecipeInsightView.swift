@@ -139,9 +139,14 @@ struct RecipeInsightView: View {
                                         Spacer()
 
                                         if let reaction = verdict.reaction {
-                                            Text(reaction.label)
-                                                .font(.subheadline.weight(.medium))
-                                                .foregroundStyle(reaction.tint)
+                                            HStack(spacing: 4) {
+                                                Image(systemName: reaction.systemImage)
+                                                    .font(.caption2)
+                                                Text(reaction.label)
+                                                    .font(.subheadline.weight(.medium))
+                                            }
+                                            .foregroundStyle(reaction.text)
+                                            .accessibilityLabel(reaction.name)
                                             Text("(\(verdict.sampleCount))")
                                                 .font(.caption)
                                                 .foregroundStyle(.secondary)
@@ -224,9 +229,14 @@ struct RecipeInsightView: View {
                                         if !ratings.isEmpty {
                                             HStack(spacing: 4) {
                                                 ForEach(ratings) { r in
-                                                    Image(systemName: r.reaction.systemImage)
-                                                        .font(.caption)
-                                                        .foregroundStyle(r.reaction.tint)
+                                                    HStack(spacing: 2) {
+                                                        Image(systemName: r.reaction.systemImage)
+                                                            .font(.caption2)
+                                                        Text(r.reaction.numberLabel)
+                                                            .font(.caption2.weight(.bold))
+                                                    }
+                                                    .foregroundStyle(r.reaction.text)
+                                                    .accessibilityLabel(r.reaction.name)
                                                 }
                                             }
                                         }

@@ -72,12 +72,12 @@ struct MealRatingSheet: View {
                 )
 
                 // 1. Taste
-                SectionCard(title: "How was it?", caption: myReaction?.name, color: myReaction?.tint) {
+                SectionCard(title: "How was it?", caption: myReaction?.name) {
                     TactileOptionPicker(selection: $myReaction)
                 }
 
                 // 2. Repeat Goal
-                SectionCard(title: "How often to repeat", caption: repeatDesire?.title, color: repeatDesire?.tint) {
+                SectionCard(title: "How often to repeat", caption: repeatDesire?.title) {
                     TactileOptionPicker(selection: $repeatDesire)
                 }
 

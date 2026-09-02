@@ -99,10 +99,12 @@ struct MealDetailPartyRatingsCard: View {
                         Text(reaction.shortLabel)
                             .font(.subheadline.weight(.semibold))
                     }
-                    .foregroundStyle(reaction.tint)
+                    .foregroundStyle(reaction.text)
                     .padding(.horizontal, 10)
                     .padding(.vertical, 5)
-                    .background(Capsule().fill(reaction.tint.opacity(0.12)))
+                    .background(Capsule().fill(reaction.fill.opacity(0.16)))
+                    .overlay(Capsule().strokeBorder(reaction.fill.opacity(0.3), lineWidth: 1))
+                    .accessibilityLabel(reaction.name)
                 } else {
                     Text("Rate")
                         .font(.caption.weight(.semibold))
@@ -143,10 +145,12 @@ struct MealDetailPartyRatingsCard: View {
                     Text(reaction.shortLabel)
                         .font(.subheadline.weight(.semibold))
                 }
-                .foregroundStyle(reaction.tint)
+                .foregroundStyle(reaction.text)
                 .padding(.horizontal, 10)
                 .padding(.vertical, 5)
-                .background(Capsule().fill(reaction.tint.opacity(0.12)))
+                .background(Capsule().fill(reaction.fill.opacity(0.16)))
+                .overlay(Capsule().strokeBorder(reaction.fill.opacity(0.3), lineWidth: 1))
+                .accessibilityLabel(reaction.name)
             } else if isAsked {
                 HStack(spacing: 4) {
                     Image(systemName: "clock.badge.checkmark")
@@ -222,10 +226,12 @@ struct MealDetailPartyRatingsCard: View {
                     Text(reaction.shortLabel)
                         .font(.subheadline.weight(.semibold))
                 }
-                .foregroundStyle(reaction.tint)
+                .foregroundStyle(reaction.text)
                 .padding(.horizontal, 10)
                 .padding(.vertical, 5)
-                .background(Capsule().fill(reaction.tint.opacity(0.12)))
+                .background(Capsule().fill(reaction.fill.opacity(0.16)))
+                .overlay(Capsule().strokeBorder(reaction.fill.opacity(0.3), lineWidth: 1))
+                .accessibilityLabel(reaction.name)
             }
         }
         .padding(.vertical, 2)

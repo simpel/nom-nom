@@ -69,8 +69,7 @@ struct MealVerdictStepView: View {
     private var tasteSectionCard: some View {
         SectionCard(
             title: "How was it?",
-            caption: myReaction?.name,
-            color: myReaction?.tint
+            caption: myReaction?.name
         ) {
             TactileOptionPicker(selection: $myReaction)
         }
@@ -81,8 +80,7 @@ struct MealVerdictStepView: View {
     private var rotationSectionCard: some View {
         SectionCard(
             title: "How often to repeat",
-            caption: repeatDesire?.title,
-            color: repeatDesire?.tint
+            caption: repeatDesire?.title
         ) {
             TactileOptionPicker(selection: $repeatDesire)
         }

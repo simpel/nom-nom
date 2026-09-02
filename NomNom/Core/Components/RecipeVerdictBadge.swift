@@ -27,7 +27,8 @@ struct RecipeVerdictBadge: View {
     struct BadgeData {
         let title: String
         let systemImage: String
-        let tint: Color
+        let fill: Color
+        let text: Color
     }
 
     private var badge: BadgeData? {
@@ -37,35 +38,35 @@ struct RecipeVerdictBadge: View {
 
         if total > 0 && negativeCount == 0 && (Double(positiveCount) / Double(total) >= 0.6) {
             if effort == .zeroTo15 {
-                return BadgeData(title: "Quick Win", systemImage: "bolt.fill", tint: .cyan)
+                return BadgeData(title: "Quick Win", systemImage: "bolt.fill", fill: DS.Color.accent, text: DS.Color.accentText)
             }
             if repeatDesire == .staple {
-                return BadgeData(title: "Household Favorite", systemImage: "star.fill", tint: .yellow)
+                return BadgeData(title: "Household Favorite", systemImage: "star.fill", fill: Reaction.amazing.fill, text: Reaction.amazing.text)
             }
             if effort == .over60 {
-                return BadgeData(title: "Showstopper", systemImage: "sparkles", tint: .purple)
+                return BadgeData(title: "Showstopper", systemImage: "sparkles", fill: DS.Color.accent, text: DS.Color.accentText)
             }
-            return BadgeData(title: "Crowd Pleaser", systemImage: "hand.thumbsup.fill", tint: .green)
+            return BadgeData(title: "Crowd Pleaser", systemImage: "hand.thumbsup.fill", fill: Reaction.great.fill, text: Reaction.great.text)
         }
 
         if repeatDesire == .staple {
-            return BadgeData(title: "Household Staple", systemImage: "arrow.triangle.2.circlepath", tint: .emeraldGreen)
+            return BadgeData(title: "Household Staple", systemImage: "arrow.triangle.2.circlepath", fill: DS.Color.accent, text: DS.Color.accentText)
         }
 
         if effort == .zeroTo15 {
-            return BadgeData(title: "Fast & Easy", systemImage: "bolt.fill", tint: .cyan)
+            return BadgeData(title: "Fast & Easy", systemImage: "bolt.fill", fill: DS.Color.accent, text: DS.Color.accentText)
         }
 
         if effort == .over60 {
-            return BadgeData(title: "Weekend Project", systemImage: "flame.fill", tint: .orange)
+            return BadgeData(title: "Weekend Project", systemImage: "flame.fill", fill: DS.Color.accent, text: DS.Color.accentText)
         }
 
         if negativeCount > 0 && positiveCount == 0 {
-            return BadgeData(title: "Needs Revision", systemImage: "wrench.and.screwdriver.fill", tint: .secondary)
+            return BadgeData(title: "Needs Revision", systemImage: "wrench.and.screwdriver.fill", fill: DS.Color.lineStrong, text: DS.Color.textSecondary)
         }
 
         if total > 0 {
-            return BadgeData(title: "Solid Dish", systemImage: "checkmark.circle.fill", tint: .blue)
+            return BadgeData(title: "Solid Dish", systemImage: "checkmark.circle.fill", fill: DS.Color.accent, text: DS.Color.accentText)
         }
 
         return nil
@@ -79,17 +80,18 @@ struct RecipeVerdictBadge: View {
                 Text(badge.title.uppercased())
                     .font(.system(size: 11, weight: .bold))
             }
-            .foregroundStyle(badge.tint)
+            .foregroundStyle(badge.text)
             .padding(.horizontal, 10)
             .padding(.vertical, 5)
             .background {
                 Capsule()
-                    .fill(badge.tint.opacity(0.14))
+                    .fill(badge.fill.opacity(0.14))
             }
             .overlay {
                 Capsule()
-                    .strokeBorder(badge.tint.opacity(0.3), lineWidth: 1)
+                    .strokeBorder(badge.fill.opacity(0.3), lineWidth: 1)
             }
+            .accessibilityLabel(badge.title)
             .transition(.scale.combined(with: .opacity))
         }
     }
@@ -97,6 +99,3 @@ struct RecipeVerdictBadge: View {
 
 typealias DishVerdictBadge = RecipeVerdictBadge
 
-private extension Color {
-    static let emeraldGreen = Color(red: 0.18, green: 0.72, blue: 0.44)
-}

@@ -12,8 +12,7 @@ struct MyVerdictCard: View {
     var body: some View {
         SectionCard(
             title: mine == nil ? "How was it?" : "Your verdict",
-            caption: mine?.name,
-            color: mine?.tint
+            caption: mine?.name
         ) {
             VStack(alignment: .leading, spacing: 10) {
                 TactileOptionPicker(selection: Binding(
