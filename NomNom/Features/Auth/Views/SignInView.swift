@@ -42,7 +42,7 @@ struct SignInView: View {
                 .frame(maxWidth: 460)
                 .frame(maxWidth: .infinity)
             }
-            .background(Color(.systemGroupedBackground))
+            .background(DS.Color.bg)
             .scrollDismissesKeyboard(.interactively)
         }
     }
@@ -55,10 +55,11 @@ struct SignInView: View {
                 .font(.system(size: 56))
                 .foregroundStyle(.tint)
             Text("Nom Nom")
-                .font(.largeTitle.bold())
+                .font(AppTypography.displayXL)
+                .foregroundStyle(DS.Color.textPrimary)
             Text("Keep track of what you cooked, whether the kids ate it, and what to cook next.")
                 .font(.subheadline)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(DS.Color.textSecondary)
                 .multilineTextAlignment(.center)
         }
         .padding(.top, 32)
@@ -92,7 +93,7 @@ struct SignInView: View {
 
             Text("No password. We'll send a six-digit code — if you've never signed in before, this creates your account.")
                 .font(.caption)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(DS.Color.textTertiary)
                 .multilineTextAlignment(.center)
         }
         .onAppear { focus = .email }
@@ -162,12 +163,12 @@ struct SignInView: View {
             Text("This build talks to the local Supabase stack. Codes don't get sent — read them in Mailpit at 127.0.0.1:54324.")
                 .font(.caption2)
         }
-        .foregroundStyle(.secondary)
+        .foregroundStyle(DS.Color.textSecondary)
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(12)
         .background {
             RoundedRectangle(cornerRadius: AppRadius.card, style: .continuous)
-                .fill(Color.secondary.opacity(0.1))
+                .fill(DS.Color.sunken)
         }
     }
     #endif

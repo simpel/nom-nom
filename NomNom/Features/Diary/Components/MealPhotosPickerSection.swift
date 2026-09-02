@@ -79,39 +79,39 @@ struct MealPhotosPickerSection: View {
                     .offset(x: -22, y: 4)
 
                 RoundedRectangle(cornerRadius: AppRadius.photo, style: .continuous)
-                    .fill(Color.accentColor.opacity(0.04))
+                    .fill(DS.Color.sunken)
                     .overlay {
                         RoundedRectangle(cornerRadius: AppRadius.photo, style: .continuous)
-                            .strokeBorder(Color.secondary.opacity(0.2), lineWidth: 1.5)
+                            .strokeBorder(DS.Color.line, lineWidth: 1.5)
                     }
                     .frame(width: 144, height: 192)
                     .rotationEffect(.degrees(7))
                     .offset(x: 22, y: 4)
 
                 RoundedRectangle(cornerRadius: AppRadius.photo, style: .continuous)
-                    .fill(Color(uiColor: .secondarySystemGroupedBackground).opacity(0.85))
+                    .fill(DS.Color.panel)
                     .overlay {
                         RoundedRectangle(cornerRadius: AppRadius.photo, style: .continuous)
-                            .strokeBorder(Color.accentColor.opacity(0.35), style: StrokeStyle(lineWidth: 1.5, dash: [6, 4]))
+                            .strokeBorder(DS.Color.lineStrong, style: StrokeStyle(lineWidth: 1.5, dash: [6, 4]))
                     }
                     .overlay {
                         VStack(spacing: 8) {
                             ZStack {
                                 Circle()
-                                    .fill(Color.accentColor.opacity(0.12))
+                                    .fill(DS.Color.accentSoft)
                                     .frame(width: 52, height: 52)
                                 Image(systemName: "camera.badge.ellipsis")
                                     .font(.system(size: 24, weight: .medium))
-                                    .foregroundStyle(Color.accentColor)
+                                    .foregroundStyle(DS.Color.accentText)
                             }
 
                             Text("Add Photos")
                                 .font(.subheadline.weight(.semibold))
-                                .foregroundStyle(.primary)
+                                .foregroundStyle(DS.Color.textPrimary)
 
                             Text("Tap to choose")
                                 .font(.caption2)
-                                .foregroundStyle(.secondary)
+                                .foregroundStyle(DS.Color.textSecondary)
                         }
                         .padding(12)
                     }

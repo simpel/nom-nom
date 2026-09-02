@@ -74,7 +74,7 @@ struct TactileOptionPicker<Option: TactilePickerOption>: View {
                         } else if hasIcon, let icon = option.icon {
                             Image(systemName: icon)
                                 .font(.system(size: 18, weight: .semibold))
-                                .foregroundStyle(isSelected ? option.tint : Color.secondary)
+                                .foregroundStyle(isSelected ? option.tint : DS.Color.textSecondary)
                                 .frame(height: 20)
                         }
 
@@ -82,11 +82,11 @@ struct TactileOptionPicker<Option: TactilePickerOption>: View {
                             if !hasIcon && !hasDescription {
                                 Text(option.label)
                                     .font(.system(size: 20, weight: isSelected ? .bold : .semibold, design: .rounded))
-                                    .foregroundStyle(isSelected ? option.tint : Color.primary)
+                                    .foregroundStyle(isSelected ? option.tint : DS.Color.textPrimary)
                             } else {
                                 Text(option.label)
                                     .font(.inter(size: 13, weight: isSelected ? .bold : .semibold))
-                                    .foregroundStyle(isSelected ? Color.primary : Color.primary.opacity(0.85))
+                                    .foregroundStyle(isSelected ? DS.Color.textPrimary : DS.Color.textPrimary.opacity(0.85))
                                     .lineLimit(1)
                                     .minimumScaleFactor(0.75)
                             }
@@ -95,7 +95,7 @@ struct TactileOptionPicker<Option: TactilePickerOption>: View {
                         if hasDescription, let description = option.description {
                             Text(description)
                                 .font(.inter(size: 10, weight: .regular))
-                                .foregroundStyle(isSelected ? Color.secondary : Color.secondary.opacity(0.8))
+                                .foregroundStyle(isSelected ? DS.Color.textSecondary : DS.Color.textSecondary.opacity(0.8))
                                 .lineLimit(1)
                                 .minimumScaleFactor(0.75)
                         }
@@ -109,13 +109,13 @@ struct TactileOptionPicker<Option: TactilePickerOption>: View {
                             .fill(
                                 isSelected
                                 ? option.tint.opacity(0.20)
-                                : Color(uiColor: .systemBackground).opacity(0.70)
+                                : DS.Color.panel
                             )
                     }
                     .overlay {
                         RoundedRectangle(cornerRadius: AppRadius.picker, style: .continuous)
                             .strokeBorder(
-                                isSelected ? option.tint : Color(uiColor: .separator).opacity(0.25),
+                                isSelected ? option.tint : DS.Color.line,
                                 lineWidth: isSelected ? 1.5 : 0.7
                             )
                     }

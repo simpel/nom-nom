@@ -20,7 +20,7 @@ struct PartyListView: View {
             .padding(.horizontal, 16)
             .padding(.vertical, 14)
         }
-        .background(Color(uiColor: .systemGroupedBackground))
+        .background(DS.Color.bg)
         .screenTitle("Dinner Parties")
         .sheetDoneToolbar(primarySystemImage: "plus", onPrimaryAction: {
             showingCreate = true
@@ -42,7 +42,7 @@ struct PartyListView: View {
                             let inviter = store.label(for: .account(invite.inviterID))
                             Text("Invited by \(inviter.name)")
                                 .font(.caption)
-                                .foregroundStyle(.secondary)
+                                .foregroundStyle(DS.Color.textSecondary)
                         }
 
                         Spacer()
@@ -73,7 +73,7 @@ struct PartyListView: View {
                 if store.myParties.isEmpty {
                     Text("No Dinner Parties yet. Create one to share meals and ratings.")
                         .font(.subheadline)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(DS.Color.textTertiary)
                         .padding(.vertical, 4)
                 } else {
                     ForEach(store.myParties) { party in
@@ -89,18 +89,19 @@ struct PartyListView: View {
                                 VStack(alignment: .leading, spacing: 2) {
                                     Text(party.name)
                                         .font(.body.weight(.medium))
-                                        .foregroundStyle(.primary)
+                                        .foregroundStyle(DS.Color.textPrimary)
                                     let memberCount = store.members(of: party.id).count
                                     Text("\(memberCount) \(memberCount == 1 ? "member" : "members")")
                                         .font(.caption)
-                                        .foregroundStyle(.secondary)
+                                        .monospacedDigit()
+                                        .foregroundStyle(DS.Color.textSecondary)
                                 }
 
                                 Spacer()
 
                                 Image(systemName: "chevron.right")
                                     .font(.caption2)
-                                    .foregroundStyle(.tertiary)
+                                    .foregroundStyle(DS.Color.textTertiary)
                             }
                             .padding(.vertical, 2)
                         }

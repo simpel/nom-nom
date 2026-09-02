@@ -43,14 +43,14 @@ struct CreateRecipeSheet: View {
 
                             Text("When enabled, other dinner parties and users can discover and cook this recipe.")
                                 .font(.caption)
-                                .foregroundStyle(.secondary)
+                                .foregroundStyle(DS.Color.textSecondary)
                         }
                     }
                 }
                 .padding(.horizontal, 16)
                 .padding(.vertical, 14)
             }
-            .background(Color(uiColor: .systemGroupedBackground))
+            .background(DS.Color.bg)
             .screenTitle("New Recipe", displayMode: .inline)
             .sheetCommitToolbar(
                 isSaving: isSaving,

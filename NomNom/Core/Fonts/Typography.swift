@@ -22,6 +22,35 @@ enum AppTypography {
 
     // MARK: - SwiftUI Fonts
     static var pageTitleFont: Font {
-        Font.custom(pageTitleFontName, size: pageTitleFontSize, relativeTo: .largeTitle)
+        displayXL
+    }
+
+    // MARK: - Design System Typography Scale
+    static var displayXL: Font {
+        Font.newsreader(size: 32, weight: .regular, relativeTo: .largeTitle)
+    }
+
+    static var displayL: Font {
+        Font.newsreader(.title2, weight: .semibold)
+    }
+
+    static var displayM: Font {
+        Font.newsreader(.title3)
+    }
+
+    static var bodyL: Font {
+        Font.inter(.body)
+    }
+
+    static var bodyM: Font {
+        Font.inter(.callout)
+    }
+
+    static var bodyS: Font {
+        Font.inter(.footnote)
+    }
+
+    static var data: Font {
+        Font.inter(.callout).monospacedDigit()
     }
 }

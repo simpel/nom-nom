@@ -33,7 +33,7 @@ struct PartyDetailView: View {
                     .padding(.horizontal, 16)
                     .padding(.vertical, 14)
                 }
-                .background(Color(uiColor: .systemGroupedBackground))
+                .background(DS.Color.bg)
                 .screenTitle(party.name)
                 .toolbar {
                     ToolbarItem(placement: .topBarTrailing) {
@@ -125,11 +125,11 @@ struct PartyDetailView: View {
                         VStack(alignment: .leading, spacing: 2) {
                             Text(member.shownName)
                                 .font(.body)
-                                .foregroundStyle(.primary)
+                                .foregroundStyle(DS.Color.textPrimary)
                             if member.id == store.userID {
                                 Text("You")
                                     .font(.caption2)
-                                    .foregroundStyle(.secondary)
+                                    .foregroundStyle(DS.Color.textSecondary)
                             }
                         }
 
@@ -168,14 +168,14 @@ struct PartyDetailView: View {
                 ForEach(invites) { invite in
                     HStack(spacing: 12) {
                         Image(systemName: "envelope.fill")
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(DS.Color.textSecondary)
                         VStack(alignment: .leading, spacing: 2) {
                             Text(invite.inviteeEmail ?? "Invited member")
                                 .font(.subheadline)
-                                .foregroundStyle(.primary)
+                                .foregroundStyle(DS.Color.textPrimary)
                             Text(invite.status.rawValue.capitalized)
                                 .font(.caption2)
-                                .foregroundStyle(invite.status == .pending ? .orange : .secondary)
+                                .foregroundStyle(invite.status == .pending ? DS.Color.accentText : DS.Color.textSecondary)
                         }
 
                         Spacer()

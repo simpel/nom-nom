@@ -12,7 +12,7 @@ struct DayCell: View {
     var body: some View {
         ZStack(alignment: .bottomTrailing) {
             RoundedRectangle(cornerRadius: AppRadius.standard, style: .continuous)
-                .fill(Color.secondary.opacity(0.08))
+                .fill(DS.Color.sunken)
 
             if photoPath != nil {
                 RemoteMealPhoto(path: photoPath, cornerRadius: AppRadius.photo)
@@ -27,6 +27,7 @@ struct DayCell: View {
                 HStack {
                     Text(day, format: .dateTime.day())
                         .font(.caption.weight(isToday ? .bold : .regular))
+                        .monospacedDigit()
                         .foregroundStyle(dayNumberStyle)
                         .padding(4)
                     Spacer()
@@ -48,7 +49,7 @@ struct DayCell: View {
         .clipShape(RoundedRectangle(cornerRadius: AppRadius.standard, style: .continuous))
         .overlay {
             RoundedRectangle(cornerRadius: AppRadius.standard, style: .continuous)
-                .strokeBorder(isSelected ? Color.accentColor : (isToday ? Color.accentColor.opacity(0.45) : .clear),
+                .strokeBorder(isSelected ? DS.Color.accent : (isToday ? DS.Color.accent.opacity(0.45) : .clear),
                               lineWidth: isSelected ? 2 : 1.5)
         }
         .contentShape(RoundedRectangle(cornerRadius: AppRadius.standard, style: .continuous))
@@ -58,8 +59,8 @@ struct DayCell: View {
 
     private var dayNumberStyle: AnyShapeStyle {
         if photoPath != nil { return AnyShapeStyle(.white) }
-        if isToday { return AnyShapeStyle(Color.accentColor) }
-        return AnyShapeStyle(.primary)
+        if isToday { return AnyShapeStyle(DS.Color.accent) }
+        return AnyShapeStyle(DS.Color.textPrimary)
     }
 
     private var accessibilityText: String {

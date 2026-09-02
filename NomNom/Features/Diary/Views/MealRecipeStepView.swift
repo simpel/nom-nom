@@ -38,7 +38,7 @@ struct MealRecipeStepView: View {
             .padding(.horizontal, 16)
             .padding(.vertical, 14)
         }
-        .background(Color(uiColor: .systemGroupedBackground))
+        .background(DS.Color.bg)
         .navigationTitle("Recipe & Details")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {

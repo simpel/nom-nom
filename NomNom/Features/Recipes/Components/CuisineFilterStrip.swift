@@ -21,13 +21,13 @@ struct CuisineFilterStrip: View {
                     .padding(.vertical, 7)
                     .background(
                         selectedCuisine == nil
-                            ? Color.primary
-                            : Color(uiColor: .secondarySystemGroupedBackground)
+                            ? DS.Color.textPrimary
+                            : DS.Color.panel
                     )
                     .foregroundStyle(
                         selectedCuisine == nil
-                            ? Color(uiColor: .systemBackground)
-                            : Color.primary
+                            ? DS.Color.panel
+                            : DS.Color.textPrimary
                     )
                     .clipShape(Capsule())
                 }
@@ -59,13 +59,13 @@ struct CuisineFilterStrip: View {
                         .padding(.vertical, 6)
                         .background(
                             isSelected
-                                ? Color.primary
-                                : Color(uiColor: .secondarySystemGroupedBackground)
+                                ? DS.Color.textPrimary
+                                : DS.Color.panel
                         )
                         .foregroundStyle(
                             isSelected
-                                ? Color(uiColor: .systemBackground)
-                                : Color.primary
+                                ? DS.Color.panel
+                                : DS.Color.textPrimary
                         )
                         .clipShape(Capsule())
                     }

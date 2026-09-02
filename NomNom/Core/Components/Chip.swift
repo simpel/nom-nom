@@ -4,7 +4,7 @@ import SwiftUI
 struct Chip: View {
     let text: String
     var systemImage: String? = nil
-    var tint: Color = .secondary
+    var tint: Color = DS.Color.textSecondary
 
     var body: some View {
         HStack(spacing: 4) {

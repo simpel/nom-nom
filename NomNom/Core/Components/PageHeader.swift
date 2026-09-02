@@ -12,12 +12,12 @@ struct PageHeader: View {
             Text(title)
                 .font(AppTypography.pageTitleFont)
                 .multilineTextAlignment(textAlignment)
-                .foregroundStyle(.primary)
+                .foregroundStyle(DS.Color.textPrimary)
 
             if let subtitle, !subtitle.isEmpty {
                 Text(subtitle)
                     .font(.inter(.subheadline))
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(DS.Color.textSecondary)
                     .multilineTextAlignment(textAlignment)
             }
         }

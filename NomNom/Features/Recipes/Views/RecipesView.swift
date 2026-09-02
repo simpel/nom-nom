@@ -73,7 +73,7 @@ struct RecipesView: View {
                 }
                 .padding(.top, 8)
                 .padding(.bottom, 6)
-                .background(Color(uiColor: .systemGroupedBackground))
+                .background(DS.Color.bg)
 
                 Group {
                     if store.recipes.isEmpty {
@@ -112,13 +112,14 @@ struct RecipesView: View {
                                 }
                             } header: {
                                 Text("\(displayedRecipes.count) recipe\(displayedRecipes.count == 1 ? "" : "s")")
+                                    .monospacedDigit()
                             }
                         }
                         .listStyle(.insetGrouped)
                     }
                 }
             }
-            .background(Color(uiColor: .systemGroupedBackground))
+            .background(DS.Color.bg)
             .screenTitle("Recipes")
             .searchable(text: $searchText, prompt: "Search recipes, tags, or kitchens")
             .refreshable {

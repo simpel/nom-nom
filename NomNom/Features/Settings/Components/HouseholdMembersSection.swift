@@ -68,7 +68,7 @@ struct HouseholdMembersSection: View {
                 } else {
                     Text("Enter an email address. This will send an email with an invite link to join your household.")
                         .font(.caption2)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(DS.Color.textSecondary)
                 }
             }
         }
@@ -83,27 +83,27 @@ struct HouseholdMembersSection: View {
                             HStack(spacing: 12) {
                                 ZStack {
                                     Circle()
-                                        .fill(Color.accentColor.opacity(0.12))
+                                        .fill(DS.Color.accentSoft)
                                         .frame(width: 32, height: 32)
                                     Text(member.shownName.prefix(1).uppercased())
                                         .font(.subheadline.weight(.bold))
-                                        .foregroundStyle(Color.accentColor)
+                                        .foregroundStyle(DS.Color.accentText)
                                 }
 
                                 VStack(alignment: .leading, spacing: 2) {
                                     Text(member.shownName)
                                         .font(.body)
-                                        .foregroundStyle(.primary)
+                                        .foregroundStyle(DS.Color.textPrimary)
                                     Text(member.id == store.userID ? "You • View taste profile" : "View taste profile")
                                         .font(.caption2)
-                                        .foregroundStyle(.secondary)
+                                        .foregroundStyle(DS.Color.textSecondary)
                                 }
 
                                 Spacer()
 
                                 Image(systemName: "chevron.right")
                                     .font(.caption2)
-                                    .foregroundStyle(.tertiary)
+                                    .foregroundStyle(DS.Color.textTertiary)
                             }
                             .padding(.vertical, 2)
                         }

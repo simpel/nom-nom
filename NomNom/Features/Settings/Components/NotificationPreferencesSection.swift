@@ -26,7 +26,7 @@ struct NotificationPreferencesSection: View {
 
                 Text("Choose what is sent to your device via notifications and what is sent to your inbox via email.")
                     .font(.caption2)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(DS.Color.textSecondary)
                     .padding(.top, 4)
             }
         }
@@ -52,7 +52,7 @@ struct NotificationPreferencesSection: View {
                         Text("Dinner Party Invites")
                         Text("When added to a dinner party")
                             .font(.caption)
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(DS.Color.textSecondary)
                     }
                 } icon: {
                     Image(systemName: "person.2.fill")
@@ -72,7 +72,7 @@ struct NotificationPreferencesSection: View {
                         Text("Dinner Party Invite Emails")
                         Text("Receive email for dinner party invitations")
                             .font(.caption)
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(DS.Color.textSecondary)
                     }
                 } icon: {
                     Image(systemName: "envelope.fill")
@@ -96,7 +96,7 @@ struct NotificationPreferencesSection: View {
                         Text("Meal Invitations")
                         Text("When added to rate a meal")
                             .font(.caption)
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(DS.Color.textSecondary)
                     }
                 } icon: {
                     Image(systemName: "fork.knife")
@@ -116,7 +116,7 @@ struct NotificationPreferencesSection: View {
                         Text("Meal Invite Emails")
                         Text("Receive email when invited to rate a dish")
                             .font(.caption)
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(DS.Color.textSecondary)
                     }
                 } icon: {
                     Image(systemName: "envelope.badge.fill")
@@ -136,7 +136,7 @@ struct NotificationPreferencesSection: View {
             }
             Text("Push notifications are turned off in iOS Settings. Tap to enable them.")
                 .font(.caption)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(DS.Color.textSecondary)
             Button("Open iOS Settings") {
                 notifications.openSystemSettings()
             }

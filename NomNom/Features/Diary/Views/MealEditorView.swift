@@ -114,7 +114,7 @@ struct MealEditorView: View {
                 .padding(.horizontal, 16)
                 .padding(.vertical, 14)
             }
-            .background(Color(uiColor: .systemGroupedBackground))
+            .background(DS.Color.bg)
             .screenTitle(isEditing ? "Edit meal" : "New meal", displayMode: .inline)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {

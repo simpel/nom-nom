@@ -18,11 +18,11 @@ struct ProfileSettingsSection: View {
                 HStack(spacing: 14) {
                     ZStack {
                         Circle()
-                            .fill(Color.accentColor.opacity(0.12))
+                            .fill(DS.Color.accentSoft)
                             .frame(width: 48, height: 48)
                         Text(firstName.prefix(1).uppercased())
                             .font(.title3.weight(.bold))
-                            .foregroundStyle(Color.accentColor)
+                            .foregroundStyle(DS.Color.accentText)
                     }
 
                     VStack(spacing: 8) {
@@ -38,7 +38,7 @@ struct ProfileSettingsSection: View {
 
                 Text("This is the name other dinner party members see when you share meals and rate dishes.")
                     .font(.caption2)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(DS.Color.textSecondary)
 
                 Divider()
 

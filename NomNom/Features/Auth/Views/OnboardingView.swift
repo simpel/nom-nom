@@ -30,7 +30,7 @@ struct OnboardingView: View {
                 bottomBar
             }
             .padding(24)
-            .background(Color(.systemGroupedBackground))
+            .background(DS.Color.bg)
             .navigationBarTitleDisplayMode(.inline)
         }
         .interactiveDismissDisabled()
@@ -51,7 +51,7 @@ struct OnboardingView: View {
             Text(emoji)
                 .font(.system(size: 56))
                 .frame(width: 88, height: 88)
-                .background(Color(.secondarySystemGroupedBackground))
+                .background(DS.Color.panel)
                 .clipShape(Circle())
                 .shadow(color: .black.opacity(0.08), radius: 8, y: 4)
 
@@ -67,11 +67,11 @@ struct OnboardingView: View {
                             Text(choice)
                                 .font(.system(size: 28))
                                 .frame(width: 44, height: 44)
-                                .background(emoji == choice ? Color.accentColor.opacity(0.2) : Color(.secondarySystemGroupedBackground))
+                                .background(emoji == choice ? DS.Color.accentSoft : DS.Color.panel)
                                 .clipShape(Circle())
                                 .overlay {
                                     if emoji == choice {
-                                        Circle().stroke(Color.accentColor, lineWidth: 2)
+                                        Circle().stroke(DS.Color.accent, lineWidth: 2)
                                     }
                                 }
                         }
@@ -84,10 +84,11 @@ struct OnboardingView: View {
 
             VStack(spacing: 6) {
                 Text("Welcome to Nom Nom!")
-                    .font(.title2.bold())
+                    .font(AppTypography.displayL)
+                    .foregroundStyle(DS.Color.textPrimary)
                 Text("What should other dinner party members call you?")
                     .font(.subheadline)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(DS.Color.textSecondary)
                     .multilineTextAlignment(.center)
             }
 
@@ -116,10 +117,11 @@ struct OnboardingView: View {
 
             VStack(spacing: 6) {
                 Text("Dinner Parties")
-                    .font(.title2.bold())
+                    .font(AppTypography.displayL)
+                    .foregroundStyle(DS.Color.textPrimary)
                 Text("A dinner party is a group of people you eat and share food ratings with (e.g. your household, roomies, or friends).")
                     .font(.subheadline)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(DS.Color.textSecondary)
                     .multilineTextAlignment(.center)
             }
 

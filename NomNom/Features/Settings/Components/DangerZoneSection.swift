@@ -26,7 +26,7 @@ struct DangerZoneSection: View {
 
                 Text("Permanently removes your account, your meals and their photos. Other dinner party members keep their own food logs.")
                     .font(.caption2)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(DS.Color.textSecondary)
             }
         }
     }

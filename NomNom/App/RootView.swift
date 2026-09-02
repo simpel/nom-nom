@@ -67,10 +67,10 @@ struct LaunchPlaceholder: View {
             if let caption {
                 Text(caption)
                     .font(.footnote)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(DS.Color.textSecondary)
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(Color(.systemGroupedBackground))
+        .background(DS.Color.bg)
     }
 }

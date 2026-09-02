@@ -34,7 +34,7 @@ struct MealVerdictStepView: View {
             .padding(.top, 12)
             .padding(.bottom, 36)
         }
-        .background(Color(uiColor: .systemGroupedBackground))
+        .background(DS.Color.bg)
         .screenTitle("Rate Meal")
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {

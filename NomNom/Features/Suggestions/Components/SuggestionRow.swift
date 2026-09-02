@@ -30,7 +30,7 @@ struct SuggestionRow: View {
                             .font(.caption2.bold())
                             .foregroundStyle(.white)
                             .frame(width: 18, height: 18)
-                            .background(Circle().fill(Color.accentColor))
+                            .background(Circle().fill(DS.Color.accent))
                             .offset(x: -4, y: -4)
                     }
                 }
@@ -38,6 +38,7 @@ struct SuggestionRow: View {
                 VStack(alignment: .leading, spacing: 6) {
                     Text(suggestion.name)
                         .font(.body.weight(.medium))
+                        .foregroundStyle(DS.Color.textPrimary)
                         .lineLimit(2)
 
                     HStack(spacing: 6) {
@@ -45,6 +46,7 @@ struct SuggestionRow: View {
                         if suggestion.timesServed > 0 {
                             Text("·")
                             Text("\(suggestion.timesServed)×")
+                                .monospacedDigit()
                         }
                         if showScore {
                             Text("·")
@@ -53,7 +55,7 @@ struct SuggestionRow: View {
                         }
                     }
                     .font(.caption)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(DS.Color.textSecondary)
 
                     if !suggestion.verdicts.isEmpty {
                         VerdictStrip(entries: suggestion.verdicts.map {
@@ -75,10 +77,9 @@ struct SuggestionRow: View {
     }
 
     private func tint(for reason: String) -> Color {
-        if reason.contains("happy") || reason.contains("hit") || reason.contains("liked") { return .green }
-        if reason.contains("Tough") || reason.contains("no") { return .red }
-        if reason.contains("Overdue") || reason.contains("months") { return .blue }
-        if reason.contains("once") || reason.contains("Never") || reason.contains("figuring") { return .purple }
-        return .secondary
+        if reason.contains("happy") || reason.contains("hit") || reason.contains("liked") { return Reaction.great.text }
+        if reason.contains("Tough") || reason.contains("no") { return Reaction.bad.text }
+        if reason.contains("Overdue") || reason.contains("months") { return DS.Color.accentText }
+        return DS.Color.textSecondary
     }
 }

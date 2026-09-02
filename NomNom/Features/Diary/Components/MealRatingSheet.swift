@@ -97,7 +97,7 @@ struct MealRatingSheet: View {
             .padding(.horizontal, 16)
             .padding(.vertical, 14)
         }
-        .background(Color(uiColor: .systemGroupedBackground))
+        .background(DS.Color.bg)
     }
 
     private var householdEatersCard: some View {

@@ -53,10 +53,10 @@ struct MonthGrid: View {
     private func mood(of meals: [Meal]) -> Color? {
         guard !meals.isEmpty else { return nil }
         let scores = meals.compactMap { store.averageScore(forMeal: $0.id) }
-        guard !scores.isEmpty else { return .gray }
+        guard !scores.isEmpty else { return DS.Color.textTertiary }
         let average = scores.reduce(0, +) / Double(scores.count)
-        if average >= 0.7 { return .green }
-        if average >= 0.34 { return .orange }
-        return .red
+        if average >= 0.7 { return Reaction.great.text }
+        if average >= 0.34 { return Reaction.meh.text }
+        return Reaction.bad.text
     }
 }

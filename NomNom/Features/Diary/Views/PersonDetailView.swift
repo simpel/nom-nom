@@ -112,7 +112,7 @@ struct PersonDetailView: View {
             .padding(.horizontal, 16)
             .padding(.vertical, 14)
         }
-        .background(Color(uiColor: .systemGroupedBackground))
+        .background(DS.Color.bg)
         .screenTitle(label.name)
     }
 
@@ -121,33 +121,26 @@ struct PersonDetailView: View {
             VStack(spacing: 12) {
                 ZStack {
                     Circle()
-                        .fill(Color.accentColor.opacity(0.12))
+                        .fill(DS.Color.accentSoft)
                         .frame(width: 64, height: 64)
                     Text(label.name.prefix(1).uppercased())
                         .font(.title.weight(.bold))
-                        .foregroundStyle(Color.accentColor)
+                        .foregroundStyle(DS.Color.accentText)
                 }
 
                 VStack(spacing: 4) {
                     Text(label.name)
-                        .font(.title2.bold())
-                    Text(personTypeDescription)
-                        .font(.subheadline)
-                        .foregroundStyle(.secondary)
-                }
-
-                HStack(spacing: 16) {
-                    StatPill(title: "Meals", value: "\(meals.count)")
-                    StatPill(title: "Ratings", value: "\(personRatings.count)")
-                    if !personRatings.isEmpty {
-                        let positivePercent = Int((Double(positiveRatingsCount) / Double(personRatings.count)) * 100)
-                        StatPill(title: "Positive", value: "\(positivePercent)%")
+                        .font(AppTypography.displayL)
+                        .foregroundStyle(DS.Color.textPrimary)
+                    if case .account(let id) = raterRef, id == store.userID {
+                        Text("Your profile")
+                            .font(.caption)
+                            .foregroundStyle(DS.Color.textSecondary)
                     }
                 }
-                .padding(.top, 4)
             }
             .frame(maxWidth: .infinity)
-            .padding(.vertical, 4)
+            .padding(.vertical, 8)
         }
     }
 
@@ -196,14 +189,14 @@ private struct StatPill: View {
                 .foregroundStyle(.primary)
             Text(title)
                 .font(.caption2)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(DS.Color.textSecondary)
         }
         .frame(minWidth: 80)
         .padding(.vertical, 8)
         .padding(.horizontal, 12)
         .background {
             RoundedRectangle(cornerRadius: AppRadius.card, style: .continuous)
-                .fill(Color(uiColor: .secondarySystemGroupedBackground))
+                .fill(DS.Color.panel)
         }
     }
 }

@@ -28,7 +28,7 @@ struct HouseholdPendingInvitesSection: View {
                     .font(.subheadline.weight(.medium))
                 Text("Invite link sent • Pending")
                     .font(.caption2)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(DS.Color.textSecondary)
             }
 
             Spacer()
@@ -55,7 +55,7 @@ struct HouseholdPendingInvitesSection: View {
                 } label: {
                     Image(systemName: "ellipsis")
                         .font(.body)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(DS.Color.textSecondary)
                         .frame(width: 28, height: 28)
                         .contentShape(Rectangle())
                 }

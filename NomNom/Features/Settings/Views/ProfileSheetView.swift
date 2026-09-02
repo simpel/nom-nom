@@ -24,11 +24,11 @@ struct ProfileSheetView: View {
                             HStack(spacing: 14) {
                                 ZStack {
                                     Circle()
-                                        .fill(Color.accentColor.opacity(0.12))
+                                        .fill(DS.Color.accentSoft)
                                         .frame(width: 48, height: 48)
                                     Text(firstName.prefix(1).uppercased())
                                         .font(.title3.weight(.bold))
-                                        .foregroundStyle(Color.accentColor)
+                                        .foregroundStyle(DS.Color.accentText)
                                 }
 
                                 VStack(spacing: 8) {
@@ -44,7 +44,7 @@ struct ProfileSheetView: View {
 
                             Text("This is how other dinner party members will see you.")
                                 .font(.caption2)
-                                .foregroundStyle(.secondary)
+                                .foregroundStyle(DS.Color.textSecondary)
                         }
                     }
 
@@ -67,7 +67,7 @@ struct ProfileSheetView: View {
                 .padding(.horizontal, 16)
                 .padding(.vertical, 14)
             }
-            .background(Color(uiColor: .systemGroupedBackground))
+            .background(DS.Color.bg)
             .screenTitle("My Profile", displayMode: .inline)
             .sheetCommitToolbar(onSave: {
                 saveProfile()

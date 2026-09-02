@@ -48,16 +48,16 @@ struct RecipeRowCard: View {
                 HStack(alignment: .firstTextBaseline, spacing: 6) {
                     Text(recipe.name)
                         .font(.body.weight(.semibold))
-                        .foregroundStyle(.primary)
+                        .foregroundStyle(DS.Color.textPrimary)
                         .lineLimit(1)
 
                     if !recipe.isPublic && recipe.ownerID == store.userID {
                         Text("Private")
                             .font(.caption2.weight(.medium))
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(DS.Color.textSecondary)
                             .padding(.horizontal, 6)
                             .padding(.vertical, 2)
-                            .background(Color(uiColor: .tertiarySystemFill))
+                            .background(DS.Color.sunken)
                             .clipShape(Capsule())
                     }
                 }
@@ -66,36 +66,37 @@ struct RecipeRowCard: View {
                     if let cuisineName {
                         Text(cuisineName)
                             .font(.caption.weight(.medium))
-                            .foregroundStyle(.tint)
+                            .foregroundStyle(DS.Color.accentText)
                     }
 
                     if let effort = recipe.effort {
                         if cuisineName != nil {
                             Text("•")
                                 .font(.caption2)
-                                .foregroundStyle(.tertiary)
+                                .foregroundStyle(DS.Color.textTertiary)
                         }
                         Text(effort.label)
                             .font(.caption)
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(DS.Color.textSecondary)
                     }
 
                     if servings.count > 0 {
                         if cuisineName != nil || recipe.effort != nil {
                             Text("•")
                                 .font(.caption2)
-                                .foregroundStyle(.tertiary)
+                                .foregroundStyle(DS.Color.textTertiary)
                         }
                         Text("\(servings.count)× cooked")
                             .font(.caption)
-                            .foregroundStyle(.secondary)
+                            .monospacedDigit()
+                            .foregroundStyle(DS.Color.textSecondary)
                     }
                 }
 
                 if !recipe.tags.isEmpty {
                     Text(recipe.tags.joined(separator: " • "))
                         .font(.caption2)
-                        .foregroundStyle(.tertiary)
+                        .foregroundStyle(DS.Color.textTertiary)
                         .lineLimit(1)
                 }
             }
@@ -104,7 +105,7 @@ struct RecipeRowCard: View {
 
             Image(systemName: "chevron.right")
                 .font(.caption.weight(.semibold))
-                .foregroundStyle(.tertiary)
+                .foregroundStyle(DS.Color.textTertiary)
         }
         .padding(.vertical, 6)
         .contentShape(Rectangle())

@@ -33,6 +33,7 @@ struct FoodCalendarView: View {
                 }
                 .padding(.vertical)
             }
+            .background(DS.Color.bg)
             .screenTitle("Calendar")
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
@@ -65,7 +66,8 @@ struct FoodCalendarView: View {
             Spacer()
 
             Text(visibleMonth, format: .dateTime.month(.wide).year())
-                .font(.title3.weight(.semibold))
+                .font(AppTypography.displayM)
+                .foregroundStyle(DS.Color.textPrimary)
                 .contentTransition(.numericText())
 
             Spacer()
@@ -86,7 +88,7 @@ struct FoodCalendarView: View {
             ForEach(Array(symbols.enumerated()), id: \.offset) { indexed in
                 Text(indexed.element)
                     .font(.caption2.weight(.semibold))
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(DS.Color.textSecondary)
                     .frame(maxWidth: .infinity)
             }
         }
@@ -103,7 +105,7 @@ struct FoodCalendarView: View {
                 if selectedDayMeals.isEmpty {
                     Text("Nothing logged for this day.")
                         .font(.subheadline)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(DS.Color.textTertiary)
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .padding(.vertical, 4)
                 } else {
@@ -130,7 +132,7 @@ struct FoodCalendarView: View {
                     .padding(.vertical, 6)
                 }
                 .buttonStyle(.bordered)
-                .tint(.accentColor)
+                .tint(DS.Color.accent)
                 .padding(.top, 4)
             }
         }

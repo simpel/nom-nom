@@ -28,7 +28,7 @@ struct SettingsView: View {
             .padding(.horizontal, 16)
             .padding(.vertical, 14)
         }
-        .background(Color(uiColor: .systemGroupedBackground))
+        .background(DS.Color.bg)
         .navigationTitle("Settings")
         .alert("Sign out?", isPresented: $confirmSignOut) {
             Button("Sign out", role: .destructive) {
@@ -70,11 +70,12 @@ struct SettingsView: View {
                         VStack(alignment: .leading, spacing: 2) {
                             Text("Dinner Parties")
                                 .font(.body.weight(.medium))
-                                .foregroundStyle(.primary)
+                                .foregroundStyle(DS.Color.textPrimary)
                             let count = store.myParties.count
                             Text(count == 0 ? "None yet" : "\(count) \(count == 1 ? "party" : "parties")")
                                 .font(.caption)
-                                .foregroundStyle(.secondary)
+                                .monospacedDigit()
+                                .foregroundStyle(DS.Color.textSecondary)
                         }
                         Spacer()
                         if !store.pendingPartyInvites.isEmpty {
@@ -88,7 +89,7 @@ struct SettingsView: View {
                         }
                         Image(systemName: "chevron.right")
                             .font(.caption2)
-                            .foregroundStyle(.tertiary)
+                            .foregroundStyle(DS.Color.textTertiary)
                     }
                     .padding(.vertical, 2)
                 }
@@ -96,7 +97,7 @@ struct SettingsView: View {
 
                 Text("Share meals and collective taste preferences with friends, family, or roomies.")
                     .font(.caption2)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(DS.Color.textSecondary)
                     .padding(.top, 4)
             }
         }
@@ -127,7 +128,7 @@ struct SettingsView: View {
 
                 Text("Debug builds only — adds a few months of made-up meals so the suggestions have something to work with. Writes to whichever Supabase this build points at.")
                     .font(.caption2)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(DS.Color.textTertiary)
             }
         }
     }

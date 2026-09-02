@@ -14,11 +14,11 @@ struct MeterRow: View {
                 Spacer()
                 Text(value == nil ? "–" : "\(Int(((value ?? 0) * 100).rounded()))%")
                     .font(.subheadline.monospacedDigit())
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(DS.Color.textSecondary)
             }
             GeometryReader { geometry in
                 ZStack(alignment: .leading) {
-                    Capsule().fill(Color.secondary.opacity(0.15))
+                    Capsule().fill(DS.Color.sunken)
                     Capsule()
                         .fill(tint.gradient)
                         .frame(width: max(0, min(1, value ?? 0)) * geometry.size.width)
@@ -28,7 +28,7 @@ struct MeterRow: View {
             if let caption {
                 Text(caption)
                     .font(.caption2)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(DS.Color.textTertiary)
             }
         }
         .padding(.vertical, 2)

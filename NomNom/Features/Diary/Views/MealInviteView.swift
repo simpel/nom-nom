@@ -61,7 +61,7 @@ struct MealInviteView: View {
             .padding(.horizontal, 16)
             .padding(.vertical, 14)
         }
-        .background(Color(uiColor: .systemGroupedBackground))
+        .background(DS.Color.bg)
         .navigationTitle("Ask for ratings")
         .navigationBarTitleDisplayMode(.inline)
         .onAppear { focused = invites.isEmpty }

@@ -32,7 +32,7 @@ struct SuggestionsView: View {
                             modePicker
                             Text(filters.mode.explanation)
                                 .font(.caption)
-                                .foregroundStyle(.secondary)
+                                .foregroundStyle(DS.Color.textSecondary)
                         }
 
                         if results.isEmpty {
@@ -58,12 +58,13 @@ struct SuggestionsView: View {
                                         } label: {
                                             Label("Cook it", systemImage: "flame")
                                         }
-                                        .tint(.orange)
+                                        .tint(DS.Color.accent)
                                     }
                                 }
                             } header: {
                                 HStack {
                                     Text("\(results.count) options")
+                                        .monospacedDigit()
                                     Spacer()
                                     Button(showMath ? "Hide scores" : "Show scores") {
                                         showMath.toggle()
@@ -76,6 +77,8 @@ struct SuggestionsView: View {
                             }
                         }
                     }
+                    .scrollContentBackground(.hidden)
+                    .background(DS.Color.bg)
                     .searchable(text: $filters.searchText, prompt: "Filter by name")
                     .refreshable { await store.load() }
                 }
