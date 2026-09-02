@@ -37,12 +37,7 @@ enum EffortLevel: Int, Codable, CaseIterable, Identifiable, Hashable, TactilePic
     }
 
     var tint: Color {
-        switch self {
-        case .zeroTo15: return .cyan
-        case .fifteenTo30: return .blue
-        case .thirtyTo60: return .orange
-        case .over60: return .purple
-        }
+        DS.Color.accent
     }
 
     var title: String { label }
@@ -83,11 +78,7 @@ enum RotationGoal: Int, Codable, CaseIterable, Identifiable, Hashable, TactilePi
     }
 
     var tint: Color {
-        switch self {
-        case .oneAndDone: return .secondary
-        case .sometimes: return .indigo
-        case .staple: return .emeraldGreen
-        }
+        DS.Color.accent
     }
 
     var title: String { label }
@@ -95,6 +86,3 @@ enum RotationGoal: Int, Codable, CaseIterable, Identifiable, Hashable, TactilePi
     var systemImage: String { icon ?? "" }
 }
 
-private extension Color {
-    static let emeraldGreen = Color(red: 0.18, green: 0.72, blue: 0.44)
-}

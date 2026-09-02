@@ -23,23 +23,7 @@ struct MealRatingBadge: View {
 
     @ViewBuilder
     private func rotationBadge(_ rotation: RotationGoal) -> some View {
-        HStack(spacing: 3) {
-            Image(systemName: rotation.systemImage)
-                .font(.system(size: 10, weight: .semibold))
-            Text(rotation.title)
-                .font(.system(size: 11, weight: .semibold))
-        }
-        .foregroundStyle(rotation.tint)
-        .padding(.horizontal, 7)
-        .padding(.vertical, 4)
-        .background {
-            Capsule()
-                .fill(rotation.tint.opacity(0.12))
-        }
-        .overlay {
-            Capsule()
-                .strokeBorder(rotation.tint.opacity(0.24), lineWidth: 1)
-        }
+        RotationPill(goal: rotation)
     }
 
     @ViewBuilder

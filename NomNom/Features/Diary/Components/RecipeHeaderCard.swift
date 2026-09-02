@@ -35,7 +35,7 @@ struct RecipeHeaderCard: View {
                             Chip(text: cuisineName, systemImage: "fork.knife", tint: .orange)
                         }
                         if let effort = recipe.effort {
-                            Chip(text: effort.title, systemImage: effort.systemImage, tint: effort.tint)
+                            BurnerMeter(effort: effort, showLabel: true)
                         }
                     }
                     .padding(.top, 2)

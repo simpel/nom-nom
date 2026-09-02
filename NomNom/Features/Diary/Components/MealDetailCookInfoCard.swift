@@ -82,13 +82,7 @@ struct MealDetailCookInfoCard: View {
                             .font(.subheadline)
                             .foregroundStyle(.secondary)
                         Spacer()
-                        HStack(spacing: 4) {
-                            Image(systemName: effort.systemImage)
-                                .font(.caption2)
-                            Text(effort.title)
-                                .font(.subheadline.weight(.medium))
-                        }
-                        .foregroundStyle(effort.tint)
+                        BurnerMeter(effort: effort, showLabel: true)
                     }
                 }
 

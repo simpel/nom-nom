@@ -65,7 +65,13 @@ struct TactileOptionPicker<Option: TactilePickerOption>: View {
                     }
                 } label: {
                     VStack(spacing: 4) {
-                        if hasIcon, let icon = option.icon {
+                        if let effort = option as? EffortLevel {
+                            BurnerMeter(effort: effort)
+                                .frame(height: 22)
+                        } else if let rotation = option as? RotationGoal {
+                            RotationPill(goal: rotation, showIcon: false)
+                                .frame(height: 22)
+                        } else if hasIcon, let icon = option.icon {
                             Image(systemName: icon)
                                 .font(.system(size: 18, weight: .semibold))
                                 .foregroundStyle(isSelected ? option.tint : Color.secondary)
