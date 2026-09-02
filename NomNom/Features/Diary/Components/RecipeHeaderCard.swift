@@ -32,7 +32,7 @@ struct RecipeHeaderCard: View {
 
                     HStack(spacing: 8) {
                         if let cuisineName = Cuisine.formatDisplayName(recipe.cuisine) {
-                            Chip(text: cuisineName, systemImage: "fork.knife", tint: .orange)
+                            Chip(text: cuisineName, systemImage: "fork.knife", tint: DS.Color.accentText)
                         }
                         if let effort = recipe.effort {
                             BurnerMeter(effort: effort, showLabel: true)
@@ -44,7 +44,7 @@ struct RecipeHeaderCard: View {
                 if !recipe.tags.isEmpty {
                     WrappingHStack {
                         ForEach(recipe.tags, id: \.self) { tag in
-                            Chip(text: tag, systemImage: "tag", tint: .indigo)
+                            Chip(text: tag, systemImage: "tag", tint: DS.Color.textSecondary)
                         }
                     }
                 }

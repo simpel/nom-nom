@@ -97,7 +97,7 @@ struct MealDetailCookInfoCard: View {
                         Spacer()
                         WrappingHStack {
                             ForEach(tags, id: \.self) { tag in
-                                Chip(text: tag, systemImage: "tag", tint: .indigo)
+                                Chip(text: tag, systemImage: "tag", tint: DS.Color.textSecondary)
                             }
                         }
                     }

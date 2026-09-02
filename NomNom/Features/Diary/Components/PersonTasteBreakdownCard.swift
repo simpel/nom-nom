@@ -8,16 +8,16 @@ struct PersonTasteBreakdownCard: View {
     let totalRatingsCount: Int
 
     var body: some View {
-        SectionCard(title: "Taste Profile", caption: "AI Insights", color: .purple) {
+        SectionCard(title: "Taste Profile", caption: "AI Insights") {
             VStack(alignment: .leading, spacing: 12) {
                 Text(summary)
                     .font(.subheadline)
-                    .foregroundStyle(.primary)
+                    .foregroundStyle(DS.Color.textPrimary)
 
                 if !topTags.isEmpty {
                     WrappingHStack {
                         ForEach(topTags.prefix(5), id: \.self) { tag in
-                            Chip(text: tag, systemImage: "heart.fill", tint: .purple)
+                            Chip(text: tag, systemImage: "heart.fill", tint: DS.Color.accentText)
                         }
                     }
                 }
@@ -26,7 +26,7 @@ struct PersonTasteBreakdownCard: View {
                     VStack(alignment: .leading, spacing: 6) {
                         Text("Rating breakdown")
                             .font(.caption.weight(.medium))
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(DS.Color.textSecondary)
 
                         HStack(spacing: 6) {
                             ForEach(Reaction.allCases) { reaction in

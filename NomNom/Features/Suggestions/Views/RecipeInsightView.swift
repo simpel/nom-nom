@@ -67,16 +67,17 @@ struct RecipeInsightView: View {
                                 .frame(width: 90, height: 90)
                             VStack(alignment: .leading, spacing: 6) {
                                 Text(recipe.name)
-                                    .font(.title3.weight(.semibold))
+                                    .font(AppTypography.displayM)
+                                    .foregroundStyle(DS.Color.textPrimary)
                                 Text(suggestion.timesServed == 0
                                      ? "Never cooked"
                                      : "Cooked \(suggestion.timesServed) time\(suggestion.timesServed == 1 ? "" : "s")")
                                     .font(.subheadline)
-                                    .foregroundStyle(.secondary)
+                                    .foregroundStyle(DS.Color.textSecondary)
                                 if let gap = suggestion.typicalGapDays {
                                     Text("Roughly every \(Int(gap.rounded())) days")
                                         .font(.caption)
-                                        .foregroundStyle(.secondary)
+                                        .foregroundStyle(DS.Color.textSecondary)
                                 }
                             }
                         }
@@ -101,17 +102,17 @@ struct RecipeInsightView: View {
                         MeterRow(title: "Liked",
                                  value: suggestion.likeScore,
                                  caption: suggestion.likeScore == nil ? "No verdicts yet" : nil,
-                                 tint: .green)
+                                 tint: Reaction.great.text)
                         Divider()
                         MeterRow(title: "Due for a repeat",
                                  value: suggestion.readiness,
                                  caption: readinessCaption,
-                                 tint: .blue)
+                                 tint: DS.Color.accent)
                         Divider()
                         MeterRow(title: "How sure we are",
                                  value: suggestion.confidence,
                                  caption: suggestion.confidence < 0.4 ? "Needs a few more data points" : nil,
-                                 tint: .purple)
+                                 tint: DS.Color.lineStrong)
                     }
                 }
 
@@ -221,7 +222,7 @@ struct RecipeInsightView: View {
                                             if !parties.isEmpty {
                                                 Text(parties.map(\.name).joined(separator: ", "))
                                                     .font(.caption2)
-                                                    .foregroundStyle(.indigo)
+                                                    .foregroundStyle(DS.Color.accentText)
                                             }
                                         }
                                         Spacer()
@@ -284,10 +285,11 @@ struct RecipeInsightView: View {
 
                 Text("Merging moves every logged meal onto the other recipe and keeps its name.")
                     .font(.caption2)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(DS.Color.textSecondary)
                     .padding(.top, 4)
             }
         }
+        .background(DS.Color.bg)
     }
 
     private func mergeCandidates(excluding recipe: Recipe) -> [Recipe] {
