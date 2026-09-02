@@ -1,101 +1,112 @@
 import SwiftUI
 
-/// Step 2 of logging a meal: record your own verdict (and any household members) before saving.
+/// Step 2 of logging a meal: A rich hero moment to evaluate your personal Taste verdict and Rotation goal.
 struct MealVerdictStepView: View {
     let draft: FoodStore.MealDraft
-    let pickedData: Data?
-    let existingPath: String?
     var onDismiss: () -> Void
 
     @Environment(FoodStore.self) private var store
-    @State private var verdicts: [RaterRef: Reaction] = [:]
+    @State private var myReaction: Reaction?
+    @State private var repeatDesire: RotationGoal?
     @State private var isSaving = false
 
     var body: some View {
-        Form {
-            mealSummaryHeader
-
-            Section {
-                ForEach(store.raterRoster, id: \.ref) { person in
-                    ReactionPicker(emoji: person.emoji,
-                                   name: person.name,
-                                   selection: binding(for: person.ref))
+        ScrollView {
+            VStack(spacing: 20) {
+                // Top Hero Section: Arced Photo Deck (if photos exist)
+                if !draft.photos.isEmpty {
+                    RecipePhotoArcDeck(draft: draft.photos)
                 }
-            } header: {
-                Text("How was it?")
-            } footer: {
-                Text("Leave blank if you didn't catch a reaction — blanks are ignored by the suggestions.")
+
+                // Centered Dish Title & Date
+                PageHeader(
+                    title: draft.dishName,
+                    subtitle: draft.eatenOn.formatted(.dateTime.weekday(.wide).day().month(.wide).year())
+                )
+
+                // Axis 1: Taste Verdict (3-card selector)
+                tasteSectionCard
+
+                // Axis 2: Rotation Goal (3-card selector)
+                rotationSectionCard
             }
+            .padding(.horizontal, 16)
+            .padding(.top, 12)
+            .padding(.bottom, 36)
         }
-        .navigationTitle("Rate meal")
-        .navigationBarTitleDisplayMode(.inline)
+        .background(Color(uiColor: .systemGroupedBackground))
+        .screenTitle("Rate Meal")
         .toolbar {
-            ToolbarItem(placement: .confirmationAction) {
+            ToolbarItem(placement: .topBarTrailing) {
                 if isSaving {
-                    ProgressView()
+                    ProgressView().controlSize(.small)
                 } else {
-                    Button("Save") {
+                    Button {
                         save()
+                    } label: {
+                        Image(systemName: "checkmark")
+                            .fontWeight(.semibold)
                     }
-                    .fontWeight(.semibold)
                 }
             }
         }
         .onAppear {
-            verdicts = draft.verdicts
+            myReaction = draft.verdicts[.account(store.userID)]
+            repeatDesire = draft.repeatDesire
         }
         .interactiveDismissDisabled(isSaving)
-    }
-
-    private var mealSummaryHeader: some View {
-        Section {
-            HStack(spacing: 14) {
-                if let pickedData, let uiImage = UIImage(data: pickedData) {
-                    Image(uiImage: uiImage)
-                        .resizable()
-                        .scaledToFill()
-                        .frame(width: 56, height: 56)
-                        .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
-                } else if let existingPath {
-                    RemoteMealPhoto(path: existingPath, cornerRadius: 10)
-                        .frame(width: 56, height: 56)
-                } else {
-                    ZStack {
-                        RoundedRectangle(cornerRadius: 10, style: .continuous)
-                            .fill(Color.secondary.opacity(0.12))
-                        Image(systemName: "fork.knife")
-                            .foregroundStyle(.secondary)
-                    }
-                    .frame(width: 56, height: 56)
-                }
-
-                VStack(alignment: .leading, spacing: 4) {
-                    Text(draft.dishName)
-                        .font(.headline)
-                    Text(draft.eatenOn, format: .dateTime.weekday(.wide).day().month(.abbreviated))
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                }
-            }
-            .padding(.vertical, 4)
+        .alert("Couldn't save meal",
+               isPresented: Binding(get: { store.errorMessage != nil },
+                                    set: { if !$0 { store.errorMessage = nil } })) {
+            Button("OK") { store.errorMessage = nil }
+        } message: {
+            Text(store.errorMessage ?? "")
         }
     }
 
-    private func binding(for ref: RaterRef) -> Binding<Reaction?> {
-        Binding(
-            get: { verdicts[ref] },
-            set: { verdicts[ref] = $0 }
-        )
+    // MARK: - Taste Section
+
+    private var tasteSectionCard: some View {
+        SectionCard(
+            title: "How was it?",
+            caption: myReaction?.name,
+            color: myReaction?.tint
+        ) {
+            TactileOptionPicker(selection: $myReaction)
+        }
+    }
+
+    // MARK: - Rotation Section
+
+    private var rotationSectionCard: some View {
+        SectionCard(
+            title: "How often to repeat",
+            caption: repeatDesire?.title,
+            color: repeatDesire?.tint
+        ) {
+            TactileOptionPicker(selection: $repeatDesire)
+        }
     }
 
     private func save() {
         var finalDraft = draft
-        finalDraft.verdicts = verdicts
+        var updatedVerdicts = draft.verdicts
+        let myRef: RaterRef = .account(store.userID)
+        if let reaction = myReaction {
+            updatedVerdicts[myRef] = reaction
+        } else {
+            updatedVerdicts.removeValue(forKey: myRef)
+        }
+        finalDraft.verdicts = updatedVerdicts
+        finalDraft.repeatDesire = repeatDesire
+
         isSaving = true
+        UIImpactFeedbackGenerator(style: .medium).impactOccurred()
         Task {
             let ok = await store.save(finalDraft)
             isSaving = false
             if ok {
+                UINotificationFeedbackGenerator().notificationOccurred(.success)
                 onDismiss()
             }
         }

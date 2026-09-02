@@ -15,18 +15,18 @@ import UIKit
 /// present are skipped, so it tops up rather than duplicating.
 enum SampleData {
 
-    // name, tags, days-ago each time it was served, verdict per kid
-    private static let plan: [(String, [String], [Int], [[Reaction]])] = [
-        ("Tacos", ["friday", "quick"], [5, 12, 19, 33], [[.loved, .loved], [.loved, .ok], [.loved, .loved], [.loved, .loved]]),
-        ("Pancakes", ["sweet", "quick"], [9, 30, 61], [[.loved, .loved], [.loved, .loved], [.ok, .loved]]),
-        ("Fish gratin", ["oven"], [21, 74], [[.disliked, .ok], [.disliked, .disliked]]),
-        ("Meatballs and mash", ["classic"], [3, 17, 40, 58], [[.loved, .ok], [.ok, .ok], [.loved, .ok], [.loved, .loved]]),
-        ("Pasta bolognese", ["quick", "classic"], [7, 24, 44], [[.ok, .loved], [.loved, .loved], [.ok, .loved]]),
-        ("Chickpea curry", ["veggie"], [48], [[.ok, .disliked]]),
-        ("Pea soup", ["thursday"], [90], [[.disliked, .ok]]),
-        ("Homemade pizza", ["weekend"], [14, 52], [[.loved, .loved], [.loved, .loved]]),
-        ("Salmon and potatoes", ["oven"], [28], [[.ok, .ok]]),
-        ("Chicken wok", ["quick", "veggie"], [], [])
+    // name, tags, cuisine, days-ago each time it was served, verdict per kid
+    private static let plan: [(String, [String], String?, [Int], [[Reaction]])] = [
+        ("Tacos", ["friday", "quick"], "mexican", [5, 12, 19, 33], [[.amazing, .amazing], [.amazing, .good], [.amazing, .amazing], [.amazing, .amazing]]),
+        ("Pancakes", ["sweet", "quick"], "nordic", [9, 30, 61], [[.amazing, .amazing], [.amazing, .amazing], [.good, .amazing]]),
+        ("Fish gratin", ["oven"], "nordic", [21, 74], [[.bad, .good], [.bad, .bad]]),
+        ("Meatballs and mash", ["classic"], "nordic", [3, 17, 40, 58], [[.amazing, .good], [.good, .good], [.amazing, .good], [.amazing, .amazing]]),
+        ("Pasta bolognese", ["quick", "classic"], "italian", [7, 24, 44], [[.good, .amazing], [.amazing, .amazing], [.good, .amazing]]),
+        ("Chickpea curry", ["veggie"], "indian", [48], [[.good, .bad]]),
+        ("Pea soup", ["thursday"], "nordic", [90], [[.bad, .good]]),
+        ("Homemade pizza", ["weekend"], "italian", [14, 52], [[.amazing, .amazing], [.amazing, .amazing]]),
+        ("Salmon and potatoes", ["oven"], "nordic", [28], [[.good, .good]]),
+        ("Chicken wok", ["quick", "veggie"], "asian", [], [])
     ]
 
     @MainActor
@@ -71,7 +71,7 @@ enum SampleData {
 
         let dishes: [Dish] = try await supabase
             .from("dishes")
-            .insert(todo.map { NewDish(ownerID: store.userID, name: $0.0, tags: $0.1) })
+            .insert(todo.map { NewDish(ownerID: store.userID, name: $0.0, tags: $0.1, cuisine: $0.2) })
             .select()
             .execute()
             .value
@@ -86,7 +86,7 @@ enum SampleData {
         /// the meals come back with their ids.
         var provenance: [(dishKey: String, day: Date, verdicts: [Reaction])] = []
 
-        for (name, _, daysAgoList, verdicts) in todo {
+        for (name, _, _, daysAgoList, verdicts) in todo {
             let key = name.normalizedForMatching
             guard let dish = byKey[key] else { continue }
             for (index, daysAgo) in daysAgoList.enumerated() {
@@ -138,6 +138,7 @@ enum SampleData {
     /// `<meal_id>/<uuid>.jpg`, the policy that reads the meal id back out of it, and
     /// the authenticated download — and it's the thumbnail the list and the calendar
     /// actually reach for.
+    @MainActor
     private static func attachPhotos(to meals: [Meal], dishes: [Dish]) async throws {
         let newestPerDish = Dictionary(grouping: meals, by: \.dishID)
             .compactMapValues { $0.max { $0.eatenOn < $1.eatenOn } }
@@ -151,10 +152,10 @@ enum SampleData {
                 .upload(path, data: data, options: FileOptions(contentType: "image/jpeg"))
             try await supabase
                 .from("meals")
-                .update(MealPhotoPatch(photo_path: path))
+                .update(MealPhotosPatch(photoPaths: [path]))
                 .eq("id", value: meal.id.uuidString)
                 .execute()
-            await PhotoCache.shared.put(data, for: path)
+            PhotoCache.shared.put(data, for: path)
         }
     }
 

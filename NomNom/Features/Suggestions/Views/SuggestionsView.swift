@@ -80,7 +80,7 @@ struct SuggestionsView: View {
                     .refreshable { await store.load() }
                 }
             }
-            .navigationTitle("What to eat")
+            .screenTitle("What to eat")
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
                     Button {
@@ -127,3 +127,10 @@ enum SuggestionSheet: Identifiable {
         }
     }
 }
+
+#Preview {
+    NomNomPreview(inNavigationStack: false) {
+        SuggestionsView()
+    }
+}
+

@@ -1,7 +1,7 @@
 import SwiftUI
 import PhotosUI
 
-/// Add or edit one meal: photo, title (autofilled), date, dinner party serving, per-person verdicts, notes.
+/// Add or edit one meal: multiple photos, title (with existing dish matching), date, dinner party serving, notes.
 struct MealEditorView: View {
     var mealID: UUID?
     var initialDate: Date?
@@ -14,90 +14,167 @@ struct MealEditorView: View {
     @State private var linkedDishID: UUID?
     @State private var date = Date.now
     @State private var notes = ""
+    @State private var effort: EffortLevel?
+    @State private var repeatDesire: RotationGoal?
     @State private var verdicts: [RaterRef: Reaction] = [:]
     @State private var tagsText = ""
     @State private var selectedParties: Set<UUID> = []
 
-    @State private var existingPath: String?
-    @State private var pickedData: Data?
-    @State private var didRemovePhoto = false
+    @State private var photosDraft = FoodStore.PhotosDraft()
+    @State private var recipeDraft = FoodStore.RecipeDraft()
+    @State private var loadedRecipeDishID: UUID?
 
-    @State private var pickerItem: PhotosPickerItem?
-    @State private var showCamera = false
-    @State private var loadingPhoto = false
     @State private var isSaving = false
     @State private var didLoad = false
 
     @State private var showingCreateParty = false
     @State private var newPartyName = ""
+    @State private var showDishPickerSheet = false
+    @State private var showRecipeEditorSheet = false
+    @State private var navigateToRecipeStep = false
     @State private var navigateToVerdict = false
 
     private var meal: Meal? { mealID.flatMap { store.meal($0) } }
     private var isEditing: Bool { mealID != nil }
     private var canProceed: Bool { !title.trimmedName.isEmpty && !isSaving }
 
+    private var existingMatchedDish: Dish? {
+        if let linkedDishID, let dish = store.dish(linkedDishID) { return dish }
+        let normalized = title.trimmedName.normalizedForMatching
+        guard !normalized.isEmpty else { return nil }
+        return store.myDishes.first { $0.normalizedName == normalized }
+    }
+
+    private var isExistingDish: Bool { existingMatchedDish != nil }
+
     private var currentDraft: FoodStore.MealDraft {
         let name = title.trimmedName
         let tags = TagsParser.parse(tagsText)
 
-        let photo: FoodStore.PhotoChange = {
-            if let pickedData { return .replaced(pickedData) }
-            if didRemovePhoto, existingPath != nil { return .removed }
-            return .unchanged
-        }()
-
         return FoodStore.MealDraft(mealID: mealID,
                                    dishName: name,
-                                   linkedDishID: linkedDishID,
+                                   linkedDishID: linkedDishID ?? existingMatchedDish?.id,
                                    eatenOn: date,
                                    notes: notes,
                                    tags: tags,
-                                   photo: photo,
+                                   photos: photosDraft,
+                                   effort: effort,
+                                   repeatDesire: repeatDesire,
                                    verdicts: verdicts,
-                                   servedParties: selectedParties)
+                                   servedParties: selectedParties,
+                                   recipe: recipeDraft)
+    }
+
+    private var currentDraftBinding: Binding<FoodStore.MealDraft> {
+        Binding(
+            get: { currentDraft },
+            set: { updated in
+                recipeDraft = updated.recipe ?? recipeDraft
+                tagsText = updated.tags.joined(separator: ", ")
+                notes = updated.notes
+                effort = updated.effort
+                repeatDesire = updated.repeatDesire
+                verdicts = updated.verdicts
+            }
+        )
     }
 
     var body: some View {
         NavigationStack {
-            Form {
-                MealEditorPhotoSection(pickedData: $pickedData,
-                                       didRemovePhoto: $didRemovePhoto,
-                                       pickerItem: $pickerItem,
-                                       showCamera: $showCamera,
-                                       existingPath: existingPath,
-                                       loadingPhoto: loadingPhoto)
-                titleSection
-                partiesSection
-                detailsSection
-                if isEditing { inviteSection }
-                if isEditing { deleteSection }
-            }
-            .navigationTitle(isEditing ? "Edit meal" : "New meal")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") { dismiss() }
-                        .disabled(isSaving)
+            ScrollView {
+                VStack(spacing: 16) {
+                    PageHeader(title: isEditing ? "Edit meal" : "New meal")
+
+                    MealPhotosPickerSection(draft: $photosDraft)
+
+                    MealEditorRecipeSection(
+                        title: $title,
+                        existingMatchedRecipe: existingMatchedDish,
+                        isExistingRecipe: isExistingDish,
+                        onPickRecipe: { showDishPickerSheet = true },
+                        onEditRecipe: { showRecipeEditorSheet = true },
+                        onRemoveRecipe: removeSelectedDish
+                    )
+
+                    MealEditorCookingTimeSection(effort: $effort)
+
+                    MealEditorPartiesSection(
+                        selectedParties: $selectedParties,
+                        onCreateParty: { showingCreateParty = true }
+                    )
+
+                    MealEditorDetailsSection(
+                        date: $date,
+                        notes: $notes,
+                        meal: meal,
+                        isSaving: isSaving,
+                        onDelete: deleteMeal
+                    )
                 }
-                ToolbarItem(placement: .confirmationAction) {
+                .padding(.horizontal, 16)
+                .padding(.vertical, 14)
+            }
+            .background(Color(uiColor: .systemGroupedBackground))
+            .screenTitle(isEditing ? "Edit meal" : "New meal", displayMode: .inline)
+            .toolbar {
+                ToolbarItem(placement: .topBarLeading) {
+                    Button {
+                        dismiss()
+                    } label: {
+                        Image(systemName: "xmark")
+                            .fontWeight(.semibold)
+                    }
+                    .disabled(isSaving)
+                    .accessibilityLabel("Cancel")
+                }
+
+                ToolbarItem(placement: .topBarTrailing) {
                     if isSaving {
-                        ProgressView()
+                        ProgressView().controlSize(.small)
                     } else if isEditing {
-                        Button("Save") { save() }
-                            .disabled(!canProceed)
-                            .fontWeight(.semibold)
+                        Button {
+                            save()
+                        } label: {
+                            Image(systemName: "checkmark")
+                                .fontWeight(.semibold)
+                        }
+                        .disabled(!canProceed)
                     } else {
-                        Button("Next") { navigateToVerdict = true }
-                            .disabled(!canProceed)
-                            .fontWeight(.semibold)
+                        Button("Next") {
+                            proceed()
+                        }
+                        .disabled(!canProceed)
+                        .fontWeight(.semibold)
                     }
                 }
             }
+            .navigationDestination(isPresented: $navigateToRecipeStep) {
+                MealRecipeStepView(draft: currentDraftBinding, onDismiss: { dismiss() })
+            }
             .navigationDestination(isPresented: $navigateToVerdict) {
-                MealVerdictStepView(draft: currentDraft,
-                                    pickedData: pickedData,
-                                    existingPath: existingPath,
-                                    onDismiss: { dismiss() })
+                MealVerdictStepView(draft: currentDraft, onDismiss: { dismiss() })
+            }
+            .sheet(isPresented: $showRecipeEditorSheet) {
+                DishRecipeEditSheet(dishName: $title,
+                                    recipeDraft: $recipeDraft,
+                                    tagsText: $tagsText)
+            }
+            .sheet(isPresented: $showDishPickerSheet) {
+                RecipePickerSheet(
+                    onSelectExistingRecipe: { recipe in
+                        title = recipe.name
+                        linkedDishID = recipe.id
+                        tagsText = recipe.tags.joined(separator: ", ")
+                        loadRecipe(from: recipe)
+                    },
+                    onSelectNewRecipe: { name in
+                        title = name
+                        linkedDishID = nil
+                        loadedRecipeDishID = nil
+                        recipeDraft = FoodStore.RecipeDraft()
+                        tagsText = ""
+                    }
+                )
             }
             .alert("New Dinner Party", isPresented: $showingCreateParty) {
                 TextField("Party name", text: $newPartyName)
@@ -113,104 +190,73 @@ struct MealEditorView: View {
                 }
                 Button("Cancel", role: .cancel) { newPartyName = "" }
             }
-            .sheet(isPresented: $showCamera) {
-                CameraPicker { image in
-                    pickedData = PhotoTools.prepare(image)
-                    didRemovePhoto = false
-                }
-                .ignoresSafeArea()
-            }
-            .task(id: pickerItem) { await loadPickedPhoto() }
             .onAppear(perform: loadIfNeeded)
+            .onChange(of: linkedDishID) { _, _ in syncMatchedDishRecipe() }
+            .onChange(of: title) { _, _ in syncMatchedDishRecipe() }
             .interactiveDismissDisabled(isSaving)
-        }
-    }
-
-    // MARK: - Form Sections
-
-    private var titleSection: some View {
-        Section("What was it?") {
-            DishNameField(text: $title,
-                          linkedDishID: $linkedDishID,
-                          dishes: store.myDishes,
-                          history: store.dishHistory)
-        }
-    }
-
-    private var partiesSection: some View {
-        Section {
-            ForEach(store.myParties) { party in
-                Toggle(isOn: Binding(
-                    get: { selectedParties.contains(party.id) },
-                    set: { isSelected in
-                        if isSelected {
-                            selectedParties.insert(party.id)
-                        } else {
-                            selectedParties.remove(party.id)
-                        }
-                    }
-                )) {
-                    Label(party.name, systemImage: "person.2.fill")
-                }
-            }
-
-            Button {
-                showingCreateParty = true
-            } label: {
-                Label("Create new party...", systemImage: "plus")
-                    .font(.subheadline)
-            }
-        } header: {
-            Text("Serve to Dinner Parties")
-        }
-    }
-
-    private var detailsSection: some View {
-        Section("Details") {
-            DatePicker("When", selection: $date, displayedComponents: [.date])
-            TextField("Tags, comma separated", text: $tagsText)
-                .textInputAutocapitalization(.never)
-                .autocorrectionDisabled()
-            TextField("Notes", text: $notes, axis: .vertical)
-                .lineLimit(2...5)
-        }
-    }
-
-    @ViewBuilder
-    private var inviteSection: some View {
-        if let meal, meal.createdBy == store.userID {
-            Section {
-                NavigationLink {
-                    InviteView(mealID: meal.id)
-                } label: {
-                    let count = store.invites(forMeal: meal.id).count
-                    Label(count == 0 ? "Ask someone to rate this"
-                                     : "Invited \(count) \(count == 1 ? "person" : "people")",
-                          systemImage: "person.badge.plus")
-                }
-            } footer: {
-                Text("They'll get this meal in their inbox and can leave their own verdict.")
+            .alert("Couldn't save meal",
+                   isPresented: Binding(get: { store.errorMessage != nil },
+                                        set: { if !$0 { store.errorMessage = nil } })) {
+                Button("OK") { store.errorMessage = nil }
+            } message: {
+                Text(store.errorMessage ?? "")
             }
         }
     }
 
-    private var deleteSection: some View {
-        Section {
-            Button(role: .destructive) {
-                guard let meal else { return }
-                Task {
-                    await store.delete(meal: meal)
-                    dismiss()
-                }
-            } label: {
-                Label("Delete this meal", systemImage: "trash")
-                    .frame(maxWidth: .infinity)
-            }
-            .disabled(isSaving)
+    private func removeSelectedDish() {
+        title = ""
+        linkedDishID = nil
+        loadedRecipeDishID = nil
+        recipeDraft = FoodStore.RecipeDraft()
+        tagsText = ""
+    }
+
+    private func deleteMeal() {
+        guard let meal else { return }
+        Task {
+            await store.delete(meal: meal)
+            dismiss()
         }
     }
 
-    // MARK: - Load / save
+    private func proceed() {
+        if isExistingDish {
+            navigateToVerdict = true
+        } else {
+            navigateToRecipeStep = true
+        }
+    }
+
+    private func syncMatchedDishRecipe() {
+        guard let dish = existingMatchedDish else { return }
+        guard dish.id != loadedRecipeDishID else { return }
+        loadRecipe(from: dish)
+    }
+
+    private func loadRecipe(from dish: Dish) {
+        loadedRecipeDishID = dish.id
+        tagsText = dish.tags.joined(separator: ", ")
+        recipeDraft = FoodStore.RecipeDraft(
+            text: dish.recipeText,
+            existingPhotoPaths: dish.recipePhotoPaths,
+            addedPhotoData: [],
+            removedPhotoPaths: [],
+            effort: dish.effort
+        )
+        if effort == nil, let dishEffort = dish.effort {
+            effort = dishEffort
+        }
+        if photosDraft.isEmpty {
+            let firstPhoto = store.servings(of: dish.id)
+                .sorted(by: { $0.eatenOn > $1.eatenOn })
+                .first(where: { !$0.photoPaths.isEmpty })?
+                .photoPaths.first
+            if let firstPhoto {
+                photosDraft = FoodStore.PhotosDraft(existingPaths: [firstPhoto])
+            }
+        }
+    }
 
     private func loadIfNeeded() {
         guard !didLoad else { return }
@@ -222,6 +268,7 @@ struct MealEditorView: View {
                 title = dish.name
                 linkedDishID = dish.id
                 tagsText = dish.tags.joined(separator: ", ")
+                loadRecipe(from: dish)
             }
             if let party = store.currentParty {
                 selectedParties.insert(party.id)
@@ -234,9 +281,15 @@ struct MealEditorView: View {
         linkedDishID = dish?.id
         date = meal.eatenOn
         notes = meal.notes
-        existingPath = meal.photoPath
+        effort = meal.effort
+        repeatDesire = meal.repeatDesire
+        photosDraft = FoodStore.PhotosDraft(existingPaths: meal.photoPaths)
         tagsText = (dish?.tags ?? []).joined(separator: ", ")
         selectedParties = Set(store.parties(forMeal: meal.id).map(\.id))
+
+        if let dish {
+            loadRecipe(from: dish)
+        }
 
         let mine = Set(store.myEaters.map(\.id))
         var loaded: [RaterRef: Reaction] = [:]
@@ -253,38 +306,11 @@ struct MealEditorView: View {
         verdicts = loaded
     }
 
-    private func loadPickedPhoto() async {
-        guard let pickerItem else { return }
-        loadingPhoto = true
-        defer { loadingPhoto = false }
-        if let data = try? await pickerItem.loadTransferable(type: Data.self) {
-            pickedData = PhotoTools.prepare(data) ?? data
-            didRemovePhoto = false
-        }
-    }
-
     private func save() {
         let name = title.trimmedName
         guard !name.isEmpty else { return }
 
-        let tags = TagsParser.parse(tagsText)
-
-        let photo: FoodStore.PhotoChange = {
-            if let pickedData { return .replaced(pickedData) }
-            if didRemovePhoto, existingPath != nil { return .removed }
-            return .unchanged
-        }()
-
-        let draft = FoodStore.MealDraft(mealID: mealID,
-                                        dishName: name,
-                                        linkedDishID: linkedDishID,
-                                        eatenOn: date,
-                                        notes: notes,
-                                        tags: tags,
-                                        photo: photo,
-                                        verdicts: verdicts,
-                                        servedParties: selectedParties)
-
+        let draft = currentDraft
         isSaving = true
         Task {
             let ok = await store.save(draft)
@@ -293,3 +319,18 @@ struct MealEditorView: View {
         }
     }
 }
+
+#Preview("New Meal") {
+    NomNomPreview {
+        MealEditorView()
+    }
+}
+
+#Preview("Edit Meal") {
+    NomNomPreview { store in
+        if let meal = store.meals.first {
+            MealEditorView(mealID: meal.id)
+        }
+    }
+}
+

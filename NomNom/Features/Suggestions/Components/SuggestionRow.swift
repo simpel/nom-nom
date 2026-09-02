@@ -19,11 +19,11 @@ struct SuggestionRow: View {
 
     var body: some View {
         NavigationLink {
-            DishInsightView(suggestion: suggestion)
+            RecipeInsightView(suggestion: suggestion)
         } label: {
             HStack(alignment: .top, spacing: 12) {
                 ZStack(alignment: .topLeading) {
-                    RemoteMealPhoto(path: suggestion.photoPath, cornerRadius: 10)
+                    RemoteMealPhoto(path: suggestion.photoPath, cornerRadius: AppRadius.photo)
                         .frame(width: 60, height: 60)
                     if rank <= 3 {
                         Text("\(rank)")

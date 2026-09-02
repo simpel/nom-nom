@@ -54,6 +54,13 @@ struct PartyMember: Identifiable, Hashable, Decodable {
         userID = try container.decode(UUID.self, forKey: .userID)
         joinedAt = try container.decodeTimestamp(.joinedAt)
     }
+
+    init(id: UUID = UUID(), partyID: UUID, userID: UUID, joinedAt: Date = .now) {
+        self.id = id
+        self.partyID = partyID
+        self.userID = userID
+        self.joinedAt = joinedAt
+    }
 }
 
 struct PartyInvite: Identifiable, Hashable, Decodable {
@@ -111,6 +118,13 @@ struct MealParty: Identifiable, Hashable, Decodable {
         mealID = try container.decode(UUID.self, forKey: .mealID)
         partyID = try container.decode(UUID.self, forKey: .partyID)
         createdAt = try container.decodeTimestamp(.createdAt)
+    }
+
+    init(id: UUID = UUID(), mealID: UUID, partyID: UUID, createdAt: Date = .now) {
+        self.id = id
+        self.mealID = mealID
+        self.partyID = partyID
+        self.createdAt = createdAt
     }
 }
 

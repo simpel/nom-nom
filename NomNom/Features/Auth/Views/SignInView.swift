@@ -166,7 +166,7 @@ struct SignInView: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(12)
         .background {
-            RoundedRectangle(cornerRadius: 10, style: .continuous)
+            RoundedRectangle(cornerRadius: AppRadius.card, style: .continuous)
                 .fill(Color.secondary.opacity(0.1))
         }
     }

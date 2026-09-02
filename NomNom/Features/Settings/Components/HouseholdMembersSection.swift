@@ -34,107 +34,104 @@ struct HouseholdMembersSection: View {
     }
 
     var body: some View {
-        // MARK: - Add Household Member by Email
-        Section {
-            HStack(spacing: 8) {
-                TextField("member@example.com", text: $email)
-                    .textContentType(.emailAddress)
-                    .keyboardType(.emailAddress)
-                    .textInputAutocapitalization(.never)
-                    .autocorrectionDisabled()
-                    .focused($emailFocused)
-                    .submitLabel(.send)
-                    .onSubmit {
-                        if isEmailValid {
-                            sendInvite()
-                        }
-                    }
-
-                if isSending {
-                    ProgressView()
-                        .controlSize(.small)
-                } else {
-                    Button("Send", action: sendInvite)
-                        .buttonStyle(.borderedProminent)
-                        .controlSize(.small)
-                        .disabled(!isEmailValid || isSending)
-                }
-            }
-        } header: {
-            Text("Add Household Member")
-        } footer: {
-            if showInvalidFormatError {
-                Text("Please enter a valid email address (e.g. name@example.com).")
-                    .foregroundStyle(.red)
-            } else {
-                Text("Enter an email address. This will send an email with an invite link to join your household.")
-            }
-        }
-
-        // MARK: - Active Household Members
-        if !partyMembers.isEmpty {
-            Section {
-                ForEach(partyMembers) { member in
-                    HStack(spacing: 12) {
-                        Text(member.avatarEmoji)
-                            .font(.title2)
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text(member.shownName)
-                                .font(.body)
-                            if member.id == store.userID {
-                                Text("You")
-                                    .font(.caption2)
-                                    .foregroundStyle(.secondary)
+        SectionCard("Add Household Member") {
+            VStack(alignment: .leading, spacing: 10) {
+                HStack(spacing: 8) {
+                    TextField("member@example.com", text: $email)
+                        .textContentType(.emailAddress)
+                        .keyboardType(.emailAddress)
+                        .textInputAutocapitalization(.never)
+                        .autocorrectionDisabled()
+                        .focused($emailFocused)
+                        .submitLabel(.send)
+                        .onSubmit {
+                            if isEmailValid {
+                                sendInvite()
                             }
                         }
+
+                    if isSending {
+                        ProgressView()
+                            .controlSize(.small)
+                    } else {
+                        Button("Send", action: sendInvite)
+                            .buttonStyle(.borderedProminent)
+                            .controlSize(.small)
+                            .disabled(!isEmailValid || isSending)
                     }
-                    .padding(.vertical, 2)
                 }
-            } header: {
-                Text("Members (\(partyMembers.count))")
+
+                if showInvalidFormatError {
+                    Text("Please enter a valid email address (e.g. name@example.com).")
+                        .font(.caption2)
+                        .foregroundStyle(.red)
+                } else {
+                    Text("Enter an email address. This will send an email with an invite link to join your household.")
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
+                }
             }
         }
 
-        // MARK: - Pending Email Invitations
-        if !pendingInvites.isEmpty {
-            Section {
-                ForEach(pendingInvites) { invite in
-                    HStack(spacing: 12) {
-                        Image(systemName: "envelope.badge")
-                            .foregroundStyle(.orange)
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text(invite.inviteeEmail ?? "Invited member")
-                                .font(.subheadline.weight(.medium))
-                            Text("Invite link sent • Pending")
-                                .font(.caption2)
-                                .foregroundStyle(.secondary)
-                        }
+        if !partyMembers.isEmpty {
+            SectionCard("Members (\(partyMembers.count))") {
+                VStack(spacing: 8) {
+                    ForEach(partyMembers) { member in
+                        NavigationLink {
+                            PersonDetailView(raterRef: .account(member.id))
+                        } label: {
+                            HStack(spacing: 12) {
+                                ZStack {
+                                    Circle()
+                                        .fill(Color.accentColor.opacity(0.12))
+                                        .frame(width: 32, height: 32)
+                                    Text(member.shownName.prefix(1).uppercased())
+                                        .font(.subheadline.weight(.bold))
+                                        .foregroundStyle(Color.accentColor)
+                                }
 
-                        Spacer()
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text(member.shownName)
+                                        .font(.body)
+                                        .foregroundStyle(.primary)
+                                    Text(member.id == store.userID ? "You • View taste profile" : "View taste profile")
+                                        .font(.caption2)
+                                        .foregroundStyle(.secondary)
+                                }
 
-                        Button("Revoke", role: .destructive) {
-                            Task { await store.revokePartyInvite(invite) }
+                                Spacer()
+
+                                Image(systemName: "chevron.right")
+                                    .font(.caption2)
+                                    .foregroundStyle(.tertiary)
+                            }
+                            .padding(.vertical, 2)
                         }
-                        .buttonStyle(.bordered)
-                        .controlSize(.small)
+                        .buttonStyle(.plain)
+
+                        if member.id != partyMembers.last?.id {
+                            Divider()
+                        }
                     }
-                    .padding(.vertical, 2)
                 }
-            } header: {
-                Text("Pending Invitations")
             }
         }
 
-        // MARK: - Local Eaters (If any exist)
+        HouseholdPendingInvitesSection(
+            pendingInvites: pendingInvites,
+            successAlertMessage: $successAlertMessage
+        )
+
         if !store.myEaters.isEmpty {
-            Section {
-                ForEach(store.myEaters) { eater in
-                    EaterRow(eater: eater, emojiChoices: emojiChoices)
+            SectionCard("Other Profiles (No account)") {
+                VStack(spacing: 8) {
+                    ForEach(store.myEaters) { eater in
+                        EaterRow(eater: eater, emojiChoices: emojiChoices)
+                        if eater.id != store.myEaters.last?.id {
+                            Divider()
+                        }
+                    }
                 }
-                .onDelete(perform: deleteEater)
-                .onMove(perform: moveEater)
-            } header: {
-                Text("Other Profiles (No account)")
             }
         }
     }
@@ -145,7 +142,6 @@ struct HouseholdMembersSection: View {
         isSending = true
 
         Task {
-            // Find existing party or create a default household party if none exists yet
             let party: Party?
             if let existing = activeParty {
                 party = existing
@@ -182,45 +178,5 @@ struct HouseholdMembersSection: View {
         var reordered = store.myEaters
         reordered.move(fromOffsets: source, toOffset: destination)
         Task { await store.reorderEaters(reordered) }
-    }
-}
-
-struct EaterRow: View {
-    let eater: Eater
-    let emojiChoices: [String]
-
-    @Environment(FoodStore.self) private var store
-
-    @State private var name: String
-
-    init(eater: Eater, emojiChoices: [String]) {
-        self.eater = eater
-        self.emojiChoices = emojiChoices
-        self._name = State(initialValue: eater.name)
-    }
-
-    var body: some View {
-        HStack(spacing: 12) {
-            Menu {
-                ForEach(emojiChoices, id: \.self) { emoji in
-                    Button(emoji) { commit { $0.emoji = emoji } }
-                }
-            } label: {
-                Text(eater.emoji).font(.title2)
-            }
-
-            TextField("Name", text: $name)
-                .onSubmit { commit { $0.name = name } }
-        }
-        .onChange(of: eater.name) { _, updated in
-            if updated != name { name = updated }
-        }
-    }
-
-    private func commit(_ change: (inout Eater) -> Void) {
-        var updated = eater
-        updated.name = name.trimmedName.isEmpty ? eater.name : name.trimmedName
-        change(&updated)
-        Task { await store.update(eater: updated) }
     }
 }

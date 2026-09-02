@@ -13,36 +13,44 @@ struct ProfileSettingsSection: View {
     @State private var didLoadProfile = false
 
     var body: some View {
-        Section {
-            HStack(spacing: 12) {
-                Menu {
-                    ForEach(emojiChoices, id: \.self) { emoji in
-                        Button(emoji) { myEmoji = emoji; saveProfile() }
+        SectionCard("Your Profile") {
+            VStack(alignment: .leading, spacing: 12) {
+                HStack(spacing: 14) {
+                    ZStack {
+                        Circle()
+                            .fill(Color.accentColor.opacity(0.12))
+                            .frame(width: 48, height: 48)
+                        Text(firstName.prefix(1).uppercased())
+                            .font(.title3.weight(.bold))
+                            .foregroundStyle(Color.accentColor)
                     }
+
+                    VStack(spacing: 8) {
+                        TextField("First name", text: $firstName)
+                            .textContentType(.givenName)
+                            .onSubmit(saveProfile)
+                        Divider()
+                        TextField("Last name", text: $lastName)
+                            .textContentType(.familyName)
+                            .onSubmit(saveProfile)
+                    }
+                }
+
+                Text("This is the name other dinner party members see when you share meals and rate dishes.")
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+
+                Divider()
+
+                Button(role: .destructive) {
+                    confirmSignOut = true
                 } label: {
-                    Text(myEmoji).font(.title2)
+                    Label("Sign out", systemImage: "rectangle.portrait.and.arrow.right")
+                        .font(.subheadline.weight(.semibold))
+                        .foregroundStyle(.red)
                 }
-
-                VStack(spacing: 8) {
-                    TextField("First name", text: $firstName)
-                        .textContentType(.givenName)
-                        .onSubmit(saveProfile)
-                    Divider()
-                    TextField("Last name", text: $lastName)
-                        .textContentType(.familyName)
-                        .onSubmit(saveProfile)
-                }
+                .buttonStyle(.plain)
             }
-
-            Button(role: .destructive) {
-                confirmSignOut = true
-            } label: {
-                Label("Sign out", systemImage: "rectangle.portrait.and.arrow.right")
-            }
-        } header: {
-            Text("Your Profile")
-        } footer: {
-            Text("This is the name other dinner party members see when you share meals and rate dishes.")
         }
         .onAppear(perform: loadProfileIfNeeded)
     }

@@ -12,6 +12,7 @@ struct PartyDetailView: View {
     @State private var newName = ""
     @State private var confirmLeave = false
     @State private var memberToRemove: Profile?
+    @State private var resentAlertMessage: String?
 
     private var party: Party? { store.party(partyID) }
     private var members: [Profile] { store.members(of: partyID) }
@@ -20,22 +21,27 @@ struct PartyDetailView: View {
     var body: some View {
         Group {
             if let party {
-                List {
-                    headerSection(party: party)
-                    membersSection(party: party)
-                    if !invites.isEmpty {
-                        invitesSection
+                ScrollView {
+                    VStack(spacing: 16) {
+                        headerSection(party: party)
+                        membersSection(party: party)
+                        if !invites.isEmpty {
+                            invitesSection
+                        }
+                        dangerSection(party: party)
                     }
-                    dangerSection(party: party)
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 14)
                 }
-                .navigationTitle(party.name)
-                .navigationBarTitleDisplayMode(.inline)
+                .background(Color(uiColor: .systemGroupedBackground))
+                .screenTitle(party.name)
                 .toolbar {
-                    ToolbarItem(placement: .primaryAction) {
+                    ToolbarItem(placement: .topBarTrailing) {
                         Button {
-                            showingInvite = true
+                            dismiss()
                         } label: {
-                            Label("Invite", systemImage: "person.badge.plus")
+                            Image(systemName: "checkmark")
+                                .fontWeight(.semibold)
                         }
                     }
                 }
@@ -73,6 +79,14 @@ struct PartyDetailView: View {
                 } message: {
                     Text("They will no longer be able to see meals served to this party.")
                 }
+                .alert("Invitation Resent", isPresented: Binding(
+                    get: { resentAlertMessage != nil },
+                    set: { if !$0 { resentAlertMessage = nil } }
+                )) {
+                    Button("OK") { resentAlertMessage = nil }
+                } message: {
+                    Text(resentAlertMessage ?? "")
+                }
             } else {
                 ContentUnavailableView("Party Not Found", systemImage: "person.2.slash")
             }
@@ -80,10 +94,10 @@ struct PartyDetailView: View {
     }
 
     private func headerSection(party: Party) -> some View {
-        Section {
+        SectionCard("Party Info") {
             HStack {
                 Text(party.name)
-                    .font(.headline)
+                    .font(.body.weight(.medium))
                 Spacer()
                 Button("Rename") {
                     newName = party.name
@@ -91,80 +105,124 @@ struct PartyDetailView: View {
                 }
                 .font(.subheadline)
             }
-        } header: {
-            Text("Party Info")
         }
     }
 
     private func membersSection(party: Party) -> some View {
-        Section("Members (\(members.count))") {
-            ForEach(members) { member in
-                HStack(spacing: 12) {
-                    Text(member.avatarEmoji)
-                        .font(.title2)
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text(member.shownName)
-                            .font(.body)
-                        if member.id == store.userID {
-                            Text("You")
-                                .font(.caption2)
-                                .foregroundStyle(.secondary)
+        SectionCard("Members (\(members.count))") {
+            VStack(spacing: 8) {
+                ForEach(members) { member in
+                    HStack(spacing: 12) {
+                        ZStack {
+                            Circle()
+                                .fill(Color.accentColor.opacity(0.12))
+                                .frame(width: 32, height: 32)
+                            Text(member.shownName.prefix(1).uppercased())
+                                .font(.subheadline.weight(.bold))
+                                .foregroundStyle(Color.accentColor)
+                        }
+
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(member.shownName)
+                                .font(.body)
+                                .foregroundStyle(.primary)
+                            if member.id == store.userID {
+                                Text("You")
+                                    .font(.caption2)
+                                    .foregroundStyle(.secondary)
+                            }
+                        }
+
+                        Spacer()
+
+                        if member.id != store.userID {
+                            Button(role: .destructive) {
+                                memberToRemove = member
+                            } label: {
+                                Image(systemName: "minus.circle")
+                                    .foregroundStyle(.red)
+                            }
+                            .buttonStyle(.plain)
                         }
                     }
+                    .padding(.vertical, 2)
 
-                    Spacer()
-
-                    if member.id != store.userID {
-                        Button(role: .destructive) {
-                            memberToRemove = member
-                        } label: {
-                            Image(systemName: "minus.circle")
-                                .foregroundStyle(.red)
-                        }
-                        .buttonStyle(.plain)
-                    }
+                    Divider()
                 }
-                .padding(.vertical, 2)
+
+                Button {
+                    showingInvite = true
+                } label: {
+                    Label("Invite member", systemImage: "person.badge.plus")
+                        .font(.subheadline.weight(.semibold))
+                }
+                .buttonStyle(.plain)
+                .padding(.top, 4)
             }
         }
     }
 
     private var invitesSection: some View {
-        Section("Invited (\(invites.count))") {
-            ForEach(invites) { invite in
-                HStack(spacing: 12) {
-                    Image(systemName: "envelope.fill")
-                        .foregroundStyle(.secondary)
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text(invite.inviteeEmail ?? "Invited member")
-                            .font(.subheadline)
-                        Text(invite.status.rawValue.capitalized)
-                            .font(.caption2)
-                            .foregroundStyle(invite.status == .pending ? .orange : .secondary)
-                    }
-
-                    Spacer()
-
-                    if invite.isPending {
-                        Button("Revoke", role: .destructive) {
-                            Task { await store.revokePartyInvite(invite) }
+        SectionCard("Invited (\(invites.count))") {
+            VStack(spacing: 8) {
+                ForEach(invites) { invite in
+                    HStack(spacing: 12) {
+                        Image(systemName: "envelope.fill")
+                            .foregroundStyle(.secondary)
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(invite.inviteeEmail ?? "Invited member")
+                                .font(.subheadline)
+                                .foregroundStyle(.primary)
+                            Text(invite.status.rawValue.capitalized)
+                                .font(.caption2)
+                                .foregroundStyle(invite.status == .pending ? .orange : .secondary)
                         }
-                        .buttonStyle(.bordered)
-                        .controlSize(.small)
+
+                        Spacer()
+
+                        if invite.isPending {
+                            HStack(spacing: 8) {
+                                Button("Resend") {
+                                    Task {
+                                        let success = await store.resendPartyInvite(invite)
+                                        if success {
+                                            resentAlertMessage = "Invitation resent to \(invite.inviteeEmail ?? "member")."
+                                        }
+                                    }
+                                }
+                                .buttonStyle(.bordered)
+                                .controlSize(.small)
+
+                                Button(role: .destructive) {
+                                    Task { await store.revokePartyInvite(invite) }
+                                } label: {
+                                    Image(systemName: "trash")
+                                        .foregroundStyle(.red)
+                                }
+                                .buttonStyle(.plain)
+                            }
+                        }
+                    }
+                    .padding(.vertical, 2)
+
+                    if invite.id != invites.last?.id {
+                        Divider()
                     }
                 }
-                .padding(.vertical, 2)
             }
         }
     }
 
     private func dangerSection(party: Party) -> some View {
-        Section {
+        SectionCard {
             Button(role: .destructive) {
                 confirmLeave = true
             } label: {
                 Label("Leave party", systemImage: "arrow.right.door")
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(.red)
             }
+            .buttonStyle(.plain)
         }
     }
 }

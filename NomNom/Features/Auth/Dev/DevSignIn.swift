@@ -41,29 +41,31 @@ enum DevSignIn {
 
     private static let mailpit = URL(string: "http://127.0.0.1:54324")!
 
+    static var isRequested: Bool {
+        requestedEmail != nil
+    }
+
     @MainActor
-    static func runIfRequested(_ auth: AuthController) async {
-        guard let email = requestedEmail else { return }
+    static func run(_ auth: AuthController) async {
+        guard let email = requestedEmail else {
+            auth.start()
+            return
+        }
         guard isLocalStack else {
             print("[DevSignIn] refusing to run: \(SupabaseConfig.url) is not the local stack")
+            auth.start()
             return
         }
 
-        // Drop any existing session first. "Sign in as this person" should mean
-        // that even when somebody else is already signed in — and the session
-        // outlives the app container, so after a `db reset` the keychain still
-        // holds a perfectly unexpired token for a user id that no longer exists.
-        // Left in place it shows the tabs and then fails every write on a foreign
-        // key against auth.users.
-        try? await supabase.auth.signOut()
-
         if await signInWithFixedPassword(as: email) {
             print("[DevSignIn] signed in as \(email)")
+            auth.start()
             return
         }
 
         print("[DevSignIn] admin route unavailable, falling back to Mailpit")
         await signInThroughMailpit(as: email, auth)
+        auth.start()
     }
 
     // MARK: - The fast route: admin API + a known password

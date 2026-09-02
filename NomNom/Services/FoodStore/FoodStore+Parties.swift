@@ -229,4 +229,27 @@ extension FoodStore {
             errorMessage = Self.describe(error)
         }
     }
+
+    @discardableResult
+    func resendPartyInvite(_ invite: PartyInvite) async -> Bool {
+        guard let email = invite.inviteeEmail else { return false }
+        struct SendInvitePayload: Encodable {
+            let party_id: String
+            let invitee_email: String
+        }
+        let payload = SendInvitePayload(party_id: invite.partyID.uuidString, invitee_email: email)
+        do {
+            try await supabase.functions.invoke(
+                "send-invite-email",
+                options: FunctionInvokeOptions(body: payload)
+            )
+            Self.log.info("Invite email resent successfully to \(email)")
+            errorMessage = nil
+            return true
+        } catch {
+            Self.log.error("send-invite-email function returned error: \(error.localizedDescription)")
+            errorMessage = Self.describe(error)
+            return false
+        }
+    }
 }

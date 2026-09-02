@@ -34,6 +34,24 @@ struct Eater: Identifiable, Hashable, Decodable {
         createdAt = try container.decodeTimestamp(.createdAt)
     }
 
+    init(
+        id: UUID = UUID(),
+        ownerID: UUID,
+        name: String,
+        emoji: String = "🧒",
+        isActive: Bool = true,
+        sortIndex: Int = 0,
+        createdAt: Date = .now
+    ) {
+        self.id = id
+        self.ownerID = ownerID
+        self.name = name
+        self.emoji = emoji
+        self.isActive = isActive
+        self.sortIndex = sortIndex
+        self.createdAt = createdAt
+    }
+
     var raterRef: RaterRef { .eater(id) }
 }
 

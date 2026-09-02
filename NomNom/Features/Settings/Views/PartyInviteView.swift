@@ -36,20 +36,11 @@ struct PartyInviteView: View {
             }
             .navigationTitle("Invite to \(party.name)")
             .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") { dismiss() }
-                        .disabled(isSending)
-                }
-                ToolbarItem(placement: .confirmationAction) {
-                    if isSending {
-                        ProgressView()
-                    } else {
-                        Button("Send") { send() }
-                            .disabled(!email.isValidEmail || isSending)
-                    }
-                }
-            }
+            .sheetCommitToolbar(
+                isSaving: isSending,
+                canSave: email.isValidEmail,
+                onSave: send
+            )
             .onAppear { focused = true }
         }
         .presentationDetents([.medium])

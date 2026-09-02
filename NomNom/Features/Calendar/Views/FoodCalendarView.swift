@@ -33,7 +33,7 @@ struct FoodCalendarView: View {
                 }
                 .padding(.vertical)
             }
-            .navigationTitle("Calendar")
+            .screenTitle("Calendar")
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
                     Button("Today") {
@@ -96,55 +96,42 @@ struct FoodCalendarView: View {
     // MARK: - Selected day
 
     private var daySection: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            HStack {
-                Text(selectedDay, format: .dateTime.weekday(.wide).day().month(.wide))
-                    .font(.headline)
-                Spacer()
+        SectionCard(
+            title: selectedDay.formatted(.dateTime.weekday(.wide).day().month(.wide))
+        ) {
+            VStack(spacing: 8) {
+                if selectedDayMeals.isEmpty {
+                    Text("Nothing logged for this day.")
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(.vertical, 4)
+                } else {
+                    ForEach(selectedDayMeals) { meal in
+                        NavigationLink {
+                            MealDetailView(mealID: meal.id)
+                        } label: {
+                            MealRow(meal: meal)
+                                .padding(.vertical, 4)
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+
                 Button {
                     addingForDay = selectedDay
                 } label: {
-                    Label("Add", systemImage: "plus")
-                        .font(.subheadline)
-                }
-            }
-
-            if selectedDayMeals.isEmpty {
-                Text("Nothing logged for this day.")
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(.vertical, 8)
-            } else {
-                ForEach(selectedDayMeals) { meal in
-                    NavigationLink {
-                        MealDetailView(mealID: meal.id)
-                    } label: {
-                        HStack(spacing: 12) {
-                            RemoteMealPhoto(path: meal.photoPath, cornerRadius: 10)
-                                .frame(width: 64, height: 64)
-                            VStack(alignment: .leading, spacing: 4) {
-                                Text(store.dishName(forMeal: meal))
-                                    .font(.body.weight(.medium))
-                                    .foregroundStyle(.primary)
-                                let verdicts = store.verdictEntries(forMeal: meal.id)
-                                if !verdicts.isEmpty {
-                                    VerdictStrip(entries: verdicts)
-                                }
-                            }
-                            Spacer()
-                            Image(systemName: "chevron.right")
-                                .font(.caption)
-                                .foregroundStyle(.tertiary)
-                        }
-                        .padding(10)
-                        .background {
-                            RoundedRectangle(cornerRadius: 12, style: .continuous)
-                                .fill(Color.secondary.opacity(0.08))
-                        }
+                    HStack {
+                        Image(systemName: "plus")
+                        Text("Add meal")
                     }
-                    .buttonStyle(.plain)
+                    .font(.subheadline.weight(.semibold))
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 6)
                 }
+                .buttonStyle(.bordered)
+                .tint(.accentColor)
+                .padding(.top, 4)
             }
         }
         .padding(.horizontal)
@@ -157,3 +144,10 @@ struct FoodCalendarView: View {
         }
     }
 }
+
+#Preview {
+    NomNomPreview(inNavigationStack: false) {
+        FoodCalendarView()
+    }
+}
+

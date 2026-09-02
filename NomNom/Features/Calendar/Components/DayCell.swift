@@ -11,14 +11,14 @@ struct DayCell: View {
 
     var body: some View {
         ZStack(alignment: .bottomTrailing) {
-            RoundedRectangle(cornerRadius: 10, style: .continuous)
+            RoundedRectangle(cornerRadius: AppRadius.standard, style: .continuous)
                 .fill(Color.secondary.opacity(0.08))
 
             if photoPath != nil {
-                RemoteMealPhoto(path: photoPath, cornerRadius: 10)
+                RemoteMealPhoto(path: photoPath, cornerRadius: AppRadius.photo)
                     .frame(height: 52)
                     .overlay {
-                        RoundedRectangle(cornerRadius: 10, style: .continuous)
+                        RoundedRectangle(cornerRadius: AppRadius.photo, style: .continuous)
                             .fill(.black.opacity(0.28))
                     }
             }
@@ -45,13 +45,13 @@ struct DayCell: View {
             }
         }
         .frame(height: 52)
-        .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+        .clipShape(RoundedRectangle(cornerRadius: AppRadius.standard, style: .continuous))
         .overlay {
-            RoundedRectangle(cornerRadius: 10, style: .continuous)
+            RoundedRectangle(cornerRadius: AppRadius.standard, style: .continuous)
                 .strokeBorder(isSelected ? Color.accentColor : (isToday ? Color.accentColor.opacity(0.45) : .clear),
                               lineWidth: isSelected ? 2 : 1.5)
         }
-        .contentShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+        .contentShape(RoundedRectangle(cornerRadius: AppRadius.standard, style: .continuous))
         .accessibilityElement(children: .combine)
         .accessibilityLabel(accessibilityText)
     }

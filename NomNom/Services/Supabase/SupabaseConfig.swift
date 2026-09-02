@@ -33,6 +33,9 @@ enum SupabaseConfig {
     /// storage policies read the meal id out of that first path segment to decide
     /// who may see the object, so the layout is load-bearing.
     static let photoBucket = "meal-photos"
+
+    /// Private bucket holding recipe photos, keyed `<dish_id>/<uuid>.jpg`.
+    static let recipeBucket = "recipe-photos"
 }
 
 /// One client for the whole app. `SupabaseClient` keeps the session in the
@@ -40,5 +43,8 @@ enum SupabaseConfig {
 /// think about token lifetime.
 let supabase = SupabaseClient(
     supabaseURL: SupabaseConfig.url,
-    supabaseKey: SupabaseConfig.publishableKey
+    supabaseKey: SupabaseConfig.publishableKey,
+    options: SupabaseClientOptions(
+        auth: .init(emitLocalSessionAsInitialSession: true)
+    )
 )

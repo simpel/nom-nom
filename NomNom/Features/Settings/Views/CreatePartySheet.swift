@@ -21,22 +21,12 @@ struct CreatePartySheet: View {
                     Text("Any member can invite others, and meals can be shared with this party.")
                 }
             }
-            .navigationTitle("New Dinner Party")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") { dismiss() }
-                        .disabled(isCreating)
-                }
-                ToolbarItem(placement: .confirmationAction) {
-                    if isCreating {
-                        ProgressView()
-                    } else {
-                        Button("Create") { create() }
-                            .disabled(name.trimmedName.isEmpty)
-                    }
-                }
-            }
+            .screenTitle("New Dinner Party", displayMode: .inline)
+            .sheetCommitToolbar(
+                isSaving: isCreating,
+                canSave: !name.trimmedName.isEmpty,
+                onSave: create
+            )
         }
         .presentationDetents([.medium])
     }

@@ -24,3 +24,10 @@ enum PhotoTools {
         return prepare(image)
     }
 }
+
+/// Lightweight wrapper for presenting sheet viewers by index.
+struct PhotoIndexWrapper: Identifiable {
+    let index: Int
+    var id: Int { index }
+}
+

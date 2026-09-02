@@ -3,7 +3,8 @@ import SwiftUI
 /// A meal photo stored in private cloud storage, downloaded and cached via PhotoCache.
 struct RemoteMealPhoto: View {
     let path: String?
-    var cornerRadius: CGFloat = 12
+    var cornerRadius: CGFloat = AppRadius.photo
+    var bucket: String = SupabaseConfig.photoBucket
 
     @State private var data: Data?
     @State private var isLoading = false
@@ -28,7 +29,7 @@ struct RemoteMealPhoto: View {
             return
         }
         isLoading = true
-        let loaded = await PhotoCache.shared.data(for: path)
+        let loaded = await PhotoCache.shared.data(for: path, bucket: bucket)
         // Guard against row recycling while request was in-flight
         guard self.path == path else { return }
         data = loaded

@@ -113,9 +113,12 @@ struct EaterVerdict: Identifiable, Hashable {
 
     var reaction: Reaction? {
         guard let score else { return nil }
-        if score >= 0.7 { return .loved }
-        if score >= 0.34 { return .ok }
-        return .disliked
+        if score >= 0.85 { return .amazing }
+        if score >= 0.70 { return .great }
+        if score >= 0.50 { return .good }
+        if score >= 0.30 { return .meh }
+        if score >= 0.15 { return .bad }
+        return .inedible
     }
 }
 

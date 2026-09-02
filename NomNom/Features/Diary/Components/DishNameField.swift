@@ -115,7 +115,7 @@ struct DishNameField: View {
                 .padding(.vertical, 6)
                 .padding(.horizontal, 10)
                 .background {
-                    RoundedRectangle(cornerRadius: 8, style: .continuous)
+                    RoundedRectangle(cornerRadius: AppRadius.button, style: .continuous)
                         .fill(Color.orange.opacity(0.12))
                 }
             }
@@ -151,7 +151,7 @@ struct DishNameField: View {
                 }
                 .padding(.horizontal, 10)
                 .background {
-                    RoundedRectangle(cornerRadius: 10, style: .continuous)
+                    RoundedRectangle(cornerRadius: AppRadius.input, style: .continuous)
                         .fill(Color.secondary.opacity(0.08))
                 }
                 .transition(.opacity)

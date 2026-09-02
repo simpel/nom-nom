@@ -17,61 +17,62 @@ struct ProfileSheetView: View {
 
     var body: some View {
         NavigationStack {
-            Form {
-                Section {
-                    HStack(spacing: 12) {
-                        Menu {
-                            ForEach(emojiChoices, id: \.self) { emoji in
-                                Button(emoji) {
-                                    myEmoji = emoji
-                                    saveProfile()
+            ScrollView {
+                VStack(spacing: 16) {
+                    SectionCard("Profile Details") {
+                        VStack(alignment: .leading, spacing: 10) {
+                            HStack(spacing: 14) {
+                                ZStack {
+                                    Circle()
+                                        .fill(Color.accentColor.opacity(0.12))
+                                        .frame(width: 48, height: 48)
+                                    Text(firstName.prefix(1).uppercased())
+                                        .font(.title3.weight(.bold))
+                                        .foregroundStyle(Color.accentColor)
+                                }
+
+                                VStack(spacing: 8) {
+                                    TextField("First name", text: $firstName)
+                                        .textContentType(.givenName)
+                                        .onSubmit(saveProfile)
+                                    Divider()
+                                    TextField("Last name", text: $lastName)
+                                        .textContentType(.familyName)
+                                        .onSubmit(saveProfile)
                                 }
                             }
+
+                            Text("This is how other dinner party members will see you.")
+                                .font(.caption2)
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+
+                    NotificationPreferencesSection()
+
+                    SectionCard {
+                        Button(role: .destructive) {
+                            confirmSignOut = true
                         } label: {
-                            Text(myEmoji)
-                                .font(.system(size: 40))
-                                .padding(6)
-                                .background(Color.secondary.opacity(0.12))
-                                .clipShape(Circle())
+                            Label("Sign out", systemImage: "rectangle.portrait.and.arrow.right")
+                                .font(.subheadline.weight(.semibold))
+                                .foregroundStyle(.red)
+                                .frame(maxWidth: .infinity)
                         }
-
-                        VStack(spacing: 8) {
-                            TextField("First name", text: $firstName)
-                                .textContentType(.givenName)
-                                .onSubmit(saveProfile)
-                            Divider()
-                            TextField("Last name", text: $lastName)
-                                .textContentType(.familyName)
-                                .onSubmit(saveProfile)
-                        }
+                        .buttonStyle(.plain)
                     }
-                    .padding(.vertical, 4)
-                } header: {
-                    Text("Profile Details")
-                } footer: {
-                    Text("This is how other dinner party members will see you.")
-                }
 
-                Section {
-                    Button(role: .destructive) {
-                        confirmSignOut = true
-                    } label: {
-                        Label("Sign out", systemImage: "rectangle.portrait.and.arrow.right")
-                    }
+                    DangerZoneSection(confirmDelete: $confirmDelete)
                 }
-
-                DangerZoneSection(confirmDelete: $confirmDelete)
+                .padding(.horizontal, 16)
+                .padding(.vertical, 14)
             }
-            .navigationTitle("My Profile")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .confirmationAction) {
-                    Button("Done") {
-                        saveProfile()
-                        dismiss()
-                    }
-                }
-            }
+            .background(Color(uiColor: .systemGroupedBackground))
+            .screenTitle("My Profile", displayMode: .inline)
+            .sheetCommitToolbar(onSave: {
+                saveProfile()
+                dismiss()
+            })
             .onAppear(perform: loadProfileIfNeeded)
             .alert("Sign out?", isPresented: $confirmSignOut) {
                 Button("Sign out", role: .destructive) {

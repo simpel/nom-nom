@@ -61,11 +61,11 @@ struct MealEditorPhotoSection: View {
     @ViewBuilder
     private var photoPreview: some View {
         if let pickedData {
-            MealPhoto(data: pickedData, cornerRadius: 16)
+            MealPhoto(data: pickedData, cornerRadius: AppRadius.photo)
         } else if let existingPath, !didRemovePhoto {
-            RemoteMealPhoto(path: existingPath, cornerRadius: 16)
+            RemoteMealPhoto(path: existingPath, cornerRadius: AppRadius.photo)
         } else {
-            MealPhoto(data: nil, cornerRadius: 16)
+            MealPhoto(data: nil, cornerRadius: AppRadius.photo)
         }
     }
 }

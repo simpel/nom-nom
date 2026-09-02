@@ -14,15 +14,21 @@ struct SettingsView: View {
     private let emojiChoices = ["🧒", "👦", "👧", "🧑", "👩", "👨", "👶", "🐣", "🦊", "🐻", "🐼", "🦁", "🐧", "🦄"]
 
     var body: some View {
-        List {
-            partiesSection
-            HouseholdMembersSection(emojiChoices: emojiChoices)
-            ProfileSettingsSection(emojiChoices: emojiChoices, confirmSignOut: $confirmSignOut)
-            #if DEBUG
-            sampleDataSection
-            #endif
-            DangerZoneSection(confirmDelete: $confirmDelete)
+        ScrollView {
+            VStack(spacing: 16) {
+                partiesSection
+                HouseholdMembersSection(emojiChoices: emojiChoices)
+                NotificationPreferencesSection()
+                ProfileSettingsSection(emojiChoices: emojiChoices, confirmSignOut: $confirmSignOut)
+                #if DEBUG
+                sampleDataSection
+                #endif
+                DangerZoneSection(confirmDelete: $confirmDelete)
+            }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 14)
         }
+        .background(Color(uiColor: .systemGroupedBackground))
         .navigationTitle("Settings")
         .alert("Sign out?", isPresented: $confirmSignOut) {
             Button("Sign out", role: .destructive) {
@@ -52,63 +58,85 @@ struct SettingsView: View {
     // MARK: - Dinner Parties Section
 
     private var partiesSection: some View {
-        Section {
-            NavigationLink {
-                PartyListView()
-            } label: {
-                HStack(spacing: 12) {
-                    Image(systemName: "person.2.fill")
-                        .font(.title3)
-                        .foregroundStyle(.tint)
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text("Dinner Parties")
-                            .font(.body)
-                        let count = store.myParties.count
-                        Text(count == 0 ? "None yet" : "\(count) \(count == 1 ? "party" : "parties")")
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                    }
-                    if !store.pendingPartyInvites.isEmpty {
+        SectionCard("Dinner Parties") {
+            VStack(alignment: .leading, spacing: 10) {
+                NavigationLink {
+                    PartyListView()
+                } label: {
+                    HStack(spacing: 12) {
+                        Image(systemName: "person.2.fill")
+                            .font(.title3)
+                            .foregroundStyle(.tint)
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("Dinner Parties")
+                                .font(.body.weight(.medium))
+                                .foregroundStyle(.primary)
+                            let count = store.myParties.count
+                            Text(count == 0 ? "None yet" : "\(count) \(count == 1 ? "party" : "parties")")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
                         Spacer()
-                        Text("\(store.pendingPartyInvites.count) invite")
-                            .font(.caption2.bold())
-                            .padding(.horizontal, 6)
-                            .padding(.vertical, 2)
-                            .background(Color.orange)
-                            .foregroundStyle(.white)
-                            .clipShape(Capsule())
+                        if !store.pendingPartyInvites.isEmpty {
+                            Text("\(store.pendingPartyInvites.count) invite")
+                                .font(.caption2.bold())
+                                .padding(.horizontal, 6)
+                                .padding(.vertical, 2)
+                                .background(Color.orange)
+                                .foregroundStyle(.white)
+                                .clipShape(Capsule())
+                        }
+                        Image(systemName: "chevron.right")
+                            .font(.caption2)
+                            .foregroundStyle(.tertiary)
                     }
+                    .padding(.vertical, 2)
                 }
+                .buttonStyle(.plain)
+
+                Text("Share meals and collective taste preferences with friends, family, or roomies.")
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+                    .padding(.top, 4)
             }
-        } header: {
-            Text("Dinner Parties")
-        } footer: {
-            Text("Share meals and collective taste preferences with friends, family, or roomies.")
         }
     }
 
     #if DEBUG
     private var sampleDataSection: some View {
-        Section {
-            Button {
-                isSeeding = true
-                Task {
-                    await SampleData.populate(store)
-                    isSeeding = false
-                }
-            } label: {
-                HStack {
-                    Text("Fill with sample history")
-                    if isSeeding {
-                        Spacer()
-                        ProgressView().controlSize(.small)
+        SectionCard("Debug Tools") {
+            VStack(alignment: .leading, spacing: 10) {
+                Button {
+                    isSeeding = true
+                    Task {
+                        await SampleData.populate(store)
+                        isSeeding = false
+                    }
+                } label: {
+                    HStack {
+                        Text("Fill with sample history")
+                            .font(.subheadline.weight(.medium))
+                        if isSeeding {
+                            Spacer()
+                            ProgressView().controlSize(.small)
+                        }
                     }
                 }
+                .buttonStyle(.plain)
+                .disabled(isSeeding)
+
+                Text("Debug builds only — adds a few months of made-up meals so the suggestions have something to work with. Writes to whichever Supabase this build points at.")
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
             }
-            .disabled(isSeeding)
-        } footer: {
-            Text("Debug builds only — adds a few months of made-up meals so the suggestions have something to work with. Writes to whichever Supabase this build points at.")
         }
     }
     #endif
 }
+
+#Preview {
+    NomNomPreview {
+        SettingsView()
+    }
+}
+

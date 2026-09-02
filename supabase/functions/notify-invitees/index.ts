@@ -112,6 +112,25 @@ Deno.serve(async (req) => {
     Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
   );
 
+  // Check user notification preferences in profile
+  const { data: profile } = await admin
+    .from("profiles")
+    .select("notify_push_party_invite, notify_push_meal_invite")
+    .eq("id", payload.record.user_id)
+    .single();
+
+  if (profile) {
+    const kind = payload.record.kind;
+    if (kind === "party_invite" && profile.notify_push_party_invite === false) {
+      console.log("Push notification skipped: user disabled party invite push notifications.");
+      return Response.json({ skipped: "push-notifications-disabled" });
+    }
+    if ((kind === "rating_request" || kind === "meal_invite") && profile.notify_push_meal_invite === false) {
+      console.log("Push notification skipped: user disabled meal push notifications.");
+      return Response.json({ skipped: "push-notifications-disabled" });
+    }
+  }
+
   const { data: tokens, error } = await admin
     .from("device_tokens")
     .select("apns_token, environment")

@@ -61,8 +61,8 @@ enum DevSelfCheck {
             eatenOn: .now,
             notes: "written by the self check",
             tags: ["selfcheck"],
-            photo: .replaced(swatch()),
-            verdicts: store.activeEaters.first.map { [$0.raterRef: .loved] } ?? [:]
+            photos: FoodStore.PhotosDraft(addedData: [swatch()]),
+            verdicts: store.activeEaters.first.map { [$0.raterRef: .amazing] } ?? [:]
         ))
         check("save a new meal with a photo", created, store.errorMessage ?? "")
 
@@ -107,12 +107,12 @@ enum DevSelfCheck {
                 eatenOn: meal.eatenOn,
                 notes: meal.notes,
                 tags: [],
-                photo: .unchanged,
-                verdicts: [eater.raterRef: .disliked]
+                photos: FoodStore.PhotosDraft(existingPaths: meal.photoPaths),
+                verdicts: [eater.raterRef: .bad]
             ))
             check("edit an existing verdict", changed, store.errorMessage ?? "")
             check("the verdict actually changed",
-                  store.ratings(forMeal: meal.id).first { $0.eaterID == eater.id }?.reaction == .disliked)
+                  store.ratings(forMeal: meal.id).first { $0.eaterID == eater.id }?.reaction == .bad)
             check("one verdict per person, not a duplicate",
                   store.ratings(forMeal: meal.id).filter { $0.eaterID == eater.id }.count == 1)
         }
@@ -120,9 +120,9 @@ enum DevSelfCheck {
         // 4. Rate a meal somebody else invited me to.
         if let theirs = store.awaitingMyRating.first {
             let before = store.myRating(forMeal: theirs.id)
-            await store.rate(mealID: theirs.id, as: .ok)
+            await store.rate(mealID: theirs.id, as: .good)
             check("rate a meal I was invited to",
-                  store.myRating(forMeal: theirs.id) == .ok,
+                  store.myRating(forMeal: theirs.id) == .good,
                   "was \(String(describing: before)); \(store.errorMessage ?? "")")
             check("the invite was marked answered",
                   store.invites(forMeal: theirs.id)
@@ -148,7 +148,7 @@ enum DevSelfCheck {
             eatenOn: meal.eatenOn,
             notes: meal.notes,
             tags: [],
-            photo: .removed,
+            photos: FoodStore.PhotosDraft(removedPaths: meal.photoPaths),
             verdicts: [:]
         ))
         check("remove a photo", cleared, store.errorMessage ?? "")

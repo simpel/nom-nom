@@ -60,14 +60,21 @@ enum DishRepository {
             let name = dish.normalizedName
             var base: Double
 
+            let normalizedCuisine = dish.cuisine?.normalizedForMatching ?? ""
+            let matchesTag = dish.tags.contains { $0.normalizedForMatching.contains(q) }
+
             if name == q {
                 base = 100
             } else if name.hasPrefix(q) {
                 base = 80
             } else if dish.normalizedName.matchTokens.contains(where: { $0.hasPrefix(q) }) {
                 base = 60
+            } else if !normalizedCuisine.isEmpty && (normalizedCuisine == q || normalizedCuisine.hasPrefix(q)) {
+                base = 55
             } else if name.contains(q) {
                 base = 40
+            } else if matchesTag || (!normalizedCuisine.isEmpty && normalizedCuisine.contains(q)) {
+                base = 35
             } else if Fuzzy.isProbableTypo(name, q) {
                 base = 25
             } else if q.count >= 4, Fuzzy.similarity(name, q) > 0.7 {

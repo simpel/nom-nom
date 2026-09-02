@@ -44,6 +44,15 @@ final class AuthController {
         return nil
     }
 
+    init(phase: Phase = .loading, step: Step = .email) {
+        self.phase = phase
+        self.step = step
+    }
+
+    static var preview: AuthController {
+        AuthController(phase: .signedIn(userID: UUID(uuidString: "00000000-0000-0000-0000-000000000001")!))
+    }
+
     // MARK: - Lifecycle
 
     /// Starts mirroring the client's session into `phase`.

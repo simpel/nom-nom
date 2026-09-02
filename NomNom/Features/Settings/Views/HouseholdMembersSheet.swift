@@ -11,13 +11,8 @@ struct HouseholdMembersSheet: View {
             List {
                 HouseholdMembersSection(emojiChoices: emojiChoices)
             }
-            .navigationTitle("Household Members")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .confirmationAction) {
-                    Button("Done") { dismiss() }
-                }
-            }
+            .screenTitle("Household Members", displayMode: .inline)
+            .sheetDoneToolbar()
         }
     }
 }

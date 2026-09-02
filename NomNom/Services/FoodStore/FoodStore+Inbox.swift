@@ -24,10 +24,56 @@ extension FoodStore {
             invites.append(created)
             reindex()
             try? await loadProfiles()
+
+            struct SendMealInvitePayload: Encodable {
+                let meal_id: String
+                let invitee_email: String
+            }
+            let payload = SendMealInvitePayload(meal_id: mealID.uuidString, invitee_email: email)
+            do {
+                try await supabase.functions.invoke(
+                    "send-invite-email",
+                    options: FunctionInvokeOptions(body: payload)
+                )
+                Self.log.info("Meal invite email sent successfully to \(email)")
+            } catch {
+                Self.log.error("send-invite-email function returned error: \(error.localizedDescription)")
+            }
+
             errorMessage = nil
             return true
         } catch let error as PostgrestError where error.code == "23505" {
             errorMessage = "\(email) has already been invited to this meal."
+            return false
+        } catch {
+            errorMessage = Self.describe(error)
+            return false
+        }
+    }
+
+    func askToRate(member: Profile, forMeal mealID: UUID) async -> Bool {
+        guard member.id != userID else { return false }
+
+        struct NewMemberInvite: Encodable {
+            let meal_id: UUID
+            let inviter_id: UUID
+            let invitee_id: UUID
+        }
+
+        do {
+            let created: MealInvite = try await supabase
+                .from("meal_invites")
+                .insert(NewMemberInvite(meal_id: mealID, inviter_id: userID, invitee_id: member.id))
+                .select()
+                .single()
+                .execute()
+                .value
+            invites.append(created)
+            reindex()
+            errorMessage = nil
+            return true
+        } catch let error as PostgrestError where error.code == "23505" {
+            errorMessage = "\(member.shownName) has already been asked to rate this meal."
             return false
         } catch {
             errorMessage = Self.describe(error)

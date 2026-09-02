@@ -44,6 +44,9 @@ private struct SignedInView: View {
                     .task {
                         let fresh = FoodStore(userID: userID)
                         await fresh.load()
+                        if let token = NotificationManager.shared.deviceToken {
+                            await fresh.registerDeviceToken(token)
+                        }
                         store = fresh
                     }
             }

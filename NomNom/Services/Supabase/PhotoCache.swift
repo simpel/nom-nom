@@ -41,7 +41,7 @@ final class PhotoCache {
         memory.object(forKey: path as NSString) as Data?
     }
 
-    func data(for path: String) async -> Data? {
+    func data(for path: String, bucket: String = SupabaseConfig.photoBucket) async -> Data? {
         if let hit = cached(path) { return hit }
 
         if let onDisk = readFromDisk(path) {
@@ -56,12 +56,12 @@ final class PhotoCache {
         let task = Task<Data?, Never> {
             do {
                 let data = try await supabase.storage
-                    .from(SupabaseConfig.photoBucket)
+                    .from(bucket)
                     .download(path: path)
                 return data
             } catch {
                 #if DEBUG
-                print("[PhotoCache] download failed for \(path): \(error)")
+                print("[PhotoCache] download failed for \(path) from \(bucket): \(error)")
                 #endif
                 return nil
             }

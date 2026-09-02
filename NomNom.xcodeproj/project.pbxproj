@@ -231,9 +231,11 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = "Nom Nom";
+				INFOPLIST_KEY_CFBundleURLTypes = "[{\"CFBundleURLName\":\"se.joelsanden.nomnom\",\"CFBundleURLSchemes\":[\"nomnom\"]}]";
 				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				INFOPLIST_KEY_NSCameraUsageDescription = "Take a photo of the food you just served.";
 				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "Pick a photo of the food from your library.";
+				INFOPLIST_KEY_UIAppFonts = "Inter-Regular.ttf Inter-Medium.ttf Inter-SemiBold.ttf Inter-Bold.ttf Inter-Light.ttf Newsreader-Regular.ttf Newsreader-Medium.ttf Newsreader-SemiBold.ttf Newsreader-Bold.ttf Newsreader-Italic.ttf Newsreader-SemiBoldItalic.ttf";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -263,9 +265,11 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = "Nom Nom";
+				INFOPLIST_KEY_CFBundleURLTypes = "[{\"CFBundleURLName\":\"se.joelsanden.nomnom\",\"CFBundleURLSchemes\":[\"nomnom\"]}]";
 				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				INFOPLIST_KEY_NSCameraUsageDescription = "Take a photo of the food you just served.";
 				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "Pick a photo of the food from your library.";
+				INFOPLIST_KEY_UIAppFonts = "Inter-Regular.ttf Inter-Medium.ttf Inter-SemiBold.ttf Inter-Bold.ttf Inter-Light.ttf Newsreader-Regular.ttf Newsreader-Medium.ttf Newsreader-SemiBold.ttf Newsreader-Bold.ttf Newsreader-Italic.ttf Newsreader-SemiBoldItalic.ttf";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;

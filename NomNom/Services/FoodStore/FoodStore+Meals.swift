@@ -3,10 +3,105 @@ import Supabase
 
 extension FoodStore {
 
-    enum PhotoChange {
-        case unchanged
-        case replaced(Data)
-        case removed
+    struct PhotosDraft: Equatable {
+        enum Item: Equatable, Identifiable {
+            case existing(path: String)
+            case added(id: UUID, data: Data)
+
+            var id: String {
+                switch self {
+                case .existing(let path): return "existing:\(path)"
+                case .added(let id, _): return "added:\(id.uuidString)"
+                }
+            }
+        }
+
+        var items: [Item] = []
+        var removedPaths: [String] = []
+
+        init(items: [Item] = [], removedPaths: [String] = []) {
+            self.items = items
+            self.removedPaths = removedPaths
+        }
+
+        init(existingPaths: [String] = [], addedData: [Data] = [], removedPaths: [String] = []) {
+            self.items = existingPaths.map { .existing(path: $0) } + addedData.map { .added(id: UUID(), data: $0) }
+            self.removedPaths = removedPaths
+        }
+
+        var existingPaths: [String] {
+            get {
+                items.compactMap {
+                    if case .existing(let path) = $0 { return path }
+                    return nil
+                }
+            }
+            set {
+                let added = items.filter { if case .added = $0 { return true } else { return false } }
+                items = newValue.map { .existing(path: $0) } + added
+            }
+        }
+
+        var addedData: [Data] {
+            get {
+                items.compactMap {
+                    if case .added(_, let data) = $0 { return data }
+                    return nil
+                }
+            }
+            set {
+                let existing = items.filter { if case .existing = $0 { return true } else { return false } }
+                items = existing + newValue.map { .added(id: UUID(), data: $0) }
+            }
+        }
+
+        var isEmpty: Bool {
+            items.isEmpty
+        }
+
+        var count: Int {
+            items.count
+        }
+
+        mutating func move(from source: IndexSet, to destination: Int) {
+            items.move(fromOffsets: source, toOffset: destination)
+        }
+
+        mutating func swap(_ i: Int, _ j: Int) {
+            guard items.indices.contains(i), items.indices.contains(j) else { return }
+            items.swapAt(i, j)
+        }
+
+        mutating func append(_ data: Data) {
+            items.append(.added(id: UUID(), data: data))
+        }
+
+        mutating func remove(at index: Int) {
+            guard items.indices.contains(index) else { return }
+            let removed = items.remove(at: index)
+            if case .existing(let path) = removed {
+                removedPaths.append(path)
+            }
+        }
+    }
+
+    struct RecipeDraft: Equatable {
+        var text: String = ""
+        var existingPhotoPaths: [String] = []
+        var addedPhotoData: [Data] = []
+        var removedPhotoPaths: [String] = []
+        var effort: EffortLevel? = nil
+        var cuisine: String? = nil
+        var isPublic: Bool = true
+
+        var totalPhotosCount: Int {
+            existingPhotoPaths.count + addedPhotoData.count
+        }
+
+        var hasContent: Bool {
+            if effort != nil || cuisine != nil || !isPublic { return true }
+            return !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || totalPhotosCount > 0
+        }
     }
 
     struct MealDraft {
@@ -16,9 +111,12 @@ extension FoodStore {
         var eatenOn: Date
         var notes: String
         var tags: [String]
-        var photo: PhotoChange
+        var photos: PhotosDraft = PhotosDraft()
+        var effort: EffortLevel? = nil
+        var repeatDesire: RotationGoal? = nil
         var verdicts: [RaterRef: Reaction]
         var servedParties: Set<UUID>? = nil
+        var recipe: RecipeDraft? = nil
     }
 
     @discardableResult
@@ -35,11 +133,15 @@ extension FoodStore {
                 dish = try await findOrCreateDish(named: draft.dishName, tags: draft.tags)
             }
 
+            if let recipeDraft = draft.recipe, dish.ownerID == userID {
+                try await applyRecipe(recipeDraft, to: dish)
+            }
+
             let meal: Meal
             if let id = draft.mealID {
                 meal = try await supabase
                     .from("meals")
-                    .update(MealPatch(dishID: dish.id, eatenOn: draft.eatenOn, notes: draft.notes))
+                    .update(MealPatch(dishID: dish.id, eatenOn: draft.eatenOn, notes: draft.notes, effort: draft.effort, repeatDesire: draft.repeatDesire))
                     .eq("id", value: id.uuidString)
                     .select()
                     .single()
@@ -51,7 +153,9 @@ extension FoodStore {
                     .insert(NewMeal(dishID: dish.id,
                                     createdBy: userID,
                                     eatenOn: draft.eatenOn,
-                                    notes: draft.notes))
+                                    notes: draft.notes,
+                                    effort: draft.effort,
+                                    repeatDesire: draft.repeatDesire))
                     .select()
                     .single()
                     .execute()
@@ -59,7 +163,7 @@ extension FoodStore {
             }
             upsertLocal(meal: meal)
 
-            try await applyPhoto(draft.photo, to: meal)
+            try await applyPhotos(draft.photos, to: meal)
             try await applyVerdicts(draft.verdicts, to: meal)
             if let servedParties = draft.servedParties {
                 try await applyMealParties(servedParties, to: meal.id)
@@ -69,6 +173,7 @@ extension FoodStore {
             errorMessage = nil
             return true
         } catch {
+            Self.log.error("Failed to save meal: \(error.localizedDescription, privacy: .public) - \(error)")
             errorMessage = Self.describe(error)
             return false
         }
@@ -101,39 +206,37 @@ extension FoodStore {
         }
     }
 
-    func applyPhoto(_ change: PhotoChange, to meal: Meal) async throws {
-        let previous = mealByID[meal.id]?.photoPath ?? meal.photoPath
-
-        switch change {
-        case .unchanged:
-            return
-
-        case .removed:
-            guard previous != nil else { return }
-            try await patchPhotoPath(nil, on: meal.id)
-            if let previous { await deleteObject(previous) }
-
-        case .replaced(let data):
-            let path = "\(meal.id.uuidString.lowercased())/\(UUID().uuidString.lowercased()).jpg"
-            _ = try await supabase.storage
-                .from(SupabaseConfig.photoBucket)
-                .upload(path, data: data, options: FileOptions(contentType: "image/jpeg"))
-            try await patchPhotoPath(path, on: meal.id)
-            PhotoCache.shared.put(data, for: path)
-            if let previous, previous != path { await deleteObject(previous) }
+    func applyPhotos(_ draft: PhotosDraft, to meal: Meal) async throws {
+        for path in draft.removedPaths {
+            await deleteObject(path)
         }
-    }
 
-    func patchPhotoPath(_ path: String?, on mealID: UUID) async throws {
-        let updated: Meal = try await supabase
-            .from("meals")
-            .update(MealPhotoPatch(photo_path: path))
-            .eq("id", value: mealID.uuidString)
-            .select()
-            .single()
-            .execute()
-            .value
-        upsertLocal(meal: updated)
+        var newPaths: [String] = []
+        for item in draft.items {
+            switch item {
+            case .existing(let path):
+                newPaths.append(path)
+            case .added(_, let data):
+                let path = "\(meal.id.uuidString.lowercased())/\(UUID().uuidString.lowercased()).jpg"
+                _ = try await supabase.storage
+                    .from(SupabaseConfig.photoBucket)
+                    .upload(path, data: data, options: FileOptions(contentType: "image/jpeg"))
+                PhotoCache.shared.put(data, for: path)
+                newPaths.append(path)
+            }
+        }
+
+        if newPaths != meal.photoPaths {
+            let updated: Meal = try await supabase
+                .from("meals")
+                .update(MealPhotosPatch(photoPaths: newPaths))
+                .eq("id", value: meal.id.uuidString)
+                .select()
+                .single()
+                .execute()
+                .value
+            upsertLocal(meal: updated)
+        }
     }
 
     func deleteObject(_ path: String) async {
@@ -192,7 +295,7 @@ extension FoodStore {
 
     func delete(meal: Meal) async {
         do {
-            if let path = meal.photoPath { await deleteObject(path) }
+            for path in meal.photoPaths { await deleteObject(path) }
             try await supabase.from("meals").delete().eq("id", value: meal.id.uuidString).execute()
             meals.removeAll { $0.id == meal.id }
             ratings.removeAll { $0.mealID == meal.id }

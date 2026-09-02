@@ -5,9 +5,6 @@ struct SettingsDropdownMenu: View {
     @Environment(FoodStore.self) private var store
 
     let onOpenProfile: () -> Void
-    let onOpenPartyDetail: (Party) -> Void
-    let onOpenHouseholdMembers: () -> Void
-    let onOpenCreateParty: () -> Void
     let onOpenAllParties: () -> Void
     let onRequestSignOut: () -> Void
     let onRequestDeleteAccount: () -> Void
@@ -42,40 +39,23 @@ struct SettingsDropdownMenu: View {
 
             // MARK: - Dinner Parties
             Menu {
-                if let party = store.currentParty {
-                    Button {
-                        onOpenPartyDetail(party)
-                    } label: {
-                        Label("\(party.name) Settings & Members", systemImage: "person.2.badge.gearshape")
-                    }
-
-                    let members = store.members(of: party.id)
-                    if !members.isEmpty {
-                        Menu {
-                            ForEach(members) { member in
-                                Label("\(member.avatarEmoji) \(member.shownName)", systemImage: member.id == store.userID ? "person.fill" : "person")
-                            }
-                        } label: {
-                            Label("Members (\(members.count))", systemImage: "person.2")
+                Picker("Dinner party", selection: Binding(
+                    get: { store.currentParty?.id },
+                    set: { selectedID in
+                        if let selectedID, let party = store.party(selectedID) {
+                            store.currentParty = party
+                        } else {
+                            store.currentParty = nil
                         }
                     }
-
-                    Divider()
-                } else {
-                    Button {
-                        onOpenHouseholdMembers()
-                    } label: {
-                        Label("Household Members", systemImage: "person.3")
+                )) {
+                    Text("Just me").tag(nil as UUID?)
+                    ForEach(store.myParties) { party in
+                        Text(party.name).tag(party.id as UUID?)
                     }
-
-                    Divider()
                 }
 
-                Button {
-                    onOpenCreateParty()
-                } label: {
-                    Label("New Dinner Party", systemImage: "plus")
-                }
+                Divider()
 
                 Button {
                     onOpenAllParties()

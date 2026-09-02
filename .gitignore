@@ -10,3 +10,9 @@ xcuserdata/
 # Swift Package Manager
 .build/
 .swiftpm/
+
+# Environment Secrets
+.env
+.env.*
+supabase/functions/.env
+

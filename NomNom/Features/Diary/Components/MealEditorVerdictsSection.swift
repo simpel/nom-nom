@@ -22,7 +22,7 @@ struct MealEditorVerdictsSection: View {
                 }
             }
         } header: {
-            Text("Verdict")
+            Text("How was it?")
         } footer: {
             Text("Leave blank if you didn't catch a reaction — blanks are ignored by the suggestions instead of counting as a bad score.")
         }

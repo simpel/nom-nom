@@ -1,41 +1,52 @@
 import SwiftUI
 
-/// The three-way verdict picker, one per person.
+/// Compact verdict selector (-1 to 5) for member rows.
 struct ReactionPicker: View {
     let emoji: String
     let name: String
     @Binding var selection: Reaction?
 
     var body: some View {
-        HStack(spacing: 10) {
-            Text(emoji)
-                .font(.title3)
+        HStack(spacing: 8) {
+            ZStack {
+                Circle()
+                    .fill(Color.accentColor.opacity(0.12))
+                    .frame(width: 30, height: 30)
+                Text(name.prefix(1).uppercased())
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(Color.accentColor)
+            }
+
             Text(name)
-                .font(.body)
-            Spacer(minLength: 8)
-            HStack(spacing: 6) {
+                .font(.subheadline.weight(.medium))
+                .lineLimit(1)
+
+            Spacer(minLength: 4)
+
+            HStack(spacing: 4) {
                 ForEach(Reaction.allCases) { reaction in
+                    let isSelected = selection == reaction
                     Button {
+                        UIImpactFeedbackGenerator(style: .light).impactOccurred()
                         withAnimation(.snappy(duration: 0.18)) {
-                            selection = (selection == reaction) ? nil : reaction
+                            selection = isSelected ? nil : reaction
                         }
                     } label: {
-                        Text(reaction.emoji)
-                            .font(.title3)
-                            .frame(width: 40, height: 34)
+                        Text(reaction.numberLabel)
+                            .font(.system(size: 11, weight: isSelected ? .bold : .medium, design: .rounded))
+                            .foregroundStyle(isSelected ? reaction.tint : .secondary)
+                            .frame(width: 28, height: 28)
                             .background {
-                                RoundedRectangle(cornerRadius: 9, style: .continuous)
-                                    .fill(selection == reaction ? reaction.tint.opacity(0.22) : Color.clear)
+                                RoundedRectangle(cornerRadius: AppRadius.picker, style: .continuous)
+                                    .fill(isSelected ? reaction.tint.opacity(0.2) : Color(uiColor: .tertiarySystemFill))
                             }
                             .overlay {
-                                RoundedRectangle(cornerRadius: 9, style: .continuous)
-                                    .strokeBorder(selection == reaction ? reaction.tint : Color.secondary.opacity(0.25),
-                                                  lineWidth: selection == reaction ? 2 : 1)
+                                RoundedRectangle(cornerRadius: AppRadius.picker, style: .continuous)
+                                    .strokeBorder(isSelected ? reaction.tint : Color.clear, lineWidth: 1.5)
                             }
-                            .opacity(selection == nil || selection == reaction ? 1 : 0.45)
                     }
                     .buttonStyle(.plain)
-                    .accessibilityLabel("\(name): \(reaction.label)")
+                    .accessibilityLabel("\(name): \(reaction.numberLabel) - \(reaction.name)")
                 }
             }
         }

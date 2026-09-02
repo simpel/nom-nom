@@ -9,7 +9,11 @@ final class FoodStore {
 
     let userID: UUID
 
-    var dishes: [Dish] = []
+    var dishes: [Recipe] = []
+    var recipes: [Recipe] {
+        get { dishes }
+        set { dishes = newValue }
+    }
     var meals: [Meal] = []
     var eaters: [Eater] = []
     var ratings: [MealRating] = []
@@ -44,7 +48,8 @@ final class FoodStore {
     var mealPartiesByMeal: [UUID: [MealParty]] = [:]
     var mealPartiesByParty: [UUID: [MealParty]] = [:]
     var partyMembersByParty: [UUID: [PartyMember]] = [:]
-    var dishByID: [UUID: Dish] = [:]
+    var dishByID: [UUID: Recipe] = [:]
+    var recipeByID: [UUID: Recipe] { dishByID }
     var eaterByID: [UUID: Eater] = [:]
     var mealByID: [UUID: Meal] = [:]
     var partyByID: [UUID: Party] = [:]
@@ -57,7 +62,8 @@ final class FoodStore {
 
     // MARK: - Slices the views want
 
-    var myDishes: [Dish] { dishes.filter { $0.ownerID == userID } }
+    var myDishes: [Recipe] { dishes.filter { $0.ownerID == userID } }
+    var myRecipes: [Recipe] { myDishes }
 
     var myMeals: [Meal] { meals.filter { $0.createdBy == userID } }
 
@@ -104,13 +110,18 @@ final class FoodStore {
         }
     }
 
-    func dish(_ id: UUID) -> Dish? { dishByID[id] }
+    func dish(_ id: UUID) -> Recipe? { dishByID[id] }
+    func recipe(_ id: UUID) -> Recipe? { dishByID[id] }
     func eater(_ id: UUID) -> Eater? { eaterByID[id] }
     func meal(_ id: UUID) -> Meal? { mealByID[id] }
     func party(_ id: UUID) -> Party? { partyByID[id] }
 
     func dishName(forMeal meal: Meal) -> String {
         dishByID[meal.dishID]?.name ?? "Untitled"
+    }
+
+    func recipeName(forMeal meal: Meal) -> String {
+        dishByID[meal.recipeID]?.name ?? "Untitled"
     }
 
     func servings(of dishID: UUID) -> [Meal] {
@@ -145,7 +156,21 @@ final class FoodStore {
         return scores.reduce(0, +) / Double(scores.count)
     }
 
-    func verdictEntries(forMeal mealID: UUID) -> [(emoji: String, name: String, reaction: Reaction?)] {
+    struct VerdictDetail: Identifiable {
+        let ref: RaterRef
+        let emoji: String
+        let name: String
+        let reaction: Reaction?
+
+        var id: String {
+            switch ref {
+            case .eater(let id): return "eater_\(id.uuidString)"
+            case .account(let id): return "account_\(id.uuidString)"
+            }
+        }
+    }
+
+    func verdictDetails(forMeal mealID: UUID) -> [VerdictDetail] {
         let sorted = ratings(forMeal: mealID).sorted { lhs, rhs in
             switch (lhs.source, rhs.source) {
             case (.eater(let l), .eater(let r)):
@@ -162,8 +187,12 @@ final class FoodStore {
         }
         return sorted.map { rating in
             let who = label(for: rating.source)
-            return (emoji: who.emoji, name: who.name, reaction: rating.reaction)
+            return VerdictDetail(ref: rating.source, emoji: who.emoji, name: who.name, reaction: rating.reaction)
         }
+    }
+
+    func verdictEntries(forMeal mealID: UUID) -> [(emoji: String, name: String, reaction: Reaction?)] {
+        verdictDetails(forMeal: mealID).map { (emoji: $0.emoji, name: $0.name, reaction: $0.reaction) }
     }
 
     var dishHistory: [UUID: DishHistory] {
@@ -205,13 +234,17 @@ final class FoodStore {
 
     // MARK: - Local patching
 
-    func upsertLocal(dish: Dish) {
-        if let index = dishes.firstIndex(where: { $0.id == dish.id }) {
-            dishes[index] = dish
+    func upsertLocal(recipe: Recipe) {
+        if let index = dishes.firstIndex(where: { $0.id == recipe.id }) {
+            dishes[index] = recipe
         } else {
-            dishes.append(dish)
+            dishes.append(recipe)
         }
-        dishByID[dish.id] = dish
+        dishByID[recipe.id] = recipe
+    }
+
+    func upsertLocal(dish: Recipe) {
+        upsertLocal(recipe: dish)
     }
 
     func upsertLocal(meal: Meal) {

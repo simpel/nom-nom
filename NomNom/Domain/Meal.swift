@@ -1,39 +1,90 @@
 import Foundation
 
-/// One occasion of eating a dish.
+/// One occasion of eating a cooked recipe.
 struct Meal: Identifiable, Hashable, Decodable {
     let id: UUID
-    var dishID: UUID
+    var recipeID: UUID
+    var dishID: UUID {
+        get { recipeID }
+        set { recipeID = newValue }
+    }
     /// Whoever cooked it. Only this person may edit the meal or invite others.
     var createdBy: UUID
     /// Calendar day, at local midnight — the column is a `date`, so there is no
     /// time of day to keep.
     var eatenOn: Date
     var notes: String
-    /// Object path in the private `meal-photos` bucket, `<meal_id>/<uuid>.jpg`.
-    var photoPath: String?
+    /// Object paths in the private `meal-photos` bucket, `<meal_id>/<uuid>.jpg`.
+    var photoPaths: [String]
+    /// Primary cover photo path.
+    var photoPath: String? { photoPaths.first }
+    /// Effort required to make the meal.
+    var effort: EffortLevel?
+    /// Rotation goal / repeat desire.
+    var repeatDesire: RotationGoal?
     /// Used only to order two meals eaten on the same day.
     var createdAt: Date
 
     enum CodingKeys: String, CodingKey {
         case id
-        case dishID = "dish_id"
+        case recipeID = "dish_id"
         case createdBy = "created_by"
         case eatenOn = "eaten_on"
         case notes
         case photoPath = "photo_path"
+        case photoPaths = "photo_paths"
+        case effort
+        case repeatDesire = "repeat_desire"
         case createdAt = "created_at"
     }
 
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         id = try container.decode(UUID.self, forKey: .id)
-        dishID = try container.decode(UUID.self, forKey: .dishID)
+        recipeID = try container.decode(UUID.self, forKey: .recipeID)
         createdBy = try container.decode(UUID.self, forKey: .createdBy)
         eatenOn = try container.decodeDay(.eatenOn)
         notes = try container.decodeIfPresent(String.self, forKey: .notes) ?? ""
-        photoPath = try container.decodeIfPresent(String.self, forKey: .photoPath)
+        if let paths = try container.decodeIfPresent([String].self, forKey: .photoPaths), !paths.isEmpty {
+            photoPaths = paths
+        } else if let single = try container.decodeIfPresent(String.self, forKey: .photoPath) {
+            photoPaths = [single]
+        } else {
+            photoPaths = []
+        }
+        if let rawEffort = try container.decodeIfPresent(Int.self, forKey: .effort) {
+            effort = EffortLevel(rawValue: rawEffort)
+        } else {
+            effort = nil
+        }
+        if let rawRepeat = try container.decodeIfPresent(Int.self, forKey: .repeatDesire) {
+            repeatDesire = RotationGoal(rawValue: rawRepeat)
+        } else {
+            repeatDesire = nil
+        }
         createdAt = try container.decodeTimestamp(.createdAt)
+    }
+
+    init(
+        id: UUID = UUID(),
+        recipeID: UUID,
+        createdBy: UUID,
+        eatenOn: Date = .now,
+        notes: String = "",
+        photoPaths: [String] = [],
+        effort: EffortLevel? = nil,
+        repeatDesire: RotationGoal? = nil,
+        createdAt: Date = .now
+    ) {
+        self.id = id
+        self.recipeID = recipeID
+        self.createdBy = createdBy
+        self.eatenOn = eatenOn
+        self.notes = notes
+        self.photoPaths = photoPaths
+        self.effort = effort
+        self.repeatDesire = repeatDesire
+        self.createdAt = createdAt
     }
 }
 
@@ -44,12 +95,22 @@ struct NewMeal: Encodable {
     let created_by: UUID
     let eaten_on: String
     let notes: String
+    let photo_paths: [String]
+    let effort: Int?
+    let repeat_desire: Int?
 
-    init(dishID: UUID, createdBy: UUID, eatenOn: Date, notes: String) {
-        self.dish_id = dishID
+    init(recipeID: UUID, createdBy: UUID, eatenOn: Date, notes: String, photoPaths: [String] = [], effort: EffortLevel? = nil, repeatDesire: RotationGoal? = nil) {
+        self.dish_id = recipeID
         self.created_by = createdBy
         self.eaten_on = PostgresDate.string(from: eatenOn)
         self.notes = notes
+        self.photo_paths = photoPaths
+        self.effort = effort?.rawValue
+        self.repeat_desire = repeatDesire?.rawValue
+    }
+
+    init(dishID: UUID, createdBy: UUID, eatenOn: Date, notes: String, photoPaths: [String] = [], effort: EffortLevel? = nil, repeatDesire: RotationGoal? = nil) {
+        self.init(recipeID: dishID, createdBy: createdBy, eatenOn: eatenOn, notes: notes, photoPaths: photoPaths, effort: effort, repeatDesire: repeatDesire)
     }
 }
 
@@ -57,38 +118,30 @@ struct MealPatch: Encodable {
     let dish_id: UUID
     let eaten_on: String
     let notes: String
+    let effort: Int?
+    let repeat_desire: Int?
 
-    init(dishID: UUID, eatenOn: Date, notes: String) {
-        self.dish_id = dishID
+    init(recipeID: UUID, eatenOn: Date, notes: String, effort: EffortLevel? = nil, repeatDesire: RotationGoal? = nil) {
+        self.dish_id = recipeID
         self.eaten_on = PostgresDate.string(from: eatenOn)
         self.notes = notes
+        self.effort = effort?.rawValue
+        self.repeat_desire = repeatDesire?.rawValue
+    }
+
+    init(dishID: UUID, eatenOn: Date, notes: String, effort: EffortLevel? = nil, repeatDesire: RotationGoal? = nil) {
+        self.init(recipeID: dishID, eatenOn: eatenOn, notes: notes, effort: effort, repeatDesire: repeatDesire)
     }
 }
 
-/// Photo path is patched on its own: the upload happens after the meal row exists,
-/// because the storage policy checks the meal id in the object path against a real
-/// row in `meals`, so there is nothing to upload *to* until the row is there.
-///
-/// The encoder is written out by hand because the synthesized one uses
-/// `encodeIfPresent` for optionals, which *omits* a nil rather than emitting
-/// `null`. Removing a photo would then PATCH an empty body `{}`, which updates no
-/// columns, matches no rows under `return=representation`, and fails with PGRST116
-/// — while the path stayed in the database. Clearing a column needs an explicit
-/// null on the wire.
-struct MealPhotoPatch: Encodable {
+/// Photo paths patch for a meal.
+struct MealPhotosPatch: Encodable {
+    let photo_paths: [String]
     let photo_path: String?
 
-    enum CodingKeys: String, CodingKey {
-        case photo_path
-    }
-
-    func encode(to encoder: Encoder) throws {
-        var container = encoder.container(keyedBy: CodingKeys.self)
-        if let photo_path {
-            try container.encode(photo_path, forKey: .photo_path)
-        } else {
-            try container.encodeNil(forKey: .photo_path)
-        }
+    init(photoPaths: [String]) {
+        self.photo_paths = photoPaths
+        self.photo_path = photoPaths.first
     }
 }
 
@@ -131,7 +184,21 @@ struct MealRating: Identifiable, Hashable, Decodable {
         raterID = try container.decodeIfPresent(UUID.self, forKey: .raterID)
         eaterID = try container.decodeIfPresent(UUID.self, forKey: .eaterID)
         let raw = try container.decode(Int.self, forKey: .reaction)
-        reaction = Reaction(rawValue: raw) ?? .ok
+        reaction = Reaction(rawValue: raw) ?? .good
+    }
+
+    init(
+        id: UUID = UUID(),
+        mealID: UUID,
+        raterID: UUID? = nil,
+        eaterID: UUID? = nil,
+        reaction: Reaction
+    ) {
+        self.id = id
+        self.mealID = mealID
+        self.raterID = raterID
+        self.eaterID = eaterID
+        self.reaction = reaction
     }
 
     /// The check constraint guarantees one of the two is set, so the fallback is

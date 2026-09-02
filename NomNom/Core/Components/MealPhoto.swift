@@ -4,7 +4,7 @@ import UIKit
 /// A photo of a meal from in-memory data, or a friendly placeholder.
 struct MealPhoto: View {
     let data: Data?
-    var cornerRadius: CGFloat = 12
+    var cornerRadius: CGFloat = AppRadius.photo
 
     var body: some View {
         ZStack {
@@ -22,6 +22,8 @@ struct MealPhoto: View {
                     }
             }
         }
+        .frame(minWidth: 0, maxWidth: .infinity, minHeight: 0, maxHeight: .infinity)
+        .clipped()
         .clipShape(RoundedRectangle(cornerRadius: cornerRadius, style: .continuous))
     }
 }
