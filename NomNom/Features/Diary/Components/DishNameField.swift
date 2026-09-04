@@ -13,6 +13,7 @@ struct DishNameField: View {
 
     let dishes: [Dish]
     let history: [UUID: DishHistory]
+    var favoriteIDs: Set<UUID> = []
 
     @FocusState private var focused: Bool
 
@@ -22,7 +23,7 @@ struct DishNameField: View {
 
     private var suggestions: [DishRepository.NameSuggestion] {
         guard focused else { return [] }
-        let all = DishRepository.suggestions(for: text, in: dishes, history: history)
+        let all = DishRepository.suggestions(for: text, in: dishes, history: history, favoriteIDs: favoriteIDs)
         // Don't offer what's already typed verbatim.
         return all.filter { $0.name.normalizedForMatching != text.normalizedForMatching }
     }

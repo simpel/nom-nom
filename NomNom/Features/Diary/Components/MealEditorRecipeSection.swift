@@ -49,6 +49,11 @@ struct MealEditorRecipeSection: View {
         return store.photos(for: recipe)
     }
 
+    private var isCreator: Bool {
+        guard let recipe = existingMatchedRecipe else { return true }
+        return recipe.ownerID == store.userID
+    }
+
     var body: some View {
         SectionCard("Pick recipe") {
             if title.trimmedName.isEmpty {
@@ -111,8 +116,10 @@ struct MealEditorRecipeSection: View {
                     Label("Change Recipe", systemImage: "arrow.triangle.2.circlepath")
                 }
 
-                Button(action: onEditRecipe) {
-                    Label("Edit Recipe Details", systemImage: "square.and.pencil")
+                if isCreator {
+                    Button(action: onEditRecipe) {
+                        Label("Edit Recipe Details", systemImage: "square.and.pencil")
+                    }
                 }
 
                 Button(role: .destructive, action: onRemoveRecipe) {
@@ -142,8 +149,10 @@ struct MealEditorRecipeSection: View {
                 Label("Change Recipe", systemImage: "arrow.triangle.2.circlepath")
             }
 
-            Button(action: onEditRecipe) {
-                Label("Edit Recipe Details", systemImage: "square.and.pencil")
+            if isCreator {
+                Button(action: onEditRecipe) {
+                    Label("Edit Recipe Details", systemImage: "square.and.pencil")
+                }
             }
 
             Button(role: .destructive, action: onRemoveRecipe) {

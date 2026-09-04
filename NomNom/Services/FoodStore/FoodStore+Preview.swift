@@ -47,17 +47,43 @@ extension FoodStore {
         )
         store.eaters = [kid1, kid2]
 
-        // Party
+        // Parties
         let partyID = UUID(uuidString: "00000000-0000-0000-0000-000000000020")!
         let party = Party(
             id: partyID,
             name: "Dinner Club",
+            about: "A warm Friday evening dinner club sharing homemade comfort food and taco experiments.",
+            isPublic: true,
             createdBy: previewUserID
         )
-        store.parties = [party]
+
+        let publicPartyID = UUID(uuidString: "00000000-0000-0000-0000-000000000021")!
+        let publicParty = Party(
+            id: publicPartyID,
+            name: "Nordic Cooks",
+            about: "Exploring seasonal Scandinavian cuisine, slow braises, and traditional pastries.",
+            isPublic: true,
+            createdBy: friendUserID
+        )
+
+        let discoverPartyID = UUID(uuidString: "00000000-0000-0000-0000-000000000022")!
+        let discoverParty = Party(
+            id: discoverPartyID,
+            name: "Pasta Society",
+            about: "Handmade semolina pasta, rich ragùs, and sourdough focaccia every weekend.",
+            isPublic: true,
+            createdBy: friendUserID
+        )
+
+        store.parties = [party, publicParty, discoverParty]
         store.partyMembers = [
             PartyMember(partyID: partyID, userID: previewUserID),
-            PartyMember(partyID: partyID, userID: friendUserID)
+            PartyMember(partyID: partyID, userID: friendUserID),
+            PartyMember(partyID: publicPartyID, userID: friendUserID),
+            PartyMember(partyID: discoverPartyID, userID: friendUserID)
+        ]
+        store.partyFollowers = [
+            PartyFollower(partyID: publicPartyID, userID: previewUserID)
         ]
 
         // Recipes / Dishes
@@ -70,7 +96,17 @@ extension FoodStore {
             ownerID: previewUserID,
             name: "Birria Tacos",
             tags: ["mexican", "comfort", "dinner"],
-            recipeText: "1. Slow cook beef with guajillo chilies, onions, garlic and spices for 3 hours.\n2. Dip corn tortillas in consommé and fry on flat top.\n3. Fill with shredded beef, Oaxaca cheese, cilantro and diced onion.",
+            ingredients: [
+                RecipeIngredient(quantity: "1", measurement: "kg", ingredient: "beef chuck"),
+                RecipeIngredient(quantity: "4", measurement: "", ingredient: "guajillo chilies"),
+                RecipeIngredient(quantity: "12", measurement: "", ingredient: "corn tortillas"),
+                RecipeIngredient(quantity: "200", measurement: "g", ingredient: "Oaxaca cheese")
+            ],
+            instructions: [
+                "Slow cook beef with guajillo chilies, onions, garlic and spices for 3 hours.",
+                "Dip corn tortillas in consommé and fry on flat top.",
+                "Fill with shredded beef, Oaxaca cheese, cilantro and diced onion."
+            ],
             effort: .over60
         )
         let salmon = Recipe(
@@ -78,7 +114,16 @@ extension FoodStore {
             ownerID: previewUserID,
             name: "Crispy Salmon Bowl",
             tags: ["quick", "fish", "healthy"],
-            recipeText: "Pan sear salmon fillets skin-side down for 4 mins. Serve over warm sushi rice with edamame, avocado, cucumber, and spicy mayo.",
+            ingredients: [
+                RecipeIngredient(quantity: "2", measurement: "", ingredient: "salmon fillets"),
+                RecipeIngredient(quantity: "200", measurement: "g", ingredient: "sushi rice"),
+                RecipeIngredient(quantity: "1", measurement: "", ingredient: "avocado"),
+                RecipeIngredient(quantity: "2", measurement: "tbsp", ingredient: "spicy mayo")
+            ],
+            instructions: [
+                "Pan sear salmon fillets skin-side down for 4 mins.",
+                "Serve over warm sushi rice with edamame, avocado, cucumber, and spicy mayo."
+            ],
             effort: .fifteenTo30
         )
         let pasta = Recipe(
@@ -86,7 +131,15 @@ extension FoodStore {
             ownerID: previewUserID,
             name: "Cacio e Pepe",
             tags: ["pasta", "italian", "classic"],
-            recipeText: "Toast freshly cracked black pepper in olive oil. Emulsify pasta water with Pecorino Romano cheese until velvety smooth.",
+            ingredients: [
+                RecipeIngredient(quantity: "400", measurement: "g", ingredient: "spaghetti"),
+                RecipeIngredient(quantity: "100", measurement: "g", ingredient: "Pecorino Romano"),
+                RecipeIngredient(quantity: "1", measurement: "tbsp", ingredient: "black peppercorns")
+            ],
+            instructions: [
+                "Toast freshly cracked black pepper in olive oil.",
+                "Emulsify pasta water with Pecorino Romano cheese until velvety smooth."
+            ],
             effort: .zeroTo15
         )
         store.dishes = [tacos, salmon, pasta]
@@ -125,6 +178,11 @@ extension FoodStore {
         // Meal parties
         store.mealParties = [
             MealParty(mealID: meal1ID, partyID: partyID)
+        ]
+
+        // Recipe Favorites
+        store.recipeFavorites = [
+            RecipeFavorite(recipeID: recipe1ID, userID: previewUserID)
         ]
 
         store.reindex()

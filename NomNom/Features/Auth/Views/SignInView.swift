@@ -17,7 +17,7 @@ struct SignInView: View {
     var body: some View {
         NavigationStack {
             ScrollView {
-                VStack(spacing: 24) {
+                VStack(spacing: DS.Spacing.sectionLarge) {
                     header
 
                     switch auth.step {
@@ -38,7 +38,8 @@ struct SignInView: View {
                     developmentHint
                     #endif
                 }
-                .padding(24)
+                .padding(.horizontal, 24)
+                .padding(.bottom, DS.Spacing.screenBottom)
                 .frame(maxWidth: 460)
                 .frame(maxWidth: .infinity)
             }
@@ -50,20 +51,21 @@ struct SignInView: View {
     // MARK: - Header
 
     private var header: some View {
-        VStack(spacing: 10) {
-            Image(systemName: "fork.knife.circle.fill")
-                .font(.system(size: 56))
-                .foregroundStyle(.tint)
+        VStack(spacing: DS.Spacing.md) {
+            AuthHeroArcView()
+                .padding(.bottom, DS.Spacing.xs)
+
             Text("Nom Nom")
                 .font(AppTypography.displayXL)
                 .foregroundStyle(DS.Color.textPrimary)
+
             Text("Keep track of what you cooked, whether the kids ate it, and what to cook next.")
                 .font(.subheadline)
                 .foregroundStyle(DS.Color.textSecondary)
                 .multilineTextAlignment(.center)
         }
-        .padding(.top, 32)
-        .padding(.bottom, 8)
+        .padding(.top, DS.Spacing.screenTop)
+        .padding(.bottom, DS.Spacing.xs)
     }
 
     // MARK: - Step one

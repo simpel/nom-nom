@@ -96,16 +96,16 @@ Never add new domain methods directly into `FoodStore.swift`.
 
 ## 5. Modal Sheet Dismissal & Confirmation Convention (Apple HIG Aligned)
 
-Every modal sheet must use the appropriate toolbar action based on its interaction intent:
+Every modal sheet must place the close button ("X") consistently on `.topBarLeading` alone, with any primary or secondary actions (e.g. `+`, `checkmark` to save, `Next`, or `Edit`) placed on the opposite side (`.topBarTrailing`):
 
 ### A. Intent Matrix
 
 | Sheet Type | Purpose & Examples | Leading Action (`.topBarLeading`) | Trailing Action (`.topBarTrailing`) |
 | :--- | :--- | :--- | :--- |
-| **Commit / Form / Editor** | User inputs, edits, ratings, or filters (`MealEditorView`, `MealRatingSheet`, `RecipeEditSheet`, `CreatePartySheet`, `ProfileSheetView`, `SuggestionFiltersView`) | `Image(systemName: "xmark")` (discards uncommitted draft state) | `Image(systemName: "checkmark")` (saves / confirms / commits) or `ProgressView().controlSize(.small)` during async save |
-| **Media / Photo Viewer / Lightbox** | Inspecting photos, galleries, full-screen documents with NO state changes (`MealPhotoViewerSheet`, `MealGalleryViewerSheet`, `RecipePhotoViewerSheet`) | *None* | `Image(systemName: "xmark")` with `.accessibilityLabel("Close")` |
-| **Selection / Entity Picker** | Picking an item where selection immediately closes the sheet (`RecipePickerSheet`) | `Image(systemName: "xmark")` | *None* (no dangling checkmark) |
-| **Management / List Overview** | Modal navigation overview (`PartyListView`, `HouseholdMembersSheet`) | *None* (or standard navigation back when drilled down) | Primary action (e.g. `+` `Image(systemName: "plus")`) and dismissal `Image(systemName: "checkmark")` |
+| **Commit / Form / Editor** | User inputs, edits, ratings, or filters (`MealEditorView`, `MealRatingSheet`, `RecipeEditSheet`, `CreatePartySheet`, `ProfileSheetView`, `SuggestionFiltersView`) | `Image(systemName: "xmark")` (discards uncommitted draft state, alone) | `Image(systemName: "checkmark")` (saves / confirms / commits) or `ProgressView().controlSize(.small)` during async save |
+| **Media / Photo Viewer / Lightbox** | Inspecting photos, galleries, full-screen documents with NO state changes (`MealPhotoViewerSheet`, `MealGalleryViewerSheet`, `RecipePhotoViewerSheet`) | `Image(systemName: "xmark")` with `.accessibilityLabel("Close")` (alone) | *None* |
+| **Selection / Entity Picker** | Picking an item (`RecipePickerSheet`) | `Image(systemName: "xmark")` (alone) | Optional primary action (e.g. `+` `Image(systemName: "plus")`) |
+| **Management / List Overview** | Modal navigation overview (`PartyListView`, `HouseholdMembersSheet`) | `Image(systemName: "xmark")` (alone when modal) | Optional primary action (e.g. `+` `Image(systemName: "plus")`) |
 
 ---
 
@@ -136,7 +136,7 @@ Instead of hand-writing repetitive toolbar boilerplate, **ALWAYS** use the centr
 
 4. **Management / Overview Sheets**:
    ```swift
-   .sheetDoneToolbar(
+   .sheetOverviewToolbar(
        primarySystemImage: "plus",
        onPrimaryAction: { showingCreate = true }
    )
@@ -174,9 +174,8 @@ To prevent duplication and ensure high consistency:
 - [ ] Is `NomNom/Domain/` kept clean of UI code and SwiftUI imports (unless raw type conformances require it)?
 - [ ] Are store methods placed in the corresponding `FoodStore+<Domain>.swift` extension?
 - [ ] Do screens use `.screenTitle(...)` and `PageHeader` rather than ad-hoc navigation/header modifiers?
-- [ ] Do form/editor sheets use trailing checkmark (`Image(systemName: "checkmark")`) to save and leading `xmark` (`Image(systemName: "xmark")`) to discard?
-- [ ] Do media/gallery viewers use trailing `xmark` (`Image(systemName: "xmark")`) to close, and never a checkmark?
-- [ ] Do picker sheets avoid dangling trailing checkmarks?
+- [ ] Do modal sheets place the close button (`Image(systemName: "xmark")`) on `.topBarLeading` alone?
+- [ ] Are primary actions (`+`, `checkmark` save, Next, Edit) placed on `.topBarTrailing` opposite to the close button?
 - [ ] Are emojis completely avoided across all UI and data representations?
 - [ ] Is iconography strictly minimal and purposeful rather than decorative?
 

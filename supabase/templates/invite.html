@@ -1,4 +1,9 @@
 <h2>You're invited to Nom Nom!</h2>
-<p>You have been invited to join a household / dinner party on Nom Nom to share meals and rate delicious food together.</p>
-<p><a href="{{ .ConfirmationURL }}">Accept your invitation and get started</a></p>
-<p>Or use your verification code: <strong>{{ .Token }}</strong></p>
+
+<p>You have been invited to join a dinner party on Nom Nom to share meals and rate food together.</p>
+
+<p>Enter this verification code in the app to sign in and accept your invitation:</p>
+
+<p style="font-size: 28px; font-weight: 700; letter-spacing: 6px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace;">{{ .Token }}</p>
+
+<p><a href="{{ .ConfirmationURL }}">Open Nom Nom to get started</a></p>

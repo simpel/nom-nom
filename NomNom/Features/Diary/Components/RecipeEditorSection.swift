@@ -9,15 +9,10 @@ struct RecipeEditorSection: View {
     @State private var showCamera = false
     @State private var isLoadingPhotos = false
     @State private var previewIndex: Int?
-
     var body: some View {
-        SectionCard("Instructions & Ingredients") {
-            TextField("Ingredients, preparation steps, oven temp, notes...",
-                      text: $draft.text,
-                      axis: .vertical)
-                .lineLimit(4...14)
-                .textInputAutocapitalization(.sentences)
-        }
+        RecipeIngredientsEditorSection(ingredients: $draft.ingredients)
+
+        RecipeInstructionsEditorSection(instructions: $draft.instructions)
 
         SectionCard("Recipe Photos") {
             photosEditor

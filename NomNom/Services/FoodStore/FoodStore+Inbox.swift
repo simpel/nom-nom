@@ -1,5 +1,7 @@
 import Foundation
 import Supabase
+import UIKit
+import UserNotifications
 
 extension FoodStore {
 
@@ -70,6 +72,27 @@ extension FoodStore {
                 .value
             invites.append(created)
             reindex()
+
+            if member.notifyEmailMealInvite {
+                struct SendMemberMealInvitePayload: Encodable {
+                    let meal_id: String
+                    let invitee_user_id: String
+                }
+                let payload = SendMemberMealInvitePayload(
+                    meal_id: mealID.uuidString,
+                    invitee_user_id: member.id.uuidString
+                )
+                do {
+                    try await supabase.functions.invoke(
+                        "send-invite-email",
+                        options: FunctionInvokeOptions(body: payload)
+                    )
+                    Self.log.info("Meal invite email sent to member \(member.shownName)")
+                } catch {
+                    Self.log.error("send-invite-email error for member: \(error.localizedDescription)")
+                }
+            }
+
             errorMessage = nil
             return true
         } catch let error as PostgrestError where error.code == "23505" {
@@ -130,6 +153,27 @@ extension FoodStore {
             if let index = notifications.firstIndex(where: { $0.id == updated.id }) {
                 notifications[index] = updated
             }
+            updateAppBadge()
+        } catch {
+            errorMessage = Self.describe(error)
+        }
+    }
+
+    func markUnread(_ notification: AppNotification) async {
+        guard !notification.isUnread else { return }
+        do {
+            let updated: AppNotification = try await supabase
+                .from("notifications")
+                .update(NotificationUnreadPatch())
+                .eq("id", value: notification.id.uuidString)
+                .select()
+                .single()
+                .execute()
+                .value
+            if let index = notifications.firstIndex(where: { $0.id == updated.id }) {
+                notifications[index] = updated
+            }
+            updateAppBadge()
         } catch {
             errorMessage = Self.describe(error)
         }
@@ -148,6 +192,7 @@ extension FoodStore {
             for index in notifications.indices where notifications[index].readAt == nil {
                 notifications[index].readAt = now
             }
+            updateAppBadge()
         } catch {
             errorMessage = Self.describe(error)
         }
@@ -161,8 +206,20 @@ extension FoodStore {
                 .eq("id", value: notification.id.uuidString)
                 .execute()
             notifications.removeAll { $0.id == notification.id }
+            updateAppBadge()
         } catch {
             errorMessage = Self.describe(error)
+        }
+    }
+
+    private func updateAppBadge() {
+        let count = unreadCount
+        Task { @MainActor in
+            if #available(iOS 16.0, *) {
+                try? await UNUserNotificationCenter.current().setBadgeCount(count)
+            } else {
+                UIApplication.shared.applicationIconBadgeNumber = count
+            }
         }
     }
 }

@@ -21,6 +21,10 @@ struct MealRatingSheet: View {
     @State private var selectedPhotoIndex: Int?
 
     private var meal: Meal? { store.meal(mealID) }
+    private var mealTitle: String {
+        guard let meal else { return "Meal" }
+        return store.dishName(forMeal: meal)
+    }
 
     var body: some View {
         NavigationStack {
@@ -35,7 +39,7 @@ struct MealRatingSheet: View {
                     )
                 }
             }
-            .screenTitle("Rate Meal")
+            .screenTitle("Rate Meal", displayMode: .inline)
             .sheetCommitToolbar(
                 isSaving: isSaving,
                 onCancel: close,
@@ -57,28 +61,38 @@ struct MealRatingSheet: View {
 
     private func ratingForm(for meal: Meal) -> some View {
         ScrollView {
-            VStack(spacing: 20) {
-                // Top Hero Section: Arced Photo Deck (if photos exist)
-                if !meal.photoPaths.isEmpty {
-                    RecipePhotoArcDeck(photoPaths: meal.photoPaths) { index in
-                        selectedPhotoIndex = index
-                    }
+            VStack(spacing: DS.Spacing.section) {
+                // Top Hero Section: Harmonized Arc Hero Header
+                ArcHeroHeaderView(
+                    photoPaths: meal.photoPaths,
+                    title: mealTitle,
+                    date: meal.eatenOn,
+                    alignment: .center
+                ) { index in
+                    selectedPhotoIndex = index
+                }
+                .padding(.bottom, 4)
+
+                // 1. Taste (Standalone)
+                VStack(alignment: .leading, spacing: 8) {
+                    SectionHeader(
+                        "How was it?",
+                        trailingText: myReaction?.name,
+                        trailingColor: myReaction?.text,
+                        horizontalPadding: 4
+                    )
+                    TasteScoreSelector(selection: $myReaction)
                 }
 
-                // Centered Dish Title & Date
-                PageHeader(
-                    title: store.dishName(forMeal: meal),
-                    subtitle: meal.eatenOn.formatted(.dateTime.weekday(.wide).day().month(.wide).year())
-                )
-
-                // 1. Taste
-                SectionCard(title: "How was it?", caption: myReaction?.name) {
-                    TactileOptionPicker(selection: $myReaction)
-                }
-
-                // 2. Repeat Goal
-                SectionCard(title: "How often to repeat", caption: repeatDesire?.title) {
-                    TactileOptionPicker(selection: $repeatDesire)
+                // 2. Repeat Goal (Standalone)
+                VStack(alignment: .leading, spacing: 8) {
+                    SectionHeader(
+                        "How often to repeat",
+                        trailingText: repeatDesire?.title,
+                        trailingColor: DS.Color.accentText,
+                        horizontalPadding: 4
+                    )
+                    RotationGoalSelector(selection: $repeatDesire)
                 }
 
                 // 3. Household Eaters (if present)
@@ -94,8 +108,9 @@ struct MealRatingSheet: View {
                         .background(Color(uiColor: .tertiarySystemFill), in: RoundedRectangle(cornerRadius: AppRadius.input, style: .continuous))
                 }
             }
-            .padding(.horizontal, 16)
-            .padding(.vertical, 14)
+            .padding(.horizontal, DS.Spacing.screenHorizontal)
+            .padding(.top, DS.Spacing.screenTop)
+            .padding(.bottom, DS.Spacing.screenBottom)
         }
         .background(DS.Color.bg)
     }

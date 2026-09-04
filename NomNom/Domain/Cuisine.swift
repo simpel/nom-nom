@@ -38,6 +38,26 @@ enum Cuisine: String, Codable, CaseIterable, Identifiable, Hashable {
         }
     }
 
+    /// Splits comma-separated cuisines into trimmed components.
+    static func parseMultiple(from raw: String?) -> [String] {
+        guard let raw, !raw.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return [] }
+        return raw
+            .split(separator: ",")
+            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+            .filter { !$0.isEmpty }
+    }
+
+    /// Formats all parsed cuisines into their canonical display names.
+    static func formatDisplayNames(from raw: String?) -> [String] {
+        let parts = parseMultiple(from: raw)
+        return parts.map { part in
+            if let preset = matching(from: part) {
+                return preset.displayName
+            }
+            return part.capitalized
+        }
+    }
+
     static func matching(from query: String) -> Cuisine? {
         let normalized = query.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
         guard !normalized.isEmpty else { return nil }
@@ -49,11 +69,9 @@ enum Cuisine: String, Codable, CaseIterable, Identifiable, Hashable {
     }
 
     static func formatDisplayName(_ raw: String?) -> String? {
-        guard let raw, !raw.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return nil }
-        if let preset = matching(from: raw) {
-            return preset.displayName
-        }
-        return raw.capitalized
+        let names = formatDisplayNames(from: raw)
+        guard !names.isEmpty else { return nil }
+        return names.joined(separator: ", ")
     }
 
     var assetImageName: String {
@@ -76,7 +94,9 @@ enum Cuisine: String, Codable, CaseIterable, Identifiable, Hashable {
     }
 
     static func assetImageName(for query: String?) -> String? {
-        guard let query, let cuisine = matching(from: query) else { return nil }
+        guard let query else { return nil }
+        let first = parseMultiple(from: query).first ?? query
+        guard let cuisine = matching(from: first) else { return nil }
         return cuisine.assetImageName
     }
 }

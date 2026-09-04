@@ -1,8 +1,10 @@
 import SwiftUI
 
-/// Clean key-value details table for a meal: Cook, Date, Dinner Party, Cooking Time, Tags, Chef Notes.
+/// Clean key-value details table for a meal: Recipe (tappable row), Chef, Cooking Time, Tags, Chef Notes.
 struct MealDetailCookInfoCard: View {
     let meal: Meal
+    var onOpenRecipe: (() -> Void)? = nil
+    var onOpenParty: ((Party) -> Void)? = nil
 
     @Environment(FoodStore.self) private var store
 
@@ -18,11 +20,34 @@ struct MealDetailCookInfoCard: View {
     var body: some View {
         SectionCard(title: "Details") {
             VStack(spacing: 12) {
-                // Cook Row
+                // Recipe Row (no button styling, still tappable table row)
+                if let onOpenRecipe {
+                    Button(action: onOpenRecipe) {
+                        HStack {
+                            Text("Recipe")
+                                .font(.subheadline)
+                                .foregroundStyle(DS.Color.textSecondary)
+                            Spacer()
+                            HStack(spacing: 6) {
+                                Text(store.recipeName(forMeal: meal))
+                                    .font(.subheadline.weight(.medium))
+                                    .foregroundStyle(DS.Color.textPrimary)
+                                Image(systemName: "chevron.right")
+                                    .font(.caption2)
+                                    .foregroundStyle(DS.Color.textTertiary)
+                            }
+                        }
+                    }
+                    .buttonStyle(.plain)
+
+                    Divider().overlay(DS.Color.line.opacity(0.3))
+                }
+
+                // Chef Row
                 HStack {
-                    Text("Cook")
+                    Text("Chef")
                         .font(.subheadline)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(DS.Color.textSecondary)
                     Spacer()
                     NavigationLink {
                         PersonDetailView(raterRef: .account(meal.createdBy))
@@ -30,57 +55,64 @@ struct MealDetailCookInfoCard: View {
                         HStack(spacing: 8) {
                             ZStack {
                                 Circle()
-                                    .fill(Color.accentColor.opacity(0.12))
+                                    .fill(DS.Color.accentSoft)
                                     .frame(width: 24, height: 24)
                                 Text(cookLabel.name.prefix(1).uppercased())
                                     .font(.system(size: 10, weight: .bold))
-                                    .foregroundStyle(Color.accentColor)
+                                    .foregroundStyle(DS.Color.accentText)
                             }
                             Text(meal.createdBy == store.userID ? "You" : cookLabel.name)
                                 .font(.subheadline.weight(.medium))
-                                .foregroundStyle(.primary)
+                                .foregroundStyle(DS.Color.textPrimary)
                             Image(systemName: "chevron.right")
                                 .font(.caption2)
-                                .foregroundStyle(.tertiary)
+                                .foregroundStyle(DS.Color.textTertiary)
                         }
                     }
                     .buttonStyle(.plain)
                 }
 
-                Divider()
-
-                // Date Row
-                HStack {
-                    Text("Date")
-                        .font(.subheadline)
-                        .foregroundStyle(.secondary)
-                    Spacer()
-                    Text(meal.eatenOn, format: .dateTime.weekday(.wide).day().month(.wide).year())
-                        .font(.subheadline.weight(.medium))
-                        .foregroundStyle(.primary)
-                }
-
-                // Dinner Party
-                if !parties.isEmpty {
-                    Divider()
+                // Dinner Party Row
+                if let party = parties.first {
+                    Divider().overlay(DS.Color.line.opacity(0.3))
                     HStack {
                         Text("Dinner Party")
                             .font(.subheadline)
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(DS.Color.textSecondary)
                         Spacer()
-                        Text(parties.map(\.name).joined(separator: ", "))
-                            .font(.subheadline.weight(.medium))
-                            .foregroundStyle(.primary)
+                        if let onOpenParty {
+                            Button {
+                                onOpenParty(party)
+                            } label: {
+                                HStack(spacing: 6) {
+                                    PartyAvatar(party: party, size: 20)
+                                    Text(parties.map(\.name).joined(separator: ", "))
+                                        .font(.subheadline.weight(.medium))
+                                        .foregroundStyle(DS.Color.accentText)
+                                    Image(systemName: "chevron.right")
+                                        .font(.caption2)
+                                        .foregroundStyle(DS.Color.textTertiary)
+                                }
+                            }
+                            .buttonStyle(.plain)
+                        } else {
+                            HStack(spacing: 6) {
+                                PartyAvatar(party: party, size: 20)
+                                Text(parties.map(\.name).joined(separator: ", "))
+                                    .font(.subheadline.weight(.medium))
+                                    .foregroundStyle(DS.Color.textPrimary)
+                            }
+                        }
                     }
                 }
 
                 // Cooking Time / Effort (if specified)
                 if let effort = displayEffort {
-                    Divider()
+                    Divider().overlay(DS.Color.line.opacity(0.3))
                     HStack {
                         Text("Cooking Time")
                             .font(.subheadline)
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(DS.Color.textSecondary)
                         Spacer()
                         BurnerMeter(effort: effort, showLabel: true)
                     }
@@ -88,11 +120,11 @@ struct MealDetailCookInfoCard: View {
 
                 // Tags
                 if let tags = dish?.tags, !tags.isEmpty {
-                    Divider()
+                    Divider().overlay(DS.Color.line.opacity(0.3))
                     HStack(alignment: .top) {
                         Text("Tags")
                             .font(.subheadline)
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(DS.Color.textSecondary)
                             .padding(.top, 2)
                         Spacer()
                         WrappingHStack {
@@ -105,15 +137,15 @@ struct MealDetailCookInfoCard: View {
 
                 // Chef Notes
                 if !meal.notes.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-                    Divider()
+                    Divider().overlay(DS.Color.line.opacity(0.3))
                     HStack(alignment: .top) {
                         Text("Notes")
                             .font(.subheadline)
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(DS.Color.textSecondary)
                         Spacer()
                         Text(meal.notes)
                             .font(.subheadline)
-                            .foregroundStyle(.primary)
+                            .foregroundStyle(DS.Color.textPrimary)
                             .multilineTextAlignment(.trailing)
                     }
                 }

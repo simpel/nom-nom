@@ -9,33 +9,34 @@ struct MealVerdictStepView: View {
     @State private var myReaction: Reaction?
     @State private var repeatDesire: RotationGoal?
     @State private var isSaving = false
+    @State private var selectedPhotoIndex: Int?
 
     var body: some View {
         ScrollView {
-            VStack(spacing: 20) {
-                // Top Hero Section: Arced Photo Deck (if photos exist)
-                if !draft.photos.isEmpty {
-                    RecipePhotoArcDeck(draft: draft.photos)
+            VStack(spacing: DS.Spacing.section) {
+                // Top Hero Section: Harmonized Arc Hero Header
+                ArcHeroHeaderView(
+                    draft: draft.photos,
+                    title: draft.dishName.isEmpty ? "Rate Meal" : draft.dishName,
+                    date: draft.eatenOn,
+                    alignment: .center
+                ) { index in
+                    selectedPhotoIndex = index
                 }
+                .padding(.bottom, 4)
 
-                // Centered Dish Title & Date
-                PageHeader(
-                    title: draft.dishName,
-                    subtitle: draft.eatenOn.formatted(.dateTime.weekday(.wide).day().month(.wide).year())
-                )
+                // Axis 1: Taste Verdict (Standalone 6-tile selector)
+                tasteSection
 
-                // Axis 1: Taste Verdict (3-card selector)
-                tasteSectionCard
-
-                // Axis 2: Rotation Goal (3-card selector)
-                rotationSectionCard
+                // Axis 2: Rotation Goal (Standalone 3-card selector)
+                rotationSection
             }
-            .padding(.horizontal, 16)
-            .padding(.top, 12)
-            .padding(.bottom, 36)
+            .padding(.horizontal, DS.Spacing.screenHorizontal)
+            .padding(.top, DS.Spacing.screenTop)
+            .padding(.bottom, DS.Spacing.screenBottom)
         }
         .background(DS.Color.bg)
-        .screenTitle("Rate Meal")
+        .screenTitle("Rate Meal", displayMode: .inline)
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
                 if isSaving {
@@ -48,6 +49,14 @@ struct MealVerdictStepView: View {
                             .fontWeight(.semibold)
                     }
                 }
+            }
+        }
+        .sheet(item: Binding(
+            get: { selectedPhotoIndex.map { PhotoIndexWrapper(index: $0) } },
+            set: { selectedPhotoIndex = $0?.index }
+        )) { wrapper in
+            if !draft.photos.isEmpty {
+                MealPhotoViewerSheet(draft: draft.photos, initialIndex: wrapper.index)
             }
         }
         .onAppear {
@@ -66,23 +75,29 @@ struct MealVerdictStepView: View {
 
     // MARK: - Taste Section
 
-    private var tasteSectionCard: some View {
-        SectionCard(
-            title: "How was it?",
-            caption: myReaction?.name
-        ) {
-            TactileOptionPicker(selection: $myReaction)
+    private var tasteSection: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            SectionHeader(
+                "How was it?",
+                trailingText: myReaction?.name,
+                trailingColor: myReaction?.text,
+                horizontalPadding: 4
+            )
+            TasteScoreSelector(selection: $myReaction)
         }
     }
 
     // MARK: - Rotation Section
 
-    private var rotationSectionCard: some View {
-        SectionCard(
-            title: "How often to repeat",
-            caption: repeatDesire?.title
-        ) {
-            TactileOptionPicker(selection: $repeatDesire)
+    private var rotationSection: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            SectionHeader(
+                "How often to repeat",
+                trailingText: repeatDesire?.title,
+                trailingColor: DS.Color.accentText,
+                horizontalPadding: 4
+            )
+            RotationGoalSelector(selection: $repeatDesire)
         }
     }
 

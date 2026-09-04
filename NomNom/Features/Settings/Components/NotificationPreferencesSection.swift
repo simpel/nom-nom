@@ -164,10 +164,9 @@ struct NotificationPreferencesSection: View {
         if isEnabled {
             Task {
                 if notifications.authorizationStatus == .notDetermined {
-                    let granted = await notifications.requestAuthorization()
-                    if granted, let token = notifications.deviceToken {
-                        await store.registerDeviceToken(token)
-                    }
+                    _ = await notifications.requestAuthorization()
+                } else if notifications.authorizationStatus == .authorized {
+                    UIApplication.shared.registerForRemoteNotifications()
                 }
             }
         }

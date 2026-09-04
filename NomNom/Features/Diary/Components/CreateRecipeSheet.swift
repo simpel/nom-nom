@@ -3,12 +3,14 @@ import SwiftUI
 /// Dedicated modal sheet for creating a new recipe with name, instructions, effort, and tags.
 struct CreateRecipeSheet: View {
     var initialName: String = ""
+    var initialCuisine: String? = nil
     var onCreated: ((Recipe) -> Void)?
 
     @Environment(FoodStore.self) private var store
     @Environment(\.dismiss) private var dismiss
 
     @State private var name: String = ""
+    @State private var coverPhotosDraft = FoodStore.PhotosDraft()
     @State private var recipeDraft = FoodStore.RecipeDraft()
     @State private var tagsText: String = ""
     @State private var isSaving = false
@@ -16,7 +18,9 @@ struct CreateRecipeSheet: View {
     var body: some View {
         NavigationStack {
             ScrollView {
-                VStack(spacing: 16) {
+                VStack(spacing: DS.Spacing.section) {
+                    AssetPhotosPickerSection(draft: $coverPhotosDraft)
+
                     SectionCard("Recipe Name") {
                         TextField("Recipe name (e.g. Carbonara)", text: $name)
                             .autocorrectionDisabled()
@@ -47,8 +51,9 @@ struct CreateRecipeSheet: View {
                         }
                     }
                 }
-                .padding(.horizontal, 16)
-                .padding(.vertical, 14)
+                .padding(.horizontal, DS.Spacing.screenHorizontal)
+                .padding(.top, DS.Spacing.screenTop)
+                .padding(.bottom, DS.Spacing.screenBottom)
             }
             .background(DS.Color.bg)
             .screenTitle("New Recipe", displayMode: .inline)
@@ -60,6 +65,9 @@ struct CreateRecipeSheet: View {
             .onAppear {
                 if name.isEmpty && !initialName.isEmpty {
                     name = initialName
+                }
+                if recipeDraft.cuisine == nil, let initialCuisine {
+                    recipeDraft.cuisine = initialCuisine
                 }
             }
         }
@@ -79,6 +87,7 @@ struct CreateRecipeSheet: View {
                     cuisine: recipeDraft.cuisine,
                     isPublic: recipeDraft.isPublic
                 )
+                try await store.applyCoverPhotos(coverPhotosDraft, to: recipe)
                 try await store.applyRecipe(recipeDraft, to: recipe)
                 isSaving = false
                 onCreated?(recipe)

@@ -25,7 +25,9 @@ extension FoodStore {
             async let parties: [Party] = supabase.from("parties").select().execute().value
             async let partyMembers: [PartyMember] = supabase.from("party_members").select().execute().value
             async let partyInvites: [PartyInvite] = supabase.from("party_invites").select().execute().value
+            async let partyFollowers: [PartyFollower] = supabase.from("party_followers").select().execute().value
             async let mealParties: [MealParty] = supabase.from("meal_parties").select().execute().value
+            async let recipeFavorites: [RecipeFavorite] = supabase.from("recipe_favorites").select().execute().value
 
             self.dishes = try await dishes
             self.meals = try await meals
@@ -36,7 +38,9 @@ extension FoodStore {
             self.parties = try await parties
             self.partyMembers = try await partyMembers
             self.partyInvites = try await partyInvites
+            self.partyFollowers = try await partyFollowers
             self.mealParties = try await mealParties
+            self.recipeFavorites = try await recipeFavorites
 
             reindex()
             try await loadProfiles()
@@ -49,12 +53,15 @@ extension FoodStore {
     func loadProfiles() async throws {
         var wanted: Set<UUID> = [userID]
         wanted.formUnion(meals.map(\.createdBy))
+        wanted.formUnion(dishes.map(\.ownerID))
         wanted.formUnion(invites.map(\.inviterID))
         wanted.formUnion(invites.compactMap(\.inviteeID))
         wanted.formUnion(ratings.compactMap(\.raterID))
         wanted.formUnion(partyMembers.map(\.userID))
         wanted.formUnion(partyInvites.map(\.inviterID))
         wanted.formUnion(partyInvites.compactMap(\.inviteeID))
+        wanted.formUnion(parties.map(\.createdBy))
+        wanted.formUnion(partyFollowers.map(\.userID))
 
         let missing = wanted.subtracting(profiles.keys)
         guard !missing.isEmpty else { return }
@@ -89,6 +96,8 @@ extension FoodStore {
         mealPartiesByMeal = Dictionary(grouping: mealParties, by: \.mealID)
         mealPartiesByParty = Dictionary(grouping: mealParties, by: \.partyID)
         partyMembersByParty = Dictionary(grouping: partyMembers, by: \.partyID)
+        partyFollowersByParty = Dictionary(grouping: partyFollowers, by: \.partyID)
+        favoriteRecipeIDs = Set(recipeFavorites.filter { $0.userID == userID }.map(\.recipeID))
 
         let myPartyIDs = Set(partyMembers.filter { $0.userID == userID }.map(\.partyID))
         if let current = currentParty, !myPartyIDs.contains(current.id) {

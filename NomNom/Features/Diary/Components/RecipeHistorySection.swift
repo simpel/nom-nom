@@ -3,7 +3,7 @@ import SwiftUI
 /// Section in RecipeDetailView showing cooked history filtered by dinner party, with auto-load pagination.
 struct RecipeHistorySection: View {
     let history: [Meal]
-    let selectedPartyID: UUID?
+    var selectedPartyID: UUID? = nil
     let onSelectMeal: (Meal) -> Void
 
     @Environment(FoodStore.self) private var store
@@ -19,12 +19,12 @@ struct RecipeHistorySection: View {
     }
 
     var body: some View {
-        SectionCard("Cooked History (\(filteredHistory.count))") {
+        SectionCard("Cooked History", caption: "\(filteredHistory.count) occasions") {
             VStack(spacing: 8) {
                 if filteredHistory.isEmpty {
                     Text(selectedPartyID == nil ? "No meals logged for this recipe yet." : "No meals logged for this dinner party.")
                         .font(.subheadline)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(DS.Color.textSecondary)
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .padding(.vertical, 4)
                 } else {
@@ -32,7 +32,7 @@ struct RecipeHistorySection: View {
                         Button {
                             onSelectMeal(meal)
                         } label: {
-                            MealRow(meal: meal)
+                            RecipeHistoryRow(meal: meal)
                         }
                         .buttonStyle(.plain)
                         .onAppear {
@@ -42,7 +42,7 @@ struct RecipeHistorySection: View {
                         }
 
                         if meal.id != visibleMeals.last?.id {
-                            Divider()
+                            Divider().overlay(DS.Color.line.opacity(0.25))
                         }
                     }
                 }

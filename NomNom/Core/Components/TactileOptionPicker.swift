@@ -58,13 +58,15 @@ struct TactileOptionPicker<Option: TactilePickerOption>: View {
                 let hasIcon = showIcon && option.icon != nil
                 let hasDescription = showDescription && option.description != nil
 
+                let isRotation = option is RotationGoal
+
                 Button {
                     UIImpactFeedbackGenerator(style: .light).impactOccurred()
                     withAnimation(.spring(response: 0.25, dampingFraction: 0.75)) {
                         selection = isSelected ? nil : option
                     }
                 } label: {
-                    VStack(spacing: 4) {
+                    VStack(spacing: isRotation ? 6 : 4) {
                         if let effort = option as? EffortLevel {
                             BurnerMeter(effort: effort)
                                 .frame(height: 22)
@@ -78,7 +80,7 @@ struct TactileOptionPicker<Option: TactilePickerOption>: View {
                                 .frame(height: 20)
                         }
 
-                        if showLabel {
+                        if showLabel && !isRotation {
                             if !hasIcon && !hasDescription {
                                 Text(option.label)
                                     .font(.system(size: 20, weight: isSelected ? .bold : .semibold, design: .rounded))

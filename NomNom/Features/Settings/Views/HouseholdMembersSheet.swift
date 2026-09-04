@@ -12,7 +12,7 @@ struct HouseholdMembersSheet: View {
                 HouseholdMembersSection(emojiChoices: emojiChoices)
             }
             .screenTitle("Household Members", displayMode: .inline)
-            .sheetDoneToolbar()
+            .sheetCloseToolbar()
         }
     }
 }

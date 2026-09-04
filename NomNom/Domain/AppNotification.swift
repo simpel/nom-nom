@@ -52,10 +52,10 @@ struct AppNotification: Identifiable, Hashable, Decodable {
 
     var symbol: String {
         switch kind {
-        case .ratingRequest: return "hand.raised.fill"
-        case .ratingReceived: return "star.bubble.fill"
+        case .ratingRequest: return "fork.knife"
+        case .ratingReceived: return "fork.knife"
         case .partyInvite: return "person.2.fill"
-        case .partyJoined: return "person.crop.circle.badge.plus"
+        case .partyJoined: return "person.badge.plus"
         case .other: return "bell.fill"
         }
     }
@@ -67,4 +67,8 @@ struct NotificationReadPatch: Encodable {
     init(at date: Date = .now) {
         self.read_at = ISO8601DateFormatter().string(from: date)
     }
+}
+
+struct NotificationUnreadPatch: Encodable {
+    let read_at: String? = nil
 }

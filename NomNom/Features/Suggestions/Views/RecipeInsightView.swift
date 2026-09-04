@@ -1,7 +1,7 @@
 import SwiftUI
 
 /// Why is this recipe being suggested? Shows the parts of the score and the history
-/// behind them, plus rename/merge so the naming can be cleaned up after the fact.
+/// behind them, plus rename so the naming can be cleaned up after the fact.
 struct RecipeInsightView: View {
     let suggestion: Suggestion
 
@@ -10,7 +10,6 @@ struct RecipeInsightView: View {
     @State private var showEditor = false
     @State private var renaming = false
     @State private var newName = ""
-    @State private var mergeTarget: Recipe?
 
     private var recipe: Recipe? { store.recipe(suggestion.dish.id) }
     private var history: [Meal] { store.servings(of: suggestion.dish.id) }
@@ -22,7 +21,7 @@ struct RecipeInsightView: View {
             } else {
                 ContentUnavailableView("Recipe is gone",
                                        systemImage: "questionmark.folder",
-                                       description: Text("It was deleted or merged into another recipe."))
+                                       description: Text("It was deleted."))
             }
         }
         .navigationTitle("Recipe")
@@ -40,26 +39,12 @@ struct RecipeInsightView: View {
                 Task { await store.rename(recipe: recipe, to: trimmed) }
             }
         }
-        .confirmationDialog("Merge into “\(mergeTarget?.name ?? "")”?",
-                            isPresented: Binding(get: { mergeTarget != nil },
-                                                 set: { if !$0 { mergeTarget = nil } }),
-                            titleVisibility: .visible) {
-            Button("Merge \(history.count) meal\(history.count == 1 ? "" : "s")", role: .destructive) {
-                if let recipe, let mergeTarget {
-                    Task { await store.merge(recipe: recipe, into: mergeTarget) }
-                }
-                mergeTarget = nil
-            }
-            Button("Cancel", role: .cancel) { mergeTarget = nil }
-        } message: {
-            Text("“\(recipe?.name ?? "")” will be removed and its history kept under the other name.")
         }
-    }
 
     @ViewBuilder
     private func content(for recipe: Recipe) -> some View {
         ScrollView {
-            VStack(spacing: 16) {
+            VStack(spacing: DS.Spacing.section) {
                 SectionCard {
                     VStack(alignment: .leading, spacing: 12) {
                         HStack(alignment: .top, spacing: 14) {
@@ -259,8 +244,9 @@ struct RecipeInsightView: View {
 
                 housekeepingSection(for: recipe)
             }
-            .padding(.horizontal, 16)
-            .padding(.vertical, 14)
+            .padding(.horizontal, DS.Spacing.screenHorizontal)
+            .padding(.top, DS.Spacing.screenTop)
+            .padding(.bottom, DS.Spacing.screenBottom)
         }
         .background(Color(uiColor: .systemGroupedBackground))
     }
@@ -272,32 +258,9 @@ struct RecipeInsightView: View {
                     newName = recipe.name
                     renaming = true
                 }
-                if !mergeCandidates(excluding: recipe).isEmpty {
-                    Divider()
-                    Menu("Merge into another recipe") {
-                        ForEach(mergeCandidates(excluding: recipe)) { candidate in
-                            Button(candidate.name) {
-                                mergeTarget = candidate
-                            }
-                        }
-                    }
-                }
-
-                Text("Merging moves every logged meal onto the other recipe and keeps its name.")
-                    .font(.caption2)
-                    .foregroundStyle(DS.Color.textSecondary)
-                    .padding(.top, 4)
             }
         }
         .background(DS.Color.bg)
-    }
-
-    private func mergeCandidates(excluding recipe: Recipe) -> [Recipe] {
-        store.myRecipes
-            .filter { $0.id != recipe.id }
-            .sorted { Fuzzy.similarity($0.normalizedName, recipe.normalizedName) > Fuzzy.similarity($1.normalizedName, recipe.normalizedName) }
-            .prefix(8)
-            .map { $0 }
     }
 
     private var readinessCaption: String? {

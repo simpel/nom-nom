@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// Card displaying dinner party members, their ratings for this meal, and quick "Ask to rate" actions.
+/// Card displaying individual dinner party member ratings (strictly no icons).
 struct MealDetailPartyRatingsCard: View {
     let meal: Meal
 
@@ -18,8 +18,7 @@ struct MealDetailPartyRatingsCard: View {
         var seen = Set<UUID>()
         var list: [Profile] = []
 
-        // Always include current user first
-        let myProfile = store.myProfile ?? Profile(id: store.userID, displayName: "You", avatarEmoji: "🧑")
+        let myProfile = store.myProfile ?? Profile(id: store.userID, displayName: "You", avatarEmoji: "")
         list.append(myProfile)
         seen.insert(store.userID)
 
@@ -31,168 +30,29 @@ struct MealDetailPartyRatingsCard: View {
                 }
             }
         }
+
+        // Include any outside invited members or accounts that have rated this meal
+        for invite in mealInvites {
+            if let inviteeID = invite.inviteeID, !seen.contains(inviteeID) {
+                seen.insert(inviteeID)
+                let profile = store.profiles[inviteeID] ?? Profile(id: inviteeID, displayName: invite.inviteeEmail ?? "Guest", avatarEmoji: "")
+                list.append(profile)
+            }
+        }
+        for rating in store.ratings(forMeal: meal.id) {
+            if case .account(let accountID) = rating.source, !seen.contains(accountID) {
+                seen.insert(accountID)
+                let profile = store.profiles[accountID] ?? Profile(id: accountID, displayName: "Guest", avatarEmoji: "")
+                list.append(profile)
+            }
+        }
+
         return list
     }
 
     private var mealInvites: [MealInvite] {
         store.invites(forMeal: meal.id)
     }
-
-    var body: some View {
-        SectionCard(title: "Ratings") {
-            VStack(spacing: 12) {
-                ForEach(partyMembers) { member in
-                    memberRow(member)
-                }
-
-                // Household eaters ratings if any
-                ForEach(householdEaterVerdicts) { verdict in
-                    eaterRow(verdict)
-                }
-            }
-        }
-        .sheet(isPresented: $showRatingSheet) {
-            MealRatingSheet(mealID: meal.id)
-        }
-    }
-
-    // MARK: - Member Rows
-
-    @ViewBuilder
-    private func memberRow(_ member: Profile) -> some View {
-        let isMe = member.id == store.userID
-        let rating = store.rating(for: .account(member.id), on: meal.id)
-        let isAsked = mealInvites.contains { $0.inviteeID == member.id }
-
-        if isMe {
-            myRatingRow(member: member, rating: rating)
-        } else {
-            otherMemberRow(member: member, rating: rating, isAsked: isAsked)
-        }
-    }
-
-    @ViewBuilder
-    private func myRatingRow(member: Profile, rating: MealRating?) -> some View {
-        Button {
-            showRatingSheet = true
-        } label: {
-            HStack(spacing: 12) {
-                ZStack {
-                    Circle()
-                        .fill(Color.accentColor.opacity(0.12))
-                        .frame(width: 36, height: 36)
-                    Text(member.displayName.prefix(1).uppercased())
-                        .font(.system(size: 13, weight: .bold))
-                        .foregroundStyle(Color.accentColor)
-                }
-
-                Text("You")
-                    .font(.subheadline.weight(.medium))
-                    .foregroundStyle(.primary)
-
-                Spacer()
-
-                if let reaction = rating?.reaction {
-                    HStack(spacing: 5) {
-                        Image(systemName: reaction.systemImage)
-                            .font(.system(size: 13, weight: .semibold))
-                        Text(reaction.shortLabel)
-                            .font(.subheadline.weight(.semibold))
-                    }
-                    .foregroundStyle(reaction.text)
-                    .padding(.horizontal, 10)
-                    .padding(.vertical, 5)
-                    .background(Capsule().fill(reaction.fill.opacity(0.16)))
-                    .overlay(Capsule().strokeBorder(reaction.fill.opacity(0.3), lineWidth: 1))
-                    .accessibilityLabel(reaction.name)
-                } else {
-                    Text("Rate")
-                        .font(.caption.weight(.semibold))
-                        .foregroundStyle(Color.accentColor)
-                        .padding(.horizontal, 12)
-                        .padding(.vertical, 6)
-                        .background(Color.accentColor.opacity(0.12), in: Capsule())
-                }
-            }
-            .contentShape(Rectangle())
-        }
-        .buttonStyle(.plain)
-        .padding(.vertical, 2)
-    }
-
-    @ViewBuilder
-    private func otherMemberRow(member: Profile, rating: MealRating?, isAsked: Bool) -> some View {
-        HStack(spacing: 12) {
-            ZStack {
-                Circle()
-                    .fill(Color.accentColor.opacity(0.12))
-                    .frame(width: 36, height: 36)
-                Text(member.shownName.prefix(1).uppercased())
-                    .font(.system(size: 13, weight: .bold))
-                    .foregroundStyle(Color.accentColor)
-            }
-
-            Text(member.shownName)
-                .font(.subheadline.weight(.medium))
-                .foregroundStyle(.primary)
-
-            Spacer()
-
-            if let reaction = rating?.reaction {
-                HStack(spacing: 5) {
-                    Image(systemName: reaction.systemImage)
-                        .font(.system(size: 13, weight: .semibold))
-                    Text(reaction.shortLabel)
-                        .font(.subheadline.weight(.semibold))
-                }
-                .foregroundStyle(reaction.text)
-                .padding(.horizontal, 10)
-                .padding(.vertical, 5)
-                .background(Capsule().fill(reaction.fill.opacity(0.16)))
-                .overlay(Capsule().strokeBorder(reaction.fill.opacity(0.3), lineWidth: 1))
-                .accessibilityLabel(reaction.name)
-            } else if isAsked {
-                HStack(spacing: 4) {
-                    Image(systemName: "clock.badge.checkmark")
-                        .font(.caption2)
-                    Text("Asked")
-                        .font(.caption.weight(.medium))
-                }
-                .foregroundStyle(.secondary)
-                .padding(.horizontal, 10)
-                .padding(.vertical, 5)
-                .background(Color.secondary.opacity(0.1), in: Capsule())
-            } else {
-                Button {
-                    invitingMemberID = member.id
-                    Task {
-                        _ = await store.askToRate(member: member, forMeal: meal.id)
-                        invitingMemberID = nil
-                    }
-                } label: {
-                    HStack(spacing: 4) {
-                        if invitingMemberID == member.id {
-                            ProgressView().controlSize(.mini)
-                        } else {
-                            Image(systemName: "bell.fill")
-                                .font(.caption2)
-                        }
-                        Text("Ask to rate")
-                            .font(.caption.weight(.semibold))
-                    }
-                    .foregroundStyle(Color.accentColor)
-                    .padding(.horizontal, 10)
-                    .padding(.vertical, 5)
-                    .background(Color.accentColor.opacity(0.12), in: Capsule())
-                }
-                .buttonStyle(.plain)
-                .disabled(invitingMemberID != nil)
-            }
-        }
-        .padding(.vertical, 2)
-    }
-
-    // MARK: - Household Eaters
 
     private var householdEaterVerdicts: [FoodStore.VerdictDetail] {
         store.verdictDetails(forMeal: meal.id).filter { detail in
@@ -201,39 +61,64 @@ struct MealDetailPartyRatingsCard: View {
         }
     }
 
-    @ViewBuilder
-    private func eaterRow(_ detail: FoodStore.VerdictDetail) -> some View {
-        HStack(spacing: 12) {
-            ZStack {
-                Circle()
-                    .fill(Color.secondary.opacity(0.12))
-                    .frame(width: 36, height: 36)
-                Text(detail.name.prefix(1).uppercased())
-                    .font(.system(size: 13, weight: .bold))
-                    .foregroundStyle(Color.primary)
-            }
+    private var totalParticipants: Int {
+        partyMembers.count + householdEaterVerdicts.count
+    }
 
-            Text(detail.name)
-                .font(.subheadline.weight(.medium))
-                .foregroundStyle(.primary)
+    private var ratingsCaption: String {
+        let ratings = store.ratings(forMeal: meal.id)
+        guard !ratings.isEmpty else { return "Awaiting ratings" }
+        if totalParticipants > 0 {
+            return "\(ratings.count) of \(totalParticipants) rated"
+        }
+        return "\(ratings.count) rating\(ratings.count == 1 ? "" : "s")"
+    }
 
-            Spacer()
+    var body: some View {
+        SectionCard("Participants", caption: ratingsCaption) {
+            VStack(spacing: 12) {
+                ForEach(partyMembers) { member in
+                    let isMe = member.id == store.userID
+                    let rating = store.rating(for: .account(member.id), on: meal.id)
+                    let isAsked = mealInvites.contains { $0.inviteeID == member.id }
 
-            if let reaction = detail.reaction {
-                HStack(spacing: 5) {
-                    Image(systemName: reaction.systemImage)
-                        .font(.system(size: 13, weight: .semibold))
-                    Text(reaction.shortLabel)
-                        .font(.subheadline.weight(.semibold))
+                    MealDetailMemberRatingRow(
+                        name: member.shownName,
+                        avatar: member.avatarEmoji,
+                        initialLetter: String(member.shownName.prefix(1)),
+                        isMe: isMe,
+                        rating: rating,
+                        isAsked: isAsked,
+                        isInviting: invitingMemberID == member.id,
+                        onTapRate: { showRatingSheet = true },
+                        onAskToRate: { askToRate(member) }
+                    )
                 }
-                .foregroundStyle(reaction.text)
-                .padding(.horizontal, 10)
-                .padding(.vertical, 5)
-                .background(Capsule().fill(reaction.fill.opacity(0.16)))
-                .overlay(Capsule().strokeBorder(reaction.fill.opacity(0.3), lineWidth: 1))
-                .accessibilityLabel(reaction.name)
+
+                // Household Eaters Rows (Strictly NO ICONS)
+                ForEach(householdEaterVerdicts) { verdict in
+                    MealDetailMemberRatingRow(
+                        name: verdict.name,
+                        avatar: verdict.emoji,
+                        initialLetter: String(verdict.name.prefix(1)),
+                        isMe: false,
+                        reaction: verdict.reaction,
+                        isAsked: false,
+                        isInviting: false
+                    )
+                }
             }
         }
-        .padding(.vertical, 2)
+        .sheet(isPresented: $showRatingSheet) {
+            MealRatingSheet(mealID: meal.id)
+        }
+    }
+
+    private func askToRate(_ member: Profile) {
+        invitingMemberID = member.id
+        Task {
+            _ = await store.askToRate(member: member, forMeal: meal.id)
+            invitingMemberID = nil
+        }
     }
 }

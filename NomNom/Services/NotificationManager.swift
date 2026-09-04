@@ -11,6 +11,7 @@ final class NotificationManager: NSObject, UNUserNotificationCenterDelegate {
     var authorizationStatus: UNAuthorizationStatus = .notDetermined
     var deviceToken: String?
     var pendingRateMealID: UUID?
+    var pendingViewMealID: UUID?
 
     private static let log = Logger(subsystem: "se.joelsanden.nomnom", category: "notifications")
 
@@ -89,9 +90,14 @@ final class NotificationManager: NSObject, UNUserNotificationCenterDelegate {
     ) {
         let userInfo = response.notification.request.content.userInfo
         let mealIdString = (userInfo["mealId"] as? String) ?? (userInfo["meal_id"] as? String)
+        let kind = (userInfo["kind"] as? String) ?? ""
         if let mealIdString, let id = UUID(uuidString: mealIdString) {
             Task { @MainActor in
-                NotificationManager.shared.pendingRateMealID = id
+                if kind == "rating_request" {
+                    NotificationManager.shared.pendingRateMealID = id
+                } else {
+                    NotificationManager.shared.pendingViewMealID = id
+                }
             }
         }
         completionHandler()

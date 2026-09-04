@@ -86,7 +86,8 @@ extension FoodStore {
     }
 
     struct RecipeDraft: Equatable {
-        var text: String = ""
+        var ingredients: [RecipeIngredient] = []
+        var instructions: [String] = []
         var existingPhotoPaths: [String] = []
         var addedPhotoData: [Data] = []
         var removedPhotoPaths: [String] = []
@@ -100,7 +101,9 @@ extension FoodStore {
 
         var hasContent: Bool {
             if effort != nil || cuisine != nil || !isPublic { return true }
-            return !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || totalPhotosCount > 0
+            let hasIngredients = ingredients.contains { !$0.isEmpty }
+            let hasInstructions = instructions.contains { !$0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
+            return hasIngredients || hasInstructions || totalPhotosCount > 0
         }
     }
 

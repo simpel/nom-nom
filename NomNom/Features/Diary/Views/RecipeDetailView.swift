@@ -1,28 +1,36 @@
 import SwiftUI
 
 /// Comprehensive detail view for a recipe:
-/// - Hero image arc deck displaying all photos associated with this recipe
-/// - Header card with title, stats, duration, tags, and prominent "Cook this recipe" action button
-/// - Horizontal scrollable line graph of general scores over time (filterable by dinner party)
-/// - Cooked history list with auto-loading on scroll (filtered by selected dinner party)
-/// - Top-right Edit mode toggle (reveals rename, merge, and housekeeping tools)
+/// - Harmonized centered arc hero presentation with photos, recipe title, and last cooked date
+/// - Key-value details table (Created by, Cooking Time, Cuisine, Tags) matching MealDetailView
+/// - Structured ingredients, instructions, and recipe page photos
+/// - Cooked history list with auto-loading on scroll (when history exists)
+/// - Top-right Edit button when owned by current user
 struct RecipeDetailView: View {
     let recipeID: UUID
+    var showCloseButton: Bool = false
 
     @Environment(FoodStore.self) private var store
+    @Environment(\.dismiss) private var dismiss
 
     @State private var showEditSheet = false
-    @State private var selectedPartyID: UUID?
     @State private var showMealEditor = false
     @State private var selectedMealForDetail: Meal?
     @State private var selectedPhotoIndex: Int?
 
-    init(recipeID: UUID) {
+    init(recipeID: UUID, showCloseButton: Bool = false) {
         self.recipeID = recipeID
+        self.showCloseButton = showCloseButton
     }
 
-    init(dishID: UUID) {
+    init(recipe: Recipe, showCloseButton: Bool = false) {
+        self.recipeID = recipe.id
+        self.showCloseButton = showCloseButton
+    }
+
+    init(dishID: UUID, showCloseButton: Bool = false) {
         self.recipeID = dishID
+        self.showCloseButton = showCloseButton
     }
 
     private var recipe: Recipe? { store.recipe(recipeID) }
@@ -40,15 +48,39 @@ struct RecipeDetailView: View {
                 ContentUnavailableView(
                     "Recipe is gone",
                     systemImage: "questionmark.folder",
-                    description: Text("It was deleted or merged into another recipe.")
+                    description: Text("It was deleted.")
                 )
             }
         }
-        .screenTitle(recipe?.name ?? "Recipe")
+        .screenTitle(recipe?.name ?? "Recipe", displayMode: .inline)
         .toolbar {
-            ToolbarItem(placement: .topBarTrailing) {
-                Button("Edit") {
-                    showEditSheet = true
+            if showCloseButton {
+                ToolbarItem(placement: .topBarLeading) {
+                    Button {
+                        dismiss()
+                    } label: {
+                        Image(systemName: "xmark")
+                            .fontWeight(.semibold)
+                    }
+                    .accessibilityLabel("Close")
+                }
+            }
+
+            ToolbarItemGroup(placement: .topBarTrailing) {
+                if let recipe {
+                    Button {
+                        Task { await store.toggleFavorite(recipe: recipe) }
+                    } label: {
+                        Image(systemName: store.isFavorite(recipe: recipe) ? "heart.fill" : "heart")
+                            .foregroundStyle(store.isFavorite(recipe: recipe) ? DS.Color.accent : DS.Color.textSecondary)
+                    }
+                    .accessibilityLabel(store.isFavorite(recipe: recipe) ? "Remove from Favourites" : "Add to Favourites")
+                }
+
+                if let recipe, recipe.ownerID == store.userID {
+                    Button("Edit") {
+                        showEditSheet = true
+                    }
                 }
             }
         }
@@ -60,7 +92,7 @@ struct RecipeDetailView: View {
         }
         .sheet(item: $selectedMealForDetail) { meal in
             NavigationStack {
-                MealDetailView(mealID: meal.id)
+                MealDetailView(mealID: meal.id, showCloseButton: true)
             }
         }
         .sheet(isPresented: Binding(
@@ -79,42 +111,74 @@ struct RecipeDetailView: View {
     @ViewBuilder
     private func content(for recipe: Recipe) -> some View {
         ScrollView {
-            VStack(spacing: 16) {
-                if !allPhotos.isEmpty {
-                    RecipePhotoArcDeck(photoPaths: allPhotos) { index in
-                        selectedPhotoIndex = index
-                    }
+            VStack(spacing: DS.Spacing.section) {
+                ArcHeroHeaderView(
+                    photoPaths: allPhotos,
+                    cuisine: recipe.cuisine,
+                    title: recipe.name,
+                    subtitle: recipeSubtitle(for: recipe),
+                    alignment: .center
+                ) { index in
+                    selectedPhotoIndex = index
                 }
+                .padding(.bottom, DS.Spacing.xs)
 
-                RecipeHeaderCard(recipe: recipe, history: history) {
+                // Centered "Use in Meal" action button above ingredients
+                Button {
                     showMealEditor = true
+                } label: {
+                    Text("Use in Meal")
+                        .font(.subheadline.weight(.semibold))
+                        .padding(.horizontal, 24)
+                        .padding(.vertical, 10)
+                }
+                .buttonStyle(.borderedProminent)
+                .tint(DS.Color.accent)
+                .clipShape(Capsule())
+                .frame(maxWidth: .infinity, alignment: .center)
+
+                // 1. Ingredients
+                if !recipe.ingredients.isEmpty {
+                    RecipeIngredientsCard(ingredients: recipe.ingredients)
+                        .padding(.horizontal, DS.Spacing.screenHorizontal)
                 }
 
-                if recipe.hasInstructions {
-                    RecipeInstructionsCard(recipe: recipe)
+                // 2. Instructions
+                if !recipe.instructions.isEmpty {
+                    RecipeStepsCard(instructions: recipe.instructions)
+                        .padding(.horizontal, DS.Spacing.screenHorizontal)
                 }
 
-                RecipePartyHistorySection(recipeID: recipe.id)
-
-                RecipeScoreHistorySection(
-                    recipe: recipe,
-                    history: history,
-                    selectedPartyID: $selectedPartyID
-                ) { meal in
-                    selectedMealForDetail = meal
+                // 3. Recipe Page Photos (if any)
+                if !recipe.recipePhotoPaths.isEmpty {
+                    RecipePhotosCard(recipe: recipe)
+                        .padding(.horizontal, DS.Spacing.screenHorizontal)
                 }
 
-                RecipeHistorySection(
-                    history: history,
-                    selectedPartyID: selectedPartyID
-                ) { meal in
-                    selectedMealForDetail = meal
+                // 4. Details
+                RecipeDetailInfoCard(recipe: recipe)
+                    .padding(.horizontal, DS.Spacing.screenHorizontal)
+
+                // 5. History
+                if !history.isEmpty {
+                    RecipeHistorySection(history: history) { meal in
+                        selectedMealForDetail = meal
+                    }
+                    .padding(.horizontal, DS.Spacing.screenHorizontal)
                 }
             }
-            .padding(.horizontal, 16)
-            .padding(.vertical, 14)
+            .padding(.top, DS.Spacing.screenTop)
+            .padding(.bottom, DS.Spacing.screenBottom)
         }
         .background(DS.Color.bg)
+    }
+
+    private func recipeSubtitle(for recipe: Recipe) -> String {
+        if let last = history.first?.eatenOn {
+            return "Last cooked \(last.formatted(.dateTime.day().month(.abbreviated).year()))"
+        } else {
+            return "Never cooked"
+        }
     }
 }
 

@@ -22,16 +22,19 @@ struct FoodCalendarView: View {
     var body: some View {
         NavigationStack {
             ScrollView {
-                VStack(spacing: 16) {
-                    monthHeader
-                    weekdayHeader
+                VStack(spacing: DS.Spacing.sectionCompact) {
+                    VStack(spacing: DS.Spacing.sm) {
+                        monthHeader
+                        weekdayHeader
+                    }
                     MonthGrid(month: visibleMonth,
                               selectedDay: $selectedDay,
                               mealsByDay: mealsByDay)
                     Divider().padding(.horizontal)
                     daySection
                 }
-                .padding(.vertical)
+                .padding(.top, DS.Spacing.screenTop)
+                .padding(.bottom, DS.Spacing.screenBottom)
             }
             .background(DS.Color.bg)
             .screenTitle("Calendar")

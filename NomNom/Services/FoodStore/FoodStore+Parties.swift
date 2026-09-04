@@ -4,13 +4,37 @@ import Supabase
 extension FoodStore {
 
     @discardableResult
-    func createParty(name: String) async -> Party? {
+    func createParty(
+        name: String,
+        about: String = "",
+        isPublic: Bool = false,
+        photoData: Data? = nil
+    ) async -> Party? {
         let trimmed = name.trimmedName
         guard !trimmed.isEmpty else { return nil }
         do {
+            let partyID = UUID()
+            var uploadedPath: String? = nil
+
+            if let photoData, let prepared = PhotoTools.prepare(photoData) {
+                let path = "\(partyID.uuidString.lowercased())/avatar.jpg"
+                PhotoCache.shared.put(prepared, for: path)
+                _ = try? await supabase.storage
+                    .from(SupabaseConfig.partyBucket)
+                    .upload(path, data: prepared, options: FileOptions(contentType: "image/jpeg", upsert: true))
+                uploadedPath = path
+            }
+
             let created: Party = try await supabase
                 .from("parties")
-                .insert(NewParty(name: trimmed, created_by: userID))
+                .insert(NewParty(
+                    id: partyID,
+                    name: trimmed,
+                    about: about.trimmingCharacters(in: .whitespacesAndNewlines),
+                    is_public: isPublic,
+                    photo_path: uploadedPath,
+                    created_by: userID
+                ))
                 .select()
                 .single()
                 .execute()

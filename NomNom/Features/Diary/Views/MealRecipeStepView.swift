@@ -12,7 +12,7 @@ struct MealRecipeStepView: View {
 
     var body: some View {
         ScrollView {
-            VStack(spacing: 16) {
+            VStack(spacing: DS.Spacing.section) {
                 SectionCard {
                     VStack(alignment: .leading, spacing: 6) {
                         Text(draft.dishName)
@@ -35,8 +35,9 @@ struct MealRecipeStepView: View {
                         .autocorrectionDisabled()
                 }
             }
-            .padding(.horizontal, 16)
-            .padding(.vertical, 14)
+            .padding(.horizontal, DS.Spacing.screenHorizontal)
+            .padding(.top, DS.Spacing.screenTop)
+            .padding(.bottom, DS.Spacing.screenBottom)
         }
         .background(DS.Color.bg)
         .navigationTitle("Recipe & Details")

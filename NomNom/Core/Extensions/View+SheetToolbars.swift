@@ -19,7 +19,7 @@ extension View {
     }
 
     /// Standard toolbar for media viewers, photo lightboxes, and read-only inspection sheets.
-    /// Provides a trailing `xmark` close button.
+    /// Provides a leading `xmark` close button.
     func sheetCloseToolbar(
         color: Color = .primary,
         onClose: (() -> Void)? = nil
@@ -36,17 +36,30 @@ extension View {
     }
 
     /// Standard toolbar for overview / list management sheets.
-    /// Provides a trailing checkmark dismissal button, with optional primary action (e.g., "+" create button).
+    /// Provides a leading `xmark` dismissal button (alone), with optional primary action (e.g., "+" create button) on trailing.
+    func sheetOverviewToolbar(
+        primarySystemImage: String? = nil,
+        onPrimaryAction: (() -> Void)? = nil,
+        onClose: (() -> Void)? = nil
+    ) -> some View {
+        modifier(SheetOverviewToolbarModifier(
+            primarySystemImage: primarySystemImage,
+            onPrimaryAction: onPrimaryAction,
+            onClose: onClose
+        ))
+    }
+
+    /// Standard toolbar for overview / list management sheets (forwards to `sheetOverviewToolbar`).
     func sheetDoneToolbar(
         primarySystemImage: String? = nil,
         onPrimaryAction: (() -> Void)? = nil,
         onDone: (() -> Void)? = nil
     ) -> some View {
-        modifier(SheetDoneToolbarModifier(
+        sheetOverviewToolbar(
             primarySystemImage: primarySystemImage,
             onPrimaryAction: onPrimaryAction,
-            onDone: onDone
-        ))
+            onClose: onDone
+        )
     }
 }
 
@@ -105,7 +118,7 @@ private struct SheetCloseToolbarModifier: ViewModifier {
     func body(content: Content) -> some View {
         content
             .toolbar {
-                ToolbarItem(placement: .topBarTrailing) {
+                ToolbarItem(placement: .topBarLeading) {
                     Button {
                         if let onClose {
                             onClose()
@@ -148,36 +161,37 @@ private struct SheetCancelToolbarModifier: ViewModifier {
     }
 }
 
-private struct SheetDoneToolbarModifier: ViewModifier {
+private struct SheetOverviewToolbarModifier: ViewModifier {
     @Environment(\.dismiss) private var dismiss
 
     let primarySystemImage: String?
     let onPrimaryAction: (() -> Void)?
-    let onDone: (() -> Void)?
+    let onClose: (() -> Void)?
 
     func body(content: Content) -> some View {
         content
             .toolbar {
-                ToolbarItem(placement: .topBarTrailing) {
-                    HStack(spacing: 14) {
-                        if let primarySystemImage, let onPrimaryAction {
-                            Button(action: onPrimaryAction) {
-                                Image(systemName: primarySystemImage)
-                                    .fontWeight(.medium)
-                            }
+                ToolbarItem(placement: .topBarLeading) {
+                    Button {
+                        if let onClose {
+                            onClose()
+                        } else {
+                            dismiss()
                         }
+                    } label: {
+                        Image(systemName: "xmark")
+                            .fontWeight(.semibold)
+                    }
+                    .accessibilityLabel("Close")
+                }
 
-                        Button {
-                            if let onDone {
-                                onDone()
-                            } else {
-                                dismiss()
-                            }
-                        } label: {
-                            Image(systemName: "checkmark")
+                if let primarySystemImage, let onPrimaryAction {
+                    ToolbarItem(placement: .topBarTrailing) {
+                        Button(action: onPrimaryAction) {
+                            Image(systemName: primarySystemImage)
                                 .fontWeight(.semibold)
                         }
-                        .accessibilityLabel("Done")
+                        .accessibilityLabel("Action")
                     }
                 }
             }

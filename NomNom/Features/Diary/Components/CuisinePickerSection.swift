@@ -1,109 +1,84 @@
 import SwiftUI
 
-/// Section for selecting or customizing a recipe's kitchen / cuisine.
+/// Clean interactive row section for selecting cuisines/categories via a dedicated sheet.
 struct CuisinePickerSection: View {
     @Binding var selection: String?
 
-    @State private var showingCustomField = false
-    @State private var customText = ""
+    @State private var showingSheet = false
 
-    private var selectedCuisine: Cuisine? {
-        guard let selection else { return nil }
-        return Cuisine.matching(from: selection)
-    }
-
-    private var isCustomSelected: Bool {
-        guard let selection, !selection.isEmpty else { return false }
-        return selectedCuisine == nil
+    private var selectedItems: [String] {
+        Cuisine.parseMultiple(from: selection)
     }
 
     var body: some View {
-        SectionCard("Kitchen / Cuisine") {
-            VStack(alignment: .leading, spacing: 12) {
-                WrappingHStack(spacing: 8, lineSpacing: 8) {
-                    ForEach(Cuisine.allCases) { cuisine in
-                        let isSelected = selection?.lowercased() == cuisine.rawValue.lowercased()
-                        Button {
-                            if isSelected {
-                                selection = nil
-                            } else {
-                                selection = cuisine.rawValue
-                                showingCustomField = false
-                            }
-                        } label: {
-                            HStack(spacing: 6) {
-                                Image(cuisine.assetImageName)
-                                    .resizable()
-                                    .scaledToFill()
-                                    .frame(width: 18, height: 18)
-                                    .clipShape(Circle())
+        SectionCard(
+            "Kitchen / Cuisine",
+            caption: selectedItems.isEmpty ? nil : "\(selectedItems.count) selected"
+        ) {
+            Button {
+                showingSheet = true
+            } label: {
+                HStack(alignment: .center, spacing: 12) {
+                    if selectedItems.isEmpty {
+                        Text("Choose kitchen / cuisines…")
+                            .font(.subheadline)
+                            .foregroundStyle(DS.Color.textSecondary)
+                    } else {
+                        WrappingHStack(spacing: 8, lineSpacing: 8) {
+                            ForEach(selectedItems, id: \.self) { item in
+                                HStack(spacing: 6) {
+                                    if let preset = Cuisine.matching(from: item) {
+                                        Image(preset.assetImageName)
+                                            .resizable()
+                                            .scaledToFill()
+                                            .frame(width: 18, height: 18)
+                                            .clipShape(Circle())
+                                    }
 
-                                Text(cuisine.displayName)
-                                    .font(.subheadline.weight(isSelected ? .semibold : .regular))
-                            }
-                            .padding(.horizontal, 10)
-                            .padding(.vertical, 5)
-                                .background(
-                                    isSelected
-                                        ? Color.accentColor.opacity(0.15)
-                                        : Color(uiColor: .tertiarySystemFill)
-                                )
-                                .foregroundStyle(isSelected ? Color.accentColor : Color.primary)
+                                    Text(Cuisine.matching(from: item)?.displayName ?? item.capitalized)
+                                        .font(.subheadline.weight(.medium))
+                                }
+                                .padding(.horizontal, 10)
+                                .padding(.vertical, 5)
+                                .background(DS.Color.accent.opacity(0.12))
+                                .foregroundStyle(DS.Color.accentText)
                                 .clipShape(Capsule())
                                 .overlay(
                                     Capsule()
-                                        .strokeBorder(
-                                            isSelected ? Color.accentColor : Color.clear,
-                                            lineWidth: 1.5
-                                        )
+                                        .strokeBorder(DS.Color.accent.opacity(0.35), lineWidth: 1)
                                 )
-                        }
-                        .buttonStyle(.plain)
-                    }
-
-                    Button {
-                        showingCustomField.toggle()
-                        if showingCustomField && selection != nil && selectedCuisine != nil {
-                            selection = nil
-                        }
-                    } label: {
-                        Text(isCustomSelected ? (selection ?? "Custom") : "Other…")
-                            .font(.subheadline.weight(isCustomSelected ? .semibold : .regular))
-                            .padding(.horizontal, 12)
-                            .padding(.vertical, 6)
-                            .background(
-                                isCustomSelected
-                                    ? Color.accentColor.opacity(0.15)
-                                    : Color(uiColor: .tertiarySystemFill)
-                            )
-                            .foregroundStyle(isCustomSelected ? Color.accentColor : Color.secondary)
-                            .clipShape(Capsule())
-                            .overlay(
-                                Capsule()
-                                    .strokeBorder(
-                                        isCustomSelected ? Color.accentColor : Color.clear,
-                                        lineWidth: 1.5
-                                    )
-                            )
-                    }
-                    .buttonStyle(.plain)
-                }
-
-                if showingCustomField || isCustomSelected {
-                    TextField("Enter custom kitchen (e.g. Ethiopian, Lebanese)", text: $customText)
-                        .autocorrectionDisabled()
-                        .textFieldStyle(.roundedBorder)
-                        .onChange(of: customText) { _, newValue in
-                            let trimmed = newValue.trimmingCharacters(in: .whitespacesAndNewlines)
-                            selection = trimmed.isEmpty ? nil : trimmed
-                        }
-                        .onAppear {
-                            if isCustomSelected, let current = selection {
-                                customText = current
                             }
                         }
+                    }
+
+                    Spacer(minLength: 4)
+
+                    Image(systemName: "chevron.right")
+                        .font(.footnote.weight(.semibold))
+                        .foregroundStyle(DS.Color.textTertiary)
                 }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .contentShape(Rectangle())
             }
+            .buttonStyle(.plain)
+            .accessibilityLabel(
+                selectedItems.isEmpty
+                    ? "Select kitchen or cuisine"
+                    : "Cuisines: \(selectedItems.joined(separator: ", ")). Tap to edit."
+            )
         }
+        .sheet(isPresented: $showingSheet) {
+            CuisinePickerSheet(selection: $selection)
+        }
+    }
+}
+
+#Preview {
+    NomNomPreview {
+        VStack(spacing: 16) {
+            CuisinePickerSection(selection: .constant(nil))
+            CuisinePickerSection(selection: .constant("italian, mexican"))
+        }
+        .padding()
     }
 }

@@ -60,6 +60,17 @@ final class PhotoCache {
                     .download(path: path)
                 return data
             } catch {
+                let otherBuckets = [
+                    SupabaseConfig.photoBucket,
+                    SupabaseConfig.recipeBucket,
+                    SupabaseConfig.partyBucket
+                ].filter { $0 != bucket }
+
+                for fallbackBucket in otherBuckets {
+                    if let fallbackData = try? await supabase.storage.from(fallbackBucket).download(path: path) {
+                        return fallbackData
+                    }
+                }
                 #if DEBUG
                 print("[PhotoCache] download failed for \(path) from \(bucket): \(error)")
                 #endif

@@ -14,8 +14,14 @@ struct Recipe: Identifiable, Hashable, Decodable {
     var normalizedName: String
     /// Optional free-form tags, e.g. "quick", "oven", "veggie".
     var tags: [String]
-    /// Written recipe text / instructions / ingredients.
-    var recipeText: String
+    /// Structured ingredients list (each with quantity, measurement, and ingredient).
+    var ingredients: [RecipeIngredient]
+    /// Step-by-step preparation instructions.
+    var instructions: [String]
+    /// Paths to dish cover photos in `recipe-photos` storage bucket.
+    var photoPaths: [String]
+    /// Primary cover photo path.
+    var photoPath: String? { photoPaths.first }
     /// Paths to recipe images in `recipe-photos` storage bucket.
     var recipePhotoPaths: [String]
     /// Effort required to prep and cook this recipe.
@@ -32,7 +38,9 @@ struct Recipe: Identifiable, Hashable, Decodable {
         case name
         case normalizedName = "normalized_name"
         case tags
-        case recipeText = "recipe_text"
+        case ingredients
+        case instructions
+        case photoPaths = "photo_paths"
         case recipePhotoPaths = "recipe_photo_paths"
         case effort
         case cuisine
@@ -47,7 +55,9 @@ struct Recipe: Identifiable, Hashable, Decodable {
         name = try container.decode(String.self, forKey: .name)
         normalizedName = try container.decode(String.self, forKey: .normalizedName)
         tags = try container.decodeIfPresent([String].self, forKey: .tags) ?? []
-        recipeText = try container.decodeIfPresent(String.self, forKey: .recipeText) ?? ""
+        ingredients = try container.decodeIfPresent([RecipeIngredient].self, forKey: .ingredients) ?? []
+        instructions = try container.decodeIfPresent([String].self, forKey: .instructions) ?? []
+        photoPaths = try container.decodeIfPresent([String].self, forKey: .photoPaths) ?? []
         recipePhotoPaths = try container.decodeIfPresent([String].self, forKey: .recipePhotoPaths) ?? []
         if let rawEffort = try container.decodeIfPresent(Int.self, forKey: .effort) {
             effort = EffortLevel(rawValue: rawEffort)
@@ -65,7 +75,9 @@ struct Recipe: Identifiable, Hashable, Decodable {
         name: String,
         normalizedName: String? = nil,
         tags: [String] = [],
-        recipeText: String = "",
+        ingredients: [RecipeIngredient] = [],
+        instructions: [String] = [],
+        photoPaths: [String] = [],
         recipePhotoPaths: [String] = [],
         effort: EffortLevel? = nil,
         cuisine: String? = nil,
@@ -77,7 +89,9 @@ struct Recipe: Identifiable, Hashable, Decodable {
         self.name = name.trimmedName
         self.normalizedName = normalizedName ?? name.normalizedForMatching
         self.tags = tags
-        self.recipeText = recipeText
+        self.ingredients = ingredients
+        self.instructions = instructions
+        self.photoPaths = photoPaths
         self.recipePhotoPaths = recipePhotoPaths
         self.effort = effort
         self.cuisine = cuisine
@@ -86,10 +100,9 @@ struct Recipe: Identifiable, Hashable, Decodable {
     }
 
     var hasInstructions: Bool {
-        !recipeText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || !recipePhotoPaths.isEmpty
+        !ingredients.isEmpty || !instructions.isEmpty || !recipePhotoPaths.isEmpty
     }
 
-    // Backwards-compatible alias during refactoring
     var hasRecipe: Bool { hasInstructions }
 }
 
@@ -103,7 +116,9 @@ struct NewRecipe: Encodable {
     let name: String
     let normalized_name: String
     let tags: [String]
-    let recipe_text: String
+    let ingredients: [RecipeIngredient]
+    let instructions: [String]
+    let photo_paths: [String]
     let recipe_photo_paths: [String]
     let effort: Int?
     let cuisine: String?
@@ -113,7 +128,9 @@ struct NewRecipe: Encodable {
         ownerID: UUID,
         name: String,
         tags: [String] = [],
-        recipeText: String = "",
+        ingredients: [RecipeIngredient] = [],
+        instructions: [String] = [],
+        photoPaths: [String] = [],
         recipePhotoPaths: [String] = [],
         effort: EffortLevel? = nil,
         cuisine: String? = nil,
@@ -123,7 +140,9 @@ struct NewRecipe: Encodable {
         self.name = name.trimmedName
         self.normalized_name = name.normalizedForMatching
         self.tags = tags
-        self.recipe_text = recipeText
+        self.ingredients = ingredients
+        self.instructions = instructions
+        self.photo_paths = photoPaths
         self.recipe_photo_paths = recipePhotoPaths
         self.effort = effort?.rawValue
         self.cuisine = cuisine?.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty == false ? cuisine : nil
@@ -152,21 +171,31 @@ struct RecipeTagsPatch: Encodable {
 
 typealias DishTagsPatch = RecipeTagsPatch
 
+/// Patch for recipe cover photos.
+struct RecipePhotosPatch: Encodable {
+    let photo_paths: [String]
+}
+
+typealias DishPhotosPatch = RecipePhotosPatch
+
 struct RecipeContentPatch: Encodable {
-    let recipe_text: String
+    let ingredients: [RecipeIngredient]
+    let instructions: [String]
     let recipe_photo_paths: [String]
     let effort: Int?
     let cuisine: String?
     let is_public: Bool
 
     init(
-        recipe_text: String,
+        ingredients: [RecipeIngredient],
+        instructions: [String],
         recipe_photo_paths: [String],
         effort: EffortLevel? = nil,
         cuisine: String? = nil,
         isPublic: Bool = true
     ) {
-        self.recipe_text = recipe_text
+        self.ingredients = ingredients
+        self.instructions = instructions
         self.recipe_photo_paths = recipe_photo_paths
         self.effort = effort?.rawValue
         self.cuisine = cuisine?.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty == false ? cuisine : nil
@@ -175,3 +204,4 @@ struct RecipeContentPatch: Encodable {
 }
 
 typealias DishRecipePatch = RecipeContentPatch
+

@@ -14,7 +14,7 @@ struct SuggestionFiltersView: View {
     var body: some View {
         NavigationStack {
             ScrollView {
-                VStack(spacing: 16) {
+                VStack(spacing: DS.Spacing.section) {
                     SectionCard("Ranking") {
                         VStack(spacing: 12) {
                             ForEach(SuggestionMode.allCases) { mode in
@@ -128,8 +128,9 @@ struct SuggestionFiltersView: View {
                         .frame(maxWidth: .infinity)
                     }
                 }
-                .padding(.horizontal, 16)
-                .padding(.vertical, 14)
+                .padding(.horizontal, DS.Spacing.screenHorizontal)
+                .padding(.top, DS.Spacing.screenTop)
+                .padding(.bottom, DS.Spacing.screenBottom)
             }
             .background(Color(uiColor: .systemGroupedBackground))
             .screenTitle("Filters", displayMode: .inline)

@@ -13,42 +13,75 @@ struct PendingRatingCard: View {
                 MealDetailView(mealID: meal.id)
             } label: {
                 HStack(spacing: 12) {
-                    RemoteMealPhoto(path: meal.photoPath, cornerRadius: AppRadius.photo)
-                        .frame(width: 56, height: 56)
+                    if let photoPath = meal.photoPath {
+                        RemoteMealPhoto(path: photoPath, cornerRadius: AppRadius.photo)
+                            .frame(width: 46, height: 58)
+                            .clipped()
+                            .clipShape(RoundedRectangle(cornerRadius: AppRadius.photo, style: .continuous))
+                            .overlay(
+                                RoundedRectangle(cornerRadius: AppRadius.photo, style: .continuous)
+                                    .strokeBorder(DS.Color.line.opacity(0.35), lineWidth: 0.5)
+                            )
+                    } else {
+                        Rectangle()
+                            .fill(DS.Color.sunken)
+                            .frame(width: 46, height: 58)
+                            .clipShape(RoundedRectangle(cornerRadius: AppRadius.photo, style: .continuous))
+                            .overlay(
+                                RoundedRectangle(cornerRadius: AppRadius.photo, style: .continuous)
+                                    .strokeBorder(DS.Color.line.opacity(0.35), lineWidth: 0.5)
+                            )
+                            .overlay {
+                                Image(systemName: "fork.knife")
+                                    .font(.subheadline)
+                                    .foregroundStyle(DS.Color.textTertiary)
+                            }
+                    }
+
                     VStack(alignment: .leading, spacing: 3) {
                         Text(store.dishName(forMeal: meal))
-                            .font(.body.weight(.medium))
-                            .foregroundStyle(.primary)
-                        let cook = store.label(for: .account(meal.createdBy))
-                        Text(cook.name)
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                        Text(meal.eatenOn, format: .dateTime.day().month(.abbreviated))
-                            .font(.caption2)
-                            .foregroundStyle(.secondary)
+                            .font(.body.weight(.semibold))
+                            .foregroundStyle(DS.Color.textPrimary)
+                            .lineLimit(1)
+
+                        HStack(spacing: 6) {
+                            let cook = store.label(for: .account(meal.createdBy))
+                            Text(cook.name)
+                                .font(.caption.weight(.medium))
+                                .foregroundStyle(DS.Color.accentText)
+                                .lineLimit(1)
+
+                            Text("•")
+                                .font(.caption2)
+                                .foregroundStyle(DS.Color.textTertiary)
+
+                            Text(meal.eatenOn, format: .dateTime.day().month(.abbreviated))
+                                .font(.caption)
+                                .foregroundStyle(DS.Color.textSecondary)
+                        }
                     }
                     Spacer()
                 }
             }
             .buttonStyle(.plain)
 
-            HStack(spacing: 5) {
+            HStack(spacing: 6) {
                 ForEach(Reaction.allCases) { reaction in
                     Button {
                         rate(reaction)
                     } label: {
                         Text(reaction.numberLabel)
-                            .font(.system(size: 13, weight: .bold, design: .rounded))
+                            .font(.subheadline.weight(.semibold))
                             .foregroundStyle(reaction.text)
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 8)
                             .background {
                                 RoundedRectangle(cornerRadius: AppRadius.button, style: .continuous)
-                                    .fill(reaction.fill.opacity(0.14))
+                                    .fill(reaction.fill.opacity(0.12))
                             }
                             .overlay {
                                 RoundedRectangle(cornerRadius: AppRadius.button, style: .continuous)
-                                    .strokeBorder(reaction.fill.opacity(0.28), lineWidth: 1)
+                                    .strokeBorder(reaction.fill.opacity(0.25), lineWidth: 0.5)
                             }
                     }
                     .buttonStyle(.plain)
@@ -60,10 +93,12 @@ struct PendingRatingCard: View {
                     decline()
                 } label: {
                     Image(systemName: "xmark")
-                        .frame(width: 34, height: 34)
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(DS.Color.textTertiary)
+                        .frame(width: 36, height: 36)
                         .overlay {
                             RoundedRectangle(cornerRadius: AppRadius.button, style: .continuous)
-                                .strokeBorder(Color.secondary.opacity(0.25))
+                                .strokeBorder(DS.Color.line, lineWidth: 0.5)
                         }
                 }
                 .buttonStyle(.plain)
@@ -75,7 +110,6 @@ struct PendingRatingCard: View {
                 if isSaving { ProgressView().controlSize(.small) }
             }
         }
-        .padding(.vertical, 4)
     }
 
     private func rate(_ reaction: Reaction) {

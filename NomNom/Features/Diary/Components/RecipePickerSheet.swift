@@ -1,6 +1,7 @@
 import SwiftUI
 
-/// Searchable sheet to pick an existing recipe or type a new recipe name.
+/// Searchable sheet to pick an existing recipe or create a new one.
+/// Visually aligned with the Recipes main tab with curated horizontal shelves and category exploration.
 struct RecipePickerSheet: View {
     @Environment(FoodStore.self) private var store
     @Environment(\.dismiss) private var dismiss
@@ -26,11 +27,19 @@ struct RecipePickerSheet: View {
         searchText.trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
-    private var suggestions: [DishRepository.NameSuggestion] {
-        DishRepository.suggestions(for: searchText,
-                                   in: store.recipes,
-                                   history: store.dishHistory,
-                                   limit: 25)
+    private var matchingRecipes: [Recipe] {
+        guard !trimmedSearch.isEmpty else { return [] }
+        let suggestions = DishRepository.suggestions(
+            for: trimmedSearch,
+            in: store.recipes,
+            history: store.dishHistory,
+            favoriteIDs: store.favoriteRecipeIDs,
+            limit: 40
+        )
+        let resolved = suggestions.compactMap { store.recipe($0.dishID) }
+        let favorites = resolved.filter { store.isFavorite(recipe: $0) }
+        let nonFavorites = resolved.filter { !store.isFavorite(recipe: $0) }
+        return favorites + nonFavorites
     }
 
     private var exactMatchExists: Bool {
@@ -41,58 +50,15 @@ struct RecipePickerSheet: View {
 
     var body: some View {
         NavigationStack {
-            List {
-                if !trimmedSearch.isEmpty && !exactMatchExists {
-                    Section {
-                        Button {
-                            onSelectNewRecipe(trimmedSearch)
-                            dismiss()
-                        } label: {
-                            HStack(spacing: 12) {
-                                Image(systemName: "plus.circle.fill")
-                                    .font(.title3)
-                                    .foregroundStyle(.orange)
-                                VStack(alignment: .leading, spacing: 2) {
-                                    Text("Add “\(trimmedSearch)”")
-                                        .font(.body.weight(.semibold))
-                                        .foregroundStyle(.primary)
-                                    Text("Create as a new recipe")
-                                        .font(.caption)
-                                        .foregroundStyle(.secondary)
-                                }
-                                Spacer()
-                            }
-                            .padding(.vertical, 4)
-                        }
-                    }
-                }
-
-                if !suggestions.isEmpty {
-                    Section(trimmedSearch.isEmpty ? "Recent & Frequent Recipes" : "Matching Recipes") {
-                        ForEach(suggestions) { suggestion in
-                            if let recipe = store.recipe(suggestion.dishID) {
-                                Button {
-                                    onSelectExistingRecipe(recipe)
-                                    dismiss()
-                                } label: {
-                                    recipeRow(recipe: recipe, suggestion: suggestion)
-                                }
-                                .buttonStyle(.plain)
-                            }
-                        }
-                    }
-                } else if trimmedSearch.isEmpty && store.myRecipes.isEmpty {
-                    Section {
-                        ContentUnavailableView {
-                            Label("No recipes yet", systemImage: "fork.knife")
-                        } description: {
-                            Text("Type the name of what you cooked to create your first recipe.")
-                        }
-                    }
+            ScrollView {
+                if trimmedSearch.isEmpty {
+                    idleContent
+                } else {
+                    searchContent
                 }
             }
-            .navigationTitle("Pick a Recipe")
-            .navigationBarTitleDisplayMode(.inline)
+            .background(DS.Color.bg)
+            .screenTitle("Pick a Recipe")
             .searchable(text: $searchText, prompt: "Search or type new recipe")
             .sheetCancelToolbar()
             .toolbar {
@@ -115,60 +81,115 @@ struct RecipePickerSheet: View {
         }
     }
 
-    private func recipeRow(recipe: Recipe, suggestion: DishRepository.NameSuggestion) -> some View {
-        let photos = store.photos(for: recipe)
+    // MARK: - Idle Mode Content
 
-        return HStack(spacing: 12) {
-            if !photos.isEmpty {
-                MiniPhotoArcDeck(
-                    photoPaths: photos,
-                    cardWidth: 42,
-                    cardHeight: 54,
-                    cornerRadius: AppRadius.photo
+    private var idleContent: some View {
+        VStack(alignment: .leading, spacing: DS.Spacing.sectionLarge) {
+            if !store.favoriteRecipes.isEmpty {
+                RecipeHorizontalShelf(
+                    title: "Favourites",
+                    recipes: store.favoriteRecipes,
+                    onSelect: selectRecipe
                 )
             }
 
-            VStack(alignment: .leading, spacing: 4) {
-                Text(recipe.name)
-                    .font(.body.weight(.medium))
-                    .foregroundStyle(.primary)
-
-                HStack(spacing: 6) {
-                    if let cuisine = Cuisine.formatDisplayName(recipe.cuisine) {
-                        Text(cuisine)
-                            .fontWeight(.medium)
-                            .foregroundStyle(.tint)
-                    }
-
-                    if suggestion.timesServed > 0 {
-                        if recipe.cuisine != nil { Text("•") }
-                        Text("\(suggestion.timesServed)× cooked")
-                    }
-                    if let last = suggestion.lastServed {
-                        Text("•")
-                        let days = Int(Date.now.timeIntervalSince(last) / 86_400)
-                        Text(days <= 0 ? "today" : "\(days)d ago")
-                    }
-                }
-                .font(.caption)
-                .foregroundStyle(.secondary)
-
-                if !recipe.tags.isEmpty {
-                    Text(recipe.tags.joined(separator: " • "))
-                        .font(.caption2)
-                        .foregroundStyle(.tertiary)
-                        .lineLimit(1)
-                }
+            if !store.recentAndFrequentRecipes.isEmpty {
+                RecipeHorizontalShelf(
+                    title: "Recent & Frequent",
+                    recipes: store.recentAndFrequentRecipes,
+                    onSelect: selectRecipe
+                )
             }
 
-            Spacer()
+            if !store.pastFavoriteRecipes.isEmpty {
+                RecipeHorizontalShelf(
+                    title: "Past Favourites",
+                    recipes: store.pastFavoriteRecipes,
+                    onSelect: selectRecipe
+                )
+            }
 
-            Image(systemName: "chevron.right")
-                .font(.caption.weight(.semibold))
-                .foregroundStyle(.tertiary)
+            if !store.popularRecipes.isEmpty {
+                RecipeHorizontalShelf(
+                    title: "Popular Recipes",
+                    recipes: store.popularRecipes,
+                    onSelect: selectRecipe
+                )
+            }
+
+            RecipeCategoryGridSection(onSelectRecipe: selectRecipe)
+
+            if store.recipes.isEmpty {
+                ContentUnavailableView {
+                    Label("No recipes yet", systemImage: "fork.knife")
+                } description: {
+                    Text("Type the name of what you cooked to create your first recipe.")
+                }
+                .padding(.top, 40)
+            }
         }
-        .padding(.vertical, 4)
-        .contentShape(Rectangle())
+        .padding(.top, DS.Spacing.screenTop)
+        .padding(.bottom, DS.Spacing.screenBottom)
+    }
+
+    // MARK: - Search Mode Content
+
+    private var searchContent: some View {
+        VStack(alignment: .leading, spacing: DS.Spacing.section) {
+            if !exactMatchExists {
+                Button {
+                    onSelectNewRecipe(trimmedSearch)
+                    dismiss()
+                } label: {
+                    HStack(spacing: 12) {
+                        Image(systemName: "plus.circle.fill")
+                            .font(.title3)
+                            .foregroundStyle(DS.Color.accent)
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("Add “\(trimmedSearch)”")
+                                .font(.body.weight(.semibold))
+                                .foregroundStyle(DS.Color.textPrimary)
+                            Text("Create as a new recipe")
+                                .font(.caption)
+                                .foregroundStyle(DS.Color.textSecondary)
+                        }
+                        Spacer()
+                    }
+                    .padding(14)
+                    .background {
+                        RoundedRectangle(cornerRadius: AppRadius.card, style: .continuous)
+                            .fill(DS.Color.panel)
+                            .overlay {
+                                RoundedRectangle(cornerRadius: AppRadius.card, style: .continuous)
+                                    .strokeBorder(DS.Color.line.opacity(0.35), lineWidth: 0.5)
+                            }
+                    }
+                }
+                .buttonStyle(.plain)
+                .padding(.horizontal, 16)
+            }
+
+            if !matchingRecipes.isEmpty {
+                VStack(alignment: .leading, spacing: 10) {
+                    SectionHeader("Matching Recipes", trailingText: "\(matchingRecipes.count) found")
+                    MinimalRecipeGrid(recipes: matchingRecipes, onSelect: selectRecipe)
+                }
+            } else if exactMatchExists {
+                ContentUnavailableView {
+                    Label("No matching recipes", systemImage: "magnifyingglass")
+                } description: {
+                    Text("No recipes match “\(trimmedSearch)”.")
+                }
+                .padding(.top, 40)
+            }
+        }
+        .padding(.top, DS.Spacing.screenTop)
+        .padding(.bottom, DS.Spacing.screenBottom)
+    }
+
+    private func selectRecipe(_ recipe: Recipe) {
+        onSelectExistingRecipe(recipe)
+        dismiss()
     }
 }
 

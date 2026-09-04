@@ -14,4 +14,40 @@ extension View {
             .navigationTitle(title)
             .navigationBarTitleDisplayMode(displayMode)
     }
+
+    /// Standard top-bar trailing toolbar for primary root tabs (Meals, Parties, Recipes).
+    /// Houses the shared `SettingsDropdownMenu` alongside the `CreateDropdownMenu`,
+    /// ensuring identical icon sizing, font weights, inter-item spacing, and edge insets.
+    func mainTabToolbar() -> some View {
+        toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                HStack(spacing: 12) {
+                    NotificationBellButton()
+                    SettingsDropdownMenu()
+                    CreateDropdownMenu()
+                }
+            }
+        }
+    }
+
+    /// Overload for custom single action button where needed.
+    func mainTabToolbar(
+        actionAccessibilityLabel: String,
+        onAction: @escaping () -> Void
+    ) -> some View {
+        toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                HStack(spacing: 12) {
+                    NotificationBellButton()
+                    SettingsDropdownMenu()
+
+                    Button(action: onAction) {
+                        Image(systemName: "plus")
+                            .fontWeight(.semibold)
+                    }
+                    .accessibilityLabel(actionAccessibilityLabel)
+                }
+            }
+        }
+    }
 }

@@ -6,6 +6,8 @@ struct RecipePartyHistorySection: View {
 
     @Environment(FoodStore.self) private var store
 
+    @State private var selectedPartyForSheet: Party?
+
     private var history: [Meal] {
         store.servings(of: recipeID)
     }
@@ -19,12 +21,22 @@ struct RecipePartyHistorySection: View {
             SectionCard("Dinner Parties History") {
                 VStack(spacing: 10) {
                     ForEach(parties) { party in
-                        partyRow(for: party)
+                        Button {
+                            selectedPartyForSheet = party
+                        } label: {
+                            partyRow(for: party)
+                        }
+                        .buttonStyle(.plain)
 
                         if party.id != parties.last?.id {
                             Divider()
                         }
                     }
+                }
+            }
+            .sheet(item: $selectedPartyForSheet) { party in
+                NavigationStack {
+                    PartyDetailView(partyID: party.id, showCloseButton: true)
                 }
             }
         }
@@ -36,6 +48,8 @@ struct RecipePartyHistorySection: View {
         let lastEaten = partyServings.map(\.eatenOn).max()
 
         return HStack(spacing: 12) {
+            PartyAvatar(party: party, size: 36)
+
             VStack(alignment: .leading, spacing: 3) {
                 Text(party.name)
                     .font(.subheadline.weight(.semibold))
@@ -71,7 +85,12 @@ struct RecipePartyHistorySection: View {
                     .background(Color(uiColor: .tertiarySystemFill))
                     .clipShape(Capsule())
             }
+
+            Image(systemName: "chevron.right")
+                .font(.caption2)
+                .foregroundStyle(DS.Color.textTertiary)
         }
         .padding(.vertical, 2)
+        .contentShape(Rectangle())
     }
 }

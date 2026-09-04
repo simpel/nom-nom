@@ -160,9 +160,6 @@ cooked in June are the same dish. Three mechanisms, in
 Matching is done on a folded key (lowercased, accents stripped, punctuation
 collapsed), so `Köttbullar & mos` and `kottbullar mos` land on the same dish.
 
-If two dishes drift apart anyway, open one from the *What to eat* tab and use
-**Merge into another dish** — every logged meal moves across.
-
 The client's find-or-create is the friendly path, not the guarantee: that is
 `unique (owner_id, normalized_name)` in the database. Two devices logging "Tacos" at
 once both miss locally and both insert, and the loser gets a `23505` — which

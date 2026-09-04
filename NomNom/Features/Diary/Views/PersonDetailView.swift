@@ -1,32 +1,75 @@
 import SwiftUI
 
-/// Shows everything one person has eaten, when they ate it, how they rated it,
-/// their top favorites and dislikes, and an AI-driven taste profile summary.
+/// Shows user profile information: avatar header, combined dinner parties and averages,
+/// created recipes, and meal history.
 struct PersonDetailView: View {
     let raterRef: RaterRef
+    var isSheet: Bool = false
 
     @Environment(FoodStore.self) private var store
+    @State private var showingEditProfile = false
 
-    private var label: (emoji: String, name: String) {
-        store.label(for: raterRef)
-    }
-
-    private var personTypeDescription: String {
+    private var personName: String {
         switch raterRef {
-        case .eater:
-            return "Household member"
         case .account(let id):
-            return id == store.userID ? "You" : "Account guest"
+            if let profile = store.profiles[id] {
+                let shown = profile.shownName.trimmingCharacters(in: .whitespaces)
+                if !shown.isEmpty && shown != "Someone" {
+                    return shown
+                }
+            }
+            if id == store.userID, let my = store.myProfile {
+                let shown = my.shownName.trimmingCharacters(in: .whitespaces)
+                if !shown.isEmpty && shown != "Someone" {
+                    return shown
+                }
+            }
+            return id == store.userID ? "Profile" : "Someone"
+        case .eater(let id):
+            return store.eater(id)?.name ?? "Someone"
         }
     }
 
-    private var personRatings: [MealRating] {
-        store.ratings(for: raterRef)
+    private var isCurrentUser: Bool {
+        if case .account(let id) = raterRef {
+            return id == store.userID
+        }
+        return false
+    }
+
+    private var parties: [Party] {
+        switch raterRef {
+        case .account(let id):
+            let partyIDs = Set(store.partyMembers.filter { $0.userID == id }.map(\.partyID))
+            return store.parties.filter { partyIDs.contains($0.id) }
+        case .eater:
+            return store.myParties
+        }
+    }
+
+    private var subtitle: String {
+        let count = parties.count
+        let partyWord = count == 1 ? "party" : "parties"
+        switch raterRef {
+        case .account(let id):
+            if id == store.userID {
+                return count == 0 ? "Personal Profile" : "Member of \(count) \(partyWord)"
+            }
+            return count == 0 ? "Dinner party guest" : "Member of \(count) \(partyWord)"
+        case .eater:
+            return "Household member"
+        }
+    }
+
+    private var createdRecipes: [Recipe] {
+        guard case .account(let id) = raterRef else { return [] }
+        return store.recipes.filter { $0.ownerID == id }.sorted { $0.createdAt > $1.createdAt }
     }
 
     private var meals: [Meal] {
         var mealSet: [UUID: Meal] = [:]
-        for rating in personRatings {
+        let ratings = store.ratings(for: raterRef)
+        for rating in ratings {
             if let meal = store.meal(rating.mealID) {
                 mealSet[meal.id] = meal
             }
@@ -39,173 +82,77 @@ struct PersonDetailView: View {
         return mealSet.values.sorted { $0.eatenOn > $1.eatenOn }
     }
 
-    private var ratingCounts: [Reaction: Int] {
-        var counts: [Reaction: Int] = [:]
-        for r in personRatings {
-            counts[r.reaction, default: 0] += 1
-        }
-        return counts
-    }
-
-    private var positiveRatingsCount: Int {
-        personRatings.filter(\.reaction.isPositive).count
-    }
-
-    private var favoriteDishes: [Dish] {
-        let positive = personRatings.filter { $0.reaction.isPositive }
-        var dishIDs = Set<UUID>()
-        for rating in positive {
-            if let meal = store.meal(rating.mealID) {
-                dishIDs.insert(meal.dishID)
-            }
-        }
-        return dishIDs.compactMap { store.dish($0) }.sorted { $0.name < $1.name }
-    }
-
-    private var dislikedDishes: [Dish] {
-        let negative = personRatings.filter { $0.reaction.isNegative }
-        var dishIDs = Set<UUID>()
-        for rating in negative {
-            if let meal = store.meal(rating.mealID) {
-                dishIDs.insert(meal.dishID)
-            }
-        }
-        return dishIDs.compactMap { store.dish($0) }.sorted { $0.name < $1.name }
-    }
-
-    private var topTags: [String] {
-        var tagCounts: [String: Int] = [:]
-        for dish in favoriteDishes {
-            for tag in dish.tags {
-                tagCounts[tag, default: 0] += 1
-            }
-        }
-        return tagCounts.sorted { $0.value > $1.value }.map(\.key)
-    }
-
     var body: some View {
         ScrollView {
-            VStack(spacing: 16) {
-                headerSection
-
-                PersonTasteBreakdownCard(
-                    summary: generatedTasteSummary,
-                    topTags: topTags,
-                    ratingCounts: ratingCounts,
-                    totalRatingsCount: personRatings.count
+            VStack(spacing: DS.Spacing.section) {
+                ProfileHeaderCard(
+                    name: personName,
+                    subtitle: subtitle,
+                    isCurrentUser: isCurrentUser
                 )
 
-                if !favoriteDishes.isEmpty {
-                    PersonDishRatingsList(title: "Favorite Dishes", dishes: favoriteDishes)
+                ProfilePartiesSection(
+                    parties: parties,
+                    raterRef: raterRef
+                )
+
+                if case .account = raterRef {
+                    ProfileCreatedRecipesSection(recipes: createdRecipes)
                 }
 
-                if !dislikedDishes.isEmpty {
-                    PersonDishRatingsList(title: "Disliked Dishes", dishes: dislikedDishes, isDisliked: true)
-                }
-
-                PersonMealHistorySection(
-                    personName: label.name,
-                    raterRef: raterRef,
-                    meals: meals
+                ProfileMealHistorySection(
+                    meals: meals,
+                    raterRef: raterRef
                 )
             }
-            .padding(.horizontal, 16)
-            .padding(.vertical, 14)
+            .padding(.horizontal, DS.Spacing.screenHorizontal)
+            .padding(.top, DS.Spacing.screenTop)
+            .padding(.bottom, DS.Spacing.screenBottom)
         }
         .background(DS.Color.bg)
-        .screenTitle(label.name)
-    }
-
-    private var headerSection: some View {
-        SectionCard {
-            VStack(spacing: 12) {
-                ZStack {
-                    Circle()
-                        .fill(DS.Color.accentSoft)
-                        .frame(width: 64, height: 64)
-                    Text(label.name.prefix(1).uppercased())
-                        .font(.title.weight(.bold))
-                        .foregroundStyle(DS.Color.accentText)
-                }
-
-                VStack(spacing: 4) {
-                    Text(label.name)
-                        .font(AppTypography.displayL)
-                        .foregroundStyle(DS.Color.textPrimary)
-                    if case .account(let id) = raterRef, id == store.userID {
-                        Text("Your profile")
-                            .font(.caption)
-                            .foregroundStyle(DS.Color.textSecondary)
-                    }
-                }
-            }
-            .frame(maxWidth: .infinity)
-            .padding(.vertical, 8)
+        .screenTitle("", displayMode: .inline)
+        .modifier(SheetToolbarConditional(isSheet: isSheet, isCurrentUser: isCurrentUser, onEdit: {
+            showingEditProfile = true
+        }))
+        .sheet(isPresented: $showingEditProfile) {
+            ProfileSheetView()
         }
-    }
-
-    private var generatedTasteSummary: String {
-        let name = label.name
-        if personRatings.isEmpty {
-            return "\(name) hasn't rated enough meals yet. As they taste and rate more dishes, their AI taste profile and flavor preferences will be automatically generated here."
-        }
-
-        var parts: [String] = []
-
-        if !favoriteDishes.isEmpty {
-            let names = favoriteDishes.prefix(3).map(\.name).joined(separator: ", ")
-            parts.append("\(name) loves dishes like \(names).")
-        }
-
-        if !topTags.isEmpty {
-            let tags = topTags.prefix(3).joined(separator: ", ")
-            parts.append("Has a strong preference for recipes tagged with \(tags).")
-        }
-
-        if !dislikedDishes.isEmpty {
-            let disliked = dislikedDishes.prefix(2).map(\.name).joined(separator: ", ")
-            parts.append("Generally dislikes \(disliked).")
-        }
-
-        let positiveRate = Double(positiveRatingsCount) / Double(personRatings.count)
-        if positiveRate > 0.6 {
-            parts.append("An enthusiastic eater who enjoys most dinner selections.")
-        } else if positiveRate < 0.3 {
-            parts.append("Selective taste profile — responds best to familiar comfort foods.")
-        }
-
-        return parts.joined(separator: " ")
     }
 }
 
-private struct StatPill: View {
-    let title: String
-    let value: String
+private struct SheetToolbarConditional: ViewModifier {
+    let isSheet: Bool
+    let isCurrentUser: Bool
+    let onEdit: () -> Void
 
-    var body: some View {
-        VStack(spacing: 2) {
-            Text(value)
-                .font(.headline)
-                .foregroundStyle(.primary)
-            Text(title)
-                .font(.caption2)
-                .foregroundStyle(DS.Color.textSecondary)
-        }
-        .frame(minWidth: 80)
-        .padding(.vertical, 8)
-        .padding(.horizontal, 12)
-        .background {
-            RoundedRectangle(cornerRadius: AppRadius.card, style: .continuous)
-                .fill(DS.Color.panel)
+    func body(content: Content) -> some View {
+        if isSheet {
+            content
+                .sheetCloseToolbar()
+                .toolbar {
+                    if isCurrentUser {
+                        ToolbarItem(placement: .topBarTrailing) {
+                            Button("Edit", action: onEdit)
+                                .font(.subheadline.weight(.medium))
+                        }
+                    }
+                }
+        } else {
+            content
+                .toolbar {
+                    if isCurrentUser {
+                        ToolbarItem(placement: .topBarTrailing) {
+                            Button("Edit", action: onEdit)
+                                .font(.subheadline.weight(.medium))
+                        }
+                    }
+                }
         }
     }
 }
 
 #Preview {
     NomNomPreview { store in
-        if let eater = store.eaters.first {
-            PersonDetailView(raterRef: .eater(eater.id))
-        }
+        PersonDetailView(raterRef: .account(store.userID))
     }
 }
-

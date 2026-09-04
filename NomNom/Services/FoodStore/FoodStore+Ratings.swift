@@ -92,12 +92,17 @@ extension FoodStore {
         return RotationGoal(rawValue: min(2, max(0, rounded)))
     }
 
-    /// Average taste reaction across all historical servings of a dish.
-    func averageReaction(forDish dishID: UUID) -> Reaction? {
+    /// Average score across all historical servings of a dish (0.0 to 1.0).
+    func averageScore(forDish dishID: UUID) -> Double? {
         let dishMeals = servings(of: dishID)
         let scores = dishMeals.compactMap { averageScore(forMeal: $0.id) }
         guard !scores.isEmpty else { return nil }
-        let avgScore = scores.reduce(0, +) / Double(scores.count)
+        return scores.reduce(0, +) / Double(scores.count)
+    }
+
+    /// Average taste reaction across all historical servings of a dish.
+    func averageReaction(forDish dishID: UUID) -> Reaction? {
+        guard let avgScore = averageScore(forDish: dishID) else { return nil }
         if avgScore >= 0.85 { return .amazing }
         if avgScore >= 0.70 { return .great }
         if avgScore >= 0.50 { return .good }

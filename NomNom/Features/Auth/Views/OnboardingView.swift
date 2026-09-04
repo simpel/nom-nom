@@ -16,7 +16,7 @@ struct OnboardingView: View {
 
     var body: some View {
         NavigationStack {
-            VStack(spacing: 24) {
+            VStack(spacing: DS.Spacing.section) {
                 Spacer()
 
                 if step == 0 {
@@ -46,7 +46,7 @@ struct OnboardingView: View {
     // MARK: - Step 1: Profile
 
     private var profileStep: some View {
-        VStack(spacing: 20) {
+        VStack(spacing: DS.Spacing.section) {
             // Selected avatar display
             Text(emoji)
                 .font(.system(size: 56))
@@ -82,7 +82,7 @@ struct OnboardingView: View {
                 .padding(.vertical, 4)
             }
 
-            VStack(spacing: 6) {
+            VStack(spacing: 8) {
                 Text("Welcome to Nom Nom!")
                     .font(AppTypography.displayL)
                     .foregroundStyle(DS.Color.textPrimary)
@@ -110,12 +110,12 @@ struct OnboardingView: View {
     // MARK: - Step 2: Dinner Party
 
     private var partyStep: some View {
-        VStack(spacing: 20) {
+        VStack(spacing: DS.Spacing.section) {
             Image(systemName: "person.2.circle.fill")
                 .font(.system(size: 64))
                 .foregroundStyle(.tint)
 
-            VStack(spacing: 6) {
+            VStack(spacing: 8) {
                 Text("Dinner Parties")
                     .font(AppTypography.displayL)
                     .foregroundStyle(DS.Color.textPrimary)

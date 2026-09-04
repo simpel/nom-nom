@@ -49,6 +49,7 @@ extension FoodStore {
     }
 
     func addTags(_ tags: [String], to recipe: Recipe) async throws {
+        guard recipe.ownerID == userID else { return }
         let merged = Array(Set(recipe.tags).union(tags)).sorted()
         guard merged != recipe.tags else { return }
         let updated: Recipe = try await supabase
@@ -63,6 +64,7 @@ extension FoodStore {
     }
 
     func rename(recipe: Recipe, to newName: String) async {
+        guard recipe.ownerID == userID else { return }
         let trimmed = newName.trimmedName
         guard !trimmed.isEmpty, trimmed != recipe.name else { return }
         do {
@@ -77,17 +79,21 @@ extension FoodStore {
             upsertLocal(recipe: updated)
             errorMessage = nil
         } catch let error as PostgrestError where error.code == "23505" {
-            errorMessage = "You already have a recipe called “\(trimmed)”. Merge them instead."
+            errorMessage = "You already have a recipe called “\(trimmed)”."
         } catch {
             errorMessage = Self.describe(error)
         }
     }
 
     func applyRecipe(_ draft: RecipeDraft, to recipe: Recipe) async throws {
+        guard recipe.ownerID == userID else { return }
         let effortToSave = draft.effort ?? recipe.effort
         let cuisineToSave = draft.cuisine ?? recipe.cuisine
         let isPublicToSave = draft.isPublic
-        let updatedText = draft.text.trimmingCharacters(in: .whitespacesAndNewlines)
+        let cleanIngredients = draft.ingredients.filter { !$0.isEmpty }
+        let cleanInstructions = draft.instructions
+            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+            .filter { !$0.isEmpty }
 
         for path in draft.removedPhotoPaths {
             await deleteRecipeObject(path)
@@ -102,7 +108,8 @@ extension FoodStore {
             newPaths.append(path)
         }
 
-        guard recipe.recipeText != updatedText ||
+        guard recipe.ingredients != cleanIngredients ||
+              recipe.instructions != cleanInstructions ||
               recipe.recipePhotoPaths != newPaths ||
               recipe.effort != effortToSave ||
               recipe.cuisine != cuisineToSave ||
@@ -111,7 +118,8 @@ extension FoodStore {
         let updated: Recipe = try await supabase
             .from("dishes")
             .update(RecipeContentPatch(
-                recipe_text: updatedText,
+                ingredients: cleanIngredients,
+                instructions: cleanInstructions,
                 recipe_photo_paths: newPaths,
                 effort: effortToSave,
                 cuisine: cuisineToSave,
@@ -134,34 +142,37 @@ extension FoodStore {
         }
     }
 
-    func merge(recipe source: Recipe, into target: Recipe) async {
-        guard source.id != target.id else { return }
-        do {
-            let moved = servings(of: source.id)
-            if !moved.isEmpty {
-                try await supabase
-                    .from("meals")
-                    .update(["dish_id": target.id.uuidString])
-                    .eq("dish_id", value: source.id.uuidString)
-                    .execute()
-            }
-            for path in source.recipePhotoPaths {
-                await deleteRecipeObject(path)
-            }
-            try await supabase
-                .from("dishes")
-                .delete()
-                .eq("id", value: source.id.uuidString)
-                .execute()
+    func applyCoverPhotos(_ draft: PhotosDraft, to recipe: Recipe) async throws {
+        guard recipe.ownerID == userID else { return }
+        for path in draft.removedPaths {
+            await deleteRecipeObject(path)
+        }
 
-            for index in meals.indices where meals[index].recipeID == source.id {
-                meals[index].recipeID = target.id
+        var newPaths: [String] = []
+        for item in draft.items {
+            switch item {
+            case .existing(let path):
+                newPaths.append(path)
+            case .added(_, let data):
+                let path = "\(recipe.id.uuidString.lowercased())/\(UUID().uuidString.lowercased()).jpg"
+                _ = try await supabase.storage
+                    .from(SupabaseConfig.recipeBucket)
+                    .upload(path, data: data, options: FileOptions(contentType: "image/jpeg"))
+                PhotoCache.shared.put(data, for: path)
+                newPaths.append(path)
             }
-            recipes.removeAll { $0.id == source.id }
-            reindex()
-            errorMessage = nil
-        } catch {
-            errorMessage = Self.describe(error)
+        }
+
+        if newPaths != recipe.photoPaths {
+            let updated: Recipe = try await supabase
+                .from("dishes")
+                .update(RecipePhotosPatch(photo_paths: newPaths))
+                .eq("id", value: recipe.id.uuidString)
+                .select()
+                .single()
+                .execute()
+                .value
+            upsertLocal(recipe: updated)
         }
     }
 
@@ -169,14 +180,14 @@ extension FoodStore {
 
     func photos(for recipeID: UUID) -> [String] {
         var paths: [String] = []
-        let history = servings(of: recipeID).sorted { $0.eatenOn > $1.eatenOn }
-        for meal in history {
-            for p in meal.photoPaths where !paths.contains(p) {
+        if let recipe = recipe(recipeID) {
+            for p in recipe.photoPaths where !paths.contains(p) {
                 paths.append(p)
             }
         }
-        if let recipe = recipe(recipeID) {
-            for p in recipe.recipePhotoPaths where !paths.contains(p) {
+        let history = servings(of: recipeID).sorted { $0.eatenOn > $1.eatenOn }
+        for meal in history {
+            for p in meal.photoPaths where !paths.contains(p) {
                 paths.append(p)
             }
         }
@@ -187,26 +198,7 @@ extension FoodStore {
         photos(for: recipe.id)
     }
 
-    // MARK: - Discovery & Ranking Helpers
 
-    var popularRecipes: [Recipe] {
-        recipes.sorted { lhs, rhs in
-            let lCount = servings(of: lhs.id).count
-            let rCount = servings(of: rhs.id).count
-            if lCount != rCount { return lCount > rCount }
-            return lhs.name.localizedStandardCompare(rhs.name) == .orderedAscending
-        }
-    }
-
-    var recentRecipes: [Recipe] {
-        recipes
-            .compactMap { recipe -> (Recipe, Date)? in
-                guard let last = servings(of: recipe.id).map(\.eatenOn).max() else { return nil }
-                return (recipe, last)
-            }
-            .sorted { $0.1 > $1.1 }
-            .map(\.0)
-    }
 
     // MARK: - Compatibility Wrappers
 
@@ -216,9 +208,5 @@ extension FoodStore {
 
     func rename(dish: Recipe, to newName: String) async {
         await rename(recipe: dish, to: newName)
-    }
-
-    func merge(dish source: Recipe, into target: Recipe) async {
-        await merge(recipe: source, into: target)
     }
 }

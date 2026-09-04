@@ -16,7 +16,7 @@ struct MealInviteView: View {
 
     var body: some View {
         ScrollView {
-            VStack(spacing: 16) {
+            VStack(spacing: DS.Spacing.section) {
                 SectionCard("Invite by email") {
                     VStack(alignment: .leading, spacing: 10) {
                         HStack(spacing: 10) {
@@ -58,8 +58,9 @@ struct MealInviteView: View {
                     }
                 }
             }
-            .padding(.horizontal, 16)
-            .padding(.vertical, 14)
+            .padding(.horizontal, DS.Spacing.screenHorizontal)
+            .padding(.top, DS.Spacing.screenTop)
+            .padding(.bottom, DS.Spacing.screenBottom)
         }
         .background(DS.Color.bg)
         .navigationTitle("Ask for ratings")

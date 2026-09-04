@@ -8,7 +8,7 @@ struct RootView: View {
         Group {
             switch auth.phase {
             case .loading:
-                LaunchPlaceholder(caption: nil)
+                LaunchPlaceholder()
 
             case .signedOut:
                 SignInView()
@@ -40,7 +40,7 @@ private struct SignedInView: View {
                         .transition(.opacity)
                 }
             } else {
-                LaunchPlaceholder(caption: "Loading your food log…")
+                LaunchPlaceholder()
                     .task {
                         let fresh = FoodStore(userID: userID)
                         await fresh.load()
@@ -52,23 +52,25 @@ private struct SignedInView: View {
             }
         }
         .animation(.easeInOut(duration: 0.35), value: store?.isProfileSetup)
+        .onChange(of: NotificationManager.shared.deviceToken) { _, newToken in
+            if let newToken, let store {
+                Task {
+                    await store.registerDeviceToken(newToken)
+                }
+            }
+        }
     }
 }
 
 struct LaunchPlaceholder: View {
-    let caption: String?
+    init(caption: String? = nil) {}
 
     var body: some View {
-        VStack(spacing: 16) {
-            Image(systemName: "fork.knife")
-                .font(.system(size: 44))
-                .foregroundStyle(.tint)
+        VStack(spacing: DS.Spacing.md) {
+            Text("NomNom")
+                .font(AppTypography.displayXL)
+                .foregroundStyle(DS.Color.textPrimary)
             ProgressView()
-            if let caption {
-                Text(caption)
-                    .font(.footnote)
-                    .foregroundStyle(DS.Color.textSecondary)
-            }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(DS.Color.bg)

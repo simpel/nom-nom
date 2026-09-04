@@ -6,6 +6,7 @@ struct MealEditorView: View {
     var mealID: UUID?
     var initialDate: Date?
     var prefilledDishID: UUID?
+    var prefilledPartyID: UUID?
 
     @Environment(FoodStore.self) private var store
     @Environment(\.dismiss) private var dismiss
@@ -27,8 +28,6 @@ struct MealEditorView: View {
     @State private var isSaving = false
     @State private var didLoad = false
 
-    @State private var showingCreateParty = false
-    @State private var newPartyName = ""
     @State private var showDishPickerSheet = false
     @State private var showRecipeEditorSheet = false
     @State private var navigateToRecipeStep = false
@@ -82,7 +81,7 @@ struct MealEditorView: View {
     var body: some View {
         NavigationStack {
             ScrollView {
-                VStack(spacing: 16) {
+                VStack(spacing: DS.Spacing.section) {
                     PageHeader(title: isEditing ? "Edit meal" : "New meal")
 
                     MealPhotosPickerSection(draft: $photosDraft)
@@ -98,21 +97,23 @@ struct MealEditorView: View {
 
                     MealEditorCookingTimeSection(effort: $effort)
 
-                    MealEditorPartiesSection(
-                        selectedParties: $selectedParties,
-                        onCreateParty: { showingCreateParty = true }
-                    )
+                    MealEditorPartiesSection(selectedParties: $selectedParties)
 
                     MealEditorDetailsSection(
                         date: $date,
-                        notes: $notes,
-                        meal: meal,
-                        isSaving: isSaving,
-                        onDelete: deleteMeal
+                        notes: $notes
                     )
+
+                    if isEditing {
+                        MealEditorDeleteSection(
+                            isSaving: isSaving,
+                            onDelete: deleteMeal
+                        )
+                    }
                 }
-                .padding(.horizontal, 16)
-                .padding(.vertical, 14)
+                .padding(.horizontal, DS.Spacing.screenHorizontal)
+                .padding(.top, DS.Spacing.screenTop)
+                .padding(.bottom, DS.Spacing.screenBottom)
             }
             .background(DS.Color.bg)
             .screenTitle(isEditing ? "Edit meal" : "New meal", displayMode: .inline)
@@ -176,20 +177,6 @@ struct MealEditorView: View {
                     }
                 )
             }
-            .alert("New Dinner Party", isPresented: $showingCreateParty) {
-                TextField("Party name", text: $newPartyName)
-                Button("Create") {
-                    let name = newPartyName.trimmedName
-                    guard !name.isEmpty else { return }
-                    Task {
-                        if let created = await store.createParty(name: name) {
-                            selectedParties.insert(created.id)
-                            newPartyName = ""
-                        }
-                    }
-                }
-                Button("Cancel", role: .cancel) { newPartyName = "" }
-            }
             .onAppear(perform: loadIfNeeded)
             .onChange(of: linkedDishID) { _, _ in syncMatchedDishRecipe() }
             .onChange(of: title) { _, _ in syncMatchedDishRecipe() }
@@ -238,7 +225,8 @@ struct MealEditorView: View {
         loadedRecipeDishID = dish.id
         tagsText = dish.tags.joined(separator: ", ")
         recipeDraft = FoodStore.RecipeDraft(
-            text: dish.recipeText,
+            ingredients: dish.ingredients,
+            instructions: dish.instructions,
             existingPhotoPaths: dish.recipePhotoPaths,
             addedPhotoData: [],
             removedPhotoPaths: [],
@@ -270,7 +258,9 @@ struct MealEditorView: View {
                 tagsText = dish.tags.joined(separator: ", ")
                 loadRecipe(from: dish)
             }
-            if let party = store.currentParty {
+            if let prefilledPartyID {
+                selectedParties.insert(prefilledPartyID)
+            } else if let party = store.currentParty {
                 selectedParties.insert(party.id)
             }
             return

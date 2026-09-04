@@ -20,7 +20,8 @@ import { Resend } from "npm:resend@4.1.2";
 interface RequestBody {
   party_id?: string;
   meal_id?: string;
-  invitee_email: string;
+  invitee_email?: string;
+  invitee_user_id?: string;
 }
 
 function buildEmailHtml(params: {
@@ -109,8 +110,12 @@ function buildEmailHtml(params: {
       width: 56px;
       height: 56px;
       line-height: 56px;
-      font-size: 30px;
+      font-size: 20px;
+      font-weight: 800;
+      letter-spacing: 1px;
+      color: #ffffff;
       margin-bottom: 12px;
+      text-align: center;
     }
     .brand-title {
       font-size: 26px;
@@ -228,7 +233,7 @@ function buildEmailHtml(params: {
       
       <!-- Header -->
       <div class="header">
-        <div class="logo-badge">🍽️</div>
+        <div class="logo-badge">NN</div>
         <h1 class="brand-title">Nom Nom</h1>
         <p class="brand-subtitle">Share good food with the people you care about</p>
       </div>
@@ -292,12 +297,15 @@ Deno.serve(async (req) => {
     return Response.json({ error: "bad json body" }, { status: 400 });
   }
 
-  const { party_id, meal_id, invitee_email } = body;
-  if ((!party_id && !meal_id) || !invitee_email) {
-    return Response.json({ error: "party_id or meal_id and invitee_email are required" }, { status: 400 });
+  const { party_id, meal_id, invitee_email, invitee_user_id } = body;
+  if ((!party_id && !meal_id) || (!invitee_email && !invitee_user_id)) {
+    return Response.json(
+      { error: "party_id or meal_id, and invitee_email or invitee_user_id are required" },
+      { status: 400 }
+    );
   }
 
-  const email = invitee_email.trim().toLowerCase();
+  let email = invitee_email ? invitee_email.trim().toLowerCase() : "";
   const url = Deno.env.get("SUPABASE_URL")!;
   const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
   const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
@@ -372,20 +380,39 @@ Deno.serve(async (req) => {
     actionUrl = party_id ? `nomnom://invite?party_id=${party_id}` : (appUrl || "nomnom://invite");
   }
 
+  let recipientUserId = invitee_user_id;
+
+  if (!email && invitee_user_id) {
+    const { data: userData, error: userError } = await admin.auth.admin.getUserById(invitee_user_id);
+    if (userError || !userData?.user?.email) {
+      console.error("Could not find user for invitee_user_id:", invitee_user_id, userError);
+      return Response.json({ error: "invitee user not found" }, { status: 404 });
+    }
+    email = userData.user.email.trim().toLowerCase();
+  }
+
   console.log(`Sending Resend invite email to ${email} for "${itemName}" from ${inviterName}`);
 
   // Check if user already exists in auth.users
-  const { data: existingUserList } = await admin.auth.admin.listUsers();
-  const existingUser = existingUserList?.users?.find(
-    (u) => u.email?.toLowerCase() === email
-  );
-  const isExisting = !!existingUser;
+  let isExisting = false;
+  if (recipientUserId) {
+    isExisting = true;
+  } else {
+    const { data: existingUserList } = await admin.auth.admin.listUsers();
+    const existingUser = existingUserList?.users?.find(
+      (u) => u.email?.toLowerCase() === email
+    );
+    if (existingUser) {
+      isExisting = true;
+      recipientUserId = existingUser.id;
+    }
+  }
 
-  if (existingUser) {
+  if (recipientUserId) {
     const { data: recipientProfile } = await admin
       .from("profiles")
       .select("notify_email_party_invite, notify_email_meal_invite")
-      .eq("id", existingUser.id)
+      .eq("id", recipientUserId)
       .single();
 
     if (recipientProfile) {

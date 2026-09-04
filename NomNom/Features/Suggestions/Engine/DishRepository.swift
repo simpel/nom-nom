@@ -12,8 +12,8 @@ struct DishHistory {
 
 /// Everything that keeps dish names from drifting apart.
 ///
-/// Find-or-create and merge moved to `FoodStore`, since both are now writes that
-/// have to go through Postgres and lean on `unique (owner_id, normalized_name)` to
+/// Find-or-create moved to `FoodStore`, since it is now a write that
+/// has to go through Postgres and lean on `unique (owner_id, normalized_name)` to
 /// settle a race. What's left here is pure matching, with no I/O in it.
 enum DishRepository {
 
@@ -41,12 +41,16 @@ enum DishRepository {
     static func suggestions(for query: String,
                             in dishes: [Dish],
                             history: [UUID: DishHistory],
+                            favoriteIDs: Set<UUID> = [],
                             limit: Int = 6) -> [NameSuggestion] {
         let q = query.normalizedForMatching
         guard !q.isEmpty else {
-            // Nothing typed yet: offer the dishes we cook the most, most recent first.
+            // Nothing typed yet: offer favourites first, then dishes we cook the most, most recent first.
             return dishes
                 .sorted { lhs, rhs in
+                    let lFav = favoriteIDs.contains(lhs.id)
+                    let rFav = favoriteIDs.contains(rhs.id)
+                    if lFav != rFav { return lFav && !rFav }
                     let l = history[lhs.id]?.lastServed ?? lhs.createdAt
                     let r = history[rhs.id]?.lastServed ?? rhs.createdAt
                     return l > r
@@ -62,6 +66,7 @@ enum DishRepository {
 
             let normalizedCuisine = dish.cuisine?.normalizedForMatching ?? ""
             let matchesTag = dish.tags.contains { $0.normalizedForMatching.contains(q) }
+            let matchesIngredient = dish.ingredients.contains { $0.ingredient.normalizedForMatching.contains(q) }
 
             if name == q {
                 base = 100
@@ -73,7 +78,7 @@ enum DishRepository {
                 base = 55
             } else if name.contains(q) {
                 base = 40
-            } else if matchesTag || (!normalizedCuisine.isEmpty && normalizedCuisine.contains(q)) {
+            } else if matchesTag || matchesIngredient || (!normalizedCuisine.isEmpty && normalizedCuisine.contains(q)) {
                 base = 35
             } else if Fuzzy.isProbableTypo(name, q) {
                 base = 25
@@ -96,9 +101,12 @@ enum DishRepository {
                 return max(0, 6 - days / 30)
             }()
 
+            let isFavorite = favoriteIDs.contains(dish.id)
+            let favoriteBonus = isFavorite ? 50.0 : 0.0
+
             scored.append(suggestion(for: dish,
                                      history: entry,
-                                     rank: base - lengthPenalty + familiarity + recency))
+                                     rank: base - lengthPenalty + familiarity + recency + favoriteBonus))
         }
 
         return scored.sorted { $0.rank > $1.rank }.prefix(limit).map { $0 }

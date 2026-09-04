@@ -51,6 +51,18 @@ struct RecipeRowCard: View {
                         .foregroundStyle(DS.Color.textPrimary)
                         .lineLimit(1)
 
+                    if store.isFavorite(recipe: recipe) {
+                        Image(systemName: "heart.fill")
+                            .font(.caption2)
+                            .foregroundStyle(DS.Color.accent)
+                    }
+
+                    if recipe.ownerID != store.userID, let creator = store.profiles[recipe.ownerID]?.shortName {
+                        Text("by \(creator)")
+                            .font(.caption2)
+                            .foregroundStyle(DS.Color.textSecondary)
+                    }
+
                     if !recipe.isPublic && recipe.ownerID == store.userID {
                         Text("Private")
                             .font(.caption2.weight(.medium))
@@ -109,5 +121,15 @@ struct RecipeRowCard: View {
         }
         .padding(.vertical, 6)
         .contentShape(Rectangle())
+        .contextMenu {
+            Button {
+                Task { await store.toggleFavorite(recipe: recipe) }
+            } label: {
+                Label(
+                    store.isFavorite(recipe: recipe) ? "Remove from Favourites" : "Add to Favourites",
+                    systemImage: store.isFavorite(recipe: recipe) ? "heart.slash" : "heart"
+                )
+            }
+        }
     }
 }

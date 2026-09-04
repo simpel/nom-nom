@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// Dedicated modal sheet for editing a recipe's name, instructions, effort, tags, and merging.
+/// Dedicated modal sheet for editing a recipe's name, instructions, effort, and tags.
 struct RecipeEditSheet: View {
     let recipeID: UUID
 
@@ -8,110 +8,74 @@ struct RecipeEditSheet: View {
     @Environment(\.dismiss) private var dismiss
 
     @State private var name: String = ""
+    @State private var coverPhotosDraft = FoodStore.PhotosDraft()
     @State private var recipeDraft = FoodStore.RecipeDraft()
     @State private var tagsText: String = ""
     @State private var isSaving = false
-    @State private var mergeTarget: Recipe?
-    @State private var confirmMerge = false
 
     private var recipe: Recipe? { store.recipe(recipeID) }
-    private var history: [Meal] { store.servings(of: recipeID) }
+    private var isOwner: Bool { recipe?.ownerID == store.userID }
 
     var body: some View {
         NavigationStack {
             ScrollView {
-                VStack(spacing: 16) {
+                VStack(spacing: DS.Spacing.section) {
                     if let recipe {
-                        SectionCard("Recipe Name") {
-                            TextField("Recipe name", text: $name)
-                                .autocorrectionDisabled()
-                        }
+                        if isOwner {
+                            AssetPhotosPickerSection(draft: $coverPhotosDraft)
 
-                        RecipeEditorSection(draft: $recipeDraft)
-
-                        CuisinePickerSection(selection: $recipeDraft.cuisine)
-
-                        SectionCard("Cooking Effort") {
-                            TactileOptionPicker(selection: $recipeDraft.effort)
-                        }
-
-                        SectionCard("Tags") {
-                            TextField("Tags, comma separated (e.g. pasta, quick, oven)", text: $tagsText)
-                                .textInputAutocapitalization(.never)
-                                .autocorrectionDisabled()
-                        }
-
-                        SectionCard("Sharing & Visibility") {
-                            VStack(alignment: .leading, spacing: 6) {
-                                Toggle("Make recipe public", isOn: $recipeDraft.isPublic)
-                                    .font(.body.weight(.medium))
-
-                                Text("When enabled, other dinner parties and users can discover and cook this recipe.")
-                                    .font(.caption)
-                                    .foregroundStyle(.secondary)
+                            SectionCard("Recipe Name") {
+                                TextField("Recipe name", text: $name)
+                                    .autocorrectionDisabled()
                             }
-                        }
 
-                        if !mergeCandidates(excluding: recipe).isEmpty {
-                            SectionCard("Recipe Actions") {
-                                VStack(alignment: .leading, spacing: 8) {
-                                    Menu {
-                                        ForEach(mergeCandidates(excluding: recipe)) { candidate in
-                                            Button(candidate.name) {
-                                                mergeTarget = candidate
-                                                confirmMerge = true
-                                            }
-                                        }
-                                    } label: {
-                                        HStack {
-                                            Text("Merge into another recipe")
-                                                .font(.subheadline.weight(.medium))
-                                            Spacer()
-                                            Image(systemName: "chevron.right")
-                                                .font(.caption2)
-                                                .foregroundStyle(.tertiary)
-                                        }
-                                    }
+                            RecipeEditorSection(draft: $recipeDraft)
 
-                                    Text("Merging moves every logged meal onto the other recipe and keeps its name.")
-                                        .font(.caption2)
+                            CuisinePickerSection(selection: $recipeDraft.cuisine)
+
+                            SectionCard("Cooking Effort") {
+                                TactileOptionPicker(selection: $recipeDraft.effort)
+                            }
+
+                            SectionCard("Tags") {
+                                TextField("Tags, comma separated (e.g. pasta, quick, oven)", text: $tagsText)
+                                    .textInputAutocapitalization(.never)
+                                    .autocorrectionDisabled()
+                            }
+
+                            SectionCard("Sharing & Visibility") {
+                                VStack(alignment: .leading, spacing: 6) {
+                                    Toggle("Make recipe public", isOn: $recipeDraft.isPublic)
+                                        .font(.body.weight(.medium))
+
+                                    Text("When enabled, other dinner parties and users can discover and cook this recipe.")
+                                        .font(.caption)
                                         .foregroundStyle(.secondary)
                                 }
                             }
+                        } else {
+                            ContentUnavailableView(
+                                "Creator Only",
+                                systemImage: "lock.fill",
+                                description: Text("Only the creator of this recipe can edit its details.")
+                            )
                         }
                     } else {
                         ContentUnavailableView("Recipe not found", systemImage: "questionmark.folder")
                     }
                 }
-                .padding(.horizontal, 16)
-                .padding(.vertical, 14)
+                .padding(.horizontal, DS.Spacing.screenHorizontal)
+                .padding(.top, DS.Spacing.screenTop)
+                .padding(.bottom, DS.Spacing.screenBottom)
             }
             .background(DS.Color.bg)
             .screenTitle("Edit Recipe", displayMode: .inline)
             .sheetCommitToolbar(
                 isSaving: isSaving,
-                canSave: !name.trimmedName.isEmpty,
+                canSave: isOwner && !name.trimmedName.isEmpty,
                 onSave: save
             )
             .onAppear(perform: populate)
-            .confirmationDialog(
-                "Merge into “\(mergeTarget?.name ?? "")”?",
-                isPresented: $confirmMerge,
-                titleVisibility: .visible
-            ) {
-                Button("Merge \(history.count) meal\(history.count == 1 ? "" : "s")", role: .destructive) {
-                    if let recipe, let mergeTarget {
-                        Task {
-                            await store.merge(recipe: recipe, into: mergeTarget)
-                            dismiss()
-                        }
-                    }
-                    mergeTarget = nil
-                }
-                Button("Cancel", role: .cancel) { mergeTarget = nil }
-            } message: {
-                Text("“\(recipe?.name ?? "")” will be removed and its history kept under the other name.")
-            }
         }
     }
 
@@ -119,9 +83,11 @@ struct RecipeEditSheet: View {
         guard let recipe else { return }
         name = recipe.name
         tagsText = recipe.tags.joined(separator: ", ")
+        coverPhotosDraft = FoodStore.PhotosDraft(existingPaths: recipe.photoPaths)
 
         recipeDraft = FoodStore.RecipeDraft(
-            text: recipe.recipeText,
+            ingredients: recipe.ingredients,
+            instructions: recipe.instructions,
             existingPhotoPaths: recipe.recipePhotoPaths,
             addedPhotoData: [],
             removedPhotoPaths: [],
@@ -132,7 +98,7 @@ struct RecipeEditSheet: View {
     }
 
     private func save() {
-        guard let recipe else { return }
+        guard let recipe, isOwner else { return }
         let trimmedName = name.trimmedName
         guard !trimmedName.isEmpty else { return }
 
@@ -143,20 +109,10 @@ struct RecipeEditSheet: View {
             }
             let parsedTags = TagsParser.parse(tagsText)
             try? await store.addTags(parsedTags, to: recipe)
+            try? await store.applyCoverPhotos(coverPhotosDraft, to: recipe)
             try? await store.applyRecipe(recipeDraft, to: recipe)
             isSaving = false
             dismiss()
         }
-    }
-
-    private func mergeCandidates(excluding recipe: Recipe) -> [Recipe] {
-        store.myRecipes
-            .filter { $0.id != recipe.id }
-            .sorted {
-                Fuzzy.similarity($0.normalizedName, recipe.normalizedName) >
-                Fuzzy.similarity($1.normalizedName, recipe.normalizedName)
-            }
-            .prefix(8)
-            .map { $0 }
     }
 }

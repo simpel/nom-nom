@@ -25,7 +25,13 @@ final class FoodStore {
     var parties: [Party] = []
     var partyMembers: [PartyMember] = []
     var partyInvites: [PartyInvite] = []
+    var partyFollowers: [PartyFollower] = []
     var mealParties: [MealParty] = []
+    var recipeFavorites: [RecipeFavorite] = []
+    var favoriteRecipeIDs: Set<UUID> = []
+    var favoriteRecipes: [Recipe] {
+        recipes.filter { favoriteRecipeIDs.contains($0.id) }
+    }
     var currentParty: Party? {
         didSet {
             let key = "selectedParty_\(userID.uuidString)"
@@ -48,6 +54,7 @@ final class FoodStore {
     var mealPartiesByMeal: [UUID: [MealParty]] = [:]
     var mealPartiesByParty: [UUID: [MealParty]] = [:]
     var partyMembersByParty: [UUID: [PartyMember]] = [:]
+    var partyFollowersByParty: [UUID: [PartyFollower]] = [:]
     var dishByID: [UUID: Recipe] = [:]
     var recipeByID: [UUID: Recipe] { dishByID }
     var eaterByID: [UUID: Eater] = [:]
@@ -65,6 +72,14 @@ final class FoodStore {
     var myDishes: [Recipe] { dishes.filter { $0.ownerID == userID } }
     var myRecipes: [Recipe] { myDishes }
 
+    func isFavorite(recipeID: UUID) -> Bool {
+        favoriteRecipeIDs.contains(recipeID)
+    }
+
+    func isFavorite(recipe: Recipe) -> Bool {
+        favoriteRecipeIDs.contains(recipe.id)
+    }
+
     var myMeals: [Meal] { meals.filter { $0.createdBy == userID } }
 
     /// Context-filtered meals: if a party is selected, returns all meals served to that party;
@@ -80,6 +95,46 @@ final class FoodStore {
     var myParties: [Party] {
         let myPartyIDs = Set(partyMembers.filter { $0.userID == userID }.map(\.partyID))
         return parties.filter { myPartyIDs.contains($0.id) }
+    }
+
+    var followedPartyIDs: Set<UUID> {
+        Set(partyFollowers.filter { $0.userID == userID }.map(\.partyID))
+    }
+
+    var followedParties: [Party] {
+        let ids = followedPartyIDs
+        return parties.filter { ids.contains($0.id) }
+    }
+
+    var publicParties: [Party] {
+        parties.filter(\.isPublic)
+    }
+
+    var discoverParties: [Party] {
+        let myIDs = Set(partyMembers.filter { $0.userID == userID }.map(\.partyID))
+        let followedIDs = followedPartyIDs
+        return parties.filter { $0.isPublic && !myIDs.contains($0.id) && !followedIDs.contains($0.id) }
+    }
+
+    func isFollowing(partyID: UUID) -> Bool {
+        followedPartyIDs.contains(partyID)
+    }
+
+    func isMember(of partyID: UUID) -> Bool {
+        partyMembers.contains { $0.partyID == partyID && $0.userID == userID }
+    }
+
+    func followers(of partyID: UUID) -> [PartyFollower] {
+        partyFollowersByParty[partyID] ?? []
+    }
+
+    func searchParties(matching query: String) -> [Party] {
+        let trimmed = query.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        guard !trimmed.isEmpty else { return parties }
+        return parties.filter { party in
+            party.name.lowercased().contains(trimmed) ||
+            party.about.lowercased().contains(trimmed)
+        }
     }
 
     var pendingPartyInvites: [PartyInvite] {
@@ -139,6 +194,11 @@ final class FoodStore {
     func parties(forMeal mealID: UUID) -> [Party] {
         let pIDs = (mealPartiesByMeal[mealID] ?? []).map(\.partyID)
         return pIDs.compactMap { partyByID[$0] }
+    }
+
+    func meals(forParty partyID: UUID) -> [Meal] {
+        let mealIDs = Set((mealPartiesByParty[partyID] ?? []).map(\.mealID))
+        return meals.filter { mealIDs.contains($0.id) }
     }
 
     func members(of partyID: UUID) -> [Profile] {

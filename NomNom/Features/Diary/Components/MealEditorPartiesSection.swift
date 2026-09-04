@@ -1,39 +1,39 @@
 import SwiftUI
 
-/// Section in MealEditorView managing party assignments and party creation trigger.
+/// Section in MealEditorView managing party assignments.
 struct MealEditorPartiesSection: View {
     @Binding var selectedParties: Set<UUID>
-    let onCreateParty: () -> Void
 
     @Environment(FoodStore.self) private var store
 
     var body: some View {
-        SectionCard("Serve to Dinner Parties") {
-            VStack(spacing: 12) {
-                ForEach(store.myParties) { party in
-                    Toggle(isOn: Binding(
-                        get: { selectedParties.contains(party.id) },
-                        set: { isSelected in
-                            if isSelected {
-                                selectedParties.insert(party.id)
-                            } else {
-                                selectedParties.remove(party.id)
+        if !store.myParties.isEmpty {
+            SectionCard("Serve to Dinner Parties") {
+                VStack(spacing: 12) {
+                    ForEach(store.myParties) { party in
+                        Toggle(isOn: Binding(
+                            get: { selectedParties.contains(party.id) },
+                            set: { isSelected in
+                                if isSelected {
+                                    selectedParties.insert(party.id)
+                                } else {
+                                    selectedParties.remove(party.id)
+                                }
+                            }
+                        )) {
+                            HStack(spacing: 10) {
+                                PartyAvatar(party: party, size: 28)
+                                Text(party.name)
+                                    .font(.body)
+                                    .foregroundStyle(DS.Color.textPrimary)
                             }
                         }
-                    )) {
-                        Label(party.name, systemImage: "person.2.fill")
+
+                        if party.id != store.myParties.last?.id {
+                            Divider()
+                        }
                     }
-
-                    Divider()
                 }
-
-                Button(action: onCreateParty) {
-                    Label("Create new party...", systemImage: "plus")
-                        .font(.inter(.subheadline, weight: .medium))
-                }
-                .buttonStyle(.plain)
-                .foregroundStyle(Color.accentColor)
-                .padding(.top, 2)
             }
         }
     }

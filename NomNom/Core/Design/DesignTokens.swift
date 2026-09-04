@@ -49,4 +49,40 @@ enum DS {
             static let pine900 = SwiftUI.Color("ds/pine/pine900")
         }
     }
+
+    enum Spacing {
+        // MARK: - Micro / Inline Rhythm
+        /// 4pt - Tightest gap (micro indicators, inline dots)
+        static let xxs: CGFloat = 4
+        /// 8pt - Standard compact gap (icon to label, metadata row items)
+        static let xs: CGFloat = 8
+        /// 12pt - Form control spacing, sub-card groupings
+        static let sm: CGFloat = 12
+        /// 16pt - Card internal padding & close element groups
+        static let md: CGFloat = 16
+
+        // MARK: - Macro / Section Rhythm
+        /// 24pt - Related section subsections or compact sheet groupings
+        static let sectionCompact: CGFloat = 24
+        /// 32pt - Primary standard vertical gap between distinct cards & sections
+        static let section: CGFloat = 32
+        /// 40pt - Large editorial separation between major structural areas
+        static let sectionLarge: CGFloat = 40
+
+        // MARK: - Hero Rhythm & Breathing Room
+        /// 28pt - Gap between hero card deck and hero page title/subtitle
+        static let heroInner: CGFloat = 28
+        /// 40pt - Clearance from hero header block to first content card below
+        static let heroToContent: CGFloat = 40
+        /// 14pt - Internal vertical breathing room around fanned arc card decks
+        static let heroDeckPadding: CGFloat = 14
+
+        // MARK: - Screen Bounds & View Insets
+        /// 16pt - Standard horizontal gutter
+        static let screenHorizontal: CGFloat = 16
+        /// 20pt - ScrollView top clearance below navigation title
+        static let screenTop: CGFloat = 20
+        /// 44pt - ScrollView bottom clearance above tab bar or sheet bottom
+        static let screenBottom: CGFloat = 44
+    }
 }

@@ -18,7 +18,7 @@ struct ProfileSheetView: View {
     var body: some View {
         NavigationStack {
             ScrollView {
-                VStack(spacing: 16) {
+                VStack(spacing: DS.Spacing.section) {
                     SectionCard("Profile Details") {
                         VStack(alignment: .leading, spacing: 10) {
                             HStack(spacing: 14) {
@@ -64,8 +64,9 @@ struct ProfileSheetView: View {
 
                     DangerZoneSection(confirmDelete: $confirmDelete)
                 }
-                .padding(.horizontal, 16)
-                .padding(.vertical, 14)
+                .padding(.horizontal, DS.Spacing.screenHorizontal)
+                .padding(.top, DS.Spacing.screenTop)
+                .padding(.bottom, DS.Spacing.screenBottom)
             }
             .background(DS.Color.bg)
             .screenTitle("My Profile", displayMode: .inline)
