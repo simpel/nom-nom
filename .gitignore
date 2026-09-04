@@ -16,3 +16,6 @@ xcuserdata/
 .env.*
 supabase/functions/.env
 
+# Supabase
+supabase/.temp/
+supabase/.branches/
