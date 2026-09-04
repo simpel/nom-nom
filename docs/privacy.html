@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Privacy Policy — Nom Nom</title>
+  <meta name="description" content="Privacy Policy for Nom Nom iOS application covering email authentication, photo storage, party sharing, and data deletion.">
+  
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" href="assets/icon.png">
+  <link rel="apple-touch-icon" href="assets/icon.png">
+  
+  <!-- Preconnect and Stylesheets -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <a href="#main-content" class="skip-link">Skip to main content</a>
+
+  <!-- Header / Navigation -->
+  <header class="site-header">
+    <div class="container header-inner">
+      <a href="index.html" class="brand-link" aria-label="Nom Nom Home">
+        <img src="assets/icon.png" alt="" class="brand-icon" width="32" height="32">
+        <span class="brand-name">Nom Nom</span>
+      </a>
+
+      <nav aria-label="Primary Navigation">
+        <ul class="nav-menu">
+          <li><a href="index.html" class="nav-link">Overview</a></li>
+          <li><a href="privacy.html" class="nav-link active" aria-current="page">Privacy Policy</a></li>
+          <li><a href="https://github.com/simpel/nom-nom" class="nav-link" target="_blank" rel="noopener noreferrer">GitHub</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main id="main-content" class="policy-page">
+    <div class="container">
+      <div class="policy-content">
+        <header class="policy-header">
+          <span class="policy-badge">Legal &amp; Transparency</span>
+          <h1 class="policy-title">Privacy Policy</h1>
+          <p class="policy-updated">Last updated: September 4, 2026</p>
+        </header>
+
+        <section class="policy-section">
+          <h2>1. Introduction</h2>
+          <p>
+            Nom Nom is designed to help families and friends log what they cook, gather honest verdicts, and decide what to eat next. We believe your household dining records belong to you. Nom Nom does not sell your data, does not serve advertisements, and does not track your behavior across third-party apps or websites.
+          </p>
+          <div class="policy-callout">
+            <p>Our commitment: We collect only the minimum information necessary to authenticate you, sync your meals, and enable shared dinner party collaboration.</p>
+          </div>
+        </section>
+
+        <section class="policy-section">
+          <h2>2. Information We Collect</h2>
+          <p>When you use Nom Nom, we process the following categories of data:</p>
+          <ul>
+            <li>
+              <strong>Email Address (Account Authentication):</strong> Used solely to generate and deliver single-use six-digit verification codes for sign-in, and to route invitations between dinner party members. We do not require or store passwords.
+            </li>
+            <li>
+              <strong>User Content &amp; Meal Photos:</strong> Photos you choose to take with your device camera or select from your photo library to document a meal, along with meal titles, preparation dates, and cooking notes. Photos are stored securely in private cloud storage buckets.
+            </li>
+            <li>
+              <strong>Verdicts &amp; Taste Ratings:</strong> The rating verdicts you submit for a meal (such as Loved, OK, or Not a fan). These verdicts help generate recommendation rankings for you and your shared parties.
+            </li>
+            <li>
+              <strong>Party Memberships:</strong> Records of dinner parties you create or join, including member email associations.
+            </li>
+          </ul>
+        </section>
+
+        <section class="policy-section">
+          <h2>3. How Information is Used and Shared</h2>
+          <p>We use your information exclusively to provide the core functionality of Nom Nom:</p>
+          <ul>
+            <li>To authenticate your session and sync your meals across your devices.</li>
+            <li>To calculate "What to eat" recommendation scores based on your household's historical preferences and recency.</li>
+            <li>To share meal entries and verdicts among members of the specific Dinner Party to which a meal was served.</li>
+          </ul>
+          <p>
+            <strong>Sharing within Parties:</strong> A meal logged in your private context ("Just me") is visible only to you. When you serve a meal to a Dinner Party, all active members of that party can view the meal's photo, notes, and member verdicts. Ratings carry no party tag independently; they count toward a party solely when the rater is an active member and the meal was served to that party.
+          </p>
+          <p>
+            We do not share, monetize, or disclose your personal data to advertisers, data brokers, or marketing partners.
+          </p>
+        </section>
+
+        <section class="policy-section">
+          <h2>4. Storage, Infrastructure, and Security</h2>
+          <p>
+            Nom Nom's backend services and databases are hosted on Supabase. Your data is stored in PostgreSQL databases protected by strict Row-Level Security (RLS) policies, and meal photos are hosted in private object storage buckets. All data transmitted between the Nom Nom iOS app and our servers is encrypted in transit using industry-standard Transport Layer Security (TLS/HTTPS).
+          </p>
+        </section>
+
+        <section class="policy-section">
+          <h2>5. Account Deletion and Data Erasure</h2>
+          <p>
+            In accordance with App Store Review Guideline 5.1.1(v) and global privacy standards, you have the absolute right to delete your account and all associated data at any time directly from within the application:
+          </p>
+          <ol style="padding-left: var(--space-lg); margin-bottom: var(--space-md); color: var(--color-text-secondary); font-size: 0.9375rem; line-height: 1.65;">
+            <li style="margin-bottom: var(--space-xs);">Open the <strong>Nom Nom</strong> app on your iOS device.</li>
+            <li style="margin-bottom: var(--space-xs);">Navigate to the <strong>Settings</strong> tab.</li>
+            <li style="margin-bottom: var(--space-xs);">Select <strong>Delete Account</strong> and confirm the action.</li>
+          </ol>
+          <div class="policy-callout">
+            <p>What happens when you delete your account: Our server immediately purges all database rows linked to your user identity (profile, meal logs, verdicts, and party associations) and permanently deletes all photo files stored in our cloud buckets associated with your meals.</p>
+          </div>
+        </section>
+
+        <section class="policy-section">
+          <h2>6. Children's Privacy</h2>
+          <p>
+            Nom Nom is designed for general audiences and household meal planning. Every user account requires an email address. We do not knowingly collect personal data from children under the age of 13 without appropriate parental consent.
+          </p>
+        </section>
+
+        <section class="policy-section">
+          <h2>7. Changes to This Policy</h2>
+          <p>
+            We may update this Privacy Policy from time to time as features evolve. When changes occur, the updated policy will be published at this URL with a revised "Last updated" date.
+          </p>
+        </section>
+
+        <section class="policy-section">
+          <h2>8. Contact &amp; Inquiries</h2>
+          <p>
+            If you have questions regarding this Privacy Policy, your personal data, or wish to exercise data rights under GDPR or CCPA, you can reach out via:
+          </p>
+          <ul>
+            <li>GitHub Issues: <a href="https://github.com/simpel/nom-nom/issues" target="_blank" rel="noopener noreferrer" style="color: var(--color-accent);">github.com/simpel/nom-nom/issues</a></li>
+            <li>Maintainer: Joel Sanden</li>
+          </ul>
+        </section>
+      </div>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="site-footer">
+    <div class="container footer-inner">
+      <div class="footer-meta">
+        <span>&copy; Nom Nom. Built for iOS.</span>
+      </div>
+
+      <ul class="footer-links">
+        <li><a href="index.html" class="footer-link">Home</a></li>
+        <li><a href="privacy.html" class="footer-link">Privacy Policy</a></li>
+        <li><a href="https://github.com/simpel/nom-nom" class="footer-link" target="_blank" rel="noopener noreferrer">Source Code</a></li>
+      </ul>
+    </div>
+  </footer>
+</body>
+</html>
