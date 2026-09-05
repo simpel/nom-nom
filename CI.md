@@ -21,7 +21,7 @@ Nom Nom uses **GitHub Actions** (`.github/workflows/testflight.yml`) to automati
 Navigate to your GitHub repository:
 **Settings** → **Secrets and variables** → **Actions** → **New repository secret**.
 
-You need to add the following **6 secrets**:
+You need to add the following **App Store secrets**:
 
 | Secret Name | Description | Example / Format |
 | :--- | :--- | :--- |
@@ -31,6 +31,34 @@ You need to add the following **6 secrets**:
 | `BUILD_CERTIFICATE_BASE64` | Base64-encoded Apple Distribution `.p12` | Raw base64 string |
 | `P12_PASSWORD` | Password used when exporting the `.p12` certificate | Plain text string |
 | `BUILD_PROVISION_PROFILE_BASE64` | Base64-encoded `.mobileprovision` file | Raw base64 string |
+
+And the following **Supabase secrets** for automated database and edge function deployments:
+
+| Secret Name | Description | Example / Format |
+| :--- | :--- | :--- |
+| `SUPABASE_ACCESS_TOKEN` | Personal Access Token from Supabase Account settings | `sbp_...` |
+| `SUPABASE_PROJECT_ID` | Project Reference ID | `bctbqsrsmkyputxyiyzh` |
+| `SUPABASE_DB_PASSWORD` | Database password for your hosted Supabase instance | Plain text string |
+
+---
+
+## Supabase CI & Deployment Pipelines
+
+Nom Nom includes two GitHub Actions workflows for backend management:
+
+1. **`supabase-ci.yml` (Pull Request Validation)**:
+   - Triggers on any PR touching `supabase/**`.
+   - Spins up a local Supabase instance in CI.
+   - Runs `supabase db reset` to verify that all SQL migrations execute cleanly from scratch.
+   - Executes `python3 supabase/tests/rls_test.py` to test Row Level Security policies and triggers.
+
+2. **`supabase-deploy.yml` (Production Deployment)**:
+   - Triggers on merge to `main` when `supabase/**` changes.
+   - Links to your hosted Supabase project and runs `supabase db push` to apply pending migrations.
+   - Deploys Edge Functions (`delete-account`, `notify-invitees`, `send-invite-email`).
+
+> [!IMPORTANT]
+> **Expand & Contract Pattern:** Because mobile users take time to update their apps, all database migrations must be **backward-compatible and additive** (e.g. adding nullable columns or new tables). Do not drop or rename active columns until older app versions are deprecated.
 
 ---
 

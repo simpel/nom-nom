@@ -55,6 +55,9 @@ struct MealRatingSheet: View {
                 items.append(.remote(path: p, bucket: SupabaseConfig.photoBucket))
             }
         }
+        if items.isEmpty {
+            items.append(.fallback(cuisine: recipe.cuisine))
+        }
         return items
     }
 
@@ -93,7 +96,9 @@ struct MealRatingSheet: View {
                 if let recipe = mealRecipe {
                     let paths = recipe.recipePhotoPaths.isEmpty ? recipe.photoPaths : recipe.recipePhotoPaths
                     let bucket = recipe.recipePhotoPaths.isEmpty ? SupabaseConfig.photoBucket : SupabaseConfig.recipeBucket
-                    MealGalleryViewerSheet(paths: paths, initialIndex: wrapper.index, bucket: bucket, titlePrefix: "Recipe")
+                    if !paths.isEmpty {
+                        MealGalleryViewerSheet(paths: paths, initialIndex: min(wrapper.index, paths.count - 1), bucket: bucket, titlePrefix: "Recipe")
+                    }
                 }
             }
         }

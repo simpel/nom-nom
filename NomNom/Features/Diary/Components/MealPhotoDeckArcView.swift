@@ -3,6 +3,7 @@ import SwiftUI
 /// Arc deck layout with interactive drag-to-reorder for meal draft photos.
 struct MealPhotoDeckArcView: View {
     @Binding var draft: FoodStore.PhotosDraft
+    var bucket: String = SupabaseConfig.photoBucket
     let onTapCard: (Int) -> Void
 
     @State private var draggingItemID: String?
@@ -20,6 +21,7 @@ struct MealPhotoDeckArcView: View {
                     item: item,
                     visualSlot: visualSlot,
                     isDragging: isDragging,
+                    bucket: bucket,
                     onDelete: {
                         withAnimation(.spring(response: 0.35, dampingFraction: 0.75)) {
                             if let itemIndex = draft.items.firstIndex(where: { $0.id == item.id }) {

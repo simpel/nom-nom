@@ -85,6 +85,7 @@ struct MealDetailPartyRatingsCard: View {
                     MealDetailMemberRatingRow(
                         name: member.shownName,
                         avatar: member.avatarEmoji,
+                        photoPath: member.photoPath,
                         initialLetter: String(member.shownName.prefix(1)),
                         isMe: isMe,
                         rating: rating,

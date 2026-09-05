@@ -5,6 +5,7 @@ struct MealPhotoCardView: View {
     let item: FoodStore.PhotosDraft.Item
     let visualSlot: Int
     let isDragging: Bool
+    var bucket: String = SupabaseConfig.photoBucket
     let onDelete: () -> Void
 
     var body: some View {
@@ -12,7 +13,7 @@ struct MealPhotoCardView: View {
             ZStack {
                 switch item {
                 case .existing(let path):
-                    RemoteMealPhoto(path: path, cornerRadius: AppRadius.photo, bucket: SupabaseConfig.photoBucket)
+                    RemoteMealPhoto(path: path, cornerRadius: AppRadius.photo, bucket: bucket)
                 case .added(_, let data):
                     MealPhoto(data: data, cornerRadius: AppRadius.photo)
                 }

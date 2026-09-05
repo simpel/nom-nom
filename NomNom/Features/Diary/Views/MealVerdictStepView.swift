@@ -11,6 +11,7 @@ struct MealVerdictStepView: View {
     @State private var isSaving = false
     @State private var selectedPhotoIndex: Int?
     @State private var selectedRecipePhotoIndex: Int?
+    @State private var hasInitialized = false
 
     private var matchedRecipe: Recipe? {
         if let id = draft.linkedDishID {
@@ -70,6 +71,9 @@ struct MealVerdictStepView: View {
                     items.append(.local(id: "recipe-added-\(idx)", data: data))
                 }
             }
+        }
+        if items.isEmpty, (matchedRecipe != nil || draft.recipe != nil || resolvedCuisine != nil) {
+            items.append(.fallback(cuisine: resolvedCuisine))
         }
         return items
     }
@@ -134,12 +138,17 @@ struct MealVerdictStepView: View {
             if let matchedRecipe {
                 let paths = matchedRecipe.recipePhotoPaths.isEmpty ? matchedRecipe.photoPaths : matchedRecipe.recipePhotoPaths
                 let bucket = matchedRecipe.recipePhotoPaths.isEmpty ? SupabaseConfig.photoBucket : SupabaseConfig.recipeBucket
-                MealGalleryViewerSheet(paths: paths, initialIndex: wrapper.index, bucket: bucket, titlePrefix: "Recipe")
+                if !paths.isEmpty {
+                    MealGalleryViewerSheet(paths: paths, initialIndex: min(wrapper.index, paths.count - 1), bucket: bucket, titlePrefix: "Recipe")
+                }
             }
         }
         .onAppear {
-            myReaction = draft.verdicts[.account(store.userID)]
-            repeatDesire = draft.repeatDesire
+            if !hasInitialized {
+                hasInitialized = true
+                myReaction = draft.verdicts[.account(store.userID)]
+                repeatDesire = draft.repeatDesire
+            }
         }
         .interactiveDismissDisabled(isSaving)
         .presentationDragIndicator(.visible)

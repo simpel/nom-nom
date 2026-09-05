@@ -82,12 +82,21 @@ struct PersonDetailView: View {
         return mealSet.values.sorted { $0.eatenOn > $1.eatenOn }
     }
 
+    private var photoPath: String? {
+        guard case .account(let id) = raterRef else { return nil }
+        if id == store.userID {
+            return store.myProfile?.photoPath
+        }
+        return store.profiles[id]?.photoPath
+    }
+
     var body: some View {
         ScrollView {
             VStack(spacing: DS.Spacing.section) {
                 ProfileHeaderCard(
                     name: personName,
                     subtitle: subtitle,
+                    photoPath: photoPath,
                     isCurrentUser: isCurrentUser
                 )
 

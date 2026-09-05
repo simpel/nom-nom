@@ -72,6 +72,14 @@ struct MinimalRecipeCard: View {
                     systemImage: store.isFavorite(recipe: recipe) ? "heart.slash" : "heart"
                 )
             }
+
+            if recipe.ownerID == store.userID {
+                Button(role: .destructive) {
+                    Task { await store.delete(recipe: recipe) }
+                } label: {
+                    Label("Delete", systemImage: "trash")
+                }
+            }
         }
     }
 }

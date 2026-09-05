@@ -5,7 +5,12 @@ struct MealDetailsStepView: View {
     @Binding var draft: FoodStore.MealDraft
     var onDismiss: () -> Void
 
+    @Environment(FoodStore.self) private var store
+
     @State private var navigateToVerdict = false
+    @State private var isSaving = false
+
+    private var isEditing: Bool { draft.mealID != nil }
 
     var body: some View {
         ScrollView {
@@ -39,15 +44,27 @@ struct MealDetailsStepView: View {
         .screenTitle("Details", displayMode: .inline)
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
-                Button("Next") {
-                    navigateToVerdict = true
+                if isSaving {
+                    ProgressView().controlSize(.small)
+                } else if isEditing {
+                    Button {
+                        save()
+                    } label: {
+                        Image(systemName: "checkmark")
+                            .fontWeight(.semibold)
+                    }
+                } else {
+                    Button("Next") {
+                        navigateToVerdict = true
+                    }
+                    .fontWeight(.semibold)
                 }
-                .fontWeight(.semibold)
             }
         }
         .navigationDestination(isPresented: $navigateToVerdict) {
             MealVerdictStepView(draft: draft, onDismiss: onDismiss)
         }
+        .interactiveDismissDisabled(isSaving)
         .presentationDragIndicator(.visible)
         .simultaneousGesture(
             DragGesture(minimumDistance: 30)
@@ -57,5 +74,25 @@ struct MealDetailsStepView: View {
                     }
                 }
         )
+        .alert("Couldn't save meal",
+               isPresented: Binding(get: { store.errorMessage != nil },
+                                    set: { if !$0 { store.errorMessage = nil } })) {
+            Button("OK") { store.errorMessage = nil }
+        } message: {
+            Text(store.errorMessage ?? "")
+        }
+    }
+
+    private func save() {
+        isSaving = true
+        UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+        Task {
+            let ok = await store.save(draft)
+            isSaving = false
+            if ok {
+                UINotificationFeedbackGenerator().notificationOccurred(.success)
+                onDismiss()
+            }
+        }
     }
 }

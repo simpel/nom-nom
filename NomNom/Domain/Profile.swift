@@ -8,6 +8,7 @@ struct Profile: Identifiable, Hashable, Decodable {
     var lastName: String
     var displayName: String
     var avatarEmoji: String
+    var photoPath: String?
     var notifyPushPartyInvite: Bool
     var notifyEmailPartyInvite: Bool
     var notifyPushMealInvite: Bool
@@ -19,6 +20,7 @@ struct Profile: Identifiable, Hashable, Decodable {
         case lastName = "last_name"
         case displayName = "display_name"
         case avatarEmoji = "avatar_emoji"
+        case photoPath = "photo_path"
         case notifyPushPartyInvite = "notify_push_party_invite"
         case notifyEmailPartyInvite = "notify_email_party_invite"
         case notifyPushMealInvite = "notify_push_meal_invite"
@@ -32,6 +34,7 @@ struct Profile: Identifiable, Hashable, Decodable {
         lastName = try container.decodeIfPresent(String.self, forKey: .lastName) ?? ""
         displayName = try container.decodeIfPresent(String.self, forKey: .displayName) ?? ""
         avatarEmoji = try container.decodeIfPresent(String.self, forKey: .avatarEmoji) ?? "🧑"
+        photoPath = try container.decodeIfPresent(String.self, forKey: .photoPath)
         notifyPushPartyInvite = try container.decodeIfPresent(Bool.self, forKey: .notifyPushPartyInvite) ?? true
         notifyEmailPartyInvite = try container.decodeIfPresent(Bool.self, forKey: .notifyEmailPartyInvite) ?? true
         notifyPushMealInvite = try container.decodeIfPresent(Bool.self, forKey: .notifyPushMealInvite) ?? true
@@ -44,6 +47,7 @@ struct Profile: Identifiable, Hashable, Decodable {
         lastName: String = "",
         displayName: String = "",
         avatarEmoji: String = "🧑",
+        photoPath: String? = nil,
         notifyPushPartyInvite: Bool = true,
         notifyEmailPartyInvite: Bool = true,
         notifyPushMealInvite: Bool = true,
@@ -54,6 +58,7 @@ struct Profile: Identifiable, Hashable, Decodable {
         self.lastName = lastName
         self.displayName = displayName
         self.avatarEmoji = avatarEmoji
+        self.photoPath = photoPath
         self.notifyPushPartyInvite = notifyPushPartyInvite
         self.notifyEmailPartyInvite = notifyEmailPartyInvite
         self.notifyPushMealInvite = notifyPushMealInvite
@@ -83,6 +88,7 @@ struct ProfilePatch: Encodable {
     let last_name: String
     let display_name: String
     let avatar_emoji: String
+    let photo_path: String?
 }
 
 struct ProfileNotificationPatch: Encodable {

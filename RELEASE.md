@@ -109,10 +109,16 @@ Both, because `magic_link` goes to an address that already has an account and
 
 ### Schema and functions
 
+**Automated Deployment (Recommended):**
+With `SUPABASE_ACCESS_TOKEN`, `SUPABASE_PROJECT_ID`, and `SUPABASE_DB_PASSWORD` set in GitHub Secrets (see [CI.md](CI.md)), pushing or merging to `main` automatically runs `.github/workflows/supabase-deploy.yml` to apply pending migrations and deploy Edge Functions.
+
+**Manual Fallback:**
 ```bash
 npx supabase@latest link --project-ref bctbqsrsmkyputxyiyzh
 npx supabase@latest db push          # should report "up to date"
+npx supabase@latest functions deploy delete-account
 npx supabase@latest functions deploy notify-invitees
+npx supabase@latest functions deploy send-invite-email
 ```
 
 - [ ] 🔴 `db push` applies `20260827000000_baseline.sql` to a project that has never

@@ -4,6 +4,7 @@ import SwiftUI
 struct MealPhotoViewerSheet: View {
     let draft: FoodStore.PhotosDraft
     var initialIndex: Int = 0
+    var bucket: String = SupabaseConfig.photoBucket
 
     @Environment(\.dismiss) private var dismiss
     @State private var selection: Int = 0
@@ -15,7 +16,7 @@ struct MealPhotoViewerSheet: View {
                     Group {
                         switch item {
                         case .existing(let path):
-                            RemoteMealPhoto(path: path, cornerRadius: 0, bucket: SupabaseConfig.photoBucket)
+                            RemoteMealPhoto(path: path, cornerRadius: 0, bucket: bucket)
                         case .added(_, let data):
                             MealPhoto(data: data, cornerRadius: 0)
                         }

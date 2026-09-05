@@ -8,6 +8,8 @@ struct AssetPhotosPickerSection: View {
     @Binding var draft: FoodStore.PhotosDraft
     var title: String = "Photos"
     var caption: String? = "Optional"
+    var bucket: String = SupabaseConfig.photoBucket
+    var maxCount: Int = FoodStore.PhotosDraft.maxCount
 
     @State private var selectedPickerItems: [PhotosPickerItem] = []
     @State private var showCamera = false
@@ -24,10 +26,18 @@ struct AssetPhotosPickerSection: View {
         }
         .sheet(isPresented: $showCamera) {
             CameraPicker { image in
-                guard draft.count < FoodStore.PhotosDraft.maxCount else { return }
-                if let prepared = PhotoTools.prepare(image), !draft.contains(data: prepared) {
-                    withAnimation(.spring(response: 0.42, dampingFraction: 0.76)) {
-                        draft.append(prepared)
+                if maxCount == 1 {
+                    if let prepared = PhotoTools.prepare(image) {
+                        withAnimation(.spring(response: 0.42, dampingFraction: 0.76)) {
+                            draft.items = [.added(id: UUID(), data: prepared)]
+                        }
+                    }
+                } else {
+                    guard draft.count < maxCount else { return }
+                    if let prepared = PhotoTools.prepare(image), !draft.contains(data: prepared) {
+                        withAnimation(.spring(response: 0.42, dampingFraction: 0.76)) {
+                            draft.append(prepared)
+                        }
                     }
                 }
             }
@@ -37,7 +47,7 @@ struct AssetPhotosPickerSection: View {
             get: { previewIndex.map { PhotoPreviewItem(index: $0) } },
             set: { previewIndex = $0?.index }
         )) { item in
-            MealPhotoViewerSheet(draft: draft, initialIndex: item.index)
+            MealPhotoViewerSheet(draft: draft, initialIndex: item.index, bucket: bucket)
         }
         .task(id: selectedPickerItems) {
             await loadPickedPhotos()
@@ -48,10 +58,15 @@ struct AssetPhotosPickerSection: View {
 
     private var emptyDeckView: some View {
         VStack(spacing: DS.Spacing.md) {
-            EmptyPhotoDeckHeroView(selectedPickerItems: $selectedPickerItems)
-                .frame(height: 228)
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 4)
+            EmptyPhotoDeckHeroView(
+                selectedPickerItems: $selectedPickerItems,
+                title: maxCount == 1 ? "Add Cover Photo" : "Add Photos",
+                subtitle: "Tap to choose",
+                maxSelectionCount: maxCount
+            )
+            .frame(height: 228)
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 4)
 
             if CameraPicker.isAvailable || isLoadingPhotos {
                 emptyActionButtons
@@ -83,7 +98,7 @@ struct AssetPhotosPickerSection: View {
 
     private var populatedDeckView: some View {
         VStack(spacing: DS.Spacing.md) {
-            MealPhotoDeckArcView(draft: $draft) { index in
+            MealPhotoDeckArcView(draft: $draft, bucket: bucket) { index in
                 previewIndex = index
             }
             .frame(height: 228)
@@ -98,7 +113,7 @@ struct AssetPhotosPickerSection: View {
 
     private var populatedActionButtons: some View {
         HStack(spacing: 10) {
-            if draft.count < FoodStore.PhotosDraft.maxCount {
+            if maxCount == 1 {
                 if CameraPicker.isAvailable {
                     Button {
                         showCamera = true
@@ -109,7 +124,24 @@ struct AssetPhotosPickerSection: View {
                 }
 
                 PhotosPicker(selection: $selectedPickerItems,
-                             maxSelectionCount: FoodStore.PhotosDraft.maxCount - draft.count,
+                             maxSelectionCount: 1,
+                             matching: .images,
+                             photoLibrary: .shared()) {
+                    SubtleCapsuleLabel(title: "Change", systemImage: "photo")
+                }
+                .buttonStyle(.plain)
+            } else if draft.count < maxCount {
+                if CameraPicker.isAvailable {
+                    Button {
+                        showCamera = true
+                    } label: {
+                        SubtleCapsuleLabel(title: "Camera", systemImage: "camera")
+                    }
+                    .buttonStyle(.plain)
+                }
+
+                PhotosPicker(selection: $selectedPickerItems,
+                             maxSelectionCount: maxCount - draft.count,
                              matching: .images,
                              photoLibrary: .shared()) {
                     SubtleCapsuleLabel(title: "Add more", systemImage: "plus")
@@ -132,9 +164,20 @@ struct AssetPhotosPickerSection: View {
             selectedPickerItems = []
         }
 
+        if maxCount == 1 {
+            if let item = selectedPickerItems.first,
+               let data = try? await item.loadTransferable(type: Data.self),
+               let prepared = PhotoTools.prepare(data) {
+                withAnimation(.spring(response: 0.42, dampingFraction: 0.76)) {
+                    draft.items = [.added(id: UUID(), data: prepared)]
+                }
+            }
+            return
+        }
+
         var loaded: [Data] = []
         for item in selectedPickerItems {
-            guard (draft.count + loaded.count) < FoodStore.PhotosDraft.maxCount else { break }
+            guard (draft.count + loaded.count) < maxCount else { break }
             if let data = try? await item.loadTransferable(type: Data.self),
                let prepared = PhotoTools.prepare(data) {
                 if !loaded.contains(prepared) && !draft.contains(data: prepared) {

@@ -212,6 +212,20 @@ extension FoodStore {
 
 
 
+    func delete(recipe: Recipe) async {
+        guard recipe.ownerID == userID else { return }
+        do {
+            for path in recipe.photoPaths { await deleteRecipeObject(path) }
+            for path in recipe.recipePhotoPaths { await deleteRecipeObject(path) }
+            try await supabase.from("dishes").delete().eq("id", value: recipe.id.uuidString).execute()
+            recipes.removeAll { $0.id == recipe.id }
+            reindex()
+            errorMessage = nil
+        } catch {
+            errorMessage = Self.describe(error)
+        }
+    }
+
     // MARK: - Compatibility Wrappers
 
     func findOrCreateDish(named name: String, tags: [String]) async throws -> Recipe {
@@ -220,5 +234,9 @@ extension FoodStore {
 
     func rename(dish: Recipe, to newName: String) async {
         await rename(recipe: dish, to: newName)
+    }
+
+    func delete(dish: Recipe) async {
+        await delete(recipe: dish)
     }
 }

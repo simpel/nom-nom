@@ -5,11 +5,14 @@ import PhotosUI
 /// Tapping the deck opens the photo picker.
 struct EmptyPhotoDeckHeroView: View {
     @Binding var selectedPickerItems: [PhotosPickerItem]
+    var title: String = "Add Photos"
+    var subtitle: String = "Tap to choose"
+    var maxSelectionCount: Int = FoodStore.PhotosDraft.maxCount
 
     var body: some View {
         PhotosPicker(
             selection: $selectedPickerItems,
-            maxSelectionCount: FoodStore.PhotosDraft.maxCount,
+            maxSelectionCount: maxSelectionCount,
             matching: .images,
             photoLibrary: .shared()
         ) {
@@ -51,14 +54,17 @@ struct EmptyPhotoDeckHeroView: View {
                                     .foregroundStyle(DS.Color.accentText)
                             }
 
-                            Text("Add Photos")
+                            Text(title)
                                 .font(.subheadline.weight(.semibold))
                                 .foregroundStyle(DS.Color.textPrimary)
+                                .multilineTextAlignment(.center)
 
-                            Text("Tap to choose")
+                            Text(subtitle)
                                 .font(.caption2)
                                 .foregroundStyle(DS.Color.textSecondary)
+                                .multilineTextAlignment(.center)
                         }
+                        .multilineTextAlignment(.center)
                         .padding(12)
                     }
                     .frame(width: 144, height: 192)

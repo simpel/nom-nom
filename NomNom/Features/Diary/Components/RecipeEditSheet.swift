@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// Dedicated modal sheet for editing a recipe's name, instructions, effort, and tags.
+/// Dedicated modal sheet for editing an existing recipe with the multi-step recipe flow.
 struct RecipeEditSheet: View {
     let recipeID: UUID
 
@@ -11,7 +11,8 @@ struct RecipeEditSheet: View {
     @State private var coverPhotosDraft = FoodStore.PhotosDraft()
     @State private var recipeDraft = FoodStore.RecipeDraft()
     @State private var tagsText: String = ""
-    @State private var isSaving = false
+    @State private var navigateToDetails = false
+    @State private var didLoad = false
 
     private var recipe: Recipe? { store.recipe(recipeID) }
     private var isOwner: Bool { recipe?.ownerID == store.userID }
@@ -22,37 +23,18 @@ struct RecipeEditSheet: View {
                 VStack(spacing: DS.Spacing.section) {
                     if let recipe {
                         if isOwner {
-                            SectionCard("Recipe Name") {
-                                TextField("Recipe name", text: $name)
-                                    .autocorrectionDisabled()
-                            }
-
                             AssetPhotosPickerSection(draft: $coverPhotosDraft, title: "Cover Photo")
 
-                            RecipeEditorSection(draft: $recipeDraft)
-
-                            CuisinePickerSection(selection: $recipeDraft.cuisine)
+                            SectionCard("Recipe Name") {
+                                TextField("Recipe name (e.g. Carbonara)", text: $name)
+                                    .autocorrectionDisabled()
+                            }
 
                             SectionCard("Cooking Effort") {
                                 TactileOptionPicker(selection: $recipeDraft.effort)
                             }
 
-                            SectionCard("Tags") {
-                                TextField("Tags, comma separated (e.g. pasta, quick, oven)", text: $tagsText)
-                                    .textInputAutocapitalization(.never)
-                                    .autocorrectionDisabled()
-                            }
-
-                            SectionCard("Sharing & Visibility") {
-                                VStack(alignment: .leading, spacing: 6) {
-                                    Toggle("Make recipe public", isOn: $recipeDraft.isPublic)
-                                        .font(.body.weight(.medium))
-
-                                    Text("When enabled, other dinner parties and users can discover and cook this recipe.")
-                                        .font(.caption)
-                                        .foregroundStyle(.secondary)
-                                }
-                            }
+                            CuisinePickerSection(selection: $recipeDraft.cuisine)
                         } else {
                             ContentUnavailableView(
                                 "Creator Only",
@@ -70,17 +52,42 @@ struct RecipeEditSheet: View {
             }
             .background(DS.Color.bg)
             .screenTitle("Edit Recipe", displayMode: .inline)
-            .sheetCommitToolbar(
-                isSaving: isSaving,
-                canSave: isOwner && !name.trimmedName.isEmpty,
-                onSave: save
-            )
+            .toolbar {
+                ToolbarItem(placement: .topBarLeading) {
+                    Button {
+                        dismiss()
+                    } label: {
+                        Image(systemName: "xmark")
+                            .fontWeight(.semibold)
+                    }
+                    .accessibilityLabel("Cancel")
+                }
+
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button("Next") {
+                        navigateToDetails = true
+                    }
+                    .disabled(name.trimmedName.isEmpty || !isOwner)
+                    .fontWeight(.semibold)
+                }
+            }
+            .navigationDestination(isPresented: $navigateToDetails) {
+                RecipeDetailsStepView(
+                    recipeID: recipeID,
+                    name: name,
+                    coverPhotosDraft: coverPhotosDraft,
+                    recipeDraft: $recipeDraft,
+                    tagsText: $tagsText,
+                    onDismiss: { dismiss() }
+                )
+            }
             .onAppear(perform: populate)
         }
     }
 
     private func populate() {
-        guard let recipe else { return }
+        guard !didLoad, let recipe else { return }
+        didLoad = true
         name = recipe.name
         tagsText = recipe.tags.joined(separator: ", ")
         coverPhotosDraft = FoodStore.PhotosDraft(existingPaths: recipe.photoPaths)
@@ -95,24 +102,5 @@ struct RecipeEditSheet: View {
             cuisine: recipe.cuisine,
             isPublic: recipe.isPublic
         )
-    }
-
-    private func save() {
-        guard let recipe, isOwner else { return }
-        let trimmedName = name.trimmedName
-        guard !trimmedName.isEmpty else { return }
-
-        isSaving = true
-        Task {
-            if trimmedName != recipe.name {
-                await store.rename(recipe: recipe, to: trimmedName)
-            }
-            let parsedTags = TagsParser.parse(tagsText)
-            try? await store.addTags(parsedTags, to: recipe)
-            try? await store.applyCoverPhotos(coverPhotosDraft, to: recipe)
-            try? await store.applyRecipe(recipeDraft, to: recipe)
-            isSaving = false
-            dismiss()
-        }
     }
 }

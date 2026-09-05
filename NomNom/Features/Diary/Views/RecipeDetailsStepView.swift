@@ -1,7 +1,8 @@
 import SwiftUI
 
-/// Step 2 of creating a recipe: ingredients, instructions, tags, and sharing visibility.
+/// Step 2 of creating or editing a recipe: ingredients, instructions, tags, and sharing visibility.
 struct RecipeDetailsStepView: View {
+    var recipeID: UUID? = nil
     let name: String
     let coverPhotosDraft: FoodStore.PhotosDraft
     @Binding var recipeDraft: FoodStore.RecipeDraft
@@ -54,6 +55,15 @@ struct RecipeDetailsStepView: View {
                 }
             }
         }
+        .presentationDragIndicator(.visible)
+        .interactiveDismissDisabled(isSaving)
+        .alert("Couldn't save recipe",
+               isPresented: Binding(get: { store.errorMessage != nil },
+                                    set: { if !$0 { store.errorMessage = nil } })) {
+            Button("OK") { store.errorMessage = nil }
+        } message: {
+            Text(store.errorMessage ?? "")
+        }
     }
 
     private func save() {
@@ -61,20 +71,35 @@ struct RecipeDetailsStepView: View {
         guard !trimmedName.isEmpty else { return }
 
         isSaving = true
+        UIImpactFeedbackGenerator(style: .medium).impactOccurred()
         Task {
             do {
                 let parsedTags = TagsParser.parse(tagsText)
-                let recipe = try await store.findOrCreateRecipe(
-                    named: trimmedName,
-                    tags: parsedTags,
-                    cuisine: recipeDraft.cuisine,
-                    isPublic: recipeDraft.isPublic
-                )
-                try await store.applyCoverPhotos(coverPhotosDraft, to: recipe)
-                try await store.applyRecipe(recipeDraft, to: recipe)
-                isSaving = false
-                onCreated?(recipe)
-                onDismiss()
+                if let recipeID, let recipe = store.recipe(recipeID) {
+                    if trimmedName != recipe.name {
+                        await store.rename(recipe: recipe, to: trimmedName)
+                    }
+                    try await store.addTags(parsedTags, to: recipe)
+                    try await store.applyCoverPhotos(coverPhotosDraft, to: recipe)
+                    try await store.applyRecipe(recipeDraft, to: recipe)
+                    isSaving = false
+                    UINotificationFeedbackGenerator().notificationOccurred(.success)
+                    onCreated?(recipe)
+                    onDismiss()
+                } else {
+                    let recipe = try await store.findOrCreateRecipe(
+                        named: trimmedName,
+                        tags: parsedTags,
+                        cuisine: recipeDraft.cuisine,
+                        isPublic: recipeDraft.isPublic
+                    )
+                    try await store.applyCoverPhotos(coverPhotosDraft, to: recipe)
+                    try await store.applyRecipe(recipeDraft, to: recipe)
+                    isSaving = false
+                    UINotificationFeedbackGenerator().notificationOccurred(.success)
+                    onCreated?(recipe)
+                    onDismiss()
+                }
             } catch {
                 isSaving = false
             }

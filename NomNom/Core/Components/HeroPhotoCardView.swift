@@ -52,6 +52,31 @@ struct HeroPhotoCardView: View {
             MealPhoto(data: data, cornerRadius: AppRadius.photo)
         case .asset(let name):
             Image(name).resizable().scaledToFill()
+        case .party(let name):
+            ZStack {
+                DS.Color.sunken
+
+                VStack(spacing: 8) {
+                    ZStack {
+                        Circle()
+                            .fill(DS.Color.accentSoft)
+                            .frame(width: 52, height: 52)
+
+                        Text(String(name.prefix(1)).uppercased())
+                            .font(Font.newsreader(.title, weight: .bold))
+                            .foregroundStyle(DS.Color.accentText)
+                    }
+
+                    HStack(spacing: 4) {
+                        Image(systemName: "person.2.fill")
+                            .font(.system(size: 9, weight: .semibold))
+                        Text("Party")
+                            .font(.caption2.weight(.medium))
+                    }
+                    .foregroundStyle(DS.Color.textSecondary)
+                }
+                .padding(12)
+            }
         case .fallback(let itemCuisine):
             if let cuisineAsset = Cuisine.assetImageName(for: itemCuisine ?? cuisine) {
                 Image(cuisineAsset).resizable().scaledToFill()

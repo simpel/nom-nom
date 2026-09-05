@@ -20,50 +20,23 @@ struct ArcHeroHeaderView: View {
 
     init(
         photoPaths: [String],
+        recipePhotoPaths: [String] = [],
         cuisine: String? = nil,
-        title: String,
-        subtitle: String? = nil,
-        alignment: HorizontalAlignment = .center,
-        onSelectPhoto: ((Int) -> Void)? = nil
-    ) {
-        self.items = photoPaths.map { .remote(path: $0) }
-        self.recipeItems = []
-        self.cuisine = cuisine
-        self.title = title
-        self.subtitle = subtitle
-        self.alignment = alignment
-        self.onSelectPhoto = onSelectPhoto
-    }
-
-    init(
-        photoPaths: [String],
-        cuisine: String? = nil,
-        title: String,
-        date: Date,
-        alignment: HorizontalAlignment = .center,
-        onSelectPhoto: ((Int) -> Void)? = nil
-    ) {
-        self.init(
-            photoPaths: photoPaths,
-            cuisine: cuisine,
-            title: title,
-            subtitle: date.formatted(.dateTime.weekday(.wide).day().month(.wide).year()),
-            alignment: alignment,
-            onSelectPhoto: onSelectPhoto
-        )
-    }
-
-    init(
-        photoPaths: [String],
-        recipePhotoPaths: [String],
-        cuisine: String? = nil,
+        partyName: String? = nil,
+        bucket: String = SupabaseConfig.photoBucket,
         title: String,
         subtitle: String? = nil,
         alignment: HorizontalAlignment = .center,
         onSelectMealPhoto: ((Int) -> Void)? = nil,
-        onSelectRecipePhoto: ((Int) -> Void)? = nil
+        onSelectRecipePhoto: ((Int) -> Void)? = nil,
+        onSelectPhoto: ((Int) -> Void)? = nil
     ) {
-        self.items = photoPaths.map { .remote(path: $0) }
+        if photoPaths.isEmpty && recipePhotoPaths.isEmpty, let partyName, !partyName.isEmpty {
+            self.items = [.party(name: partyName)]
+        } else {
+            let effectiveBucket = partyName != nil ? SupabaseConfig.partyBucket : bucket
+            self.items = photoPaths.map { .remote(path: $0, bucket: effectiveBucket) }
+        }
         self.recipeItems = recipePhotoPaths.map { .remote(path: $0, bucket: SupabaseConfig.recipeBucket) }
         self.cuisine = cuisine
         self.title = title
@@ -71,93 +44,47 @@ struct ArcHeroHeaderView: View {
         self.alignment = alignment
         self.onSelectMealPhoto = onSelectMealPhoto
         self.onSelectRecipePhoto = onSelectRecipePhoto
+        self.onSelectPhoto = onSelectPhoto
     }
 
     init(
         photoPaths: [String],
-        recipePhotoPaths: [String],
+        recipePhotoPaths: [String] = [],
         cuisine: String? = nil,
+        partyName: String? = nil,
+        bucket: String = SupabaseConfig.photoBucket,
         title: String,
         date: Date,
         alignment: HorizontalAlignment = .center,
         onSelectMealPhoto: ((Int) -> Void)? = nil,
-        onSelectRecipePhoto: ((Int) -> Void)? = nil
+        onSelectRecipePhoto: ((Int) -> Void)? = nil,
+        onSelectPhoto: ((Int) -> Void)? = nil
     ) {
         self.init(
             photoPaths: photoPaths,
             recipePhotoPaths: recipePhotoPaths,
             cuisine: cuisine,
+            partyName: partyName,
+            bucket: bucket,
             title: title,
             subtitle: date.formatted(.dateTime.weekday(.wide).day().month(.wide).year()),
             alignment: alignment,
             onSelectMealPhoto: onSelectMealPhoto,
-            onSelectRecipePhoto: onSelectRecipePhoto
+            onSelectRecipePhoto: onSelectRecipePhoto,
+            onSelectPhoto: onSelectPhoto
         )
     }
 
     init(
         items: [HeroPhotoItem],
-        cuisine: String? = nil,
-        title: String,
-        date: Date,
-        alignment: HorizontalAlignment = .center,
-        onSelectPhoto: ((Int) -> Void)? = nil
-    ) {
-        self.items = items
-        self.recipeItems = []
-        self.cuisine = cuisine
-        self.title = title
-        self.subtitle = date.formatted(.dateTime.weekday(.wide).day().month(.wide).year())
-        self.alignment = alignment
-        self.onSelectPhoto = onSelectPhoto
-    }
-
-    init(
-        items: [HeroPhotoItem],
-        cuisine: String? = nil,
-        title: String,
-        subtitle: String? = nil,
-        alignment: HorizontalAlignment = .center,
-        onSelectPhoto: ((Int) -> Void)? = nil
-    ) {
-        self.items = items
-        self.recipeItems = []
-        self.cuisine = cuisine
-        self.title = title
-        self.subtitle = subtitle
-        self.alignment = alignment
-        self.onSelectPhoto = onSelectPhoto
-    }
-
-    init(
-        items: [HeroPhotoItem],
-        recipeItems: [HeroPhotoItem],
-        cuisine: String? = nil,
-        title: String,
-        date: Date,
-        alignment: HorizontalAlignment = .center,
-        onSelectMealPhoto: ((Int) -> Void)? = nil,
-        onSelectRecipePhoto: ((Int) -> Void)? = nil
-    ) {
-        self.items = items
-        self.recipeItems = recipeItems
-        self.cuisine = cuisine
-        self.title = title
-        self.subtitle = date.formatted(.dateTime.weekday(.wide).day().month(.wide).year())
-        self.alignment = alignment
-        self.onSelectMealPhoto = onSelectMealPhoto
-        self.onSelectRecipePhoto = onSelectRecipePhoto
-    }
-
-    init(
-        items: [HeroPhotoItem],
-        recipeItems: [HeroPhotoItem],
+        recipeItems: [HeroPhotoItem] = [],
         cuisine: String? = nil,
         title: String,
         subtitle: String? = nil,
         alignment: HorizontalAlignment = .center,
         onSelectMealPhoto: ((Int) -> Void)? = nil,
-        onSelectRecipePhoto: ((Int) -> Void)? = nil
+        onSelectRecipePhoto: ((Int) -> Void)? = nil,
+        onSelectPhoto: ((Int) -> Void)? = nil
     ) {
         self.items = items
         self.recipeItems = recipeItems
@@ -167,6 +94,31 @@ struct ArcHeroHeaderView: View {
         self.alignment = alignment
         self.onSelectMealPhoto = onSelectMealPhoto
         self.onSelectRecipePhoto = onSelectRecipePhoto
+        self.onSelectPhoto = onSelectPhoto
+    }
+
+    init(
+        items: [HeroPhotoItem],
+        recipeItems: [HeroPhotoItem] = [],
+        cuisine: String? = nil,
+        title: String,
+        date: Date,
+        alignment: HorizontalAlignment = .center,
+        onSelectMealPhoto: ((Int) -> Void)? = nil,
+        onSelectRecipePhoto: ((Int) -> Void)? = nil,
+        onSelectPhoto: ((Int) -> Void)? = nil
+    ) {
+        self.init(
+            items: items,
+            recipeItems: recipeItems,
+            cuisine: cuisine,
+            title: title,
+            subtitle: date.formatted(.dateTime.weekday(.wide).day().month(.wide).year()),
+            alignment: alignment,
+            onSelectMealPhoto: onSelectMealPhoto,
+            onSelectRecipePhoto: onSelectRecipePhoto,
+            onSelectPhoto: onSelectPhoto
+        )
     }
 
     init(
@@ -208,7 +160,7 @@ struct ArcHeroHeaderView: View {
                 onSelectRecipePhoto: onSelectRecipePhoto,
                 onSelectPhoto: onSelectPhoto
             )
-            .frame(height: recipeItems.isEmpty ? 228 : 236)
+            .frame(height: 228)
             .frame(maxWidth: .infinity)
             .padding(.vertical, 4)
 

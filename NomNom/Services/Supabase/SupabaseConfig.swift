@@ -39,6 +39,9 @@ enum SupabaseConfig {
 
     /// Private bucket holding dinner party avatar photos, keyed `<party_id>/avatar.jpg`.
     static let partyBucket = "party-photos"
+
+    /// Private bucket holding profile avatar photos, keyed `<user_id>/avatar.jpg`.
+    static let profileBucket = "profile-photos"
 }
 
 /// One client for the whole app. `SupabaseClient` keeps the session in the

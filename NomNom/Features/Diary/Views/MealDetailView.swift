@@ -1,4 +1,4 @@
-import SwiftUI
+    import SwiftUI
 
 /// Meal detail view presenting:
 /// - Harmonized centered arc photo deck, dinner party sentence title, and date
@@ -18,6 +18,7 @@ struct MealDetailView: View {
     @State private var selectedPartyForSheet: Party?
     @State private var selectedPhotoIndex: Int?
     @State private var selectedRecipePhotoIndex: Int?
+    @State private var confirmDeleteMeal = false
 
     private var meal: Meal? { store.meal(mealID) }
 
@@ -50,11 +51,42 @@ struct MealDetailView: View {
 
             if let meal, meal.createdBy == store.userID {
                 ToolbarItem(placement: .topBarTrailing) {
-                    Button("Edit") {
-                        showEditor = true
+                    Menu {
+                        Button {
+                            showEditor = true
+                        } label: {
+                            Label("Edit", systemImage: "pencil")
+                        }
+
+                        Button(role: .destructive) {
+                            confirmDeleteMeal = true
+                        } label: {
+                            Label("Delete meal", systemImage: "trash")
+                        }
+                    } label: {
+                        Image(systemName: "ellipsis")
+                            .fontWeight(.semibold)
+                    }
+                    .accessibilityLabel("Meal options")
+                }
+            }
+        }
+        .confirmationDialog(
+            "Delete this meal?",
+            isPresented: $confirmDeleteMeal,
+            titleVisibility: .visible
+        ) {
+            Button("Delete Meal", role: .destructive) {
+                if let meal {
+                    Task {
+                        await store.delete(meal: meal)
+                        dismiss()
                     }
                 }
             }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text("This will permanently remove this meal log.")
         }
         .sheet(isPresented: $showEditor) {
             MealEditorView(mealID: mealID)
@@ -86,7 +118,9 @@ struct MealDetailView: View {
             if let recipe = store.recipe(meal?.dishID ?? UUID()) {
                 let recipePaths = recipe.recipePhotoPaths.isEmpty ? recipe.photoPaths : recipe.recipePhotoPaths
                 let bucket = recipe.recipePhotoPaths.isEmpty ? SupabaseConfig.photoBucket : SupabaseConfig.recipeBucket
-                MealGalleryViewerSheet(paths: recipePaths, initialIndex: wrapper.index, bucket: bucket, titlePrefix: "Recipe")
+                if !recipePaths.isEmpty {
+                    MealGalleryViewerSheet(paths: recipePaths, initialIndex: min(wrapper.index, recipePaths.count - 1), bucket: bucket, titlePrefix: "Recipe")
+                }
             }
         }
     }
@@ -193,6 +227,9 @@ struct MealDetailView: View {
             if !items.contains(where: { $0.id == "\(SupabaseConfig.photoBucket):\(p)" }) {
                 items.append(.remote(path: p, bucket: SupabaseConfig.photoBucket))
             }
+        }
+        if items.isEmpty {
+            items.append(.fallback(cuisine: recipe.cuisine))
         }
         return items
     }

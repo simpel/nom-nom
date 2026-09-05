@@ -62,6 +62,7 @@ struct PartyMealsSection: View {
                     .foregroundStyle(DS.Color.textPrimary)
                     .lineLimit(2)
                     .multilineTextAlignment(.leading)
+                    .frame(maxWidth: .infinity, minHeight: 38, maxHeight: 38, alignment: .topLeading)
 
                 HStack(spacing: 4) {
                     Text(meal.eatenOn.formatted(.dateTime.day().month(.abbreviated)))
@@ -78,8 +79,11 @@ struct PartyMealsSection: View {
                             .foregroundStyle(avg.text)
                     }
                 }
+                .lineLimit(1)
             }
+            .frame(maxWidth: .infinity, alignment: .topLeading)
         }
+        .frame(maxWidth: .infinity, alignment: .topLeading)
         .contentShape(Rectangle())
     }
 }

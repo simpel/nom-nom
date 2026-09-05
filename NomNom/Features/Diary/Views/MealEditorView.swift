@@ -25,7 +25,6 @@ struct MealEditorView: View {
     @State private var recipeDraft = FoodStore.RecipeDraft()
     @State private var loadedRecipeDishID: UUID?
 
-    @State private var isSaving = false
     @State private var didLoad = false
 
     @State private var showDishPickerSheet = false
@@ -34,7 +33,7 @@ struct MealEditorView: View {
 
     private var meal: Meal? { mealID.flatMap { store.meal($0) } }
     private var isEditing: Bool { mealID != nil }
-    private var canProceed: Bool { !title.trimmedName.isEmpty && !isSaving }
+    private var canProceed: Bool { !title.trimmedName.isEmpty }
 
     private var existingMatchedDish: Dish? {
         if let linkedDishID, let dish = store.dish(linkedDishID) { return dish }
@@ -97,19 +96,6 @@ struct MealEditorView: View {
                         date: $date,
                         notes: $notes
                     )
-
-                    if isEditing {
-                        MealPhotosPickerSection(draft: $photosDraft)
-
-                        MealEditorCookingTimeSection(effort: $effort)
-
-                        MealEditorPartiesSection(selectedParties: $selectedParties)
-
-                        MealEditorDeleteSection(
-                            isSaving: isSaving,
-                            onDelete: deleteMeal
-                        )
-                    }
                 }
                 .padding(.horizontal, DS.Spacing.screenHorizontal)
                 .padding(.top, DS.Spacing.screenTop)
@@ -125,28 +111,15 @@ struct MealEditorView: View {
                         Image(systemName: "xmark")
                             .fontWeight(.semibold)
                     }
-                    .disabled(isSaving)
                     .accessibilityLabel("Cancel")
                 }
 
                 ToolbarItem(placement: .topBarTrailing) {
-                    if isSaving {
-                        ProgressView().controlSize(.small)
-                    } else if isEditing {
-                        Button {
-                            save()
-                        } label: {
-                            Image(systemName: "checkmark")
-                                .fontWeight(.semibold)
-                        }
-                        .disabled(!canProceed)
-                    } else {
-                        Button("Next") {
-                            proceed()
-                        }
-                        .disabled(!canProceed)
-                        .fontWeight(.semibold)
+                    Button("Next") {
+                        proceed()
                     }
+                    .disabled(!canProceed)
+                    .fontWeight(.semibold)
                 }
             }
             .navigationDestination(isPresented: $navigateToDetailsStep) {
@@ -177,7 +150,6 @@ struct MealEditorView: View {
             .onAppear(perform: loadIfNeeded)
             .onChange(of: linkedDishID) { _, _ in syncMatchedDishRecipe() }
             .onChange(of: title) { _, _ in syncMatchedDishRecipe() }
-            .interactiveDismissDisabled(isSaving)
             .presentationDragIndicator(.visible)
             .alert("Couldn't save meal",
                    isPresented: Binding(get: { store.errorMessage != nil },
@@ -195,14 +167,6 @@ struct MealEditorView: View {
         loadedRecipeDishID = nil
         recipeDraft = FoodStore.RecipeDraft()
         tagsText = ""
-    }
-
-    private func deleteMeal() {
-        guard let meal else { return }
-        Task {
-            await store.delete(meal: meal)
-            dismiss()
-        }
     }
 
     private func proceed() {
@@ -279,19 +243,6 @@ struct MealEditorView: View {
             }
         }
         verdicts = loaded
-    }
-
-    private func save() {
-        let name = title.trimmedName
-        guard !name.isEmpty else { return }
-
-        let draft = currentDraft
-        isSaving = true
-        Task {
-            let ok = await store.save(draft)
-            isSaving = false
-            if ok { dismiss() }
-        }
     }
 }
 

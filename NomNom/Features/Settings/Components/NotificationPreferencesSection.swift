@@ -1,33 +1,83 @@
 import SwiftUI
 import UserNotifications
 
-/// Form section for configuring push notification and email delivery preferences.
+/// Form section for configuring delivery preferences (Notification, Email, Both, Off) per event.
 struct NotificationPreferencesSection: View {
     @Environment(FoodStore.self) private var store
     @Environment(NotificationManager.self) private var notifications
 
-    @State private var pushParty = true
-    @State private var emailParty = true
-    @State private var pushMeal = true
-    @State private var emailMeal = true
+    enum DeliveryPreference: String, CaseIterable, Identifiable {
+        case both = "Both"
+        case push = "Notification"
+        case email = "Email"
+        case none = "Off"
+
+        var id: String { rawValue }
+
+        init(push: Bool, email: Bool) {
+            switch (push, email) {
+            case (true, true): self = .both
+            case (true, false): self = .push
+            case (false, true): self = .email
+            case (false, false): self = .none
+            }
+        }
+
+        var isPush: Bool { self == .both || self == .push }
+        var isEmail: Bool { self == .both || self == .email }
+    }
+
+    @State private var partyPreference: DeliveryPreference = .both
+    @State private var mealPreference: DeliveryPreference = .both
     @State private var hasLoaded = false
 
     var body: some View {
-        SectionCard("Notification Preferences") {
-            VStack(spacing: 12) {
-                if notifications.authorizationStatus == .denied && (pushParty || pushMeal) {
+        SectionCard("Notifications") {
+            VStack(alignment: .leading, spacing: 14) {
+                if notifications.authorizationStatus == .denied && (partyPreference.isPush || mealPreference.isPush) {
                     systemDisabledWarning
                     Divider()
                 }
 
-                dinnerPartyToggles
-                Divider()
-                mealInviteToggles
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("Dinner Party Invites")
+                        .font(.subheadline.weight(.medium))
+                        .foregroundStyle(DS.Color.textPrimary)
 
-                Text("Choose what is sent to your device via notifications and what is sent to your inbox via email.")
-                    .font(.caption2)
-                    .foregroundStyle(DS.Color.textSecondary)
-                    .padding(.top, 4)
+                    Picker("Dinner Party Invites", selection: Binding(
+                        get: { partyPreference },
+                        set: { newPref in
+                            partyPreference = newPref
+                            handlePreferenceChange(pushEnabled: newPref.isPush)
+                        }
+                    )) {
+                        ForEach(DeliveryPreference.allCases) { pref in
+                            Text(pref.rawValue).tag(pref)
+                        }
+                    }
+                    .pickerStyle(.segmented)
+                }
+
+                Divider()
+
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("Meal Invitations")
+                        .font(.subheadline.weight(.medium))
+                        .foregroundStyle(DS.Color.textPrimary)
+
+                    Picker("Meal Invitations", selection: Binding(
+                        get: { mealPreference },
+                        set: { newPref in
+                            mealPreference = newPref
+                            handlePreferenceChange(pushEnabled: newPref.isPush)
+                        }
+                    )) {
+                        ForEach(DeliveryPreference.allCases) { pref in
+                            Text(pref.rawValue).tag(pref)
+                        }
+                    }
+                    .pickerStyle(.segmented)
+                }
             }
         }
         .onAppear(perform: loadPreferences)
@@ -38,130 +88,37 @@ struct NotificationPreferencesSection: View {
 
     // MARK: - Subviews
 
-    private var dinnerPartyToggles: some View {
-        Group {
-            Toggle(isOn: Binding(
-                get: { pushParty },
-                set: { newValue in
-                    pushParty = newValue
-                    handlePushToggle(newValue)
-                }
-            )) {
-                Label {
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text("Dinner Party Invites")
-                        Text("When added to a dinner party")
-                            .font(.caption)
-                            .foregroundStyle(DS.Color.textSecondary)
-                    }
-                } icon: {
-                    Image(systemName: "person.2.fill")
-                        .foregroundStyle(.tint)
-                }
-            }
-
-            Toggle(isOn: Binding(
-                get: { emailParty },
-                set: { newValue in
-                    emailParty = newValue
-                    persist()
-                }
-            )) {
-                Label {
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text("Dinner Party Invite Emails")
-                        Text("Receive email for dinner party invitations")
-                            .font(.caption)
-                            .foregroundStyle(DS.Color.textSecondary)
-                    }
-                } icon: {
-                    Image(systemName: "envelope.fill")
-                        .foregroundStyle(.tint)
-                }
-            }
-        }
-    }
-
-    private var mealInviteToggles: some View {
-        Group {
-            Toggle(isOn: Binding(
-                get: { pushMeal },
-                set: { newValue in
-                    pushMeal = newValue
-                    handlePushToggle(newValue)
-                }
-            )) {
-                Label {
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text("Meal Invitations")
-                        Text("When added to rate a meal")
-                            .font(.caption)
-                            .foregroundStyle(DS.Color.textSecondary)
-                    }
-                } icon: {
-                    Image(systemName: "fork.knife")
-                        .foregroundStyle(.tint)
-                }
-            }
-
-            Toggle(isOn: Binding(
-                get: { emailMeal },
-                set: { newValue in
-                    emailMeal = newValue
-                    persist()
-                }
-            )) {
-                Label {
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text("Meal Invite Emails")
-                        Text("Receive email when invited to rate a dish")
-                            .font(.caption)
-                            .foregroundStyle(DS.Color.textSecondary)
-                    }
-                } icon: {
-                    Image(systemName: "envelope.badge.fill")
-                        .foregroundStyle(.tint)
-                }
-            }
-        }
-    }
-
     private var systemDisabledWarning: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            HStack(spacing: 8) {
-                Image(systemName: "bell.slash.fill")
+        VStack(alignment: .leading, spacing: 4) {
+            HStack(spacing: 6) {
+                Image(systemName: "bell.slash")
                     .foregroundStyle(.orange)
-                Text("Notifications Disabled")
-                    .font(.subheadline.bold())
+                Text("Notifications Disabled in iOS Settings")
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(DS.Color.textPrimary)
             }
-            Text("Push notifications are turned off in iOS Settings. Tap to enable them.")
-                .font(.caption)
-                .foregroundStyle(DS.Color.textSecondary)
+
             Button("Open iOS Settings") {
                 notifications.openSystemSettings()
             }
-            .font(.caption.bold())
+            .font(.caption.weight(.medium))
             .buttonStyle(.borderless)
             .tint(.orange)
-            .padding(.top, 2)
         }
-        .padding(.vertical, 4)
     }
 
     // MARK: - Actions
 
     private func loadPreferences() {
         guard let profile = store.myProfile else { return }
-        pushParty = profile.notifyPushPartyInvite
-        emailParty = profile.notifyEmailPartyInvite
-        pushMeal = profile.notifyPushMealInvite
-        emailMeal = profile.notifyEmailMealInvite
+        partyPreference = DeliveryPreference(push: profile.notifyPushPartyInvite, email: profile.notifyEmailPartyInvite)
+        mealPreference = DeliveryPreference(push: profile.notifyPushMealInvite, email: profile.notifyEmailMealInvite)
         hasLoaded = true
     }
 
-    private func handlePushToggle(_ isEnabled: Bool) {
+    private func handlePreferenceChange(pushEnabled: Bool) {
         persist()
-        if isEnabled {
+        if pushEnabled {
             Task {
                 if notifications.authorizationStatus == .notDetermined {
                     _ = await notifications.requestAuthorization()
@@ -176,10 +133,10 @@ struct NotificationPreferencesSection: View {
         guard hasLoaded else { return }
         Task {
             await store.updateNotificationPreferences(
-                pushParty: pushParty,
-                emailParty: emailParty,
-                pushMeal: pushMeal,
-                emailMeal: emailMeal
+                pushParty: partyPreference.isPush,
+                emailParty: partyPreference.isEmail,
+                pushMeal: mealPreference.isPush,
+                emailMeal: mealPreference.isEmail
             )
         }
     }

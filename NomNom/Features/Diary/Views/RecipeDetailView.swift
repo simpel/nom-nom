@@ -17,6 +17,7 @@ struct RecipeDetailView: View {
     @State private var showMealEditor = false
     @State private var selectedMealForDetail: Meal?
     @State private var selectedPhotoIndex: Int?
+    @State private var confirmDeleteRecipe = false
 
     init(recipeID: UUID, showCloseButton: Bool = false) {
         self.recipeID = recipeID
@@ -78,11 +79,42 @@ struct RecipeDetailView: View {
                 }
 
                 if let recipe, recipe.ownerID == store.userID {
-                    Button("Edit") {
-                        showEditSheet = true
+                    Menu {
+                        Button {
+                            showEditSheet = true
+                        } label: {
+                            Label("Edit", systemImage: "pencil")
+                        }
+
+                        Button(role: .destructive) {
+                            confirmDeleteRecipe = true
+                        } label: {
+                            Label("Delete recipe", systemImage: "trash")
+                        }
+                    } label: {
+                        Image(systemName: "ellipsis")
+                            .fontWeight(.semibold)
+                    }
+                    .accessibilityLabel("Recipe options")
+                }
+            }
+        }
+        .confirmationDialog(
+            "Delete this recipe?",
+            isPresented: $confirmDeleteRecipe,
+            titleVisibility: .visible
+        ) {
+            Button("Delete Recipe", role: .destructive) {
+                if let recipe {
+                    Task {
+                        await store.delete(recipe: recipe)
+                        dismiss()
                     }
                 }
             }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text("This will permanently remove this recipe.")
         }
         .sheet(isPresented: $showEditSheet) {
             RecipeEditSheet(recipeID: recipeID)
@@ -117,10 +149,11 @@ struct RecipeDetailView: View {
                     cuisine: recipe.cuisine,
                     title: recipe.name,
                     subtitle: recipeSubtitle(for: recipe),
-                    alignment: .center
-                ) { index in
-                    selectedPhotoIndex = index
-                }
+                    alignment: .center,
+                    onSelectPhoto: { index in
+                        selectedPhotoIndex = index
+                    }
+                )
                 .padding(.bottom, DS.Spacing.xs)
 
                 // Centered "Use in Meal" action button above ingredients

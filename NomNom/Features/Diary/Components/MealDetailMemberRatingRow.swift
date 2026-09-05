@@ -4,6 +4,7 @@ import SwiftUI
 struct MealDetailMemberRatingRow: View {
     let name: String
     var avatar: String = ""
+    var photoPath: String? = nil
     var initialLetter: String? = nil
     var isMe: Bool = false
     var reaction: Reaction? = nil
@@ -18,6 +19,7 @@ struct MealDetailMemberRatingRow: View {
     init(
         name: String,
         avatar: String = "",
+        photoPath: String? = nil,
         initialLetter: String? = nil,
         isMe: Bool = false,
         reaction: Reaction? = nil,
@@ -28,6 +30,7 @@ struct MealDetailMemberRatingRow: View {
     ) {
         self.name = name
         self.avatar = avatar
+        self.photoPath = photoPath
         self.initialLetter = initialLetter
         self.isMe = isMe
         self.reaction = reaction
@@ -40,6 +43,7 @@ struct MealDetailMemberRatingRow: View {
     init(
         name: String,
         avatar: String = "",
+        photoPath: String? = nil,
         initialLetter: String? = nil,
         isMe: Bool = false,
         rating: MealRating?,
@@ -51,6 +55,7 @@ struct MealDetailMemberRatingRow: View {
         self.init(
             name: name,
             avatar: avatar,
+            photoPath: photoPath,
             initialLetter: initialLetter,
             isMe: isMe,
             reaction: rating?.reaction,
@@ -59,13 +64,6 @@ struct MealDetailMemberRatingRow: View {
             onTapRate: onTapRate,
             onAskToRate: onAskToRate
         )
-    }
-
-    private var displayInitial: String {
-        if let initialLetter, !initialLetter.isEmpty {
-            return initialLetter.prefix(1).uppercased()
-        }
-        return name.prefix(1).uppercased()
     }
 
     var body: some View {
@@ -86,21 +84,7 @@ struct MealDetailMemberRatingRow: View {
 
     @ViewBuilder
     private var avatarView: some View {
-        ZStack {
-            Circle()
-                .fill(isMe ? DS.Color.accentSoft : DS.Color.sunken)
-                .frame(width: 34, height: 34)
-
-            let cleanAvatar = avatar.trimmingCharacters(in: .whitespacesAndNewlines)
-            if !cleanAvatar.isEmpty {
-                Text(cleanAvatar)
-                    .font(.system(size: 18))
-            } else {
-                Text(displayInitial)
-                    .font(.system(size: 13, weight: .bold))
-                    .foregroundStyle(isMe ? DS.Color.accentText : DS.Color.textPrimary)
-            }
-        }
+        UserAvatar(name: name, photoPath: photoPath, size: 34)
     }
 
     @ViewBuilder

@@ -213,7 +213,8 @@ struct NewPartyFollower: Encodable {
 struct NewPartyInvite: Encodable {
     let party_id: UUID
     let inviter_id: UUID
-    let invitee_email: String
+    var invitee_id: UUID? = nil
+    var invitee_email: String? = nil
 }
 
 struct NewMealParty: Encodable {

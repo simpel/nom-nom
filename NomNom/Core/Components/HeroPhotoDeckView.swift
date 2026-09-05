@@ -25,7 +25,7 @@ struct HeroPhotoDeckView: View {
     }
 
     private var displayMealCount: Int { min(items.count, 5) }
-    private var displayRecipeCount: Int { min(recipeItems.count, 5) }
+    private var displayRecipeCount: Int { min(recipeItems.count, 3) }
 
     init(
         photoPaths: [String],
@@ -54,29 +54,6 @@ struct HeroPhotoDeckView: View {
     }
 
     init(
-        photoPaths: [String],
-        cuisine: String? = nil,
-        bucket: String = SupabaseConfig.photoBucket,
-        cardWidth: CGFloat = 144,
-        cardHeight: CGFloat = 192,
-        badgeText: String? = nil,
-        badgeSystemImage: String? = nil,
-        onSelectPhoto: ((Int) -> Void)? = nil
-    ) {
-        self.init(
-            photoPaths: photoPaths,
-            recipePhotoPaths: [],
-            cuisine: cuisine,
-            bucket: bucket,
-            cardWidth: cardWidth,
-            cardHeight: cardHeight,
-            badgeText: badgeText,
-            badgeSystemImage: badgeSystemImage,
-            onSelectPhoto: onSelectPhoto
-        )
-    }
-
-    init(
         items: [HeroPhotoItem],
         recipeItems: [HeroPhotoItem] = [],
         cuisine: String? = nil,
@@ -100,29 +77,6 @@ struct HeroPhotoDeckView: View {
         self.onSelectPhoto = onSelectPhoto
         self.onSelectMealPhoto = onSelectMealPhoto
         self.onSelectRecipePhoto = onSelectRecipePhoto
-    }
-
-    init(
-        items: [HeroPhotoItem],
-        cuisine: String? = nil,
-        bucket: String = SupabaseConfig.photoBucket,
-        cardWidth: CGFloat = 144,
-        cardHeight: CGFloat = 192,
-        badgeText: String? = nil,
-        badgeSystemImage: String? = nil,
-        onSelectPhoto: ((Int) -> Void)? = nil
-    ) {
-        self.init(
-            items: items,
-            recipeItems: [],
-            cuisine: cuisine,
-            bucket: bucket,
-            cardWidth: cardWidth,
-            cardHeight: cardHeight,
-            badgeText: badgeText,
-            badgeSystemImage: badgeSystemImage,
-            onSelectPhoto: onSelectPhoto
-        )
     }
 
     init(
@@ -185,33 +139,33 @@ struct HeroPhotoDeckView: View {
         }
     }
 
-    // MARK: - Dual Deck Layout (Meal left-tilted, Recipe right-tilted, bottom-aligned)
+    // MARK: - Dual Deck Layout (Meal photos on main arc, Recipe photos scattered behind)
 
     private var dualDeckView: some View {
         let mealTotal = displayMealCount
         let recipeTotal = displayRecipeCount
 
         return ZStack(alignment: .bottom) {
-            // 1. Right Wing Arc (Recipe Deck, way smaller, tilted right, layered behind)
+            // 1. Background Layer: Up to 3 Recipe Photos scattered/tilted behind the arc
             ForEach(Array(recipeItems.prefix(recipeTotal).enumerated()), id: \.element.id) { index, item in
                 cardView(for: item, index: index, isRecipeDeck: true)
-                    .scaleEffect(HeroDeckMath.dualRecipeScale(for: index, total: recipeTotal, isFannedOut: isFannedOut), anchor: .bottom)
-                    .rotationEffect(.degrees(HeroDeckMath.dualRecipeRotationAngle(for: index, total: recipeTotal, isFannedOut: isFannedOut)), anchor: .bottom)
+                    .scaleEffect(HeroDeckMath.backgroundRecipeScale(for: index, total: recipeTotal, isFannedOut: isFannedOut))
+                    .rotationEffect(.degrees(HeroDeckMath.backgroundRecipeRotationAngle(for: index, total: recipeTotal, isFannedOut: isFannedOut)))
                     .offset(
-                        x: HeroDeckMath.dualRecipeXOffset(for: index, total: recipeTotal, isFannedOut: isFannedOut),
-                        y: HeroDeckMath.dualRecipeYOffset(for: index, total: recipeTotal, isFannedOut: isFannedOut)
+                        x: HeroDeckMath.backgroundRecipeXOffset(for: index, total: recipeTotal, mealTotal: mealTotal, isFannedOut: isFannedOut),
+                        y: HeroDeckMath.backgroundRecipeYOffset(for: index, total: recipeTotal, mealTotal: mealTotal, isFannedOut: isFannedOut)
                     )
                     .zIndex(Double(recipeTotal - index))
             }
 
-            // 2. Left Wing Arc (Meal Deck, prominent, tilted left, layered slightly over)
+            // 2. Foreground Layer: Meal Photos on standard centered Arc
             ForEach(Array(items.prefix(mealTotal).enumerated()), id: \.element.id) { index, item in
                 cardView(for: item, index: index, isRecipeDeck: false)
-                    .scaleEffect(HeroDeckMath.dualMealScale(for: index, total: mealTotal, isFannedOut: isFannedOut), anchor: .bottom)
-                    .rotationEffect(.degrees(HeroDeckMath.dualMealRotationAngle(for: index, total: mealTotal, isFannedOut: isFannedOut)), anchor: .bottom)
+                    .scaleEffect(HeroDeckMath.scale(for: index, total: mealTotal, isFannedOut: isFannedOut))
+                    .rotationEffect(.degrees(HeroDeckMath.rotationAngle(for: index, total: mealTotal, isFannedOut: isFannedOut)))
                     .offset(
-                        x: HeroDeckMath.dualMealXOffset(for: index, total: mealTotal, isFannedOut: isFannedOut),
-                        y: HeroDeckMath.dualMealYOffset(for: index, total: mealTotal, isFannedOut: isFannedOut)
+                        x: HeroDeckMath.xOffset(for: index, total: mealTotal, isFannedOut: isFannedOut),
+                        y: HeroDeckMath.yOffset(for: index, total: mealTotal, isFannedOut: isFannedOut)
                     )
                     .zIndex(100 + Double(mealTotal - index))
             }

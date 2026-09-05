@@ -6,6 +6,7 @@ enum HeroPhotoItem: Equatable, Identifiable {
     case local(id: String, data: Data)
     case asset(name: String)
     case fallback(cuisine: String?)
+    case party(name: String)
 
     var id: String {
         switch self {
@@ -13,6 +14,7 @@ enum HeroPhotoItem: Equatable, Identifiable {
         case .local(let id, _): return "local:\(id)"
         case .asset(let name): return "asset:\(name)"
         case .fallback(let cuisine): return "fallback:\(cuisine ?? "default")"
+        case .party(let name): return "party:\(name)"
         }
     }
 }
@@ -57,77 +59,91 @@ enum HeroDeckMath {
         return max(0.95, 1.0 - (CGFloat(rel) * 0.02))
     }
 
-    // MARK: - Dual Deck Left Wing (Meal Photos Tilted to the Left)
+    // MARK: - Background Scattered Recipe Photos (Up to 3 photos behind the meal arc)
 
-    static func dualMealXOffset(for index: Int, total: Int, isFannedOut: Bool = true) -> CGFloat {
-        guard isFannedOut else { return -32.0 }
-        let baseCenter: CGFloat = total <= 2 ? -36.0 : -46.0
-        guard total > 1 else { return baseCenter }
-        let mid = Double(total - 1) / 2.0
-        let rel = CGFloat(Double(index) - mid)
-        let spacing: CGFloat = total <= 2 ? 28.0 : (total <= 3 ? 24.0 : 20.0)
-        return baseCenter + (rel * spacing)
+    static func backgroundRecipeXOffset(for index: Int, total: Int, mealTotal: Int = 3, isFannedOut: Bool = true) -> CGFloat {
+        let count = min(total, 3)
+        let wideSpread: CGFloat = mealTotal >= 3 ? 18.0 : 0.0
+        guard isFannedOut else {
+            switch index {
+            case 0: return count == 1 ? 16 : -20
+            case 1: return 20
+            default: return 0
+            }
+        }
+
+        switch (count, index) {
+        case (1, 0):
+            return 72.0 + (wideSpread * 0.6)
+        case (2, 0):
+            return -88.0 - wideSpread
+        case (2, 1):
+            return 86.0 + wideSpread
+        case (_, 0):
+            return -96.0 - wideSpread
+        case (_, 1):
+            return 94.0 + wideSpread
+        case (_, 2):
+            return -8.0
+        default:
+            return 0
+        }
     }
 
-    static func dualMealYOffset(for index: Int, total: Int, isFannedOut: Bool = true) -> CGFloat {
-        guard isFannedOut && total > 1 else { return 0 }
-        let mid = Double(total - 1) / 2.0
-        let rel = CGFloat(Double(index) - mid)
-        return (rel * rel) * 1.5
+    static func backgroundRecipeYOffset(for index: Int, total: Int, mealTotal: Int = 3, isFannedOut: Bool = true) -> CGFloat {
+        let count = min(total, 3)
+        guard isFannedOut else { return 0 }
+
+        switch (count, index) {
+        case (1, 0):
+            return -12.0
+        case (2, 0):
+            return -10.0
+        case (2, 1):
+            return -8.0
+        case (_, 0):
+            return -10.0
+        case (_, 1):
+            return -8.0
+        case (_, 2):
+            return -22.0
+        default:
+            return -10.0
+        }
     }
 
-    static func dualMealRotationAngle(for index: Int, total: Int, isFannedOut: Bool = true) -> Double {
-        guard isFannedOut else { return -14.0 }
-        let baseTilt: Double = -22.0
-        guard total > 1 else { return baseTilt }
-        let mid = Double(total - 1) / 2.0
-        let rel = Double(index) - mid
-        let spread: Double = total <= 2 ? 6.5 : (total <= 3 ? 5.5 : 4.8)
-        return baseTilt + (rel * spread)
+    static func backgroundRecipeRotationAngle(for index: Int, total: Int, isFannedOut: Bool = true) -> Double {
+        let count = min(total, 3)
+        guard isFannedOut else {
+            switch index {
+            case 0: return count == 1 ? -4.0 : 4.0
+            case 1: return -4.0
+            default: return 0
+            }
+        }
+
+        switch (count, index) {
+        case (1, 0):
+            return -16.0
+        case (2, 0):
+            return 18.0
+        case (2, 1):
+            return -17.0
+        case (_, 0):
+            return 20.0
+        case (_, 1):
+            return -18.0
+        case (_, 2):
+            return 14.0
+        default:
+            return 0
+        }
     }
 
-    static func dualMealScale(for index: Int, total: Int, isFannedOut: Bool = true) -> CGFloat {
-        let baseScale: CGFloat = 0.98
-        guard isFannedOut && total > 1 else { return baseScale }
-        let mid = Double(total - 1) / 2.0
-        let rel = abs(Double(index) - mid)
-        return max(0.94, baseScale - (CGFloat(rel) * 0.02))
-    }
-
-    // MARK: - Dual Deck Right Wing (Recipe Photos Tilted to the Right - Way Smaller)
-
-    static func dualRecipeXOffset(for index: Int, total: Int, isFannedOut: Bool = true) -> CGFloat {
-        guard isFannedOut else { return 36.0 }
-        let baseCenter: CGFloat = total <= 2 ? 44.0 : 54.0
-        guard total > 1 else { return baseCenter }
-        let mid = Double(total - 1) / 2.0
-        let rel = CGFloat(Double(index) - mid)
-        let spacing: CGFloat = total <= 2 ? 22.0 : (total <= 3 ? 18.0 : 16.0)
-        return baseCenter + (rel * spacing)
-    }
-
-    static func dualRecipeYOffset(for index: Int, total: Int, isFannedOut: Bool = true) -> CGFloat {
-        guard isFannedOut && total > 1 else { return 0 }
-        let mid = Double(total - 1) / 2.0
-        let rel = CGFloat(Double(index) - mid)
-        return (rel * rel) * 1.5
-    }
-
-    static func dualRecipeRotationAngle(for index: Int, total: Int, isFannedOut: Bool = true) -> Double {
-        guard isFannedOut else { return 14.0 }
-        let baseTilt: Double = 22.0
-        guard total > 1 else { return baseTilt }
-        let mid = Double(total - 1) / 2.0
-        let rel = Double(index) - mid
-        let spread: Double = total <= 2 ? 6.5 : (total <= 3 ? 5.5 : 4.8)
-        return baseTilt + (rel * spread)
-    }
-
-    static func dualRecipeScale(for index: Int, total: Int, isFannedOut: Bool = true) -> CGFloat {
-        let baseScale: CGFloat = 0.65 // Way smaller for recipe photos
-        guard isFannedOut && total > 1 else { return baseScale }
-        let mid = Double(total - 1) / 2.0
-        let rel = abs(Double(index) - mid)
-        return max(0.60, baseScale - (CGFloat(rel) * 0.02))
+    static func backgroundRecipeScale(for index: Int, total: Int, isFannedOut: Bool = true) -> CGFloat {
+        switch index {
+        case 2: return 0.54
+        default: return 0.58
+        }
     }
 }

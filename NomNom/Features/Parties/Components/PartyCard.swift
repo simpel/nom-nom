@@ -14,6 +14,7 @@ struct PartyCard: View {
     var showFollowButton: Bool? = nil
 
     @Environment(FoodStore.self) private var store
+    @State private var showingInviteSheet = false
 
     private var isMember: Bool { store.isMember(of: party.id) }
     private var memberCount: Int { store.members(of: party.id).count }
@@ -35,12 +36,32 @@ struct PartyCard: View {
                 cardBody
             }
             .buttonStyle(.plain)
+            .contextMenu {
+                if isMember {
+                    Button {
+                        showingInviteSheet = true
+                    } label: {
+                        Label("Invite Member", systemImage: "person.badge.plus")
+                    }
+
+                    ShareLink(
+                        item: party.inviteURL,
+                        subject: Text("Join \(party.name) on Nom Nom"),
+                        message: Text(party.shareMessage)
+                    ) {
+                        Label("Share Invite Link", systemImage: "square.and.arrow.up")
+                    }
+                }
+            }
 
             if shouldShowFollowButton {
                 PartyFollowIconButton(party: party)
                     .padding(.top, scoreStats != nil ? 20 : 16)
                     .padding(.trailing, 10)
             }
+        }
+        .sheet(isPresented: $showingInviteSheet) {
+            PartyInviteView(party: party)
         }
     }
 

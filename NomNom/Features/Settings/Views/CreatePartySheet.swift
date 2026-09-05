@@ -11,7 +11,7 @@ struct CreatePartySheet: View {
     @State private var name = ""
     @State private var about = ""
     @State private var isPublic = false
-    @State private var photoData: Data? = nil
+    @State private var photoDraft = FoodStore.PhotosDraft()
     @State private var navigateToSetup = false
 
     private var canProceed: Bool {
@@ -24,8 +24,12 @@ struct CreatePartySheet: View {
                 VStack(spacing: DS.Spacing.section) {
                     PageHeader(title: "New dinner party")
 
-                    PartyAvatarPicker(partyName: name, photoData: $photoData, size: 80)
-                        .padding(.top, -8)
+                    AssetPhotosPickerSection(
+                        draft: $photoDraft,
+                        title: "Cover Photo",
+                        bucket: SupabaseConfig.partyBucket,
+                        maxCount: 1
+                    )
 
                     SectionCard("Party Name") {
                         TextField("Party name (e.g. Taco Night)", text: $name)
@@ -68,7 +72,7 @@ struct CreatePartySheet: View {
                 PartySetupStepView(
                     name: name,
                     about: about,
-                    photoData: photoData,
+                    photoDraft: photoDraft,
                     isPublic: $isPublic,
                     onCreated: onCreated,
                     onDismiss: { dismiss() }

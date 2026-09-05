@@ -1,35 +1,33 @@
 import SwiftUI
 
-/// Onboarding screen presented on first sign-in to collect first name, last name, avatar emoji,
+/// Onboarding screen presented on first sign-in to collect first name, last name, optional profile photo,
 /// and optionally set up a first dinner party.
 struct OnboardingView: View {
     @Environment(FoodStore.self) private var store
 
     @State private var firstName = ""
     @State private var lastName = ""
-    @State private var emoji = "🧑"
+    @State private var photoDraft = FoodStore.PhotosDraft()
     @State private var partyName = ""
     @State private var isSaving = false
     @State private var step = 0 // 0: Name/Profile, 1: First Party
 
-    private let emojiChoices = ["🧑", "👩", "👨", "🧒", "🦊", "🐻", "🐼", "🦁", "🐧", "🦄", "🥑", "🍕", "🌮", "🍣"]
-
     var body: some View {
         NavigationStack {
-            VStack(spacing: DS.Spacing.section) {
-                Spacer()
+            ScrollView {
+                VStack(spacing: DS.Spacing.section) {
+                    if step == 0 {
+                        profileStep
+                    } else {
+                        partyStep
+                    }
 
-                if step == 0 {
-                    profileStep
-                } else {
-                    partyStep
+                    bottomBar
                 }
-
-                Spacer()
-
-                bottomBar
+                .padding(.horizontal, DS.Spacing.screenHorizontal)
+                .padding(.top, DS.Spacing.screenTop)
+                .padding(.bottom, DS.Spacing.screenBottom)
             }
-            .padding(24)
             .background(DS.Color.bg)
             .navigationBarTitleDisplayMode(.inline)
         }
@@ -38,7 +36,9 @@ struct OnboardingView: View {
             if let profile = store.myProfile {
                 firstName = profile.firstName
                 lastName = profile.lastName
-                emoji = profile.avatarEmoji
+                if let photoPath = profile.photoPath, !photoPath.isEmpty {
+                    photoDraft = FoodStore.PhotosDraft(existingPaths: [photoPath])
+                }
             }
         }
     }
@@ -47,63 +47,28 @@ struct OnboardingView: View {
 
     private var profileStep: some View {
         VStack(spacing: DS.Spacing.section) {
-            // Selected avatar display
-            Text(emoji)
-                .font(.system(size: 56))
-                .frame(width: 88, height: 88)
-                .background(DS.Color.panel)
-                .clipShape(Circle())
-                .shadow(color: .black.opacity(0.08), radius: 8, y: 4)
+            PageHeader(title: "Welcome to Nom Nom")
 
-            // Emoji picker grid / horizontal scroll
-            ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: 10) {
-                    ForEach(emojiChoices, id: \.self) { choice in
-                        Button {
-                            withAnimation(.spring(response: 0.3, dampingFraction: 0.6)) {
-                                emoji = choice
-                            }
-                        } label: {
-                            Text(choice)
-                                .font(.system(size: 28))
-                                .frame(width: 44, height: 44)
-                                .background(emoji == choice ? DS.Color.accentSoft : DS.Color.panel)
-                                .clipShape(Circle())
-                                .overlay {
-                                    if emoji == choice {
-                                        Circle().stroke(DS.Color.accent, lineWidth: 2)
-                                    }
-                                }
-                        }
-                        .buttonStyle(.plain)
-                    }
+            AssetPhotosPickerSection(
+                draft: $photoDraft,
+                title: "Profile Photo",
+                bucket: SupabaseConfig.profileBucket,
+                maxCount: 1
+            )
+
+            SectionCard("Your Name") {
+                VStack(spacing: 8) {
+                    TextField("First name", text: $firstName)
+                        .textContentType(.givenName)
+                        .textInputAutocapitalization(.words)
+
+                    Divider()
+
+                    TextField("Last name", text: $lastName)
+                        .textContentType(.familyName)
+                        .textInputAutocapitalization(.words)
                 }
-                .padding(.horizontal, 4)
-                .padding(.vertical, 4)
             }
-
-            VStack(spacing: 8) {
-                Text("Welcome to Nom Nom!")
-                    .font(AppTypography.displayL)
-                    .foregroundStyle(DS.Color.textPrimary)
-                Text("What should other dinner party members call you?")
-                    .font(.subheadline)
-                    .foregroundStyle(DS.Color.textSecondary)
-                    .multilineTextAlignment(.center)
-            }
-
-            VStack(spacing: 12) {
-                TextField("First name", text: $firstName)
-                    .textFieldStyle(.roundedBorder)
-                    .textContentType(.givenName)
-                    .textInputAutocapitalization(.words)
-
-                TextField("Last name", text: $lastName)
-                    .textFieldStyle(.roundedBorder)
-                    .textContentType(.familyName)
-                    .textInputAutocapitalization(.words)
-            }
-            .padding(.horizontal, 8)
         }
     }
 
@@ -111,23 +76,12 @@ struct OnboardingView: View {
 
     private var partyStep: some View {
         VStack(spacing: DS.Spacing.section) {
-            Image(systemName: "person.2.circle.fill")
-                .font(.system(size: 64))
-                .foregroundStyle(.tint)
+            PageHeader(title: "Dinner Party")
 
-            VStack(spacing: 8) {
-                Text("Dinner Parties")
-                    .font(AppTypography.displayL)
-                    .foregroundStyle(DS.Color.textPrimary)
-                Text("A dinner party is a group of people you eat and share food ratings with (e.g. your household, roomies, or friends).")
-                    .font(.subheadline)
-                    .foregroundStyle(DS.Color.textSecondary)
-                    .multilineTextAlignment(.center)
+            SectionCard("Party Name", caption: "Optional") {
+                TextField("Party name (e.g. Taco Night)", text: $partyName)
+                    .textInputAutocapitalization(.words)
             }
-
-            TextField("Party name (e.g. The Sandens, Friday Tacos)", text: $partyName)
-                .textFieldStyle(.roundedBorder)
-                .padding(.horizontal, 8)
         }
     }
 
@@ -166,16 +120,23 @@ struct OnboardingView: View {
                         saveAndFinish()
                     }
                     .font(.footnote)
+                    .foregroundStyle(DS.Color.textSecondary)
                     .disabled(isSaving)
                 }
             }
         }
+        .padding(.top, 8)
     }
 
     private func saveAndFinish() {
         isSaving = true
+        let photoData = photoDraft.addedData.first
         Task {
-            await store.updateProfile(firstName: firstName, lastName: lastName, emoji: emoji)
+            await store.updateProfile(
+                firstName: firstName,
+                lastName: lastName,
+                newPhotoData: photoData
+            )
             if !partyName.trimmedName.isEmpty {
                 await store.createParty(name: partyName)
             }

@@ -139,13 +139,14 @@ struct RootTabView: View {
     private func handleIncomingURL(_ url: URL) {
         guard let components = URLComponents(url: url, resolvingAgainstBaseURL: true) else { return }
 
-        // 1. Party links: nomnom://party?id=... or nomnom://party/<uuid>
-        if let queryItems = components.queryItems,
-           let partyIDString = queryItems.first(where: { $0.name == "party_id" })?.value,
-           let uuid = UUID(uuidString: partyIDString) {
-            selection = 1
-            activePartyID = uuid
-            return
+        // 1. Party links: nomnom://invite?party_id=... or nomnom://party?id=... or nomnom://party/<uuid>
+        if let queryItems = components.queryItems {
+            if let partyIDString = queryItems.first(where: { $0.name == "party_id" })?.value ?? (url.host == "party" ? queryItems.first(where: { $0.name == "id" })?.value : nil),
+               let uuid = UUID(uuidString: partyIDString) {
+                selection = 1
+                activePartyID = uuid
+                return
+            }
         }
 
         if url.host == "party" {

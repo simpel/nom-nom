@@ -10,21 +10,37 @@ struct PartyDetailView: View {
     @Environment(\.dismiss) private var dismiss
 
     @State private var showingSettings = false
+    @State private var showingMembersSheet = false
     @State private var showingInvite = false
     @State private var showingCreateMeal = false
+    @State private var confirmLeave = false
+    @State private var selectedPhotoIndex: Int?
 
     private var party: Party? { store.party(partyID) }
+
+    private var partyPhotos: [String] {
+        guard let party, let p = party.photoPath, !p.isEmpty else { return [] }
+        return [p]
+    }
 
     var body: some View {
         Group {
             if let party {
                 ScrollView {
                     VStack(spacing: DS.Spacing.section) {
-                        PartyDetailHeader(party: party)
+                        PartyDetailHeader(party: party) { index in
+                            selectedPhotoIndex = index
+                        }
+
+                        if !store.isMember(of: party.id) {
+                            joinPartyBanner(party: party)
+                        }
 
                         PartyAverageRatingCard(party: party)
 
-                        PartyMembersSection(party: party)
+                        PartyMembersSection(party: party) {
+                            showingMembersSheet = true
+                        }
 
                         PartyMealsSection(party: party)
                     }
@@ -49,27 +65,53 @@ struct PartyDetailView: View {
 
                     ToolbarItemGroup(placement: .topBarTrailing) {
                         if store.isMember(of: party.id) {
-                            Menu {
-                                Button {
-                                    showingCreateMeal = true
-                                } label: {
-                                    Label("Create Meal", systemImage: "fork.knife")
-                                }
-
-                                Button {
-                                    showingInvite = true
-                                } label: {
-                                    Label("Invite Member", systemImage: "person.badge.plus")
-                                }
+                            Button {
+                                showingCreateMeal = true
                             } label: {
-                                Image(systemName: "plus")
+                                Image(systemName: "fork.knife")
                                     .fontWeight(.semibold)
                             }
-                            .accessibilityLabel("Party actions")
+                            .accessibilityLabel("Create Meal")
 
-                            Button("Edit") {
-                                showingSettings = true
+                            Button {
+                                showingInvite = true
+                            } label: {
+                                Image(systemName: "person.badge.plus")
+                                    .fontWeight(.semibold)
                             }
+                            .accessibilityLabel("Add Member")
+
+                            Menu {
+                                Button {
+                                    showingSettings = true
+                                } label: {
+                                    Label("Edit", systemImage: "pencil")
+                                }
+
+                                Button {
+                                    showingMembersSheet = true
+                                } label: {
+                                    Label("Edit members", systemImage: "person.2")
+                                }
+
+                                ShareLink(
+                                    item: party.inviteURL,
+                                    subject: Text("Join \(party.name) on Nom Nom"),
+                                    message: Text(party.shareMessage)
+                                ) {
+                                    Label("Share invite link", systemImage: "square.and.arrow.up")
+                                }
+
+                                Button(role: .destructive) {
+                                    confirmLeave = true
+                                } label: {
+                                    Label("Leave party", systemImage: "arrow.right.door")
+                                }
+                            } label: {
+                                Image(systemName: "ellipsis")
+                                    .fontWeight(.semibold)
+                            }
+                            .accessibilityLabel("Party options")
                         } else if party.isPublic {
                             let isFollowing = store.isFollowing(partyID: party.id)
                             Button {
@@ -85,16 +127,47 @@ struct PartyDetailView: View {
                         }
                     }
                 }
+                .confirmationDialog(
+                    "Leave Party?",
+                    isPresented: $confirmLeave,
+                    titleVisibility: .visible
+                ) {
+                    Button("Leave Party", role: .destructive) {
+                        Task {
+                            await store.leaveParty(party)
+                            dismiss()
+                        }
+                    }
+                    Button("Cancel", role: .cancel) {}
+                } message: {
+                    Text("You will lose access to meals served to this party. If you are the last member, the party will be deleted.")
+                }
                 .sheet(isPresented: $showingSettings) {
                     PartySettingsSheet(party: party) {
                         dismiss()
                     }
+                }
+                .sheet(isPresented: $showingMembersSheet) {
+                    PartyMembersSheet(party: party)
                 }
                 .sheet(isPresented: $showingInvite) {
                     PartyInviteView(party: party)
                 }
                 .sheet(isPresented: $showingCreateMeal) {
                     MealEditorView(mealID: nil, prefilledPartyID: party.id)
+                }
+                .sheet(item: Binding(
+                    get: { selectedPhotoIndex.map { PhotoIndexWrapper(index: $0) } },
+                    set: { selectedPhotoIndex = $0?.index }
+                )) { wrapper in
+                    if !partyPhotos.isEmpty {
+                        MealGalleryViewerSheet(
+                            paths: partyPhotos,
+                            initialIndex: min(wrapper.index, partyPhotos.count - 1),
+                            bucket: SupabaseConfig.partyBucket,
+                            titlePrefix: "Party"
+                        )
+                    }
                 }
             } else {
                 ContentUnavailableView(
@@ -117,6 +190,48 @@ struct PartyDetailView: View {
                 }
             }
         }
+    }
+
+    private func joinPartyBanner(party: Party) -> some View {
+        let hasPending = store.partyInvites.contains(where: { $0.partyID == party.id && $0.inviteeID == store.userID && $0.status == .pending })
+
+        return VStack(spacing: 10) {
+            Text(hasPending ? "You've been invited to join \(party.name)!" : "Join \(party.name) to share meals and ratings.")
+                .font(.subheadline.weight(.semibold))
+                .foregroundStyle(DS.Color.textPrimary)
+                .multilineTextAlignment(.center)
+
+            Button {
+                Task {
+                    if let invite = store.partyInvites.first(where: { $0.partyID == party.id && $0.inviteeID == store.userID && $0.status == .pending }) {
+                        await store.acceptPartyInvite(invite)
+                    } else {
+                        await store.joinParty(party)
+                    }
+                    UINotificationFeedbackGenerator().notificationOccurred(.success)
+                }
+            } label: {
+                HStack(spacing: 6) {
+                    Image(systemName: "checkmark")
+                        .fontWeight(.bold)
+                    Text("Join Dinner Party")
+                        .fontWeight(.semibold)
+                }
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 10)
+                .background(DS.Color.accentSoft)
+                .foregroundStyle(DS.Color.accentText)
+                .clipShape(RoundedRectangle(cornerRadius: AppRadius.button, style: .continuous))
+            }
+            .buttonStyle(.plain)
+        }
+        .padding(14)
+        .background(DS.Color.panel)
+        .clipShape(RoundedRectangle(cornerRadius: AppRadius.card, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: AppRadius.card, style: .continuous)
+                .strokeBorder(DS.Color.accentText.opacity(0.35), lineWidth: 0.5)
+        )
     }
 }
 

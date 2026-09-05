@@ -63,7 +63,8 @@ final class PhotoCache {
                 let otherBuckets = [
                     SupabaseConfig.photoBucket,
                     SupabaseConfig.recipeBucket,
-                    SupabaseConfig.partyBucket
+                    SupabaseConfig.partyBucket,
+                    SupabaseConfig.profileBucket
                 ].filter { $0 != bucket }
 
                 for fallbackBucket in otherBuckets {

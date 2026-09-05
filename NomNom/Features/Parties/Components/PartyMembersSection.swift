@@ -1,11 +1,16 @@
 import SwiftUI
 
-/// Displays the members of a dinner party ("Who's in there") with their rate scores
-/// and navigation to their individual profiles.
+/// Displays the members of a dinner party ("Who's in there") with their rate scores,
+/// navigation to their individual profiles, and an in-page action to edit members.
 struct PartyMembersSection: View {
     let party: Party
+    var onEditMembers: (() -> Void)? = nil
 
     @Environment(FoodStore.self) private var store
+
+    private var isMember: Bool {
+        store.isMember(of: party.id)
+    }
 
     private var members: [Profile] {
         store.members(of: party.id)
@@ -33,6 +38,31 @@ struct PartyMembersSection: View {
                         }
                     }
                 }
+
+                if isMember, let onEditMembers {
+                    if !members.isEmpty {
+                        Divider()
+                    }
+
+                    Button {
+                        onEditMembers()
+                    } label: {
+                        HStack(spacing: 8) {
+                            Image(systemName: "person.badge.plus")
+                                .font(.subheadline)
+                            Text("Edit Members")
+                                .font(.subheadline.weight(.semibold))
+                            Spacer()
+                            Image(systemName: "chevron.right")
+                                .font(.caption2)
+                                .foregroundStyle(DS.Color.textTertiary)
+                        }
+                        .foregroundStyle(DS.Color.accentText)
+                        .padding(.vertical, 4)
+                        .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
+                }
             }
         }
     }
@@ -41,15 +71,7 @@ struct PartyMembersSection: View {
         let stats = store.partyAverageScore(partyID: party.id, for: .account(member.id), limit: 20)
 
         return HStack(spacing: 12) {
-            // Monogram avatar (strictly no emoji)
-            ZStack {
-                Circle()
-                    .fill(DS.Color.accentSoft)
-                    .frame(width: 32, height: 32)
-                Text(member.shownName.prefix(1).uppercased())
-                    .font(.subheadline.weight(.bold))
-                    .foregroundStyle(DS.Color.accentText)
-            }
+            UserAvatar(profile: member, size: 32)
 
             VStack(alignment: .leading, spacing: 2) {
                 Text(member.shownName)
