@@ -141,6 +141,15 @@ struct SignInView: View {
                 focus = .email
             }
             .font(.footnote)
+
+            #if DEBUG
+            if ReviewerAccount.isReviewerEmail(address) {
+                Button("Fill reviewer code (\(ReviewerAccount.code))") {
+                    code = ReviewerAccount.code
+                }
+                .font(.caption)
+            }
+            #endif
         }
         .onAppear { focus = .code }
     }
@@ -159,11 +168,18 @@ struct SignInView: View {
     /// The local stack does not send mail — it captures it. Easy to forget, and the
     /// symptom is sitting waiting for an email that will never arrive.
     private var developmentHint: some View {
-        VStack(alignment: .leading, spacing: 4) {
+        VStack(alignment: .leading, spacing: 6) {
             Label("Local development", systemImage: "hammer.fill")
                 .font(.caption.weight(.semibold))
             Text("This build talks to the local Supabase stack. Codes don't get sent — read them in Mailpit at 127.0.0.1:54324.")
                 .font(.caption2)
+
+            Button("Use reviewer test account (\(ReviewerAccount.email))") {
+                email = ReviewerAccount.email
+                send()
+            }
+            .font(.caption.weight(.medium))
+            .buttonStyle(.borderless)
         }
         .foregroundStyle(DS.Color.textSecondary)
         .frame(maxWidth: .infinity, alignment: .leading)

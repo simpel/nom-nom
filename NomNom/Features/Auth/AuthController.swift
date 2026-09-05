@@ -96,6 +96,12 @@ final class AuthController {
         errorMessage = nil
         defer { isWorking = false }
 
+        // The reviewer test account uses a static code and does not dispatch email.
+        if ReviewerAccount.isReviewerEmail(email) {
+            step = .code(sentTo: email)
+            return
+        }
+
         do {
             // shouldCreateUser: signing in and signing up are the same gesture here
             // — there is no separate registration step, and the trigger on
@@ -120,6 +126,15 @@ final class AuthController {
         defer { isWorking = false }
 
         do {
+            if ReviewerAccount.isReviewerEmail(email) {
+                guard ReviewerAccount.isReviewerCode(code) else {
+                    errorMessage = "That code didn't work. Please check and try again."
+                    return
+                }
+                try await supabase.auth.signIn(email: email, password: ReviewerAccount.password)
+                return
+            }
+
             // `.email` covers both halves of the flow. GoTrue mails a signup
             // confirmation to an address it has never seen and a magic link to one
             // it has, and verifying with the generic email type accepts either —

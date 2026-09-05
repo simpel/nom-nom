@@ -61,6 +61,51 @@ on conflict (id) do update set
     last_name = excluded.last_name,
     display_name = excluded.display_name;
 
+-- Apple App Review & Demo test account (Password: NomNomAppleReview2025!)
+insert into auth.users (
+    instance_id, id, aud, role, email, encrypted_password, email_confirmed_at,
+    raw_app_meta_data, raw_user_meta_data, is_sso_user, is_anonymous,
+    confirmation_token, recovery_token, email_change_token_new, email_change,
+    phone_change, phone_change_token, email_change_token_current, reauthentication_token,
+    email_change_confirm_status, created_at, updated_at
+) values (
+    '00000000-0000-0000-0000-000000000000',
+    'e0000000-0000-0000-0000-000000000001',
+    'authenticated',
+    'authenticated',
+    'test@nomnom.app',
+    '$2a$06$qO8OpK6eZDBkHYr27lnJt.UMmcBpydFNmBQ9qUe4BJGYZIpn5WklO',
+    now(),
+    '{"provider": "email", "providers": ["email"]}'::jsonb,
+    '{"first_name": "Test", "last_name": "Account", "full_name": "Test Account", "email_verified": true}'::jsonb,
+    false,
+    false,
+    '', '', '', '', '', '', '', '', 0, now(), now()
+) on conflict (id) do update set
+    encrypted_password = excluded.encrypted_password,
+    raw_user_meta_data = excluded.raw_user_meta_data,
+    email = excluded.email;
+
+insert into auth.identities (
+    id, provider_id, user_id, identity_data, provider, last_sign_in_at, created_at, updated_at
+) values (
+    'e0000000-0000-0000-0000-000000000001',
+    'e0000000-0000-0000-0000-000000000001',
+    'e0000000-0000-0000-0000-000000000001',
+    jsonb_build_object('sub', 'e0000000-0000-0000-0000-000000000001', 'email', 'test@nomnom.app', 'email_verified', true),
+    'email',
+    now(),
+    now(),
+    now()
+) on conflict (id) do nothing;
+
+insert into public.profiles (id, first_name, last_name, display_name)
+values ('e0000000-0000-0000-0000-000000000001', 'Test', 'Account', 'Test Account')
+on conflict (id) do update set
+    first_name = excluded.first_name,
+    last_name = excluded.last_name,
+    display_name = excluded.display_name;
+
 insert into auth.users (
     instance_id, id, aud, role, email, encrypted_password, email_confirmed_at,
     raw_app_meta_data, raw_user_meta_data, is_sso_user, is_anonymous
