@@ -92,7 +92,8 @@ struct PartyDetailHeader: View {
                     selectedPickerItems: $selectedPickerItems,
                     title: "Add Cover Photo",
                     subtitle: "Tap to choose",
-                    maxSelectionCount: 1
+                    maxSelectionCount: 1,
+                    onDeckTap: { showCamera = true }
                 )
                 .frame(height: 228)
                 .frame(maxWidth: .infinity)

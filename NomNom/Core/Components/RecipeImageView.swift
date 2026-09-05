@@ -40,7 +40,7 @@ struct RecipeImageView: View {
     }
 
     private var photoBucket: String {
-        if let path = resolvedPhotoPath, let recipe, recipe.recipePhotoPaths.contains(path) {
+        if let path = resolvedPhotoPath, let recipe, (recipe.recipePhotoPaths.contains(path) || recipe.photoPaths.contains(path)) {
             return SupabaseConfig.recipeBucket
         }
         return SupabaseConfig.photoBucket

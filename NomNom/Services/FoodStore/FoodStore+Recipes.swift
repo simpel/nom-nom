@@ -197,12 +197,6 @@ extension FoodStore {
                 paths.append(p)
             }
         }
-        let history = servings(of: recipeID).sorted { $0.eatenOn > $1.eatenOn }
-        for meal in history {
-            for p in meal.photoPaths where !paths.contains(p) {
-                paths.append(p)
-            }
-        }
         return paths
     }
 

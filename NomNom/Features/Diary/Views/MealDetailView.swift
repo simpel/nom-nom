@@ -117,7 +117,7 @@ struct MealDetailView: View {
         )) { wrapper in
             if let recipe = store.recipe(meal?.dishID ?? UUID()) {
                 let recipePaths = recipe.recipePhotoPaths.isEmpty ? recipe.photoPaths : recipe.recipePhotoPaths
-                let bucket = recipe.recipePhotoPaths.isEmpty ? SupabaseConfig.photoBucket : SupabaseConfig.recipeBucket
+                let bucket = SupabaseConfig.recipeBucket
                 if !recipePaths.isEmpty {
                     MealGalleryViewerSheet(paths: recipePaths, initialIndex: min(wrapper.index, recipePaths.count - 1), bucket: bucket, titlePrefix: "Recipe")
                 }
@@ -219,13 +219,8 @@ struct MealDetailView: View {
             }
         }
         for p in recipe.photoPaths {
-            if !items.contains(where: { $0.id == "\(SupabaseConfig.photoBucket):\(p)" }) {
-                items.append(.remote(path: p, bucket: SupabaseConfig.photoBucket))
-            }
-        }
-        for p in store.photos(for: recipe) {
-            if !items.contains(where: { $0.id == "\(SupabaseConfig.photoBucket):\(p)" }) {
-                items.append(.remote(path: p, bucket: SupabaseConfig.photoBucket))
+            if !items.contains(where: { $0.id == "\(SupabaseConfig.recipeBucket):\(p)" }) {
+                items.append(.remote(path: p, bucket: SupabaseConfig.recipeBucket))
             }
         }
         if items.isEmpty {

@@ -44,13 +44,8 @@ struct MealVerdictStepView: View {
                 }
             }
             for p in matchedRecipe.photoPaths {
-                if !items.contains(where: { $0.id == "\(SupabaseConfig.photoBucket):\(p)" }) {
-                    items.append(.remote(path: p, bucket: SupabaseConfig.photoBucket))
-                }
-            }
-            for p in store.photos(for: matchedRecipe) {
-                if !items.contains(where: { $0.id == "\(SupabaseConfig.photoBucket):\(p)" }) {
-                    items.append(.remote(path: p, bucket: SupabaseConfig.photoBucket))
+                if !items.contains(where: { $0.id == "\(SupabaseConfig.recipeBucket):\(p)" }) {
+                    items.append(.remote(path: p, bucket: SupabaseConfig.recipeBucket))
                 }
             }
         }
@@ -137,7 +132,7 @@ struct MealVerdictStepView: View {
         )) { wrapper in
             if let matchedRecipe {
                 let paths = matchedRecipe.recipePhotoPaths.isEmpty ? matchedRecipe.photoPaths : matchedRecipe.recipePhotoPaths
-                let bucket = matchedRecipe.recipePhotoPaths.isEmpty ? SupabaseConfig.photoBucket : SupabaseConfig.recipeBucket
+                let bucket = SupabaseConfig.recipeBucket
                 if !paths.isEmpty {
                     MealGalleryViewerSheet(paths: paths, initialIndex: min(wrapper.index, paths.count - 1), bucket: bucket, titlePrefix: "Recipe")
                 }

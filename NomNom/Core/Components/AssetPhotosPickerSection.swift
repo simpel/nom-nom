@@ -62,7 +62,8 @@ struct AssetPhotosPickerSection: View {
                 selectedPickerItems: $selectedPickerItems,
                 title: maxCount == 1 ? "Add Cover Photo" : "Add Photos",
                 subtitle: "Tap to choose",
-                maxSelectionCount: maxCount
+                maxSelectionCount: maxCount,
+                onDeckTap: { showCamera = true }
             )
             .frame(height: 228)
             .frame(maxWidth: .infinity)

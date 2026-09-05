@@ -65,7 +65,19 @@ struct MealEditorPhotoSection: View {
         } else if let existingPath, !didRemovePhoto {
             RemoteMealPhoto(path: existingPath, cornerRadius: AppRadius.photo)
         } else {
-            MealPhoto(data: nil, cornerRadius: AppRadius.photo)
+            if CameraPicker.isAvailable {
+                Button {
+                    showCamera = true
+                } label: {
+                    MealPhoto(data: nil, cornerRadius: AppRadius.photo)
+                }
+                .buttonStyle(.plain)
+            } else {
+                PhotosPicker(selection: $pickerItem, matching: .images, photoLibrary: .shared()) {
+                    MealPhoto(data: nil, cornerRadius: AppRadius.photo)
+                }
+                .buttonStyle(.plain)
+            }
         }
     }
 }
