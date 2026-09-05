@@ -37,7 +37,7 @@ And the following **Supabase secrets** for automated database and edge function 
 | Secret Name | Description | Example / Format |
 | :--- | :--- | :--- |
 | `SUPABASE_ACCESS_TOKEN` | Personal Access Token from Supabase Account settings | `sbp_...` |
-| `SUPABASE_PROJECT_ID` | Project Reference ID | `bctbqsrsmkyputxyiyzh` |
+| `SUPABASE_PROJECT_REF` (or `SUPABASE_PROJECT_ID`) | Project Reference ID | `bctbqsrsmkyputxyiyzh` |
 | `SUPABASE_DB_PASSWORD` | Database password for your hosted Supabase instance | Plain text string |
 
 ---
