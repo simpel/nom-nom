@@ -18,6 +18,7 @@ on conflict (id) do update
 
 -- 3. Storage policies for recipe-photos
 -- Read: Allowed if user can read the dish
+drop policy if exists recipe_photos_read on storage.objects;
 create policy recipe_photos_read on storage.objects
     for select to authenticated
     using (
@@ -27,6 +28,7 @@ create policy recipe_photos_read on storage.objects
     );
 
 -- Write: Allowed if user is the dish owner
+drop policy if exists recipe_photos_write on storage.objects;
 create policy recipe_photos_write on storage.objects
     for insert to authenticated
     with check (
@@ -40,6 +42,7 @@ create policy recipe_photos_write on storage.objects
     );
 
 -- Delete: Allowed if user is the dish owner
+drop policy if exists recipe_photos_delete on storage.objects;
 create policy recipe_photos_delete on storage.objects
     for delete to authenticated
     using (

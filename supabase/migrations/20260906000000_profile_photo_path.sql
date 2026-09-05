@@ -16,10 +16,12 @@ on conflict (id) do update
         allowed_mime_types = excluded.allowed_mime_types;
 
 -- 3. Storage policies for profile-photos
+drop policy if exists profile_photos_read on storage.objects;
 create policy profile_photos_read on storage.objects
     for select to authenticated
     using (bucket_id = 'profile-photos');
 
+drop policy if exists profile_photos_write on storage.objects;
 create policy profile_photos_write on storage.objects
     for insert to authenticated
     with check (
@@ -27,6 +29,7 @@ create policy profile_photos_write on storage.objects
         and split_part(name, '/', 1) = auth.uid()::text
     );
 
+drop policy if exists profile_photos_update on storage.objects;
 create policy profile_photos_update on storage.objects
     for update to authenticated
     using (
@@ -34,6 +37,7 @@ create policy profile_photos_update on storage.objects
         and split_part(name, '/', 1) = auth.uid()::text
     );
 
+drop policy if exists profile_photos_delete on storage.objects;
 create policy profile_photos_delete on storage.objects
     for delete to authenticated
     using (

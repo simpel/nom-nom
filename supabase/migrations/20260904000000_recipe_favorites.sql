@@ -15,17 +15,20 @@ create index if not exists recipe_favorites_user_idx   on public.recipe_favorite
 
 alter table public.recipe_favorites enable row level security;
 
+drop policy if exists recipe_favorites_select on public.recipe_favorites;
 create policy recipe_favorites_select on public.recipe_favorites
     for select to authenticated using (
         user_id = auth.uid()
     );
 
+drop policy if exists recipe_favorites_insert on public.recipe_favorites;
 create policy recipe_favorites_insert on public.recipe_favorites
     for insert to authenticated with check (
         user_id = auth.uid()
         and public.can_read_dish(recipe_id)
     );
 
+drop policy if exists recipe_favorites_delete on public.recipe_favorites;
 create policy recipe_favorites_delete on public.recipe_favorites
     for delete to authenticated using (
         user_id = auth.uid()

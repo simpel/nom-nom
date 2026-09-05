@@ -24,6 +24,7 @@ create index if not exists party_followers_user_idx  on public.party_followers (
 alter table public.party_followers enable row level security;
 
 -- 3. Party Followers RLS Policies
+drop policy if exists party_followers_select on public.party_followers;
 create policy party_followers_select on public.party_followers
     for select to authenticated using (
         user_id = auth.uid()
@@ -31,6 +32,7 @@ create policy party_followers_select on public.party_followers
         or exists (select 1 from public.parties p where p.id = party_id and p.is_public = true)
     );
 
+drop policy if exists party_followers_insert on public.party_followers;
 create policy party_followers_insert on public.party_followers
     for insert to authenticated with check (
         user_id = auth.uid()
@@ -41,6 +43,7 @@ create policy party_followers_insert on public.party_followers
         )
     );
 
+drop policy if exists party_followers_delete on public.party_followers;
 create policy party_followers_delete on public.party_followers
     for delete to authenticated using (
         user_id = auth.uid()
