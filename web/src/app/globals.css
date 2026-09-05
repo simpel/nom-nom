@@ -753,6 +753,18 @@ body {
   color: var(--color-accent);
 }
 
+.policy-section a {
+  color: var(--color-accent);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  transition: color 0.15s ease;
+}
+
+.policy-section a:hover {
+  color: var(--color-accent-hover);
+}
+
+
 .policy-callout {
   background-color: var(--color-sunken);
   border-left: 3px solid var(--color-accent);
@@ -765,6 +777,36 @@ body {
   margin-bottom: 0;
   color: var(--color-text-primary);
   font-weight: 500;
+}
+
+.policy-steps {
+  list-style: decimal;
+  padding-left: var(--space-xl);
+  margin-bottom: var(--space-md);
+  color: var(--color-text-secondary);
+  font-size: 0.9375rem;
+  line-height: 1.65;
+}
+
+.policy-steps li {
+  margin-bottom: var(--space-xs);
+  padding-left: var(--space-xs);
+}
+
+.policy-steps li::before {
+  content: none;
+}
+
+.header-back-link {
+  font-size: 0.875rem;
+  color: var(--color-text-secondary);
+  text-decoration: none;
+  font-weight: 500;
+  transition: color 0.15s ease;
+}
+
+.header-back-link:hover {
+  color: var(--color-text-primary);
 }
 
 /* --- Footer --- */

@@ -1,7 +1,11 @@
 import Link from 'next/link';
 import Image from 'next/image';
 
-export function Header() {
+interface HeaderProps {
+  showBack?: boolean;
+}
+
+export function Header({ showBack = false }: HeaderProps) {
   return (
     <header className="site-header">
       <div className="container header-inner">
@@ -16,6 +20,11 @@ export function Header() {
           />
           <span className="brand-name">Nom Nom</span>
         </Link>
+        {showBack && (
+          <Link href="/" className="header-back-link">
+            &larr; Back
+          </Link>
+        )}
       </div>
     </header>
   );

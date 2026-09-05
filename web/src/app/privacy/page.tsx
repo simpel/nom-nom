@@ -11,14 +11,14 @@ export const metadata: Metadata = {
 export default function PrivacyPage() {
   return (
     <>
-      <Header />
+      <Header showBack />
       <main id="main-content" className="policy-page">
         <div className="container">
           <div className="policy-content">
             <header className="policy-header">
               <span className="policy-badge">Legal &amp; Transparency</span>
               <h1 className="policy-title">Privacy Policy</h1>
-              <p className="policy-updated">Last updated: September 4, 2026</p>
+              <p className="policy-updated">Last updated: September 5, 2026</p>
             </header>
 
             <section className="policy-section">
@@ -112,22 +112,14 @@ export default function PrivacyPage() {
                 account and all associated data at any time directly from within
                 the application:
               </p>
-              <ol
-                style={{
-                  paddingLeft: 'var(--space-lg)',
-                  marginBottom: 'var(--space-md)',
-                  color: 'var(--color-text-secondary)',
-                  fontSize: '0.9375rem',
-                  lineHeight: '1.65',
-                }}
-              >
-                <li style={{ marginBottom: 'var(--space-xs)' }}>
+              <ol className="policy-steps">
+                <li>
                   Open the <strong>Nom Nom</strong> app on your iOS device.
                 </li>
-                <li style={{ marginBottom: 'var(--space-xs)' }}>
+                <li>
                   Navigate to the <strong>Settings</strong> tab.
                 </li>
-                <li style={{ marginBottom: 'var(--space-xs)' }}>
+                <li>
                   Select <strong>Delete Account</strong> and confirm the action.
                 </li>
               </ol>
@@ -137,9 +129,16 @@ export default function PrivacyPage() {
                   immediately purges all database rows linked to your user identity
                   (profile, meal logs, verdicts, and party associations) and
                   permanently deletes all photo files stored in our cloud buckets
-                  associated with your meals.
+                  associated with your meals. Other dinner party members retain
+                  their own separate logs.
                 </p>
               </div>
+              <p>
+                If you no longer have access to your iOS device or require manual
+                assistance with data erasure, you may submit a deletion request
+                directly by emailing{' '}
+                <a href="mailto:me@joelsanden.se">me@joelsanden.se</a>.
+              </p>
             </section>
 
             <section className="policy-section">
@@ -170,17 +169,20 @@ export default function PrivacyPage() {
               </p>
               <ul>
                 <li>
+                  Email:{' '}
+                  <a href="mailto:me@joelsanden.se">me@joelsanden.se</a>
+                </li>
+                <li>
                   GitHub Issues:{' '}
                   <a
                     href="https://github.com/simpel/nom-nom/issues"
                     target="_blank"
                     rel="noopener noreferrer"
-                    style={{ color: 'var(--color-accent)' }}
                   >
                     github.com/simpel/nom-nom/issues
                   </a>
                 </li>
-                <li>Maintainer: Joel Sanden</li>
+                <li>Maintainer: Joel Sandén</li>
               </ul>
             </section>
           </div>
