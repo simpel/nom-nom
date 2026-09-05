@@ -21,14 +21,11 @@ struct PartyFollowButton: View {
             Button {
                 handleTap()
             } label: {
-                if isProcessing {
-                    ProgressView()
-                        .controlSize(.mini)
-                        .frame(minWidth: 54)
-                } else if isFollowing {
+                if isFollowing {
                     Text("Following")
                         .font(.caption.weight(.medium))
                         .foregroundStyle(DS.Color.textSecondary)
+                        .pendingState(isProcessing, controlSize: .mini)
                         .padding(.horizontal, 10)
                         .padding(.vertical, 5)
                         .background(Color(uiColor: .tertiarySystemFill))
@@ -37,6 +34,7 @@ struct PartyFollowButton: View {
                     Text("Follow")
                         .font(.caption.weight(.semibold))
                         .foregroundStyle(Color.accentColor)
+                        .pendingState(isProcessing, controlSize: .mini)
                         .padding(.horizontal, 12)
                         .padding(.vertical, 5)
                         .background(Color.accentColor.opacity(0.12))

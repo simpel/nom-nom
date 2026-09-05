@@ -64,18 +64,15 @@ struct PartyInviteView: View {
                         .submitLabel(.send)
                         .onSubmit(sendEmailInvite)
 
-                    if isSending {
-                        ProgressView()
-                            .controlSize(.small)
-                            .padding(.horizontal, 8)
-                    } else {
-                        Button("Send") {
-                            sendEmailInvite()
-                        }
-                        .disabled(!email.isValidEmail)
-                        .buttonStyle(.borderedProminent)
-                        .controlSize(.small)
+                    Button {
+                        sendEmailInvite()
+                    } label: {
+                        Text("Send")
+                            .pendingState(isSending)
                     }
+                    .disabled(!email.isValidEmail || isSending)
+                    .buttonStyle(.borderedProminent)
+                    .controlSize(.small)
                 }
 
                 if let success = sentSuccessMessage {

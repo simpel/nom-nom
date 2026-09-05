@@ -103,12 +103,9 @@ struct OnboardingView: View {
                 Button {
                     saveAndFinish()
                 } label: {
-                    if isSaving {
-                        ProgressView().frame(maxWidth: .infinity)
-                    } else {
-                        Text(partyName.trimmedName.isEmpty ? "Start with Just Me" : "Create Party & Finish")
-                            .frame(maxWidth: .infinity)
-                    }
+                    Text(partyName.trimmedName.isEmpty ? "Start with Just Me" : "Create Party & Finish")
+                        .frame(maxWidth: .infinity)
+                        .pendingState(isSaving)
                 }
                 .buttonStyle(.borderedProminent)
                 .controlSize(.large)

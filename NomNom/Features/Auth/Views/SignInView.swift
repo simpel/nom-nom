@@ -73,7 +73,13 @@ struct SignInView: View {
     private var emailStep: some View {
         VStack(spacing: 14) {
             TextField("you@example.com", text: $email)
-                .textFieldStyle(.roundedBorder)
+                .padding(14)
+                .background(DS.Color.sunken)
+                .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                .overlay {
+                    RoundedRectangle(cornerRadius: 12, style: .continuous)
+                        .strokeBorder(DS.Color.line.opacity(0.35), lineWidth: 0.5)
+                }
                 .textContentType(.emailAddress)
                 .keyboardType(.emailAddress)
                 .textInputAutocapitalization(.never)
@@ -83,11 +89,9 @@ struct SignInView: View {
                 .onSubmit(send)
 
             Button(action: send) {
-                if auth.isWorking {
-                    ProgressView().frame(maxWidth: .infinity)
-                } else {
-                    Text("Email me a code").frame(maxWidth: .infinity)
-                }
+                Text("Email me a code")
+                    .frame(maxWidth: .infinity)
+                    .pendingState(auth.isWorking)
             }
             .buttonStyle(.borderedProminent)
             .controlSize(.large)
@@ -110,7 +114,13 @@ struct SignInView: View {
                 .multilineTextAlignment(.center)
 
             TextField("000000", text: $code)
-                .textFieldStyle(.roundedBorder)
+                .padding(14)
+                .background(DS.Color.sunken)
+                .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                .overlay {
+                    RoundedRectangle(cornerRadius: 12, style: .continuous)
+                        .strokeBorder(DS.Color.line.opacity(0.35), lineWidth: 0.5)
+                }
                 .font(.title2.monospacedDigit())
                 .multilineTextAlignment(.center)
                 .keyboardType(.numberPad)
@@ -125,11 +135,9 @@ struct SignInView: View {
                 }
 
             Button(action: verify) {
-                if auth.isWorking {
-                    ProgressView().frame(maxWidth: .infinity)
-                } else {
-                    Text("Sign in").frame(maxWidth: .infinity)
-                }
+                Text("Sign in")
+                    .frame(maxWidth: .infinity)
+                    .pendingState(auth.isWorking)
             }
             .buttonStyle(.borderedProminent)
             .controlSize(.large)

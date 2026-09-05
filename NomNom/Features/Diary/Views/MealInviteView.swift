@@ -29,14 +29,13 @@ struct MealInviteView: View {
                                 .submitLabel(.send)
                                 .onSubmit(send)
 
-                            if isSending {
-                                ProgressView().controlSize(.small)
-                            } else {
-                                Button("Invite", action: send)
-                                    .buttonStyle(.borderedProminent)
-                                    .controlSize(.small)
-                                    .disabled(email.trimmingCharacters(in: .whitespaces).isEmpty)
+                            Button(action: send) {
+                                Text("Invite")
+                                    .pendingState(isSending)
                             }
+                            .buttonStyle(.borderedProminent)
+                            .controlSize(.small)
+                            .disabled(isSending || email.trimmingCharacters(in: .whitespaces).isEmpty)
                         }
 
                         Text("If they already have an account this lands on their Meals page straight away. If not, the invitation waits and they get it the first time they sign in with that address.")

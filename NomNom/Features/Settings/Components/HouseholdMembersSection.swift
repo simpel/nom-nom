@@ -50,15 +50,13 @@ struct HouseholdMembersSection: View {
                             }
                         }
 
-                    if isSending {
-                        ProgressView()
-                            .controlSize(.small)
-                    } else {
-                        Button("Send", action: sendInvite)
-                            .buttonStyle(.borderedProminent)
-                            .controlSize(.small)
-                            .disabled(!isEmailValid || isSending)
+                    Button(action: sendInvite) {
+                        Text("Send")
+                            .pendingState(isSending)
                     }
+                    .buttonStyle(.borderedProminent)
+                    .controlSize(.small)
+                    .disabled(!isEmailValid || isSending)
                 }
 
                 if showInvalidFormatError {
