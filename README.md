@@ -591,6 +591,32 @@ XCUITest target, and driving the simulator's UI needs an accessibility permissio
 this environment does not have, so the buttons were checked by reading the code and
 by screenshotting each tab, not by pressing them.
 
+## Web site & Vercel deployment (`web/`)
+
+The repository includes a standalone Next.js 15 web application in `web/` that provides the landing page, App Store Review Guideline 5.1.1(v) compliant Privacy Policy, and interactive previews matching the iOS Stone & Pine design system.
+
+### Local development
+
+```bash
+cd web
+pnpm install
+pnpm dev
+```
+
+Run type checking and production builds:
+
+```bash
+pnpm exec tsc --noEmit
+pnpm build
+```
+
+### Vercel configuration
+
+When importing this repository into Vercel:
+- **Framework Preset**: Next.js (auto-detected)
+- **Root Directory**: `web`
+- **Ignored Build Step**: `web/vercel.json` configures `"ignoreCommand": "git diff --quiet HEAD^ HEAD ./"` so Vercel automatically skips deployments when commits only touch iOS code (`NomNom/`), database migrations, or root documentation.
+
 ## Push notifications
 
 Supabase does not deliver APNs push itself. It provides Database Webhooks, Edge

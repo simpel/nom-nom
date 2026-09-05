@@ -23,3 +23,10 @@ supabase/.branches/
 # Scratch
 scratch/
 
+# Web (Next.js / Node)
+web/node_modules/
+web/.next/
+web/.vercel/
+web/build/
+web/dist/
+*.tsbuildinfo
