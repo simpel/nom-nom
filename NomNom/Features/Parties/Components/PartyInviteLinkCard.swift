@@ -15,7 +15,7 @@ struct PartyInviteLinkCard: View {
 
                 HStack(spacing: 10) {
                     ShareLink(
-                        item: party.inviteURL,
+                        item: party.webInviteURL,
                         subject: Text("Join \(party.name) on Nom Nom"),
                         message: Text(party.shareMessage)
                     ) {
@@ -61,7 +61,7 @@ struct PartyInviteLinkCard: View {
     }
 
     private func copyLink() {
-        UIPasteboard.general.string = party.inviteURL.absoluteString
+        UIPasteboard.general.string = party.webInviteURL.absoluteString
         UINotificationFeedbackGenerator().notificationOccurred(.success)
         withAnimation(.easeInOut(duration: 0.2)) {
             didCopy = true

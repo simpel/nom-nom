@@ -1,0 +1,11 @@
+{
+  "applinks": {
+    "apps": [],
+    "details": [
+      {
+        "appID": "D4F66LSYSF.se.joelsanden.nomnom",
+        "paths": ["/invite", "/invite/*", "/party/*", "/meal/*", "/rate-meal/*"]
+      }
+    ]
+  }
+}

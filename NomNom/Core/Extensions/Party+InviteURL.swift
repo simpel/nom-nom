@@ -8,7 +8,7 @@ extension Party {
 
     /// App Store / web universal landing URL fallback if configured.
     var webInviteURL: URL {
-        URL(string: "https://nomnom.app/invite?party_id=\(id.uuidString)") ?? inviteURL
+        URL(string: "https://www.nomnom.casa/invite?party_id=\(id.uuidString)") ?? inviteURL
     }
 
     /// Default invitation message text for system share sheet (iMessage, WhatsApp, AirDrop, etc.).
