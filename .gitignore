@@ -19,3 +19,7 @@ supabase/functions/.env
 # Supabase
 supabase/.temp/
 supabase/.branches/
+
+# Scratch
+scratch/
+

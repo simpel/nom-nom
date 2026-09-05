@@ -8,42 +8,49 @@ struct PartyFollowButton: View {
     @Environment(FoodStore.self) private var store
     @State private var isProcessing = false
 
+    private var isMember: Bool {
+        store.isMember(of: party.id)
+    }
+
     private var isFollowing: Bool {
         store.isFollowing(partyID: party.id)
     }
 
     var body: some View {
-        Button {
-            handleTap()
-        } label: {
-            if isProcessing {
-                ProgressView()
-                    .controlSize(.mini)
-                    .frame(minWidth: 54)
-            } else if isFollowing {
-                Text("Following")
-                    .font(.caption.weight(.medium))
-                    .foregroundStyle(DS.Color.textSecondary)
-                    .padding(.horizontal, 10)
-                    .padding(.vertical, 5)
-                    .background(Color(uiColor: .tertiarySystemFill))
-                    .clipShape(Capsule())
-            } else {
-                Text("Follow")
-                    .font(.caption.weight(.semibold))
-                    .foregroundStyle(Color.accentColor)
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 5)
-                    .background(Color.accentColor.opacity(0.12))
-                    .clipShape(Capsule())
+        if !isMember && party.isPublic {
+            Button {
+                handleTap()
+            } label: {
+                if isProcessing {
+                    ProgressView()
+                        .controlSize(.mini)
+                        .frame(minWidth: 54)
+                } else if isFollowing {
+                    Text("Following")
+                        .font(.caption.weight(.medium))
+                        .foregroundStyle(DS.Color.textSecondary)
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 5)
+                        .background(Color(uiColor: .tertiarySystemFill))
+                        .clipShape(Capsule())
+                } else {
+                    Text("Follow")
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(Color.accentColor)
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 5)
+                        .background(Color.accentColor.opacity(0.12))
+                        .clipShape(Capsule())
+                }
             }
+            .buttonStyle(.plain)
+            .disabled(isProcessing)
+            .accessibilityLabel(isFollowing ? "Unfollow \(party.name)" : "Follow \(party.name)")
         }
-        .buttonStyle(.plain)
-        .disabled(isProcessing)
-        .accessibilityLabel(isFollowing ? "Unfollow \(party.name)" : "Follow \(party.name)")
     }
 
     private func handleTap() {
+        guard !isMember && party.isPublic else { return }
         guard !isProcessing else { return }
         isProcessing = true
         Task {

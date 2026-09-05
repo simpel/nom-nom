@@ -23,7 +23,8 @@ struct PartyCard: View {
     private var scoreStats: FoodStore.PartyScoreStats? { store.partyAverageScore(partyID: party.id) }
 
     private var shouldShowFollowButton: Bool {
-        showFollowButton ?? (!isMember && party.isPublic)
+        guard !isMember && party.isPublic else { return false }
+        return showFollowButton ?? true
     }
 
     var body: some View {
@@ -37,7 +38,8 @@ struct PartyCard: View {
 
             if shouldShowFollowButton {
                 PartyFollowIconButton(party: party)
-                    .padding(8)
+                    .padding(.top, scoreStats != nil ? 20 : 16)
+                    .padding(.trailing, 10)
             }
         }
     }
@@ -45,14 +47,14 @@ struct PartyCard: View {
     // MARK: - Card Body
 
     private var cardBody: some View {
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: 14) {
             headerRow
 
             if !party.about.isEmpty {
                 Text(party.about)
                     .font(.subheadline)
                     .foregroundStyle(DS.Color.textSecondary)
-                    .lineSpacing(2.5)
+                    .lineSpacing(3)
                     .lineLimit(2)
                     .truncationMode(.tail)
                     .fixedSize(horizontal: false, vertical: true)
@@ -64,7 +66,7 @@ struct PartyCard: View {
 
             footerRow
         }
-        .padding(14)
+        .padding(DS.Spacing.md)
         .background(DS.Color.panel)
         .clipShape(RoundedRectangle(cornerRadius: AppRadius.card, style: .continuous))
         .overlay(
@@ -78,39 +80,26 @@ struct PartyCard: View {
 
     private var headerRow: some View {
         HStack(alignment: .center, spacing: 12) {
-            PartyAvatar(party: party, size: 42)
+            PartyAvatar(party: party, size: 44)
 
-            VStack(alignment: .leading, spacing: 4) {
+            VStack(alignment: .leading, spacing: 5) {
                 Text(party.name)
                     .font(.headline.weight(.semibold))
                     .foregroundStyle(DS.Color.textPrimary)
                     .lineLimit(1)
 
-                HStack(alignment: .center, spacing: 6) {
-                    if let stats = scoreStats {
-                        PartyScoreBadge(stats: stats)
-                    }
-
-                    if isMember {
-                        Text("\(memberCount) \(memberCount == 1 ? "member" : "members")")
-                            .monospacedDigit()
-                    } else {
-                        Text("\(followerCount) \(followerCount == 1 ? "follower" : "followers")")
-                            .monospacedDigit()
-
-                        if let hostName {
-                            Text("•")
-                                .foregroundStyle(DS.Color.textTertiary)
-                            Text("Hosted by \(hostName)")
-                                .lineLimit(1)
-                        }
-                    }
+                if let stats = scoreStats {
+                    PartyScoreBadge(stats: stats)
                 }
-                .font(.caption)
-                .foregroundStyle(DS.Color.textSecondary)
             }
 
-            Spacer(minLength: shouldShowFollowButton ? 36 : 0)
+            Spacer(minLength: 8)
+
+            if shouldShowFollowButton {
+                // Invisible reservation matching the 32x32 circle of the follow button overlay
+                Color.clear
+                    .frame(width: 32, height: 32)
+            }
         }
     }
 
@@ -128,20 +117,39 @@ struct PartyCard: View {
 
     private func mealItemCard(meal: Meal) -> some View {
         let recipe = store.dish(meal.dishID)
+        let mealReaction = store.averageReaction(forMeal: meal.id)
+
         return VStack(alignment: .leading, spacing: 6) {
-            RecipeImageView(
-                recipe: recipe,
-                photoPath: meal.photoPath,
-                cuisine: recipe?.cuisine,
-                cornerRadius: AppRadius.photo
-            )
-            .frame(width: 140, height: 105)
+            ZStack(alignment: .topTrailing) {
+                RecipeImageView(
+                    recipe: recipe,
+                    photoPath: meal.photoPath,
+                    cuisine: recipe?.cuisine,
+                    cornerRadius: AppRadius.photo
+                )
+                .frame(width: 148, height: 102)
+
+                if let reaction = mealReaction {
+                    Text(reaction.shortLabel)
+                        .font(.caption2.weight(.bold))
+                        .foregroundStyle(reaction.text)
+                        .padding(.horizontal, 6)
+                        .padding(.vertical, 2.5)
+                        .background(Capsule().fill(DS.Color.panel.opacity(0.92)))
+                        .overlay(
+                            Capsule()
+                                .strokeBorder(reaction.fill.opacity(0.35), lineWidth: 0.5)
+                        )
+                        .padding(6)
+                }
+            }
 
             Text(store.dishName(forMeal: meal))
                 .font(.caption.weight(.medium))
                 .foregroundStyle(DS.Color.textPrimary)
-                .lineLimit(1)
-                .frame(width: 140, alignment: .leading)
+                .lineLimit(2)
+                .multilineTextAlignment(.leading)
+                .frame(width: 148, height: 32, alignment: .topLeading)
         }
     }
 
@@ -150,28 +158,54 @@ struct PartyCard: View {
     private var footerRow: some View {
         HStack(spacing: 6) {
             if partyMeals.isEmpty {
-                Text("New dinner party • No meals logged yet")
-                    .font(.caption2)
+                Text("No meals logged yet")
+                    .font(.caption)
                     .foregroundStyle(DS.Color.textTertiary)
             } else {
                 Text("\(partyMeals.count) \(partyMeals.count == 1 ? "meal" : "meals") logged")
-                    .font(.caption2)
-                    .foregroundStyle(DS.Color.textTertiary)
+                    .font(.caption.weight(.medium))
+                    .foregroundStyle(DS.Color.textSecondary)
                     .monospacedDigit()
             }
 
-            Spacer()
+            Spacer(minLength: 8)
 
-            Image(systemName: "chevron.right")
-                .font(.caption2.weight(.semibold))
-                .foregroundStyle(DS.Color.textTertiary)
+            HStack(spacing: 5) {
+                if let hostName {
+                    Text("Hosted by \(hostName)")
+                        .lineLimit(1)
+
+                    Text("•")
+                        .foregroundStyle(DS.Color.textTertiary)
+                }
+
+                if isMember {
+                    Text("\(memberCount) \(memberCount == 1 ? "member" : "members")")
+                        .monospacedDigit()
+                } else {
+                    Text("\(followerCount) \(followerCount == 1 ? "follower" : "followers")")
+                        .monospacedDigit()
+                }
+            }
+            .font(.caption)
+            .foregroundStyle(DS.Color.textSecondary)
+            .lineLimit(1)
         }
     }
 }
 
-#Preview {
+#Preview("Discover Party") {
     NomNomPreview { store in
-        if let party = store.parties.first {
+        if let party = store.parties.first(where: { $0.isPublic && !store.isMember(of: $0.id) }) ?? store.parties.first {
+            PartyCard(party: party)
+                .padding()
+        }
+    }
+}
+
+#Preview("Member Party") {
+    NomNomPreview { store in
+        if let party = store.parties.first(where: { store.isMember(of: $0.id) }) {
             PartyCard(party: party)
                 .padding()
         }

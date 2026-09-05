@@ -107,7 +107,8 @@ extension FoodStore {
                 "Dip corn tortillas in consommé and fry on flat top.",
                 "Fill with shredded beef, Oaxaca cheese, cilantro and diced onion."
             ],
-            effort: .over60
+            effort: .over60,
+            cuisine: "mexican"
         )
         let salmon = Recipe(
             id: recipe2ID,
@@ -124,7 +125,8 @@ extension FoodStore {
                 "Pan sear salmon fillets skin-side down for 4 mins.",
                 "Serve over warm sushi rice with edamame, avocado, cucumber, and spicy mayo."
             ],
-            effort: .fifteenTo30
+            effort: .fifteenTo30,
+            cuisine: "japanese"
         )
         let pasta = Recipe(
             id: recipe3ID,
@@ -140,7 +142,8 @@ extension FoodStore {
                 "Toast freshly cracked black pepper in olive oil.",
                 "Emulsify pasta water with Pecorino Romano cheese until velvety smooth."
             ],
-            effort: .zeroTo15
+            effort: .zeroTo15,
+            cuisine: "italian"
         )
         store.dishes = [tacos, salmon, pasta]
 
@@ -177,7 +180,11 @@ extension FoodStore {
 
         // Meal parties
         store.mealParties = [
-            MealParty(mealID: meal1ID, partyID: partyID)
+            MealParty(mealID: meal1ID, partyID: partyID),
+            MealParty(mealID: meal2ID, partyID: partyID),
+            MealParty(mealID: meal1ID, partyID: publicPartyID),
+            MealParty(mealID: meal2ID, partyID: publicPartyID),
+            MealParty(mealID: meal1ID, partyID: discoverPartyID)
         ]
 
         // Recipe Favorites

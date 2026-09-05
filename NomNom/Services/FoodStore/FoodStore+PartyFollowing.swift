@@ -4,6 +4,13 @@ import Supabase
 extension FoodStore {
 
     func toggleFollow(party: Party) async {
+        guard canFollow(party) || isFollowing(partyID: party.id) else {
+            // Cannot follow own or member party; if somehow following, clean up
+            if isMember(of: party.id) && partyFollowers.contains(where: { $0.partyID == party.id && $0.userID == userID }) {
+                await unfollowParty(party)
+            }
+            return
+        }
         if isFollowing(partyID: party.id) {
             await unfollowParty(party)
         } else {
@@ -12,6 +19,10 @@ extension FoodStore {
     }
 
     func followParty(_ party: Party) async {
+        guard canFollow(party) else {
+            Self.log.warning("Cannot follow party \(party.name) (\(party.id)): user is a member or party is not public.")
+            return
+        }
         guard !isFollowing(partyID: party.id) else { return }
 
         // 1. Optimistic local update so UI toggles immediately
@@ -52,10 +63,10 @@ extension FoodStore {
     }
 
     func unfollowParty(_ party: Party) async {
-        guard isFollowing(partyID: party.id) else { return }
+        let removed = partyFollowers.filter { $0.partyID == party.id && $0.userID == userID }
+        guard !removed.isEmpty else { return }
 
         // 1. Optimistic local update so UI toggles immediately
-        let removed = partyFollowers.filter { $0.partyID == party.id && $0.userID == userID }
         partyFollowers.removeAll { $0.partyID == party.id && $0.userID == userID }
         reindex()
 

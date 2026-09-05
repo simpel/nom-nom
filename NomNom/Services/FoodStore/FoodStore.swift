@@ -92,13 +92,22 @@ final class FoodStore {
         return myMeals
     }
 
+    var myPartyIDs: Set<UUID> {
+        var ids = Set(partyMembers.filter { $0.userID == userID }.map(\.partyID))
+        for p in parties where p.createdBy == userID {
+            ids.insert(p.id)
+        }
+        return ids
+    }
+
     var myParties: [Party] {
-        let myPartyIDs = Set(partyMembers.filter { $0.userID == userID }.map(\.partyID))
-        return parties.filter { myPartyIDs.contains($0.id) }
+        let ids = myPartyIDs
+        return parties.filter { ids.contains($0.id) }
     }
 
     var followedPartyIDs: Set<UUID> {
-        Set(partyFollowers.filter { $0.userID == userID }.map(\.partyID))
+        let myIDs = myPartyIDs
+        return Set(partyFollowers.filter { $0.userID == userID && !myIDs.contains($0.partyID) }.map(\.partyID))
     }
 
     var followedParties: [Party] {
@@ -111,21 +120,37 @@ final class FoodStore {
     }
 
     var discoverParties: [Party] {
-        let myIDs = Set(partyMembers.filter { $0.userID == userID }.map(\.partyID))
+        let myIDs = myPartyIDs
         let followedIDs = followedPartyIDs
         return parties.filter { $0.isPublic && !myIDs.contains($0.id) && !followedIDs.contains($0.id) }
     }
 
     func isFollowing(partyID: UUID) -> Bool {
-        followedPartyIDs.contains(partyID)
+        guard !isMember(of: partyID) else { return false }
+        return followedPartyIDs.contains(partyID)
     }
 
     func isMember(of partyID: UUID) -> Bool {
-        partyMembers.contains { $0.partyID == partyID && $0.userID == userID }
+        if partyMembers.contains(where: { $0.partyID == partyID && $0.userID == userID }) {
+            return true
+        }
+        if let party = party(partyID), party.createdBy == userID {
+            return true
+        }
+        return false
+    }
+
+    func canFollow(_ party: Party) -> Bool {
+        party.isPublic && !isMember(of: party.id)
     }
 
     func followers(of partyID: UUID) -> [PartyFollower] {
-        partyFollowersByParty[partyID] ?? []
+        let memberIDs = Set((partyMembersByParty[partyID] ?? []).map(\.userID))
+        let partyObj = party(partyID)
+        let allFollowers = partyFollowersByParty[partyID] ?? []
+        return allFollowers.filter { follower in
+            !memberIDs.contains(follower.userID) && follower.userID != partyObj?.createdBy
+        }
     }
 
     func searchParties(matching query: String) -> [Party] {

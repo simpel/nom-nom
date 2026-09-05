@@ -586,32 +586,10 @@ insert into public.party_followers (party_id, user_id)
 values ('d4444444-4444-4444-4444-444444444444', 'f917e487-1f8c-4d3c-b42a-d77f1c19bceb')
 on conflict (party_id, user_id) do nothing;
 
--- Astrid & Björn follow The Friday Feast Club
-insert into public.party_followers (party_id, user_id)
-values ('d1111111-1111-1111-1111-111111111111', 'a1111111-1111-1111-1111-111111111111')
-on conflict (party_id, user_id) do nothing;
-
+-- Björn follows The Friday Feast Club
 insert into public.party_followers (party_id, user_id)
 values ('d1111111-1111-1111-1111-111111111111', 'b1111111-1111-1111-1111-111111111111')
 on conflict (party_id, user_id) do nothing;
-
--- Also attach Pasta meals to Pasta & Vino Society
-insert into public.meal_parties (meal_id, party_id)
-values ('ba000000-0000-0000-0000-000000000002', 'd4444444-4444-4444-4444-444444444444')
-on conflict (meal_id, party_id) do nothing;
-
-insert into public.meal_parties (meal_id, party_id)
-values ('ba000000-0000-0000-0000-000000000009', 'd4444444-4444-4444-4444-444444444444')
-on conflict (meal_id, party_id) do nothing;
-
--- And Nordic meals to Nordic Hearth & Ferments
-insert into public.meal_parties (meal_id, party_id)
-values ('ba000000-0000-0000-0000-000000000006', 'd5555555-5555-5555-5555-555555555555')
-on conflict (meal_id, party_id) do nothing;
-
-insert into public.meal_parties (meal_id, party_id)
-values ('ba000000-0000-0000-0000-000000000010', 'd5555555-5555-5555-5555-555555555555')
-on conflict (meal_id, party_id) do nothing;
 
 
 -- 5. 40 Recipes across 13 cuisines
@@ -2858,6 +2836,24 @@ on conflict (meal_id, rater_id) where rater_id is not null do update set reactio
 insert into public.meal_ratings (meal_id, rater_id, reaction)
 values ('ba000000-0000-0000-0000-000000000058', 'c3333333-3333-3333-3333-333333333333', 5)
 on conflict (meal_id, rater_id) where rater_id is not null do update set reaction = excluded.reaction;
+
+-- Also attach Pasta meals to Pasta & Vino Society
+insert into public.meal_parties (meal_id, party_id)
+values ('ba000000-0000-0000-0000-000000000002', 'd4444444-4444-4444-4444-444444444444')
+on conflict (meal_id, party_id) do nothing;
+
+insert into public.meal_parties (meal_id, party_id)
+values ('ba000000-0000-0000-0000-000000000009', 'd4444444-4444-4444-4444-444444444444')
+on conflict (meal_id, party_id) do nothing;
+
+-- And Nordic meals to Nordic Hearth & Ferments
+insert into public.meal_parties (meal_id, party_id)
+values ('ba000000-0000-0000-0000-000000000006', 'd5555555-5555-5555-5555-555555555555')
+on conflict (meal_id, party_id) do nothing;
+
+insert into public.meal_parties (meal_id, party_id)
+values ('ba000000-0000-0000-0000-000000000010', 'd5555555-5555-5555-5555-555555555555')
+on conflict (meal_id, party_id) do nothing;
 
 
 -- 7. Mark historical notifications as read to avoid inbox clutter

@@ -63,7 +63,7 @@ It is not a checkbox — it needs both halves:
 `Assets.xcassets/AppIcon.appiconset/` declares a 1024×1024 slot with **no image
 file**. A build with no icon is rejected automatically before review.
 
-- [ ] 🔴 Add a 1024×1024 PNG, no alpha channel, no rounded corners (Apple masks it)
+- [x] 🔴 **Done** — 1024×1024 PNG added to `NomNom/Assets.xcassets/AppIcon.appiconset/AppIcon.png`
 
 ### 🟡 Export compliance key
 

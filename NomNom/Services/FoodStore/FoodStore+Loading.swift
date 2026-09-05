@@ -99,7 +99,7 @@ extension FoodStore {
         partyFollowersByParty = Dictionary(grouping: partyFollowers, by: \.partyID)
         favoriteRecipeIDs = Set(recipeFavorites.filter { $0.userID == userID }.map(\.recipeID))
 
-        let myPartyIDs = Set(partyMembers.filter { $0.userID == userID }.map(\.partyID))
+        let myPartyIDs = self.myPartyIDs
         if let current = currentParty, !myPartyIDs.contains(current.id) {
             currentParty = nil
         } else if currentParty == nil,

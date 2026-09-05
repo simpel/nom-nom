@@ -12,22 +12,24 @@ struct PartyScoreBadge: View {
 
         HStack(spacing: 5) {
             Text("\(percent)%")
-                .font(.caption2.weight(.bold))
+                .font(.caption.weight(.bold))
                 .monospacedDigit()
 
-            Rectangle()
-                .fill(stats.reaction.text.opacity(0.35))
-                .frame(width: 1, height: 9)
+            Text("·")
+                .font(.caption.weight(.bold))
+                .foregroundStyle(stats.reaction.text.opacity(0.6))
 
             Text(stats.reaction.shortLabel)
-                .font(.caption2.weight(.semibold))
+                .font(.caption.weight(.semibold))
         }
+        .lineLimit(1)
+        .fixedSize(horizontal: true, vertical: true)
         .foregroundStyle(stats.reaction.text)
         .padding(.horizontal, 8)
-        .padding(.vertical, 3)
+        .padding(.vertical, 3.5)
         .background(Capsule().fill(stats.reaction.fill.opacity(0.12)))
         .overlay(
-            Capsule().strokeBorder(stats.reaction.fill.opacity(0.25), lineWidth: 0.5)
+            Capsule().strokeBorder(stats.reaction.fill.opacity(0.24), lineWidth: 0.5)
         )
         .accessibilityLabel("Average rating: \(percent) percent, \(stats.reaction.name)")
     }

@@ -199,6 +199,17 @@ extension FoodStore {
             if let idx = partyInvites.firstIndex(where: { $0.id == invite.id }) {
                 partyInvites[idx].status = .accepted
             }
+            if partyFollowers.contains(where: { $0.partyID == invite.partyID && $0.userID == userID }) {
+                partyFollowers.removeAll { $0.partyID == invite.partyID && $0.userID == userID }
+                Task {
+                    try? await supabase
+                        .from("party_followers")
+                        .delete()
+                        .eq("party_id", value: invite.partyID.uuidString)
+                        .eq("user_id", value: userID.uuidString)
+                        .execute()
+                }
+            }
             if !parties.contains(where: { $0.id == invite.partyID }) {
                 let fetched: Party = try await supabase
                     .from("parties")
