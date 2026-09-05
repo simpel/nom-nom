@@ -30,8 +30,7 @@ struct MealEditorView: View {
 
     @State private var showDishPickerSheet = false
     @State private var showRecipeEditorSheet = false
-    @State private var navigateToRecipeStep = false
-    @State private var navigateToVerdict = false
+    @State private var navigateToDetailsStep = false
 
     private var meal: Meal? { mealID.flatMap { store.meal($0) } }
     private var isEditing: Bool { mealID != nil }
@@ -68,6 +67,9 @@ struct MealEditorView: View {
         Binding(
             get: { currentDraft },
             set: { updated in
+                photosDraft = updated.photos
+                selectedParties = updated.servedParties ?? selectedParties
+                date = updated.eatenOn
                 recipeDraft = updated.recipe ?? recipeDraft
                 tagsText = updated.tags.joined(separator: ", ")
                 notes = updated.notes
@@ -82,10 +84,6 @@ struct MealEditorView: View {
         NavigationStack {
             ScrollView {
                 VStack(spacing: DS.Spacing.section) {
-                    PageHeader(title: isEditing ? "Edit meal" : "New meal")
-
-                    MealPhotosPickerSection(draft: $photosDraft)
-
                     MealEditorRecipeSection(
                         title: $title,
                         existingMatchedRecipe: existingMatchedDish,
@@ -95,16 +93,18 @@ struct MealEditorView: View {
                         onRemoveRecipe: removeSelectedDish
                     )
 
-                    MealEditorCookingTimeSection(effort: $effort)
-
-                    MealEditorPartiesSection(selectedParties: $selectedParties)
-
                     MealEditorDetailsSection(
                         date: $date,
                         notes: $notes
                     )
 
                     if isEditing {
+                        MealPhotosPickerSection(draft: $photosDraft)
+
+                        MealEditorCookingTimeSection(effort: $effort)
+
+                        MealEditorPartiesSection(selectedParties: $selectedParties)
+
                         MealEditorDeleteSection(
                             isSaving: isSaving,
                             onDelete: deleteMeal
@@ -149,11 +149,8 @@ struct MealEditorView: View {
                     }
                 }
             }
-            .navigationDestination(isPresented: $navigateToRecipeStep) {
-                MealRecipeStepView(draft: currentDraftBinding, onDismiss: { dismiss() })
-            }
-            .navigationDestination(isPresented: $navigateToVerdict) {
-                MealVerdictStepView(draft: currentDraft, onDismiss: { dismiss() })
+            .navigationDestination(isPresented: $navigateToDetailsStep) {
+                MealDetailsStepView(draft: currentDraftBinding, onDismiss: { dismiss() })
             }
             .sheet(isPresented: $showRecipeEditorSheet) {
                 DishRecipeEditSheet(dishName: $title,
@@ -181,6 +178,7 @@ struct MealEditorView: View {
             .onChange(of: linkedDishID) { _, _ in syncMatchedDishRecipe() }
             .onChange(of: title) { _, _ in syncMatchedDishRecipe() }
             .interactiveDismissDisabled(isSaving)
+            .presentationDragIndicator(.visible)
             .alert("Couldn't save meal",
                    isPresented: Binding(get: { store.errorMessage != nil },
                                         set: { if !$0 { store.errorMessage = nil } })) {
@@ -208,11 +206,7 @@ struct MealEditorView: View {
     }
 
     private func proceed() {
-        if isExistingDish {
-            navigateToVerdict = true
-        } else {
-            navigateToRecipeStep = true
-        }
+        navigateToDetailsStep = true
     }
 
     private func syncMatchedDishRecipe() {
@@ -234,15 +228,6 @@ struct MealEditorView: View {
         )
         if effort == nil, let dishEffort = dish.effort {
             effort = dishEffort
-        }
-        if photosDraft.isEmpty {
-            let firstPhoto = store.servings(of: dish.id)
-                .sorted(by: { $0.eatenOn > $1.eatenOn })
-                .first(where: { !$0.photoPaths.isEmpty })?
-                .photoPaths.first
-            if let firstPhoto {
-                photosDraft = FoodStore.PhotosDraft(existingPaths: [firstPhoto])
-            }
         }
     }
 

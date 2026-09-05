@@ -13,43 +13,24 @@ struct CreateRecipeSheet: View {
     @State private var coverPhotosDraft = FoodStore.PhotosDraft()
     @State private var recipeDraft = FoodStore.RecipeDraft()
     @State private var tagsText: String = ""
-    @State private var isSaving = false
+    @State private var navigateToDetails = false
 
     var body: some View {
         NavigationStack {
             ScrollView {
                 VStack(spacing: DS.Spacing.section) {
-                    AssetPhotosPickerSection(draft: $coverPhotosDraft)
+                    AssetPhotosPickerSection(draft: $coverPhotosDraft, title: "Cover Photo")
 
                     SectionCard("Recipe Name") {
                         TextField("Recipe name (e.g. Carbonara)", text: $name)
                             .autocorrectionDisabled()
                     }
 
-                    RecipeEditorSection(draft: $recipeDraft)
-
-                    CuisinePickerSection(selection: $recipeDraft.cuisine)
-
                     SectionCard("Cooking Effort") {
                         TactileOptionPicker(selection: $recipeDraft.effort)
                     }
 
-                    SectionCard("Tags") {
-                        TextField("Tags, comma separated (e.g. pasta, quick, oven)", text: $tagsText)
-                            .textInputAutocapitalization(.never)
-                            .autocorrectionDisabled()
-                    }
-
-                    SectionCard("Sharing & Visibility") {
-                        VStack(alignment: .leading, spacing: 6) {
-                            Toggle("Make recipe public", isOn: $recipeDraft.isPublic)
-                                .font(.body.weight(.medium))
-
-                            Text("When enabled, other dinner parties and users can discover and cook this recipe.")
-                                .font(.caption)
-                                .foregroundStyle(DS.Color.textSecondary)
-                        }
-                    }
+                    CuisinePickerSection(selection: $recipeDraft.cuisine)
                 }
                 .padding(.horizontal, DS.Spacing.screenHorizontal)
                 .padding(.top, DS.Spacing.screenTop)
@@ -57,11 +38,35 @@ struct CreateRecipeSheet: View {
             }
             .background(DS.Color.bg)
             .screenTitle("New Recipe", displayMode: .inline)
-            .sheetCommitToolbar(
-                isSaving: isSaving,
-                canSave: !name.trimmedName.isEmpty,
-                onSave: save
-            )
+            .toolbar {
+                ToolbarItem(placement: .topBarLeading) {
+                    Button {
+                        dismiss()
+                    } label: {
+                        Image(systemName: "xmark")
+                            .fontWeight(.semibold)
+                    }
+                    .accessibilityLabel("Cancel")
+                }
+
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button("Next") {
+                        navigateToDetails = true
+                    }
+                    .disabled(name.trimmedName.isEmpty)
+                    .fontWeight(.semibold)
+                }
+            }
+            .navigationDestination(isPresented: $navigateToDetails) {
+                RecipeDetailsStepView(
+                    name: name,
+                    coverPhotosDraft: coverPhotosDraft,
+                    recipeDraft: $recipeDraft,
+                    tagsText: $tagsText,
+                    onCreated: onCreated,
+                    onDismiss: { dismiss() }
+                )
+            }
             .onAppear {
                 if name.isEmpty && !initialName.isEmpty {
                     name = initialName
@@ -69,31 +74,6 @@ struct CreateRecipeSheet: View {
                 if recipeDraft.cuisine == nil, let initialCuisine {
                     recipeDraft.cuisine = initialCuisine
                 }
-            }
-        }
-    }
-
-    private func save() {
-        let trimmedName = name.trimmedName
-        guard !trimmedName.isEmpty else { return }
-
-        isSaving = true
-        Task {
-            do {
-                let parsedTags = TagsParser.parse(tagsText)
-                let recipe = try await store.findOrCreateRecipe(
-                    named: trimmedName,
-                    tags: parsedTags,
-                    cuisine: recipeDraft.cuisine,
-                    isPublic: recipeDraft.isPublic
-                )
-                try await store.applyCoverPhotos(coverPhotosDraft, to: recipe)
-                try await store.applyRecipe(recipeDraft, to: recipe)
-                isSaving = false
-                onCreated?(recipe)
-                dismiss()
-            } catch {
-                isSaving = false
             }
         }
     }

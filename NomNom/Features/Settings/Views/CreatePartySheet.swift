@@ -12,10 +12,10 @@ struct CreatePartySheet: View {
     @State private var about = ""
     @State private var isPublic = false
     @State private var photoData: Data? = nil
-    @State private var isCreating = false
+    @State private var navigateToSetup = false
 
-    private var canSave: Bool {
-        !name.trimmedName.isEmpty && !isCreating
+    private var canProceed: Bool {
+        !name.trimmedName.isEmpty
     }
 
     var body: some View {
@@ -30,23 +30,13 @@ struct CreatePartySheet: View {
                     SectionCard("Party Name") {
                         TextField("Party name (e.g. Taco Night)", text: $name)
                             .autocorrectionDisabled()
-                            .onSubmit(create)
+                            .onSubmit {
+                                if canProceed { navigateToSetup = true }
+                            }
                     }
 
                     SectionCard("About", caption: "Optional") {
-                        TextField("What is this dinner party about?", text: $about, axis: .vertical)
-                            .lineLimit(3...5)
-                    }
-
-                    SectionCard("Sharing & Visibility") {
-                        VStack(alignment: .leading, spacing: 6) {
-                            Toggle("Make dinner party public", isOn: $isPublic)
-                                .font(.body.weight(.medium))
-
-                            Text("Public dinner parties can be discovered and followed by other foodies.")
-                                .font(.caption)
-                                .foregroundStyle(DS.Color.textSecondary)
-                        }
+                        TextArea("What is this dinner party about?", text: $about, lineLimit: 3...5)
                     }
                 }
                 .padding(.horizontal, DS.Spacing.screenHorizontal)
@@ -54,39 +44,36 @@ struct CreatePartySheet: View {
                 .padding(.bottom, DS.Spacing.screenBottom)
             }
             .background(DS.Color.bg)
-            .screenTitle("New dinner party", displayMode: .inline)
-            .sheetCommitToolbar(
-                isSaving: isCreating,
-                canSave: canSave,
-                onSave: create
-            )
-            .interactiveDismissDisabled(isCreating)
-            .alert("Couldn't create dinner party",
-                   isPresented: Binding(get: { store.errorMessage != nil },
-                                        set: { if !$0 { store.errorMessage = nil } })) {
-                Button("OK") { store.errorMessage = nil }
-            } message: {
-                Text(store.errorMessage ?? "")
-            }
-        }
-    }
+            .screenTitle("New Party", displayMode: .inline)
+            .toolbar {
+                ToolbarItem(placement: .topBarLeading) {
+                    Button {
+                        dismiss()
+                    } label: {
+                        Image(systemName: "xmark")
+                            .fontWeight(.semibold)
+                    }
+                    .accessibilityLabel("Cancel")
+                }
 
-    private func create() {
-        let partyName = name.trimmedName
-        guard !partyName.isEmpty else { return }
-        isCreating = true
-        Task {
-            if let newParty = await store.createParty(
-                name: partyName,
-                about: about,
-                isPublic: isPublic,
-                photoData: photoData
-            ) {
-                store.currentParty = newParty
-                onCreated?(newParty)
-                dismiss()
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button("Next") {
+                        navigateToSetup = true
+                    }
+                    .disabled(!canProceed)
+                    .fontWeight(.semibold)
+                }
             }
-            isCreating = false
+            .navigationDestination(isPresented: $navigateToSetup) {
+                PartySetupStepView(
+                    name: name,
+                    about: about,
+                    photoData: photoData,
+                    isPublic: $isPublic,
+                    onCreated: onCreated,
+                    onDismiss: { dismiss() }
+                )
+            }
         }
     }
 }

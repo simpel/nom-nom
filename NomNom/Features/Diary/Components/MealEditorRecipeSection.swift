@@ -54,62 +54,66 @@ struct MealEditorRecipeSection: View {
         return recipe.ownerID == store.userID
     }
 
+    private var displayPhotoItems: [HeroPhotoItem] {
+        guard let recipe = existingMatchedRecipe else { return [] }
+        var items: [HeroPhotoItem] = []
+        var paths: [String] = []
+        for p in recipe.recipePhotoPaths where !paths.contains(p) {
+            paths.append(p)
+            items.append(.remote(path: p, bucket: SupabaseConfig.recipeBucket))
+        }
+        for p in recipe.photoPaths where !paths.contains(p) {
+            paths.append(p)
+            items.append(.remote(path: p, bucket: SupabaseConfig.photoBucket))
+        }
+        for p in store.photos(for: recipe) where !paths.contains(p) {
+            paths.append(p)
+            items.append(.remote(path: p, bucket: SupabaseConfig.photoBucket))
+        }
+        return Array(items.prefix(FoodStore.PhotosDraft.maxCount))
+    }
+
     var body: some View {
-        SectionCard("Pick recipe") {
-            if title.trimmedName.isEmpty {
-                Button(action: onPickRecipe) {
-                    HStack(spacing: 12) {
-                        Image(systemName: "fork.knife.circle.fill")
-                            .font(.title2)
-                            .foregroundStyle(.orange)
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text("Pick a recipe")
-                                .font(.body.weight(.semibold))
-                                .foregroundStyle(.primary)
-                            Text("Choose from past recipes or type a new one")
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
-                        }
-                        Spacer()
-                        Image(systemName: "chevron.right")
-                            .font(.caption.weight(.semibold))
-                            .foregroundStyle(.tertiary)
-                    }
-                    .padding(.vertical, 2)
-                }
-                .buttonStyle(.plain)
-            } else {
-                selectedRecipeRow
-            }
+        if title.trimmedName.isEmpty {
+            emptyRecipeDeckView
+        } else {
+            heroRecipeSelectedView
         }
     }
 
-    private var selectedRecipeRow: some View {
-        HStack(spacing: 12) {
-            if !recipePhotos.isEmpty {
-                MiniPhotoArcDeck(photoPaths: recipePhotos)
-            }
+    private var emptyRecipeDeckView: some View {
+        EmptyRecipeDeckHeroView(onTap: onPickRecipe)
+            .frame(height: 228)
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 4)
+            .padding(.bottom, 6)
+    }
 
-            VStack(alignment: .leading, spacing: 3) {
-                Text(title)
-                    .font(.headline)
-                    .foregroundStyle(.primary)
+    private var heroRecipeSelectedView: some View {
+        VStack(spacing: 12) {
+            HeroPhotoDeckView(
+                items: displayPhotoItems,
+                cuisine: existingMatchedRecipe?.cuisine,
+                cardWidth: 144,
+                cardHeight: 192
+            )
+            .frame(height: 228)
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 4)
 
-                if isExistingRecipe {
-                    if let recipe = existingMatchedRecipe, !recipe.tags.isEmpty {
-                        Text(recipe.tags.joined(separator: " • "))
-                            .font(.caption2)
-                            .foregroundStyle(.secondary)
-                            .lineLimit(1)
-                    }
-                } else {
-                    Text("New recipe")
-                        .font(.caption2)
-                        .foregroundStyle(.secondary)
+            VStack(spacing: 4) {
+                if let cuisineName = Cuisine.formatDisplayName(existingMatchedRecipe?.cuisine) {
+                    Text(cuisineName)
+                        .font(.subheadline.weight(.medium))
+                        .foregroundStyle(DS.Color.accentText)
                 }
-            }
 
-            Spacer()
+                Text(title)
+                    .font(AppTypography.pageTitleFont)
+                    .foregroundStyle(DS.Color.textPrimary)
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, 20)
+            }
 
             Menu {
                 Button(action: onPickRecipe) {
@@ -126,39 +130,13 @@ struct MealEditorRecipeSection: View {
                     Label("Remove", systemImage: "trash")
                 }
             } label: {
-                Image(systemName: "ellipsis")
-                    .font(.body.weight(.bold))
-                    .foregroundStyle(.secondary)
-                    .padding(8)
-                    .contentShape(Rectangle())
+                SubtleCapsuleLabel(title: "Change recipe", systemImage: "arrow.triangle.2.circlepath")
             }
             .buttonStyle(.plain)
+            .padding(.top, 2)
         }
-        .padding(.vertical, 4)
-        .contentShape(Rectangle())
-        .onTapGesture {
-            onPickRecipe()
-        }
-        .swipeActions(edge: .trailing, allowsFullSwipe: true) {
-            Button(role: .destructive, action: onRemoveRecipe) {
-                Label("Remove", systemImage: "trash")
-            }
-        }
-        .contextMenu {
-            Button(action: onPickRecipe) {
-                Label("Change Recipe", systemImage: "arrow.triangle.2.circlepath")
-            }
-
-            if isCreator {
-                Button(action: onEditRecipe) {
-                    Label("Edit Recipe Details", systemImage: "square.and.pencil")
-                }
-            }
-
-            Button(role: .destructive, action: onRemoveRecipe) {
-                Label("Remove", systemImage: "trash")
-            }
-        }
+        .frame(maxWidth: .infinity)
+        .padding(.bottom, 6)
     }
 }
 

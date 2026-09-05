@@ -10,20 +10,88 @@ struct MealVerdictStepView: View {
     @State private var repeatDesire: RotationGoal?
     @State private var isSaving = false
     @State private var selectedPhotoIndex: Int?
+    @State private var selectedRecipePhotoIndex: Int?
+
+    private var matchedRecipe: Recipe? {
+        if let id = draft.linkedDishID {
+            return store.recipe(id)
+        }
+        return store.recipes.first { $0.normalizedName == draft.dishName.normalizedForMatching }
+    }
+
+    private var resolvedCuisine: String? {
+        draft.recipe?.cuisine ?? matchedRecipe?.cuisine
+    }
+
+    private var mealPhotos: [HeroPhotoItem] {
+        draft.photos.items.map { item in
+            switch item {
+            case .existing(let path):
+                return .remote(path: path, bucket: SupabaseConfig.photoBucket)
+            case .added(let id, let data):
+                return .local(id: id.uuidString, data: data)
+            }
+        }
+    }
+
+    private var recipePhotos: [HeroPhotoItem] {
+        var items: [HeroPhotoItem] = []
+        if let matchedRecipe {
+            for p in matchedRecipe.recipePhotoPaths {
+                if !items.contains(where: { $0.id == "\(SupabaseConfig.recipeBucket):\(p)" }) {
+                    items.append(.remote(path: p, bucket: SupabaseConfig.recipeBucket))
+                }
+            }
+            for p in matchedRecipe.photoPaths {
+                if !items.contains(where: { $0.id == "\(SupabaseConfig.photoBucket):\(p)" }) {
+                    items.append(.remote(path: p, bucket: SupabaseConfig.photoBucket))
+                }
+            }
+            for p in store.photos(for: matchedRecipe) {
+                if !items.contains(where: { $0.id == "\(SupabaseConfig.photoBucket):\(p)" }) {
+                    items.append(.remote(path: p, bucket: SupabaseConfig.photoBucket))
+                }
+            }
+        }
+        if let recipeDraft = draft.recipe {
+            for p in recipeDraft.existingPhotoPaths {
+                if !items.contains(where: { $0.id == "\(SupabaseConfig.recipeBucket):\(p)" }) {
+                    items.append(.remote(path: p, bucket: SupabaseConfig.recipeBucket))
+                }
+            }
+            for (idx, data) in recipeDraft.addedPhotoData.enumerated() {
+                let alreadyInItems = items.contains { item in
+                    if case .local(_, let existingData) = item {
+                        return existingData == data
+                    }
+                    return false
+                }
+                if !alreadyInItems {
+                    items.append(.local(id: "recipe-added-\(idx)", data: data))
+                }
+            }
+        }
+        return items
+    }
 
     var body: some View {
         ScrollView {
             VStack(spacing: DS.Spacing.section) {
-                // Top Hero Section: Harmonized Arc Hero Header
+                // Top Hero Section: Harmonized Dual Arc Hero Header
                 ArcHeroHeaderView(
-                    draft: draft.photos,
+                    items: mealPhotos,
+                    recipeItems: recipePhotos,
+                    cuisine: resolvedCuisine,
                     title: draft.dishName.isEmpty ? "Rate Meal" : draft.dishName,
                     date: draft.eatenOn,
-                    alignment: .center
-                ) { index in
-                    selectedPhotoIndex = index
-                }
-                .padding(.bottom, 4)
+                    alignment: .center,
+                    onSelectMealPhoto: { index in
+                        selectedPhotoIndex = index
+                    },
+                    onSelectRecipePhoto: { index in
+                        selectedRecipePhotoIndex = index
+                    }
+                )
 
                 // Axis 1: Taste Verdict (Standalone 6-tile selector)
                 tasteSection
@@ -55,8 +123,18 @@ struct MealVerdictStepView: View {
             get: { selectedPhotoIndex.map { PhotoIndexWrapper(index: $0) } },
             set: { selectedPhotoIndex = $0?.index }
         )) { wrapper in
-            if !draft.photos.isEmpty {
+            if wrapper.index < draft.photos.count {
                 MealPhotoViewerSheet(draft: draft.photos, initialIndex: wrapper.index)
+            }
+        }
+        .sheet(item: Binding(
+            get: { selectedRecipePhotoIndex.map { PhotoIndexWrapper(index: $0) } },
+            set: { selectedRecipePhotoIndex = $0?.index }
+        )) { wrapper in
+            if let matchedRecipe {
+                let paths = matchedRecipe.recipePhotoPaths.isEmpty ? matchedRecipe.photoPaths : matchedRecipe.recipePhotoPaths
+                let bucket = matchedRecipe.recipePhotoPaths.isEmpty ? SupabaseConfig.photoBucket : SupabaseConfig.recipeBucket
+                MealGalleryViewerSheet(paths: paths, initialIndex: wrapper.index, bucket: bucket, titlePrefix: "Recipe")
             }
         }
         .onAppear {
@@ -64,6 +142,15 @@ struct MealVerdictStepView: View {
             repeatDesire = draft.repeatDesire
         }
         .interactiveDismissDisabled(isSaving)
+        .presentationDragIndicator(.visible)
+        .simultaneousGesture(
+            DragGesture(minimumDistance: 30)
+                .onEnded { value in
+                    if value.translation.height > 90 && abs(value.translation.width) < 60 {
+                        onDismiss()
+                    }
+                }
+        )
         .alert("Couldn't save meal",
                isPresented: Binding(get: { store.errorMessage != nil },
                                     set: { if !$0 { store.errorMessage = nil } })) {

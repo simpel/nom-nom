@@ -55,9 +55,7 @@ struct PartySettingsSheet: View {
                                 Text("About")
                                     .font(.caption.weight(.medium))
                                     .foregroundStyle(DS.Color.textSecondary)
-                                TextField("Describe your dinner party...", text: $about, axis: .vertical)
-                                    .lineLimit(3...5)
-                                    .textFieldStyle(.roundedBorder)
+                                TextArea("Describe your dinner party...", text: $about, lineLimit: 3...5)
                             }
 
                             Divider()

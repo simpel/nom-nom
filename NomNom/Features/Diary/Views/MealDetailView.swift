@@ -17,6 +17,7 @@ struct MealDetailView: View {
     @State private var showRecipeSheet = false
     @State private var selectedPartyForSheet: Party?
     @State private var selectedPhotoIndex: Int?
+    @State private var selectedRecipePhotoIndex: Int?
 
     private var meal: Meal? { store.meal(mealID) }
 
@@ -78,26 +79,43 @@ struct MealDetailView: View {
                 MealGalleryViewerSheet(paths: meal.photoPaths, initialIndex: wrapper.index)
             }
         }
+        .sheet(item: Binding(
+            get: { selectedRecipePhotoIndex.map { PhotoIndexWrapper(index: $0) } },
+            set: { selectedRecipePhotoIndex = $0?.index }
+        )) { wrapper in
+            if let recipe = store.recipe(meal?.dishID ?? UUID()) {
+                let recipePaths = recipe.recipePhotoPaths.isEmpty ? recipe.photoPaths : recipe.recipePhotoPaths
+                let bucket = recipe.recipePhotoPaths.isEmpty ? SupabaseConfig.photoBucket : SupabaseConfig.recipeBucket
+                MealGalleryViewerSheet(paths: recipePaths, initialIndex: wrapper.index, bucket: bucket, titlePrefix: "Recipe")
+            }
+        }
     }
 
     @ViewBuilder
     private func content(for meal: Meal) -> some View {
         let dish = store.dish(meal.dishID)
+        let recipe = store.recipe(meal.dishID)
+        let recipeItems = recipePhotoItems(for: recipe)
         let history = partyHistory(for: meal)
         let partyName = currentPartyName(for: meal)
 
         ScrollView {
             VStack(spacing: DS.Spacing.section) {
-                // 1. Photos + Heading sentence + Date (Harmonized Arc Hero Header)
+                // 1. Photos + Heading sentence + Date (Harmonized Dual Arc Hero Header)
                 ArcHeroHeaderView(
-                    photoPaths: meal.photoPaths,
+                    items: meal.photoPaths.map { .remote(path: $0, bucket: SupabaseConfig.photoBucket) },
+                    recipeItems: recipeItems,
                     cuisine: dish?.cuisine,
                     title: mealHeading(for: meal),
                     date: meal.eatenOn,
-                    alignment: .center
-                ) { index in
-                    selectedPhotoIndex = index
-                }
+                    alignment: .center,
+                    onSelectMealPhoto: { index in
+                        selectedPhotoIndex = index
+                    },
+                    onSelectRecipePhoto: { index in
+                        selectedRecipePhotoIndex = index
+                    }
+                )
                 .padding(.bottom, DS.Spacing.xs)
 
                 // 2. Average rating (Finely divided between numerical score and verdict)
@@ -156,6 +174,27 @@ struct MealDetailView: View {
             }
         }
         .sorted { $0.eatenOn > $1.eatenOn }
+    }
+
+    private func recipePhotoItems(for recipe: Recipe?) -> [HeroPhotoItem] {
+        guard let recipe else { return [] }
+        var items: [HeroPhotoItem] = []
+        for p in recipe.recipePhotoPaths {
+            if !items.contains(where: { $0.id == "\(SupabaseConfig.recipeBucket):\(p)" }) {
+                items.append(.remote(path: p, bucket: SupabaseConfig.recipeBucket))
+            }
+        }
+        for p in recipe.photoPaths {
+            if !items.contains(where: { $0.id == "\(SupabaseConfig.photoBucket):\(p)" }) {
+                items.append(.remote(path: p, bucket: SupabaseConfig.photoBucket))
+            }
+        }
+        for p in store.photos(for: recipe) {
+            if !items.contains(where: { $0.id == "\(SupabaseConfig.photoBucket):\(p)" }) {
+                items.append(.remote(path: p, bucket: SupabaseConfig.photoBucket))
+            }
+        }
+        return items
     }
 }
 

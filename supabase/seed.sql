@@ -73,7 +73,7 @@ insert into auth.users (
     'e0000000-0000-0000-0000-000000000001',
     'authenticated',
     'authenticated',
-    'test@nomnom.app',
+    'app@nomnom.casa',
     '$2a$06$qO8OpK6eZDBkHYr27lnJt.UMmcBpydFNmBQ9qUe4BJGYZIpn5WklO',
     now(),
     '{"provider": "email", "providers": ["email"]}'::jsonb,
@@ -92,7 +92,7 @@ insert into auth.identities (
     'e0000000-0000-0000-0000-000000000001',
     'e0000000-0000-0000-0000-000000000001',
     'e0000000-0000-0000-0000-000000000001',
-    jsonb_build_object('sub', 'e0000000-0000-0000-0000-000000000001', 'email', 'test@nomnom.app', 'email_verified', true),
+    jsonb_build_object('sub', 'e0000000-0000-0000-0000-000000000001', 'email', 'app@nomnom.casa', 'email_verified', true),
     'email',
     now(),
     now(),
@@ -511,6 +511,10 @@ on conflict (party_id, user_id) do nothing;
 
 insert into public.party_members (party_id, user_id)
 values ('d1111111-1111-1111-1111-111111111111', 'a3333333-3333-3333-3333-333333333333')
+on conflict (party_id, user_id) do nothing;
+
+insert into public.party_members (party_id, user_id)
+values ('d1111111-1111-1111-1111-111111111111', 'e0000000-0000-0000-0000-000000000001')
 on conflict (party_id, user_id) do nothing;
 
 -- Party 2: Sunday Supper Society (Public, Joel is creator & member)

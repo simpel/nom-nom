@@ -121,16 +121,9 @@ struct MealDetailCookInfoCard: View {
                 // Tags
                 if let tags = dish?.tags, !tags.isEmpty {
                     Divider().overlay(DS.Color.line.opacity(0.3))
-                    HStack(alignment: .top) {
-                        Text("Tags")
-                            .font(.subheadline)
-                            .foregroundStyle(DS.Color.textSecondary)
-                            .padding(.top, 2)
-                        Spacer()
-                        WrappingHStack {
-                            ForEach(tags, id: \.self) { tag in
-                                Chip(text: tag, systemImage: "tag", tint: DS.Color.textSecondary)
-                            }
+                    LabeledWrappingRow(label: "Tags", alignment: .trailing) {
+                        ForEach(tags, id: \.self) { tag in
+                            Chip(text: tag, tint: DS.Color.textSecondary)
                         }
                     }
                 }

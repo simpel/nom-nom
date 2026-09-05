@@ -3,11 +3,11 @@ import Foundation
 /// Static credentials configured for App Store Review and testing.
 ///
 /// Apple reviewers test on physical hardware without access to external email
-/// inboxes. Following the industry standard, `test@nomnom.app` with static code
+/// inboxes. Following the industry standard, `app@nomnom.casa` with static code
 /// `123456` bypasses OTP delivery and signs in with a fixed password against
 /// Supabase Auth.
 enum ReviewerAccount {
-    static let email = "test@nomnom.app"
+    static let email = "app@nomnom.casa"
     static let code = "123456"
     static let password = "NomNomAppleReview2025!"
 

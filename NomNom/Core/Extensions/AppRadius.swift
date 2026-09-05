@@ -21,7 +21,7 @@ public enum AppRadius {
     public static var picker: CGFloat { standard }
 
     /// Radius specifically for photos and media cards.
-    public static var photo: CGFloat { standard }
+    public static var photo: CGFloat = 16
 
     /// Sharp corner (0px).
     public static let none: CGFloat = 0

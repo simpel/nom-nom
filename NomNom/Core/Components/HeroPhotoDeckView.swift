@@ -1,106 +1,179 @@
 import SwiftUI
 
-/// An individual photo source displayed in `HeroPhotoDeckView`.
-enum HeroPhotoItem: Equatable, Identifiable {
-    case remote(path: String)
-    case local(id: String, data: Data)
-
-    var id: String {
-        switch self {
-        case .remote(let path): return "remote:\(path)"
-        case .local(let id, _): return "local:\(id)"
-        }
-    }
-}
-
 /// Recurrent hero UX moment presenting asset images as a crafted deck of cards.
 ///
-/// On appear, the cover photo is displayed first front-and-center, and the
-/// underlying cards animate out smoothly from beneath it into a balanced fan deck.
+/// When both meal and recipe photos are provided, displays a dual-layer arc:
+/// - Foreground arc: Meal photos at primary scale and angle
+/// - Background arc: Recipe photos layered behind at a distinct angle, size, and lift
 struct HeroPhotoDeckView: View {
     let items: [HeroPhotoItem]
+    var recipeItems: [HeroPhotoItem] = []
     var cuisine: String? = nil
     var bucket: String = SupabaseConfig.photoBucket
-    var cardWidth: CGFloat = 154
-    var cardHeight: CGFloat = 206
+    var cardWidth: CGFloat = 144
+    var cardHeight: CGFloat = 192
+    var badgeText: String? = nil
+    var badgeSystemImage: String? = nil
     var onSelectPhoto: ((Int) -> Void)? = nil
+    var onSelectMealPhoto: ((Int) -> Void)? = nil
+    var onSelectRecipePhoto: ((Int) -> Void)? = nil
 
     @State private var isFannedOut = false
 
-    private var displayCount: Int {
-        min(items.count, 5)
+    private var hasDualDeck: Bool {
+        !items.isEmpty && !recipeItems.isEmpty
+    }
+
+    private var displayMealCount: Int { min(items.count, 5) }
+    private var displayRecipeCount: Int { min(recipeItems.count, 5) }
+
+    init(
+        photoPaths: [String],
+        recipePhotoPaths: [String] = [],
+        cuisine: String? = nil,
+        bucket: String = SupabaseConfig.photoBucket,
+        cardWidth: CGFloat = 144,
+        cardHeight: CGFloat = 192,
+        badgeText: String? = nil,
+        badgeSystemImage: String? = nil,
+        onSelectMealPhoto: ((Int) -> Void)? = nil,
+        onSelectRecipePhoto: ((Int) -> Void)? = nil,
+        onSelectPhoto: ((Int) -> Void)? = nil
+    ) {
+        self.items = photoPaths.map { .remote(path: $0, bucket: bucket) }
+        self.recipeItems = recipePhotoPaths.map { .remote(path: $0, bucket: SupabaseConfig.recipeBucket) }
+        self.cuisine = cuisine
+        self.bucket = bucket
+        self.cardWidth = cardWidth
+        self.cardHeight = cardHeight
+        self.badgeText = badgeText
+        self.badgeSystemImage = badgeSystemImage
+        self.onSelectPhoto = onSelectPhoto
+        self.onSelectMealPhoto = onSelectMealPhoto
+        self.onSelectRecipePhoto = onSelectRecipePhoto
     }
 
     init(
         photoPaths: [String],
         cuisine: String? = nil,
         bucket: String = SupabaseConfig.photoBucket,
-        cardWidth: CGFloat = 154,
-        cardHeight: CGFloat = 206,
+        cardWidth: CGFloat = 144,
+        cardHeight: CGFloat = 192,
+        badgeText: String? = nil,
+        badgeSystemImage: String? = nil,
         onSelectPhoto: ((Int) -> Void)? = nil
     ) {
-        self.items = photoPaths.map { .remote(path: $0) }
+        self.init(
+            photoPaths: photoPaths,
+            recipePhotoPaths: [],
+            cuisine: cuisine,
+            bucket: bucket,
+            cardWidth: cardWidth,
+            cardHeight: cardHeight,
+            badgeText: badgeText,
+            badgeSystemImage: badgeSystemImage,
+            onSelectPhoto: onSelectPhoto
+        )
+    }
+
+    init(
+        items: [HeroPhotoItem],
+        recipeItems: [HeroPhotoItem] = [],
+        cuisine: String? = nil,
+        bucket: String = SupabaseConfig.photoBucket,
+        cardWidth: CGFloat = 144,
+        cardHeight: CGFloat = 192,
+        badgeText: String? = nil,
+        badgeSystemImage: String? = nil,
+        onSelectMealPhoto: ((Int) -> Void)? = nil,
+        onSelectRecipePhoto: ((Int) -> Void)? = nil,
+        onSelectPhoto: ((Int) -> Void)? = nil
+    ) {
+        self.items = items
+        self.recipeItems = recipeItems
         self.cuisine = cuisine
         self.bucket = bucket
         self.cardWidth = cardWidth
         self.cardHeight = cardHeight
+        self.badgeText = badgeText
+        self.badgeSystemImage = badgeSystemImage
         self.onSelectPhoto = onSelectPhoto
+        self.onSelectMealPhoto = onSelectMealPhoto
+        self.onSelectRecipePhoto = onSelectRecipePhoto
     }
 
     init(
         items: [HeroPhotoItem],
         cuisine: String? = nil,
         bucket: String = SupabaseConfig.photoBucket,
-        cardWidth: CGFloat = 154,
-        cardHeight: CGFloat = 206,
+        cardWidth: CGFloat = 144,
+        cardHeight: CGFloat = 192,
+        badgeText: String? = nil,
+        badgeSystemImage: String? = nil,
         onSelectPhoto: ((Int) -> Void)? = nil
     ) {
-        self.items = items
-        self.cuisine = cuisine
-        self.bucket = bucket
-        self.cardWidth = cardWidth
-        self.cardHeight = cardHeight
-        self.onSelectPhoto = onSelectPhoto
+        self.init(
+            items: items,
+            recipeItems: [],
+            cuisine: cuisine,
+            bucket: bucket,
+            cardWidth: cardWidth,
+            cardHeight: cardHeight,
+            badgeText: badgeText,
+            badgeSystemImage: badgeSystemImage,
+            onSelectPhoto: onSelectPhoto
+        )
     }
 
     init(
         draft: FoodStore.PhotosDraft,
+        recipeItems: [HeroPhotoItem] = [],
         cuisine: String? = nil,
         bucket: String = SupabaseConfig.photoBucket,
-        cardWidth: CGFloat = 154,
-        cardHeight: CGFloat = 206,
+        cardWidth: CGFloat = 144,
+        cardHeight: CGFloat = 192,
+        badgeText: String? = nil,
+        badgeSystemImage: String? = nil,
+        onSelectMealPhoto: ((Int) -> Void)? = nil,
+        onSelectRecipePhoto: ((Int) -> Void)? = nil,
         onSelectPhoto: ((Int) -> Void)? = nil
     ) {
         self.items = draft.items.map { item in
             switch item {
             case .existing(let path):
-                return .remote(path: path)
+                return .remote(path: path, bucket: bucket)
             case .added(let id, let data):
                 return .local(id: id.uuidString, data: data)
             }
         }
+        self.recipeItems = recipeItems
         self.cuisine = cuisine
         self.bucket = bucket
         self.cardWidth = cardWidth
         self.cardHeight = cardHeight
+        self.badgeText = badgeText
+        self.badgeSystemImage = badgeSystemImage
         self.onSelectPhoto = onSelectPhoto
+        self.onSelectMealPhoto = onSelectMealPhoto
+        self.onSelectRecipePhoto = onSelectRecipePhoto
     }
 
     var body: some View {
-        ZStack {
-            if items.isEmpty {
+        ZStack(alignment: .bottom) {
+            if items.isEmpty && recipeItems.isEmpty {
                 emptyPlaceholderCard
-            } else if items.count == 1 {
-                cardView(for: items[0], index: 0)
+            } else if hasDualDeck {
+                dualDeckView
+            } else if !items.isEmpty {
+                singleDeckView(for: items, isRecipeDeck: false)
             } else {
-                multiCardDeck
+                singleDeckView(for: recipeItems, isRecipeDeck: true)
             }
         }
-        .frame(height: 248)
+        .frame(height: cardHeight + 28, alignment: .bottom)
         .frame(maxWidth: .infinity)
-        .padding(.vertical, DS.Spacing.heroDeckPadding)
-        .task(id: items) {
-            guard items.count > 1 else {
+        .task(id: "\(items.count)-\(recipeItems.count)") {
+            guard (items.count + recipeItems.count) > 1 else {
                 isFannedOut = false
                 return
             }
@@ -112,131 +185,84 @@ struct HeroPhotoDeckView: View {
         }
     }
 
-    // MARK: - Single & Empty Cards
+    // MARK: - Dual Deck Layout (Meal left-tilted, Recipe right-tilted, bottom-aligned)
 
-    private var emptyPlaceholderCard: some View {
-        ZStack {
-            if let cuisineAsset = Cuisine.assetImageName(for: cuisine) {
-                Image(cuisineAsset)
-                    .resizable()
-                    .scaledToFill()
-                    .frame(width: cardWidth, height: cardHeight)
-                    .clipShape(RoundedRectangle(cornerRadius: AppRadius.photo, style: .continuous))
-                    .overlay(
-                        RoundedRectangle(cornerRadius: AppRadius.photo, style: .continuous)
-                            .strokeBorder(DS.Color.line.opacity(0.35), lineWidth: 0.5)
+    private var dualDeckView: some View {
+        let mealTotal = displayMealCount
+        let recipeTotal = displayRecipeCount
+
+        return ZStack(alignment: .bottom) {
+            // 1. Right Wing Arc (Recipe Deck, way smaller, tilted right, layered behind)
+            ForEach(Array(recipeItems.prefix(recipeTotal).enumerated()), id: \.element.id) { index, item in
+                cardView(for: item, index: index, isRecipeDeck: true)
+                    .scaleEffect(HeroDeckMath.dualRecipeScale(for: index, total: recipeTotal, isFannedOut: isFannedOut), anchor: .bottom)
+                    .rotationEffect(.degrees(HeroDeckMath.dualRecipeRotationAngle(for: index, total: recipeTotal, isFannedOut: isFannedOut)), anchor: .bottom)
+                    .offset(
+                        x: HeroDeckMath.dualRecipeXOffset(for: index, total: recipeTotal, isFannedOut: isFannedOut),
+                        y: HeroDeckMath.dualRecipeYOffset(for: index, total: recipeTotal, isFannedOut: isFannedOut)
                     )
-            } else {
-                RoundedRectangle(cornerRadius: AppRadius.photo, style: .continuous)
-                    .fill(DS.Color.sunken)
-                    .frame(width: cardWidth, height: cardHeight)
-                    .overlay {
-                        Image(systemName: "fork.knife")
-                            .font(.title2)
-                            .foregroundStyle(DS.Color.textTertiary)
-                    }
-                    .overlay(
-                        RoundedRectangle(cornerRadius: AppRadius.photo, style: .continuous)
-                            .strokeBorder(DS.Color.line.opacity(0.35), lineWidth: 0.5)
+                    .zIndex(Double(recipeTotal - index))
+            }
+
+            // 2. Left Wing Arc (Meal Deck, prominent, tilted left, layered slightly over)
+            ForEach(Array(items.prefix(mealTotal).enumerated()), id: \.element.id) { index, item in
+                cardView(for: item, index: index, isRecipeDeck: false)
+                    .scaleEffect(HeroDeckMath.dualMealScale(for: index, total: mealTotal, isFannedOut: isFannedOut), anchor: .bottom)
+                    .rotationEffect(.degrees(HeroDeckMath.dualMealRotationAngle(for: index, total: mealTotal, isFannedOut: isFannedOut)), anchor: .bottom)
+                    .offset(
+                        x: HeroDeckMath.dualMealXOffset(for: index, total: mealTotal, isFannedOut: isFannedOut),
+                        y: HeroDeckMath.dualMealYOffset(for: index, total: mealTotal, isFannedOut: isFannedOut)
                     )
+                    .zIndex(100 + Double(mealTotal - index))
             }
         }
-        .shadow(color: Color.black.opacity(0.10), radius: 8, x: 0, y: 4)
     }
 
-    @ViewBuilder
-    private func cardContent(for item: HeroPhotoItem) -> some View {
-        switch item {
-        case .remote(let path):
-            RemoteMealPhoto(path: path, cornerRadius: AppRadius.photo, bucket: bucket)
-        case .local(_, let data):
-            MealPhoto(data: data, cornerRadius: AppRadius.photo)
-        }
-    }
+    // MARK: - Single Deck Layout
 
-    private func cardView(for item: HeroPhotoItem, index: Int) -> some View {
-        Button {
-            onSelectPhoto?(index)
-        } label: {
-            cardContent(for: item)
-                .frame(width: cardWidth, height: cardHeight)
-                .clipShape(RoundedRectangle(cornerRadius: AppRadius.photo, style: .continuous))
-                .overlay(
-                    RoundedRectangle(cornerRadius: AppRadius.photo, style: .continuous)
-                        .strokeBorder(DS.Color.line.opacity(0.35), lineWidth: 0.5)
-                )
-                .shadow(color: Color.black.opacity(0.18), radius: 10, x: 0, y: 5)
-        }
-        .buttonStyle(.plain)
-        .disabled(onSelectPhoto == nil)
-    }
-
-    // MARK: - Multi-Card Deck
-
-    private var multiCardDeck: some View {
-        let total = displayCount
+    private func singleDeckView(for deckItems: [HeroPhotoItem], isRecipeDeck: Bool) -> some View {
+        let total = min(deckItems.count, 5)
         return ZStack {
-            ForEach(Array(items.prefix(total).enumerated()), id: \.element.id) { index, item in
-                cardView(for: item, index: index)
-                    .rotationEffect(.degrees(rotationAngle(for: index, total: total)))
-                    .offset(x: xOffset(for: index, total: total), y: yOffset(for: index, total: total))
-                    .scaleEffect(scale(for: index, total: total))
+            ForEach(Array(deckItems.prefix(total).enumerated()), id: \.element.id) { index, item in
+                cardView(for: item, index: index, isRecipeDeck: isRecipeDeck)
+                    .rotationEffect(.degrees(HeroDeckMath.rotationAngle(for: index, total: total, isFannedOut: isFannedOut)))
+                    .offset(
+                        x: HeroDeckMath.xOffset(for: index, total: total, isFannedOut: isFannedOut),
+                        y: HeroDeckMath.yOffset(for: index, total: total, isFannedOut: isFannedOut)
+                    )
+                    .scaleEffect(HeroDeckMath.scale(for: index, total: total, isFannedOut: isFannedOut))
                     .zIndex(Double(total - index))
             }
-
-            if items.count > 1 {
-                VStack {
-                    Spacer()
-                    Text("\(items.count) photos")
-                        .font(.caption2.weight(.semibold))
-                        .foregroundStyle(.white)
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 3)
-                        .background(Color.black.opacity(0.60), in: Capsule())
-                        .shadow(color: .black.opacity(0.20), radius: 4, x: 0, y: 2)
-                        .padding(.bottom, 2)
-                }
-                .allowsHitTesting(false)
-                .zIndex(150)
-            }
         }
     }
 
-    // MARK: - Symmetric Centered Arc Math
+    // MARK: - Subviews
 
-    private func cardSpacing(total: Int) -> CGFloat {
-        guard total > 1 else { return 0 }
-        return total <= 3 ? 54.0 : max(32.0, min(50.0, 220.0 / CGFloat(total)))
+    private var emptyPlaceholderCard: some View {
+        cardView(for: .fallback(cuisine: cuisine), index: 0, isRecipeDeck: false)
     }
 
-    private func rotationAngle(for index: Int, total: Int) -> Double {
-        guard isFannedOut && total > 1 else { return 0 }
-        let mid = Double(total - 1) / 2.0
-        let rel = Double(index) - mid
-        let maxAngle = min(18.0, Double(total - 1) * 4.8)
-        return (rel / max(1.0, mid)) * maxAngle
+    private func cardView(for item: HeroPhotoItem, index: Int, isRecipeDeck: Bool) -> some View {
+        HeroPhotoCardView(
+            item: item,
+            cuisine: cuisine,
+            width: cardWidth,
+            height: cardHeight,
+            isRecipeDeck: isRecipeDeck,
+            badgeText: index == 0 && !isRecipeDeck ? badgeText : nil,
+            badgeSystemImage: badgeSystemImage,
+            onTap: action(for: index, isRecipeDeck: isRecipeDeck)
+        )
     }
 
-    private func xOffset(for index: Int, total: Int) -> CGFloat {
-        guard isFannedOut && total > 1 else { return 0 }
-        let mid = Double(total - 1) / 2.0
-        let rel = CGFloat(Double(index) - mid)
-        return rel * cardSpacing(total: total)
-    }
-
-    private func yOffset(for index: Int, total: Int) -> CGFloat {
-        guard isFannedOut && total > 1 else { return 0 }
-        let mid = Double(total - 1) / 2.0
-        let rel = CGFloat(Double(index) - mid)
-        let curve: CGFloat = total <= 3 ? 3.5 : min(3.0, 14.0 / CGFloat(total))
-        return (rel * rel) * curve
-    }
-
-    private func scale(for index: Int, total: Int) -> CGFloat {
-        if index == 0 { return 1.0 }
-        if !isFannedOut { return 0.96 }
-        let mid = Double(total - 1) / 2.0
-        let rel = abs(Double(index) - mid)
-        return max(0.95, 1.0 - (CGFloat(rel) * 0.02))
+    private func action(for index: Int, isRecipeDeck: Bool) -> (() -> Void)? {
+        if isRecipeDeck {
+            if let onSelectRecipePhoto { return { onSelectRecipePhoto(index) } }
+            if let onSelectPhoto { return { onSelectPhoto(index) } }
+        } else {
+            if let onSelectMealPhoto { return { onSelectMealPhoto(index) } }
+            if let onSelectPhoto { return { onSelectPhoto(index) } }
+        }
+        return nil
     }
 }

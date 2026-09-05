@@ -85,13 +85,7 @@ enum DevSelfCheck {
 
         // 2. Invite an address that already has an account. The trigger should
         //    resolve it, which is what makes the invite visible to them at all.
-        //
-        //    Create that account first. This used to depend on one surviving from an
-        //    earlier run, so the check passed on a database that had been used before
-        //    and failed on a freshly reset one.
-        let guestEmail = "guest@foodlog.test"
-        check("the guest account exists to be invited",
-              await DevSignIn.ensureAccount(guestEmail))
+        let guestEmail = "astrid.lind@foodlog.test"
         let invited = await store.invite(email: guestEmail, toMeal: meal.id)
         check("invite an existing account by email", invited, store.errorMessage ?? "")
         let invite = store.invites(forMeal: meal.id).first

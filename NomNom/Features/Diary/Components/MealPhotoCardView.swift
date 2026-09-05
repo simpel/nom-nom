@@ -20,10 +20,14 @@ struct MealPhotoCardView: View {
             .photoBottomScrim()
             .frame(width: 144, height: 192)
             .clipShape(RoundedRectangle(cornerRadius: AppRadius.photo, style: .continuous))
-            .shadow(color: Color.black.opacity(isDragging ? 0.35 : 0.20),
-                    radius: isDragging ? 16 : 10,
+            .overlay(
+                RoundedRectangle(cornerRadius: AppRadius.photo, style: .continuous)
+                    .strokeBorder(DS.Color.line.opacity(0.35), lineWidth: 0.5)
+            )
+            .shadow(color: Color.black.opacity(isDragging ? 0.32 : 0.16),
+                    radius: isDragging ? 18 : 14,
                     x: 0,
-                    y: isDragging ? 10 : 5)
+                    y: isDragging ? 10 : 7)
             .contentShape(Rectangle())
 
             if !isDragging {

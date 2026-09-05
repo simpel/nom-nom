@@ -40,12 +40,12 @@ struct RecipeInstructionsEditorSection: View {
                 .background(DS.Color.sunken, in: Circle())
                 .padding(.top, 6)
 
-            TextField("Step description...", text: $instructions[index], axis: .vertical)
-                .font(.subheadline)
-                .lineLimit(2...8)
-                .padding(.horizontal, 10)
-                .padding(.vertical, 7)
-                .background(DS.Color.sunken, in: RoundedRectangle(cornerRadius: 8, style: .continuous))
+            TextArea(
+                "Step description...",
+                text: $instructions[index],
+                lineLimit: 2...8,
+                font: .subheadline
+            )
 
             Button {
                 withAnimation(.easeInOut(duration: 0.2)) {

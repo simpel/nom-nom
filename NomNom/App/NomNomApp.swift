@@ -15,12 +15,6 @@ struct NomNomApp: App {
                 .environment(auth)
                 .environment(NotificationManager.shared)
                 .task {
-                    #if DEBUG
-                    if DevSignIn.isRequested {
-                        await DevSignIn.run(auth)
-                        return
-                    }
-                    #endif
                     auth.start()
                 }
         }

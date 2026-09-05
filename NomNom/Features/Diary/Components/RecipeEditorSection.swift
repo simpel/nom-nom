@@ -20,7 +20,7 @@ struct RecipeEditorSection: View {
         .sheet(isPresented: $showCamera) {
             CameraPicker { image in
                 if let prepared = PhotoTools.prepare(image) {
-                    draft.addedPhotoData.append(prepared)
+                    draft.addPhotoData(prepared)
                 }
             }
             .ignoresSafeArea()
@@ -59,28 +59,35 @@ struct RecipeEditorSection: View {
                 }
             }
 
-            HStack(spacing: 10) {
-                if CameraPicker.isAvailable {
-                    Button {
-                        showCamera = true
-                    } label: {
-                        Label("Camera", systemImage: "camera.fill")
+            if totalPhotos < 5 {
+                HStack(spacing: 10) {
+                    if CameraPicker.isAvailable {
+                        Button {
+                            showCamera = true
+                        } label: {
+                            Label("Camera", systemImage: "camera")
+                                .font(.subheadline.weight(.medium))
+                                .frame(maxWidth: .infinity)
+                        }
+                        .buttonStyle(.bordered)
+                        .tint(DS.Color.textSecondary)
+                    }
+
+                    PhotosPicker(selection: $selectedPickerItems,
+                                 maxSelectionCount: 5 - totalPhotos,
+                                 matching: .images,
+                                 photoLibrary: .shared()) {
+                        Label(totalPhotos == 0 ? "Add Photos" : "Add More", systemImage: "photo.on.rectangle")
+                            .font(.subheadline.weight(.medium))
                             .frame(maxWidth: .infinity)
                     }
                     .buttonStyle(.bordered)
-                }
+                    .tint(DS.Color.textSecondary)
 
-                PhotosPicker(selection: $selectedPickerItems,
-                             matching: .images,
-                             photoLibrary: .shared()) {
-                    Label(totalPhotos == 0 ? "Add Photos" : "Add More", systemImage: "photo.on.rectangle.angled")
-                        .frame(maxWidth: .infinity)
-                }
-                .buttonStyle(.bordered)
-
-                if isLoadingPhotos {
-                    ProgressView()
-                        .controlSize(.small)
+                    if isLoadingPhotos {
+                        ProgressView()
+                            .controlSize(.small)
+                    }
                 }
             }
         }
@@ -133,9 +140,10 @@ struct RecipeEditorSection: View {
         }
 
         for item in selectedPickerItems {
+            guard draft.canAddPhoto else { break }
             if let data = try? await item.loadTransferable(type: Data.self),
                let prepared = PhotoTools.prepare(data) {
-                draft.addedPhotoData.append(prepared)
+                draft.addPhotoData(prepared)
             }
         }
     }

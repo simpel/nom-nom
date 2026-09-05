@@ -52,10 +52,6 @@
       </BuildableProductRunnable>
       <CommandLineArguments>
          <CommandLineArgument
-            argument = "-dev-sign-in cook@foodlog.test"
-            isEnabled = "YES">
-         </CommandLineArgument>
-         <CommandLineArgument
             argument = "-seed-sample-data"
             isEnabled = "NO">
          </CommandLineArgument>

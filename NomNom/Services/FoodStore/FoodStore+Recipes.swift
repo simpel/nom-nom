@@ -98,14 +98,19 @@ extension FoodStore {
         for path in draft.removedPhotoPaths {
             await deleteRecipeObject(path)
         }
-        var newPaths = draft.existingPhotoPaths
+        var newPaths: [String] = []
+        for p in draft.existingPhotoPaths where !newPaths.contains(p) {
+            newPaths.append(p)
+        }
         for data in draft.addedPhotoData {
             let path = "\(recipe.id.uuidString.lowercased())/\(UUID().uuidString.lowercased()).jpg"
             _ = try await supabase.storage
                 .from(SupabaseConfig.recipeBucket)
                 .upload(path, data: data, options: FileOptions(contentType: "image/jpeg"))
             PhotoCache.shared.put(data, for: path)
-            newPaths.append(path)
+            if !newPaths.contains(path) {
+                newPaths.append(path)
+            }
         }
 
         guard recipe.ingredients != cleanIngredients ||
@@ -152,14 +157,18 @@ extension FoodStore {
         for item in draft.items {
             switch item {
             case .existing(let path):
-                newPaths.append(path)
+                if !newPaths.contains(path) {
+                    newPaths.append(path)
+                }
             case .added(_, let data):
                 let path = "\(recipe.id.uuidString.lowercased())/\(UUID().uuidString.lowercased()).jpg"
                 _ = try await supabase.storage
                     .from(SupabaseConfig.recipeBucket)
                     .upload(path, data: data, options: FileOptions(contentType: "image/jpeg"))
                 PhotoCache.shared.put(data, for: path)
-                newPaths.append(path)
+                if !newPaths.contains(path) {
+                    newPaths.append(path)
+                }
             }
         }
 
@@ -182,6 +191,9 @@ extension FoodStore {
         var paths: [String] = []
         if let recipe = recipe(recipeID) {
             for p in recipe.photoPaths where !paths.contains(p) {
+                paths.append(p)
+            }
+            for p in recipe.recipePhotoPaths where !paths.contains(p) {
                 paths.append(p)
             }
         }

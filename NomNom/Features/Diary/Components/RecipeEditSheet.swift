@@ -22,12 +22,12 @@ struct RecipeEditSheet: View {
                 VStack(spacing: DS.Spacing.section) {
                     if let recipe {
                         if isOwner {
-                            AssetPhotosPickerSection(draft: $coverPhotosDraft)
-
                             SectionCard("Recipe Name") {
                                 TextField("Recipe name", text: $name)
                                     .autocorrectionDisabled()
                             }
+
+                            AssetPhotosPickerSection(draft: $coverPhotosDraft, title: "Cover Photo")
 
                             RecipeEditorSection(draft: $recipeDraft)
 

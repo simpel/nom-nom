@@ -4,6 +4,8 @@ import Supabase
 extension FoodStore {
 
     struct PhotosDraft: Equatable {
+        static let maxCount: Int = 5
+
         enum Item: Equatable, Identifiable {
             case existing(path: String)
             case added(id: UUID, data: Data)
@@ -20,12 +22,43 @@ extension FoodStore {
         var removedPaths: [String] = []
 
         init(items: [Item] = [], removedPaths: [String] = []) {
-            self.items = items
+            var uniqueItems: [Item] = []
+            var seenPaths = Set<String>()
+            var seenData = Set<Data>()
+            for item in items {
+                switch item {
+                case .existing(let path):
+                    if !seenPaths.contains(path) {
+                        seenPaths.insert(path)
+                        uniqueItems.append(item)
+                    }
+                case .added(_, let data):
+                    if !seenData.contains(data) {
+                        seenData.insert(data)
+                        uniqueItems.append(item)
+                    }
+                }
+                if uniqueItems.count == Self.maxCount { break }
+            }
+            self.items = uniqueItems
             self.removedPaths = removedPaths
         }
 
         init(existingPaths: [String] = [], addedData: [Data] = [], removedPaths: [String] = []) {
-            self.items = existingPaths.map { .existing(path: $0) } + addedData.map { .added(id: UUID(), data: $0) }
+            var uniqueItems: [Item] = []
+            var seenPaths = Set<String>()
+            for path in existingPaths where !seenPaths.contains(path) {
+                seenPaths.insert(path)
+                uniqueItems.append(.existing(path: path))
+                if uniqueItems.count == Self.maxCount { break }
+            }
+            var seenData = Set<Data>()
+            for data in addedData where !seenData.contains(data) {
+                seenData.insert(data)
+                uniqueItems.append(.added(id: UUID(), data: data))
+                if uniqueItems.count == Self.maxCount { break }
+            }
+            self.items = uniqueItems
             self.removedPaths = removedPaths
         }
 
@@ -38,7 +71,9 @@ extension FoodStore {
             }
             set {
                 let added = items.filter { if case .added = $0 { return true } else { return false } }
-                items = newValue.map { .existing(path: $0) } + added
+                var seen = Set<String>()
+                let uniqueNew = newValue.filter { seen.insert($0).inserted }
+                items = uniqueNew.map { .existing(path: $0) } + added
             }
         }
 
@@ -51,7 +86,13 @@ extension FoodStore {
             }
             set {
                 let existing = items.filter { if case .existing = $0 { return true } else { return false } }
-                items = existing + newValue.map { .added(id: UUID(), data: $0) }
+                var newItems = existing
+                var seen = Set<Data>()
+                for data in newValue where seen.insert(data).inserted {
+                    newItems.append(.added(id: UUID(), data: data))
+                    if newItems.count == Self.maxCount { break }
+                }
+                items = newItems
             }
         }
 
@@ -61,6 +102,15 @@ extension FoodStore {
 
         var count: Int {
             items.count
+        }
+
+        func contains(data: Data) -> Bool {
+            items.contains { item in
+                if case .added(_, let existingData) = item {
+                    return existingData == data
+                }
+                return false
+            }
         }
 
         mutating func move(from source: IndexSet, to destination: Int) {
@@ -73,6 +123,8 @@ extension FoodStore {
         }
 
         mutating func append(_ data: Data) {
+            guard items.count < Self.maxCount else { return }
+            guard !contains(data: data) else { return }
             items.append(.added(id: UUID(), data: data))
         }
 
@@ -86,6 +138,8 @@ extension FoodStore {
     }
 
     struct RecipeDraft: Equatable {
+        static let maxCount: Int = 5
+
         var ingredients: [RecipeIngredient] = []
         var instructions: [String] = []
         var existingPhotoPaths: [String] = []
@@ -97,6 +151,16 @@ extension FoodStore {
 
         var totalPhotosCount: Int {
             existingPhotoPaths.count + addedPhotoData.count
+        }
+
+        var canAddPhoto: Bool {
+            totalPhotosCount < Self.maxCount
+        }
+
+        mutating func addPhotoData(_ data: Data) {
+            guard canAddPhoto else { return }
+            guard !addedPhotoData.contains(data) else { return }
+            addedPhotoData.append(data)
         }
 
         var hasContent: Bool {
@@ -218,14 +282,18 @@ extension FoodStore {
         for item in draft.items {
             switch item {
             case .existing(let path):
-                newPaths.append(path)
+                if !newPaths.contains(path) {
+                    newPaths.append(path)
+                }
             case .added(_, let data):
                 let path = "\(meal.id.uuidString.lowercased())/\(UUID().uuidString.lowercased()).jpg"
                 _ = try await supabase.storage
                     .from(SupabaseConfig.photoBucket)
                     .upload(path, data: data, options: FileOptions(contentType: "image/jpeg"))
                 PhotoCache.shared.put(data, for: path)
-                newPaths.append(path)
+                if !newPaths.contains(path) {
+                    newPaths.append(path)
+                }
             }
         }
 

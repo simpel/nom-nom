@@ -19,11 +19,43 @@ struct MealRatingSheet: View {
     @State private var isSaving = false
     @State private var didLoad = false
     @State private var selectedPhotoIndex: Int?
+    @State private var selectedRecipePhotoIndex: Int?
 
     private var meal: Meal? { store.meal(mealID) }
     private var mealTitle: String {
         guard let meal else { return "Meal" }
         return store.dishName(forMeal: meal)
+    }
+
+    private var mealRecipe: Recipe? {
+        guard let meal else { return nil }
+        return store.recipe(meal.dishID)
+    }
+
+    private var mealPhotos: [HeroPhotoItem] {
+        guard let meal else { return [] }
+        return meal.photoPaths.map { .remote(path: $0, bucket: SupabaseConfig.photoBucket) }
+    }
+
+    private var recipePhotos: [HeroPhotoItem] {
+        guard let recipe = mealRecipe else { return [] }
+        var items: [HeroPhotoItem] = []
+        for p in recipe.recipePhotoPaths {
+            if !items.contains(where: { $0.id == "\(SupabaseConfig.recipeBucket):\(p)" }) {
+                items.append(.remote(path: p, bucket: SupabaseConfig.recipeBucket))
+            }
+        }
+        for p in recipe.photoPaths {
+            if !items.contains(where: { $0.id == "\(SupabaseConfig.photoBucket):\(p)" }) {
+                items.append(.remote(path: p, bucket: SupabaseConfig.photoBucket))
+            }
+        }
+        for p in store.photos(for: recipe) {
+            if !items.contains(where: { $0.id == "\(SupabaseConfig.photoBucket):\(p)" }) {
+                items.append(.remote(path: p, bucket: SupabaseConfig.photoBucket))
+            }
+        }
+        return items
     }
 
     var body: some View {
@@ -50,8 +82,18 @@ struct MealRatingSheet: View {
                 get: { selectedPhotoIndex.map { PhotoIndexWrapper(index: $0) } },
                 set: { selectedPhotoIndex = $0?.index }
             )) { wrapper in
-                if let meal, !meal.photoPaths.isEmpty {
+                if let meal, wrapper.index < meal.photoPaths.count {
                     MealGalleryViewerSheet(paths: meal.photoPaths, initialIndex: wrapper.index)
+                }
+            }
+            .sheet(item: Binding(
+                get: { selectedRecipePhotoIndex.map { PhotoIndexWrapper(index: $0) } },
+                set: { selectedRecipePhotoIndex = $0?.index }
+            )) { wrapper in
+                if let recipe = mealRecipe {
+                    let paths = recipe.recipePhotoPaths.isEmpty ? recipe.photoPaths : recipe.recipePhotoPaths
+                    let bucket = recipe.recipePhotoPaths.isEmpty ? SupabaseConfig.photoBucket : SupabaseConfig.recipeBucket
+                    MealGalleryViewerSheet(paths: paths, initialIndex: wrapper.index, bucket: bucket, titlePrefix: "Recipe")
                 }
             }
         }
@@ -62,16 +104,21 @@ struct MealRatingSheet: View {
     private func ratingForm(for meal: Meal) -> some View {
         ScrollView {
             VStack(spacing: DS.Spacing.section) {
-                // Top Hero Section: Harmonized Arc Hero Header
+                // Top Hero Section: Harmonized Dual Arc Hero Header
                 ArcHeroHeaderView(
-                    photoPaths: meal.photoPaths,
+                    items: mealPhotos,
+                    recipeItems: recipePhotos,
+                    cuisine: mealRecipe?.cuisine,
                     title: mealTitle,
                     date: meal.eatenOn,
-                    alignment: .center
-                ) { index in
-                    selectedPhotoIndex = index
-                }
-                .padding(.bottom, 4)
+                    alignment: .center,
+                    onSelectMealPhoto: { index in
+                        selectedPhotoIndex = index
+                    },
+                    onSelectRecipePhoto: { index in
+                        selectedRecipePhotoIndex = index
+                    }
+                )
 
                 // 1. Taste (Standalone)
                 VStack(alignment: .leading, spacing: 8) {
@@ -97,15 +144,12 @@ struct MealRatingSheet: View {
 
                 // 3. Household Eaters (if present)
                 if !store.myEaters.isEmpty {
-                    householdEatersCard
+                    MealRatingEatersCard(eaters: store.myEaters, reactions: $eaterReactions)
                 }
 
                 // 4. Notes & Review
                 SectionCard(title: "Notes & Review") {
-                    TextField("Add your thoughts, flavor notes, or adjustments…", text: $notes, axis: .vertical)
-                        .lineLimit(3...6)
-                        .padding(10)
-                        .background(Color(uiColor: .tertiarySystemFill), in: RoundedRectangle(cornerRadius: AppRadius.input, style: .continuous))
+                    TextArea("Add your thoughts, flavor notes, or adjustments…", text: $notes, lineLimit: 3...6)
                 }
             }
             .padding(.horizontal, DS.Spacing.screenHorizontal)
@@ -113,38 +157,6 @@ struct MealRatingSheet: View {
             .padding(.bottom, DS.Spacing.screenBottom)
         }
         .background(DS.Color.bg)
-    }
-
-    private var householdEatersCard: some View {
-        SectionCard(title: "Household Eaters", caption: "Family reactions") {
-            VStack(spacing: 10) {
-                ForEach(store.myEaters) { eater in
-                    HStack(spacing: 10) {
-                        ZStack {
-                            Circle()
-                                .fill(Color.accentColor.opacity(0.12))
-                                .frame(width: 26, height: 26)
-                            Text(eater.name.prefix(1).uppercased())
-                                .font(.system(size: 11, weight: .bold))
-                                .foregroundStyle(Color.accentColor)
-                        }
-
-                        Text(eater.name)
-                            .font(.subheadline.weight(.medium))
-
-                        Spacer()
-
-                        TactileTasteSelector(selection: Binding(
-                            get: { eaterReactions[eater.id] },
-                            set: { eaterReactions[eater.id] = $0 }
-                        ))
-                    }
-                    if eater.id != store.myEaters.last?.id {
-                        Divider()
-                    }
-                }
-            }
-        }
     }
 
     // MARK: - Actions

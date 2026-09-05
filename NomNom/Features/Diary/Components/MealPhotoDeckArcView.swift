@@ -50,31 +50,19 @@ struct MealPhotoDeckArcView: View {
     // MARK: - Deck Arc Math
 
     private func cardSpacing(total: Int) -> CGFloat {
-        guard total > 1 else { return 0 }
-        return total <= 3 ? 54.0 : max(32.0, min(50.0, 220.0 / CGFloat(total)))
+        HeroDeckMath.cardSpacing(total: total)
     }
 
     private func cardAngle(index: Int, total: Int) -> Double {
-        guard total > 1 else { return 0 }
-        let mid = Double(total - 1) / 2.0
-        let rel = Double(index) - mid
-        let maxAngle = min(20.0, Double(total - 1) * 4.8)
-        return (rel / max(1.0, mid)) * maxAngle
+        HeroDeckMath.rotationAngle(for: index, total: total)
     }
 
     private func cardXOffset(index: Int, total: Int) -> CGFloat {
-        guard total > 1 else { return 0 }
-        let mid = Double(total - 1) / 2.0
-        let rel = CGFloat(Double(index) - mid)
-        return rel * cardSpacing(total: total)
+        HeroDeckMath.xOffset(for: index, total: total)
     }
 
     private func cardYOffset(index: Int, total: Int) -> CGFloat {
-        guard total > 1 else { return 0 }
-        let mid = Double(total - 1) / 2.0
-        let rel = CGFloat(Double(index) - mid)
-        let curve: CGFloat = total <= 3 ? 3.5 : min(3.0, 14.0 / CGFloat(total))
-        return (rel * rel) * curve
+        HeroDeckMath.yOffset(for: index, total: total)
     }
 
     private func effectiveVisualSlot(for index: Int, total: Int) -> Int {
