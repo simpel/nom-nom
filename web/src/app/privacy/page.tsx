@@ -11,7 +11,7 @@ export const metadata: Metadata = {
 export default function PrivacyPage() {
   return (
     <>
-      <Header currentPath="/privacy" />
+      <Header />
       <main id="main-content" className="policy-page">
         <div className="container">
           <div className="policy-content">

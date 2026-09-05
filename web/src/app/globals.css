@@ -810,3 +810,60 @@ body {
 .footer-link:hover {
   color: var(--color-text-primary);
 }
+
+/* --- Bare Essentials Minimal Layout --- */
+.minimal-screen {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--space-xl) var(--space-md);
+}
+
+.minimal-main {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.minimal-brand {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-md);
+  text-align: center;
+}
+
+.minimal-logo {
+  width: 96px;
+  height: 96px;
+  border-radius: 22px;
+  box-shadow: var(--shadow-card);
+  display: block;
+}
+
+.minimal-title {
+  font-family: var(--font-serif-stack);
+  font-size: 2.25rem;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  color: var(--color-text-primary);
+}
+
+.minimal-footer {
+  padding-top: var(--space-lg);
+  padding-bottom: var(--space-sm);
+}
+
+.minimal-footer-link {
+  font-size: 0.8125rem;
+  color: var(--color-text-tertiary);
+  text-decoration: none;
+  transition: color 0.15s ease;
+}
+
+.minimal-footer-link:hover {
+  color: var(--color-text-primary);
+}
