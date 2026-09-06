@@ -30,17 +30,13 @@ struct PendingPartyInvitesSection: View {
 
                             Spacer()
 
-                            Button("Accept") {
+                            AppButton("Accept", variant: .primary, style: .normal, size: .sm) {
                                 Task { await store.acceptPartyInvite(invite) }
                             }
-                            .buttonStyle(.borderedProminent)
-                            .controlSize(.small)
 
-                            Button("Decline") {
+                            AppButton("Decline", variant: .neutral, style: .outlined, size: .sm) {
                                 Task { await store.declinePartyInvite(invite) }
                             }
-                            .buttonStyle(.bordered)
-                            .controlSize(.small)
                         }
 
                         if invite.id != store.pendingPartyInvites.last?.id {

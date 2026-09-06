@@ -26,11 +26,10 @@ struct ProfileSettingsSection: View {
                     }
 
                     VStack(spacing: 8) {
-                        TextField("First name", text: $firstName)
+                        Input("First name", text: $firstName, size: .sm)
                             .textContentType(.givenName)
                             .onSubmit(saveProfile)
-                        Divider()
-                        TextField("Last name", text: $lastName)
+                        Input("Last name", text: $lastName, size: .sm)
                             .textContentType(.familyName)
                             .onSubmit(saveProfile)
                     }
@@ -42,14 +41,15 @@ struct ProfileSettingsSection: View {
 
                 Divider()
 
-                Button(role: .destructive) {
+                AppButton(
+                    "Sign out",
+                    variant: .destructive,
+                    style: .ghost,
+                    size: .md,
+                    isFullWidth: true
+                ) {
                     confirmSignOut = true
-                } label: {
-                    Label("Sign out", systemImage: "rectangle.portrait.and.arrow.right")
-                        .font(.subheadline.weight(.semibold))
-                        .foregroundStyle(.red)
                 }
-                .buttonStyle(.plain)
             }
         }
         .onAppear(perform: loadProfileIfNeeded)

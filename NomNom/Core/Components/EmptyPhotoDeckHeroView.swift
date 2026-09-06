@@ -6,9 +6,13 @@ import PhotosUI
 struct EmptyPhotoDeckHeroView: View {
     @Binding var selectedPickerItems: [PhotosPickerItem]
     var title: String = "Add Photos"
-    var subtitle: String = "Tap to choose"
+    var subtitle: String? = nil
     var maxSelectionCount: Int = FoodStore.PhotosDraft.maxCount
     var onDeckTap: (() -> Void)? = nil
+
+    private var effectiveSubtitle: String {
+        subtitle ?? (CameraPicker.isAvailable ? "Tap to take photo" : "Tap to choose")
+    }
 
     var body: some View {
         if let onDeckTap, CameraPicker.isAvailable {
@@ -75,7 +79,7 @@ struct EmptyPhotoDeckHeroView: View {
                             .foregroundStyle(DS.Color.textPrimary)
                             .multilineTextAlignment(.center)
 
-                        Text(subtitle)
+                        Text(effectiveSubtitle)
                             .font(.caption2)
                             .foregroundStyle(DS.Color.textSecondary)
                             .multilineTextAlignment(.center)

@@ -99,11 +99,11 @@ struct RecipeDetailView: View {
                 }
             }
         }
-        .confirmationDialog(
+        .alert(
             "Delete this recipe?",
-            isPresented: $confirmDeleteRecipe,
-            titleVisibility: .visible
+            isPresented: $confirmDeleteRecipe
         ) {
+            Button("Cancel", role: .cancel) {}
             Button("Delete Recipe", role: .destructive) {
                 if let recipe {
                     Task {
@@ -112,7 +112,6 @@ struct RecipeDetailView: View {
                     }
                 }
             }
-            Button("Cancel", role: .cancel) {}
         } message: {
             Text("This will permanently remove this recipe.")
         }
@@ -157,17 +156,14 @@ struct RecipeDetailView: View {
                 .padding(.bottom, DS.Spacing.xs)
 
                 // Centered "Use in Meal" action button above ingredients
-                Button {
+                AppButton(
+                    "Use in Meal",
+                    variant: .primary,
+                    style: .normal,
+                    size: .md
+                ) {
                     showMealEditor = true
-                } label: {
-                    Text("Use in Meal")
-                        .font(.subheadline.weight(.semibold))
-                        .padding(.horizontal, 24)
-                        .padding(.vertical, 10)
                 }
-                .buttonStyle(.borderedProminent)
-                .tint(DS.Color.accent)
-                .clipShape(Capsule())
                 .frame(maxWidth: .infinity, alignment: .center)
 
                 // 1. Ingredients

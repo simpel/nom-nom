@@ -8,21 +8,17 @@ struct DangerZoneSection: View {
     var body: some View {
         SectionCard {
             VStack(alignment: .leading, spacing: 8) {
-                Button(role: .destructive) {
+                AppButton(
+                    "Delete account",
+                    variant: .destructive,
+                    style: .ghost,
+                    size: .md,
+                    isFullWidth: true,
+                    isPending: auth.isWorking,
+                    disabled: auth.isWorking
+                ) {
                     confirmDelete = true
-                } label: {
-                    HStack {
-                        Label("Delete account", systemImage: "trash")
-                            .font(.subheadline.weight(.semibold))
-                            .foregroundStyle(.red)
-                        if auth.isWorking {
-                            Spacer()
-                            ProgressView().controlSize(.small)
-                        }
-                    }
                 }
-                .buttonStyle(.plain)
-                .disabled(auth.isWorking)
 
                 Text("Permanently removes your account, your meals and their photos. Other dinner party members keep their own food logs.")
                     .font(.caption2)

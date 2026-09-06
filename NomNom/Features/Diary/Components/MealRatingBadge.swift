@@ -44,43 +44,10 @@ struct MealRatingBadge: View {
 
     @ViewBuilder
     private func ratedBadge(ratings: [MealRating]) -> some View {
-        let reaction: Reaction = {
-            if ratings.count == 1, let single = ratings.first?.reaction {
-                return single
-            }
-            let score = store.averageScore(forMeal: meal.id) ?? 0.5
-            if score >= 0.8 { return .amazing }
-            if score >= 0.6 { return .good }
-            if score >= 0.4 { return .meh }
-            if score >= 0.2 { return .bad }
-            return .inedible
-        }()
-
-        let label: String = {
-            if ratings.count == 1 {
-                return ratings.first?.reaction.shortLabel ?? reaction.shortLabel
-            }
-            let score = store.averageScore(forMeal: meal.id) ?? 0.5
-            return "\(Int((score * 100).rounded()))%"
-        }()
-
-        HStack(spacing: 4) {
-            Image(systemName: reaction.systemImage)
-                .font(.system(size: 10, weight: .semibold))
-            Text(label)
-                .font(.system(size: 11, weight: .semibold))
+        if ratings.count == 1, let single = ratings.first?.reaction {
+            ScoreBadge(reaction: single, format: .verdictOnly, size: .sm)
+        } else if let score = store.averageScore(forMeal: meal.id) {
+            ScoreBadge(score: score, format: .scoreOnly, size: .sm)
         }
-        .foregroundStyle(reaction.text)
-        .padding(.horizontal, 9)
-        .padding(.vertical, 4)
-        .background {
-            Capsule()
-                .fill(reaction.fill.opacity(0.14))
-        }
-        .overlay {
-            Capsule()
-                .strokeBorder(reaction.fill.opacity(0.28), lineWidth: 1)
-        }
-        .accessibilityLabel("\(reaction.name): \(label)")
     }
 }

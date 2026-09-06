@@ -71,11 +71,11 @@ struct MealDetailView: View {
                 }
             }
         }
-        .confirmationDialog(
+        .alert(
             "Delete this meal?",
-            isPresented: $confirmDeleteMeal,
-            titleVisibility: .visible
+            isPresented: $confirmDeleteMeal
         ) {
+            Button("Cancel", role: .cancel) {}
             Button("Delete Meal", role: .destructive) {
                 if let meal {
                     Task {
@@ -84,7 +84,6 @@ struct MealDetailView: View {
                     }
                 }
             }
-            Button("Cancel", role: .cancel) {}
         } message: {
             Text("This will permanently remove this meal log.")
         }

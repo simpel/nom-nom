@@ -1,8 +1,12 @@
 # Xcode
 build/
 DerivedData/
+.derivedData/
+[Dd]erived[Dd]ata/
 *.xcuserstate
 xcuserdata/
+*.xcodeproj/xcuserdata/
+*.xcworkspace/xcuserdata/
 *.xcscmblueprint
 *.xccheckout
 .DS_Store

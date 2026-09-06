@@ -36,30 +36,17 @@ struct PartyRecentCompanionsSection: View {
                                     .padding(.vertical, 5)
                                     .background(DS.Color.accentSoft)
                                     .clipShape(Capsule())
-                            } else if invitingID == profile.id {
-                                ProgressView()
-                                    .controlSize(.small)
                             } else {
-                                Button {
+                                AppButton(
+                                    "Invite",
+                                    variant: .primary,
+                                    style: .normal,
+                                    size: .sm,
+                                    isPending: invitingID == profile.id,
+                                    disabled: invitingID != nil
+                                ) {
                                     invite(profile)
-                                } label: {
-                                    HStack(spacing: 4) {
-                                        Image(systemName: "plus")
-                                            .font(.caption.weight(.bold))
-                                        Text("Invite")
-                                            .font(.caption.weight(.semibold))
-                                    }
-                                    .padding(.horizontal, 10)
-                                    .padding(.vertical, 5)
-                                    .background(DS.Color.panel)
-                                    .foregroundStyle(DS.Color.textPrimary)
-                                    .clipShape(Capsule())
-                                    .overlay(
-                                        Capsule()
-                                            .strokeBorder(DS.Color.line.opacity(0.4), lineWidth: 0.5)
-                                    )
                                 }
-                                .buttonStyle(.plain)
                             }
                         }
                         .padding(.vertical, 2)

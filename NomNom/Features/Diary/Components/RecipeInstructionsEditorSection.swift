@@ -11,22 +11,19 @@ struct RecipeInstructionsEditorSection: View {
                     stepRow(at: index)
                 }
 
-                Button {
+                AppButton(
+                    "Add Step",
+                    systemImage: "plus",
+                    variant: .secondary,
+                    style: .ghost,
+                    size: .sm
+                ) {
                     withAnimation(.easeInOut(duration: 0.2)) {
                         $instructions.wrappedValue.append("")
                     }
-                } label: {
-                    HStack(spacing: 6) {
-                        Image(systemName: "plus")
-                            .font(.subheadline.weight(.semibold))
-                        Text("Add Step")
-                            .font(.subheadline.weight(.medium))
-                    }
-                    .foregroundStyle(DS.Color.accentText)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(.top, instructions.isEmpty ? 2 : 4)
                 }
-                .buttonStyle(.plain)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.top, instructions.isEmpty ? 2 : 4)
             }
         }
     }
@@ -47,17 +44,17 @@ struct RecipeInstructionsEditorSection: View {
                 font: .subheadline
             )
 
-            Button {
+            AppButton(
+                systemImage: "minus.circle",
+                variant: .destructive,
+                style: .ghost,
+                size: .sm
+            ) {
                 withAnimation(.easeInOut(duration: 0.2)) {
                     removeStep(at: index)
                 }
-            } label: {
-                Image(systemName: "minus.circle")
-                    .font(.body)
-                    .foregroundStyle(DS.Color.textTertiary)
-                    .padding(.vertical, 6)
             }
-            .buttonStyle(.plain)
+            .accessibilityLabel("Remove step")
         }
     }
 

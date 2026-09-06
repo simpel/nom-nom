@@ -110,7 +110,7 @@ struct PartyCard: View {
                     .lineLimit(1)
 
                 if let stats = scoreStats {
-                    PartyScoreBadge(stats: stats)
+                    ScoreBadge(stats: stats, format: .both, size: .sm)
                 }
             }
 
@@ -133,7 +133,9 @@ struct PartyCard: View {
                     mealItemCard(meal: meal)
                 }
             }
+            .padding(.horizontal, DS.Spacing.md)
         }
+        .padding(.horizontal, -DS.Spacing.md)
     }
 
     private func mealItemCard(meal: Meal) -> some View {

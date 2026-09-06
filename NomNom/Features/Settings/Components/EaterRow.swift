@@ -24,7 +24,7 @@ struct EaterRow: View {
                 Text(eater.emoji).font(.title2)
             }
 
-            TextField("Name", text: $name)
+            Input("Name", text: $name, size: .sm, style: .plain)
                 .onSubmit { commit { $0.name = name } }
         }
         .onChange(of: eater.name) { _, updated in

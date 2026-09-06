@@ -10,9 +10,7 @@ struct SignInView: View {
 
     @State private var email = ""
     @State private var code = ""
-    @FocusState private var focus: Field?
-
-    private enum Field { case email, code }
+    @FocusState private var emailFocused: Bool
 
     var body: some View {
         NavigationStack {
@@ -25,13 +23,6 @@ struct SignInView: View {
                         emailStep
                     case .code(let address):
                         codeStep(sentTo: address)
-                    }
-
-                    if let message = auth.errorMessage {
-                        Label(message, systemImage: "exclamationmark.triangle.fill")
-                            .font(.footnote)
-                            .foregroundStyle(.orange)
-                            .frame(maxWidth: .infinity, alignment: .leading)
                     }
 
                     #if DEBUG
@@ -72,37 +63,46 @@ struct SignInView: View {
 
     private var emailStep: some View {
         VStack(spacing: 14) {
-            TextField("you@example.com", text: $email)
-                .padding(14)
-                .background(DS.Color.sunken)
-                .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
-                .overlay {
-                    RoundedRectangle(cornerRadius: 12, style: .continuous)
-                        .strokeBorder(DS.Color.line.opacity(0.35), lineWidth: 0.5)
+            Input(
+                "you@example.com",
+                text: $email,
+                size: .xl,
+                shape: .capsule,
+                isError: auth.errorMessage != nil,
+                isFocused: $emailFocused
+            )
+            .textContentType(.emailAddress)
+            .keyboardType(.emailAddress)
+            .textInputAutocapitalization(.never)
+            .autocorrectionDisabled()
+            .submitLabel(.go)
+            .onSubmit(send)
+            .onChange(of: email) { _, _ in
+                if auth.errorMessage != nil {
+                    auth.errorMessage = nil
                 }
-                .textContentType(.emailAddress)
-                .keyboardType(.emailAddress)
-                .textInputAutocapitalization(.never)
-                .autocorrectionDisabled()
-                .focused($focus, equals: .email)
-                .submitLabel(.go)
-                .onSubmit(send)
-
-            Button(action: send) {
-                Text("Email me a code")
-                    .frame(maxWidth: .infinity)
-                    .pendingState(auth.isWorking)
             }
-            .buttonStyle(.borderedProminent)
-            .controlSize(.large)
-            .disabled(auth.isWorking || email.trimmingCharacters(in: .whitespaces).isEmpty)
 
-            Text("No password. We'll send a six-digit code — if you've never signed in before, this creates your account.")
-                .font(.caption)
-                .foregroundStyle(DS.Color.textTertiary)
-                .multilineTextAlignment(.center)
+            if let message = auth.errorMessage {
+                Text(message)
+                    .font(.subheadline)
+                    .foregroundStyle(DS.Color.textSecondary)
+                    .multilineTextAlignment(.center)
+            }
+
+            AppButton(
+                "Email me a code",
+                variant: .primary,
+                style: .normal,
+                size: .xl,
+                isFullWidth: true,
+                isPending: auth.isWorking,
+                disabled: auth.isWorking || email.trimmingCharacters(in: .whitespaces).isEmpty,
+                action: send
+            )
         }
-        .onAppear { focus = .email }
+        .animation(.easeInOut(duration: 0.2), value: auth.errorMessage)
+        .onAppear { emailFocused = true }
     }
 
     // MARK: - Step two
@@ -113,53 +113,68 @@ struct SignInView: View {
                 .font(.subheadline)
                 .multilineTextAlignment(.center)
 
-            TextField("000000", text: $code)
-                .padding(14)
-                .background(DS.Color.sunken)
-                .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
-                .overlay {
-                    RoundedRectangle(cornerRadius: 12, style: .continuous)
-                        .strokeBorder(DS.Color.line.opacity(0.35), lineWidth: 0.5)
+            OTPCodeField(
+                code: $code,
+                isError: auth.errorMessage != nil,
+                onComplete: { completeCode in
+                    verify(code: completeCode)
+                },
+                onEdit: {
+                    if auth.errorMessage != nil {
+                        auth.errorMessage = nil
+                    }
                 }
-                .font(.title2.monospacedDigit())
-                .multilineTextAlignment(.center)
-                .keyboardType(.numberPad)
-                .textContentType(.oneTimeCode)
-                .focused($focus, equals: .code)
-                .onChange(of: code) { _, newValue in
-                    // Keep it to six digits, then submit on its own — the keypad has
-                    // no return key to submit with.
-                    let digits = newValue.filter(\.isNumber)
-                    if digits != newValue { code = digits }
-                    if digits.count == 6 { verify() }
-                }
+            )
+            .padding(.vertical, 4)
 
-            Button(action: verify) {
-                Text("Sign in")
-                    .frame(maxWidth: .infinity)
-                    .pendingState(auth.isWorking)
+            if auth.errorMessage != nil {
+                HStack(spacing: 6) {
+                    Text("The code didn't work.")
+                        .foregroundStyle(DS.Color.textSecondary)
+
+                    AppButton("Send new code", variant: .neutral, style: .ghost, size: .sm) {
+                        code = ""
+                        auth.errorMessage = nil
+                        Task { await auth.sendCode(to: address) }
+                    }
+                }
+                .font(.subheadline)
+                .transition(.opacity)
             }
-            .buttonStyle(.borderedProminent)
-            .controlSize(.large)
-            .disabled(auth.isWorking || code.count < 6)
 
-            Button("Use a different address") {
+            AppButton(
+                "Sign in",
+                variant: .primary,
+                style: .normal,
+                size: .xl,
+                isFullWidth: true,
+                isPending: auth.isWorking,
+                disabled: auth.isWorking || code.count < 6,
+                action: { verify() }
+            )
+
+            AppButton(
+                "Use a different address",
+                variant: .neutral,
+                style: .ghost,
+                size: .xl,
+                isFullWidth: true,
+                disabled: auth.isWorking
+            ) {
                 code = ""
                 auth.startOver()
-                focus = .email
             }
-            .font(.footnote)
 
             #if DEBUG
             if ReviewerAccount.isReviewerEmail(address) {
-                Button("Fill reviewer code (\(ReviewerAccount.code))") {
+                AppButton("Fill reviewer code (\(ReviewerAccount.code))", variant: .neutral, style: .outlined, size: .sm) {
                     code = ReviewerAccount.code
+                    verify(code: ReviewerAccount.code)
                 }
-                .font(.caption)
             }
             #endif
         }
-        .onAppear { focus = .code }
+        .animation(.easeInOut(duration: 0.2), value: auth.errorMessage)
     }
 
     // MARK: - Actions
@@ -168,8 +183,11 @@ struct SignInView: View {
         Task { await auth.sendCode(to: email) }
     }
 
-    private func verify() {
-        Task { await auth.verify(code: code) }
+    private func verify(code overrideCode: String? = nil) {
+        guard !auth.isWorking else { return }
+        let targetCode = (overrideCode ?? code).trimmingCharacters(in: .whitespacesAndNewlines)
+        guard targetCode.count >= 6 else { return }
+        Task { await auth.verify(code: targetCode) }
     }
 
     #if DEBUG

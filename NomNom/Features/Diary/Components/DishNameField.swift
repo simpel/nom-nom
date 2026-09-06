@@ -50,28 +50,20 @@ struct DishNameField: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack(spacing: 6) {
-                ZStack(alignment: .leading) {
-                    // Ghost completion sits behind the real field.
-                    if let ghost = ghostCompletion {
-                        HStack(spacing: 0) {
-                            Text(text).foregroundStyle(.clear)
-                            Text(ghost).foregroundStyle(.tertiary)
-                        }
-                        .lineLimit(1)
-                        .allowsHitTesting(false)
+                Input(
+                    "What did you cook?",
+                    text: $text,
+                    ghostText: ghostCompletion,
+                    isFocused: $focused
+                )
+                .textInputAutocapitalization(.sentences)
+                .autocorrectionDisabled()
+                .submitLabel(.done)
+                .onChange(of: text) { _, newValue in
+                    // Typing something that no longer matches the linked dish unlinks it.
+                    if let linkedDish, linkedDish.normalizedName != newValue.normalizedForMatching {
+                        linkedDishID = nil
                     }
-
-                    TextField("What did you cook?", text: $text)
-                        .focused($focused)
-                        .textInputAutocapitalization(.sentences)
-                        .autocorrectionDisabled()
-                        .submitLabel(.done)
-                        .onChange(of: text) { _, newValue in
-                            // Typing something that no longer matches the linked dish unlinks it.
-                            if let linkedDish, linkedDish.normalizedName != newValue.normalizedForMatching {
-                                linkedDishID = nil
-                            }
-                        }
                 }
 
                 if ghostCompletion != nil {

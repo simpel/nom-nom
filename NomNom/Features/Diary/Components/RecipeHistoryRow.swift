@@ -42,12 +42,7 @@ struct RecipeHistoryRow: View {
 
             if let score = store.averageScore(forMeal: meal.id),
                let reaction = store.averageReaction(forMeal: meal.id) {
-                Text("\(Int((score * 100).rounded()))%")
-                    .font(.caption2.weight(.bold))
-                    .foregroundStyle(reaction.text)
-                    .padding(.horizontal, 7)
-                    .padding(.vertical, 3)
-                    .background(Capsule().fill(reaction.fill.opacity(0.16)))
+                ScoreBadge(score: score, reaction: reaction, format: .scoreOnly, size: .sm)
             }
 
             Image(systemName: "chevron.right")

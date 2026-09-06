@@ -37,26 +37,33 @@ struct HouseholdMembersSection: View {
         SectionCard("Add Household Member") {
             VStack(alignment: .leading, spacing: 10) {
                 HStack(spacing: 8) {
-                    TextField("member@example.com", text: $email)
-                        .textContentType(.emailAddress)
-                        .keyboardType(.emailAddress)
-                        .textInputAutocapitalization(.never)
-                        .autocorrectionDisabled()
-                        .focused($emailFocused)
-                        .submitLabel(.send)
-                        .onSubmit {
-                            if isEmailValid {
-                                sendInvite()
-                            }
+                    Input(
+                        "member@example.com",
+                        text: $email,
+                        size: .sm,
+                        isError: showInvalidFormatError,
+                        isFocused: $emailFocused
+                    )
+                    .textContentType(.emailAddress)
+                    .keyboardType(.emailAddress)
+                    .textInputAutocapitalization(.never)
+                    .autocorrectionDisabled()
+                    .submitLabel(.send)
+                    .onSubmit {
+                        if isEmailValid {
+                            sendInvite()
                         }
-
-                    Button(action: sendInvite) {
-                        Text("Send")
-                            .pendingState(isSending)
                     }
-                    .buttonStyle(.borderedProminent)
-                    .controlSize(.small)
-                    .disabled(!isEmailValid || isSending)
+
+                    AppButton(
+                        "Send",
+                        variant: .primary,
+                        style: .normal,
+                        size: .sm,
+                        isPending: isSending,
+                        disabled: !isEmailValid || isSending,
+                        action: sendInvite
+                    )
                 }
 
                 if showInvalidFormatError {

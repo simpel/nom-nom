@@ -12,10 +12,9 @@ struct MyRecipesSection: View {
             } description: {
                 Text("Recipes you create will appear here.")
             } actions: {
-                Button("Create Recipe") {
+                AppButton("Create Recipe", variant: .primary, style: .normal, size: .md) {
                     onCreateRecipe?()
                 }
-                .buttonStyle(.borderedProminent)
             }
             .padding(.top, 40)
         } else {

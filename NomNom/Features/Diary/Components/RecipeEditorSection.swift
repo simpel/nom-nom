@@ -62,27 +62,39 @@ struct RecipeEditorSection: View {
             if totalPhotos < 5 {
                 HStack(spacing: 10) {
                     if CameraPicker.isAvailable {
-                        Button {
+                        AppButton(
+                            totalPhotos == 0 ? "Add Photo" : "Camera",
+                            systemImage: "camera",
+                            variant: .neutral,
+                            style: .outlined,
+                            size: .sm,
+                            isFullWidth: true
+                        ) {
                             showCamera = true
-                        } label: {
-                            Label("Camera", systemImage: "camera")
-                                .font(.subheadline.weight(.medium))
-                                .frame(maxWidth: .infinity)
                         }
-                        .buttonStyle(.bordered)
-                        .tint(DS.Color.textSecondary)
                     }
 
                     PhotosPicker(selection: $selectedPickerItems,
                                  maxSelectionCount: 5 - totalPhotos,
                                  matching: .images,
                                  photoLibrary: .shared()) {
-                        Label(totalPhotos == 0 ? "Add Photos" : "Add More", systemImage: "photo.on.rectangle")
-                            .font(.subheadline.weight(.medium))
-                            .frame(maxWidth: .infinity)
+                        HStack(spacing: 8) {
+                            Image(systemName: "photo.on.rectangle")
+                                .font(.subheadline.weight(.semibold))
+                            Text("Library")
+                                .font(.subheadline)
+                                .fontWeight(.semibold)
+                        }
+                        .frame(maxWidth: .infinity)
+                        .frame(height: 34)
+                        .padding(.horizontal, 12)
+                        .foregroundStyle(DS.Color.textPrimary)
+                        .background(Color.clear)
+                        .clipShape(Capsule())
+                        .overlay {
+                            Capsule().strokeBorder(DS.Color.lineStrong, lineWidth: 1.5)
+                        }
                     }
-                    .buttonStyle(.bordered)
-                    .tint(DS.Color.textSecondary)
 
                     if isLoadingPhotos {
                         ProgressView()

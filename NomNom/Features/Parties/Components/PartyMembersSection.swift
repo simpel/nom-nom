@@ -92,23 +92,7 @@ struct PartyMembersSection: View {
             Spacer()
 
             if let stats {
-                HStack(spacing: 6) {
-                    let percent = Int((stats.score * 100).rounded())
-                    Text("\(percent)%")
-                        .font(Font.newsreader(.subheadline, weight: .bold))
-                        .monospacedDigit()
-                        .foregroundStyle(stats.reaction.text)
-
-                    Text(stats.reaction.shortLabel)
-                        .font(.caption2.weight(.semibold))
-                        .foregroundStyle(stats.reaction.text)
-                        .padding(.horizontal, 7)
-                        .padding(.vertical, 2)
-                        .background(Capsule().fill(stats.reaction.fill.opacity(0.14)))
-                        .overlay(
-                            Capsule().strokeBorder(stats.reaction.fill.opacity(0.28), lineWidth: 0.5)
-                        )
-                }
+                ScoreBadge(stats: stats, format: .both, size: .sm)
             }
 
             Image(systemName: "chevron.right")

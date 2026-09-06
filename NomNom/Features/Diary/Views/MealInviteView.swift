@@ -20,22 +20,28 @@ struct MealInviteView: View {
                 SectionCard("Invite by email") {
                     VStack(alignment: .leading, spacing: 10) {
                         HStack(spacing: 10) {
-                            TextField("their@email.com", text: $email)
-                                .textContentType(.emailAddress)
-                                .keyboardType(.emailAddress)
-                                .textInputAutocapitalization(.never)
-                                .autocorrectionDisabled()
-                                .focused($focused)
-                                .submitLabel(.send)
-                                .onSubmit(send)
+                            Input(
+                                "their@email.com",
+                                text: $email,
+                                size: .sm,
+                                isFocused: $focused
+                            )
+                            .textContentType(.emailAddress)
+                            .keyboardType(.emailAddress)
+                            .textInputAutocapitalization(.never)
+                            .autocorrectionDisabled()
+                            .submitLabel(.send)
+                            .onSubmit(send)
 
-                            Button(action: send) {
-                                Text("Invite")
-                                    .pendingState(isSending)
-                            }
-                            .buttonStyle(.borderedProminent)
-                            .controlSize(.small)
-                            .disabled(isSending || email.trimmingCharacters(in: .whitespaces).isEmpty)
+                            AppButton(
+                                "Invite",
+                                variant: .primary,
+                                style: .normal,
+                                size: .sm,
+                                isPending: isSending,
+                                disabled: isSending || email.trimmingCharacters(in: .whitespaces).isEmpty,
+                                action: send
+                            )
                         }
 
                         Text("If they already have an account this lands on their Meals page straight away. If not, the invitation waits and they get it the first time they sign in with that address.")

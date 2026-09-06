@@ -121,11 +121,16 @@ struct SuggestionFiltersView: View {
                     }
 
                     SectionCard {
-                        Button("Reset to defaults") {
+                        AppButton(
+                            "Reset to defaults",
+                            variant: .neutral,
+                            style: .ghost,
+                            size: .md,
+                            isFullWidth: true,
+                            disabled: filters.isDefault
+                        ) {
                             filters = SuggestionFilters(mode: filters.mode)
                         }
-                        .disabled(filters.isDefault)
-                        .frame(maxWidth: .infinity)
                     }
                 }
                 .padding(.horizontal, DS.Spacing.screenHorizontal)

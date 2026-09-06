@@ -58,7 +58,7 @@ struct NotificationPreferencesSection: View {
                     .pickerStyle(.segmented)
                 }
 
-                Divider()
+
 
                 VStack(alignment: .leading, spacing: 8) {
                     Text("Meal Invitations")
@@ -98,12 +98,15 @@ struct NotificationPreferencesSection: View {
                     .foregroundStyle(DS.Color.textPrimary)
             }
 
-            Button("Open iOS Settings") {
+            AppButton(
+                "Open iOS Settings",
+                variant: .neutral,
+                style: .outlined,
+                size: .sm
+            ) {
                 notifications.openSystemSettings()
             }
-            .font(.caption.weight(.medium))
-            .buttonStyle(.borderless)
-            .tint(.orange)
+            .padding(.top, 2)
         }
     }
 

@@ -38,14 +38,14 @@ struct MealsEmptyStateView: View {
                             .padding(.horizontal, 28)
                     }
 
-                    Button(action: onLogMeal) {
-                        Text("Log a meal")
-                            .font(.headline.weight(.semibold))
-                            .frame(maxWidth: .infinity)
-                    }
-                    .buttonStyle(.borderedProminent)
-                    .controlSize(.large)
-                    .tint(DS.Color.accent)
+                    AppButton(
+                        "Log a meal",
+                        variant: .primary,
+                        style: .normal,
+                        size: .xl,
+                        isFullWidth: true,
+                        action: onLogMeal
+                    )
                     .frame(maxWidth: 320)
                     .padding(.horizontal, 24)
                     .padding(.top, 4)

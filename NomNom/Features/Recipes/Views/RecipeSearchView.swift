@@ -89,10 +89,9 @@ struct RecipeSearchView: View {
             } description: {
                 Text("Try searching with a different term, ingredient, or cuisine.")
             } actions: {
-                Button("Clear Search") {
+                AppButton("Clear Search", variant: .neutral, style: .outlined, size: .md) {
                     searchText = ""
                 }
-                .buttonStyle(.bordered)
             }
         } else if displayedSearchResults.isEmpty {
             ContentUnavailableView {
@@ -100,10 +99,9 @@ struct RecipeSearchView: View {
             } description: {
                 Text("No recipes match your current sort and filter criteria.")
             } actions: {
-                Button("Reset Filters") {
+                AppButton("Reset Filters", variant: .neutral, style: .outlined, size: .md) {
                     filterCriteria = RecipeFilterCriteria()
                 }
-                .buttonStyle(.bordered)
             }
         } else {
             ScrollView {

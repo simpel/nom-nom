@@ -89,20 +89,15 @@ struct PendingRatingCard: View {
                     .disabled(isSaving)
                 }
 
-                Button {
+                AppButton(
+                    systemImage: "xmark",
+                    variant: .neutral,
+                    style: .outlined,
+                    size: .sm,
+                    disabled: isSaving
+                ) {
                     decline()
-                } label: {
-                    Image(systemName: "xmark")
-                        .font(.caption.weight(.semibold))
-                        .foregroundStyle(DS.Color.textTertiary)
-                        .frame(width: 36, height: 36)
-                        .overlay {
-                            RoundedRectangle(cornerRadius: AppRadius.button, style: .continuous)
-                                .strokeBorder(DS.Color.line, lineWidth: 0.5)
-                        }
                 }
-                .buttonStyle(.plain)
-                .disabled(isSaving)
                 .accessibilityLabel("Decline")
             }
             .opacity(isSaving ? 0.4 : 1)

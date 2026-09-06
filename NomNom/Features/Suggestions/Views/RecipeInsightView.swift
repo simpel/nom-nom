@@ -67,18 +67,16 @@ struct RecipeInsightView: View {
                             }
                         }
 
-                        Button {
+                        AppButton(
+                            "Cook this tonight",
+                            systemImage: "flame.fill",
+                            variant: .primary,
+                            style: .normal,
+                            size: .xl,
+                            isFullWidth: true
+                        ) {
                             showEditor = true
-                        } label: {
-                            HStack {
-                                Spacer()
-                                Label("Cook this tonight", systemImage: "flame.fill")
-                                    .font(.headline)
-                                Spacer()
-                            }
-                            .padding(.vertical, 4)
                         }
-                        .buttonStyle(.borderedProminent)
                     }
                 }
 
@@ -254,7 +252,7 @@ struct RecipeInsightView: View {
     private func housekeepingSection(for recipe: Recipe) -> some View {
         SectionCard("Housekeeping") {
             VStack(alignment: .leading, spacing: 10) {
-                Button("Rename recipe") {
+                AppButton("Rename recipe", variant: .neutral, style: .outlined, size: .sm) {
                     newName = recipe.name
                     renaming = true
                 }

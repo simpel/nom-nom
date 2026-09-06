@@ -30,10 +30,9 @@ struct CategoryRecipesView: View {
                 } description: {
                     Text("Add a new recipe tagged with \(cuisine.displayName) to see it here.")
                 } actions: {
-                    Button("Create Recipe") {
+                    AppButton("Create Recipe", variant: .primary, style: .normal, size: .md) {
                         showingCreateSheet = true
                     }
-                    .buttonStyle(.borderedProminent)
                 }
             } else if displayedRecipes.isEmpty {
                 ContentUnavailableView {
@@ -41,10 +40,9 @@ struct CategoryRecipesView: View {
                 } description: {
                     Text("Try loosening your effort or rating filters.")
                 } actions: {
-                    Button("Reset Filters") {
+                    AppButton("Reset Filters", variant: .neutral, style: .outlined, size: .md) {
                         filterCriteria = RecipeFilterCriteria()
                     }
-                    .buttonStyle(.bordered)
                 }
             } else {
                 ScrollView {
@@ -61,11 +59,8 @@ struct CategoryRecipesView: View {
         .screenTitle(cuisine.displayName)
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
-                Button {
+                AppButton(systemImage: "plus", variant: .primary, style: .ghost, size: .sm) {
                     showingCreateSheet = true
-                } label: {
-                    Image(systemName: "plus")
-                        .fontWeight(.semibold)
                 }
                 .accessibilityLabel("Create Recipe")
             }
@@ -89,19 +84,13 @@ struct CategoryRecipesView: View {
 
             Spacer()
 
-            Button {
+            AppButton(
+                filterCriteria.isDefault ? "Sort & Filter" : "Filtered",
+                variant: filterCriteria.isDefault ? .neutral : .primary,
+                style: .ghost,
+                size: .sm
+            ) {
                 showingFilterSheet = true
-            } label: {
-                HStack(spacing: 5) {
-                    Text(filterCriteria.isDefault ? "Sort & Filter" : "Filtered")
-                        .font(.caption.weight(.semibold))
-                    if !filterCriteria.isDefault {
-                        Circle()
-                            .fill(DS.Color.accent)
-                            .frame(width: 6, height: 6)
-                    }
-                }
-                .foregroundStyle(filterCriteria.isDefault ? DS.Color.textSecondary : DS.Color.accentText)
             }
         }
         .padding(.horizontal, 16)

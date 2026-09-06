@@ -25,14 +25,26 @@ struct ProfileSheetView: View {
                     )
 
                     SectionCard("Profile Details") {
-                        VStack(spacing: 8) {
-                            TextField("First name", text: $firstName)
-                                .textContentType(.givenName)
-                                .onSubmit { saveProfile() }
-                            Divider()
-                            TextField("Last name", text: $lastName)
-                                .textContentType(.familyName)
-                                .onSubmit { saveProfile() }
+                        VStack(alignment: .leading, spacing: 12) {
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text("First name")
+                                    .font(.caption.weight(.medium))
+                                    .foregroundStyle(DS.Color.textSecondary)
+                                Input("First name", text: $firstName)
+                                    .textContentType(.givenName)
+                                    .textInputAutocapitalization(.words)
+                                    .onSubmit { saveProfile() }
+                            }
+
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text("Last name")
+                                    .font(.caption.weight(.medium))
+                                    .foregroundStyle(DS.Color.textSecondary)
+                                Input("Last name", text: $lastName)
+                                    .textContentType(.familyName)
+                                    .textInputAutocapitalization(.words)
+                                    .onSubmit { saveProfile() }
+                            }
                         }
                     }
 

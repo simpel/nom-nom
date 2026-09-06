@@ -40,10 +40,9 @@ struct SuggestionsView: View {
                                 VStack(alignment: .leading, spacing: 8) {
                                     Text("No dish matches these filters.")
                                         .font(.subheadline)
-                                    Button("Reset filters") {
+                                    AppButton("Reset filters", variant: .neutral, style: .outlined, size: .sm) {
                                         filters = SuggestionFilters(mode: filters.mode)
                                     }
-                                    .font(.caption)
                                 }
                             }
                         } else {
@@ -66,11 +65,9 @@ struct SuggestionsView: View {
                                     Text("\(results.count) options")
                                         .monospacedDigit()
                                     Spacer()
-                                    Button(showMath ? "Hide scores" : "Show scores") {
+                                    AppButton(showMath ? "Hide scores" : "Show scores", variant: .neutral, style: .ghost, size: .sm) {
                                         showMath.toggle()
                                     }
-                                    .font(.caption)
-                                    .textCase(nil)
                                 }
                             } footer: {
                                 Text("Swipe a row right to log it as tonight's dinner.")

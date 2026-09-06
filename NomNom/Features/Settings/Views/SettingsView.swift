@@ -108,24 +108,21 @@ struct SettingsView: View {
     private var sampleDataSection: some View {
         SectionCard("Debug Tools") {
             VStack(alignment: .leading, spacing: 10) {
-                Button {
+                AppButton(
+                    "Fill with sample history",
+                    variant: .neutral,
+                    style: .outlined,
+                    size: .md,
+                    isFullWidth: true,
+                    isPending: isSeeding,
+                    disabled: isSeeding
+                ) {
                     isSeeding = true
                     Task {
                         await SampleData.populate(store)
                         isSeeding = false
                     }
-                } label: {
-                    HStack {
-                        Text("Fill with sample history")
-                            .font(.subheadline.weight(.medium))
-                        if isSeeding {
-                            Spacer()
-                            ProgressView().controlSize(.small)
-                        }
-                    }
                 }
-                .buttonStyle(.plain)
-                .disabled(isSeeding)
 
                 Text("Debug builds only — adds a few months of made-up meals so the suggestions have something to work with. Writes to whichever Supabase this build points at.")
                     .font(.caption2)

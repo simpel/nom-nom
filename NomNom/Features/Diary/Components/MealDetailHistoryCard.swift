@@ -66,12 +66,7 @@ struct MealDetailHistoryCard: View {
 
             if let score = store.averageScore(forMeal: past.id),
                let reaction = store.averageReaction(forMeal: past.id) {
-                Text("\(Int((score * 100).rounded()))%")
-                    .font(.caption2.weight(.bold))
-                .foregroundStyle(reaction.text)
-                .padding(.horizontal, 7)
-                .padding(.vertical, 3)
-                .background(Capsule().fill(reaction.fill.opacity(0.16)))
+                ScoreBadge(score: score, reaction: reaction, format: .scoreOnly, size: .sm)
             }
 
             Image(systemName: "chevron.right")

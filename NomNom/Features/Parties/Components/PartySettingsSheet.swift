@@ -31,7 +31,7 @@ struct PartySettingsSheet: View {
                     )
 
                     SectionCard("Party Name") {
-                        TextField("Party name (e.g. Taco Night)", text: $name)
+                        Input("Party name (e.g. Taco Night)", text: $name)
                             .autocorrectionDisabled()
                     }
 

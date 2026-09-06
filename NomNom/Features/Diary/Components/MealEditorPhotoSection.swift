@@ -27,30 +27,48 @@ struct MealEditorPhotoSection: View {
 
                 HStack(spacing: 10) {
                     if CameraPicker.isAvailable {
-                        Button {
+                        AppButton(
+                            "Camera",
+                            systemImage: "camera.fill",
+                            variant: .neutral,
+                            style: .outlined,
+                            size: .md,
+                            isFullWidth: true
+                        ) {
                             showCamera = true
-                        } label: {
-                            Label("Camera", systemImage: "camera.fill")
-                                .frame(maxWidth: .infinity)
                         }
-                        .buttonStyle(.bordered)
                     }
 
                     PhotosPicker(selection: $pickerItem, matching: .images, photoLibrary: .shared()) {
-                        Label("Library", systemImage: "photo.on.rectangle")
-                            .frame(maxWidth: .infinity)
+                        HStack(spacing: 8) {
+                            Image(systemName: "photo.on.rectangle")
+                                .font(.callout.weight(.semibold))
+                            Text("Library")
+                                .font(.callout)
+                                .fontWeight(.semibold)
+                        }
+                        .frame(maxWidth: .infinity)
+                        .frame(height: 42)
+                        .padding(.horizontal, 16)
+                        .foregroundStyle(DS.Color.textPrimary)
+                        .background(Color.clear)
+                        .clipShape(Capsule())
+                        .overlay {
+                            Capsule().strokeBorder(DS.Color.lineStrong, lineWidth: 1.5)
+                        }
                     }
-                    .buttonStyle(.bordered)
 
                     if hasPhoto {
-                        Button(role: .destructive) {
+                        AppButton(
+                            systemImage: "trash",
+                            variant: .destructive,
+                            style: .outlined,
+                            size: .md
+                        ) {
                             pickedData = nil
                             pickerItem = nil
                             didRemovePhoto = true
-                        } label: {
-                            Image(systemName: "trash")
                         }
-                        .buttonStyle(.bordered)
                     }
                 }
             }

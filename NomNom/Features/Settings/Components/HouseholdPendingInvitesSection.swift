@@ -34,11 +34,9 @@ struct HouseholdPendingInvitesSection: View {
             Spacer()
 
             HStack(spacing: 8) {
-                Button("Resend") {
+                AppButton("Resend", variant: .secondary, style: .outlined, size: .sm) {
                     resend(invite)
                 }
-                .buttonStyle(.bordered)
-                .controlSize(.small)
 
                 Menu {
                     Button {

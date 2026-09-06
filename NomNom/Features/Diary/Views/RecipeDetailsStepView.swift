@@ -19,7 +19,7 @@ struct RecipeDetailsStepView: View {
                 RecipeEditorSection(draft: $recipeDraft)
 
                 SectionCard("Tags") {
-                    TextField("Tags, comma separated (e.g. pasta, quick, oven)", text: $tagsText)
+                    Input("Tags, comma separated (e.g. pasta, quick, oven)", text: $tagsText)
                         .textInputAutocapitalization(.never)
                         .autocorrectionDisabled()
                 }

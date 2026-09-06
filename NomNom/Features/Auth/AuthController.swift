@@ -114,6 +114,7 @@ final class AuthController {
     }
 
     func verify(code rawCode: String) async {
+        guard !isWorking else { return }
         guard case .code(let email) = step else { return }
         let code = rawCode.trimmingCharacters(in: .whitespacesAndNewlines)
         guard code.count >= 6 else {
@@ -131,7 +132,9 @@ final class AuthController {
                     errorMessage = "That code didn't work. Please check and try again."
                     return
                 }
-                try await supabase.auth.signIn(email: email, password: ReviewerAccount.password)
+                let session = try await supabase.auth.signIn(email: email, password: ReviewerAccount.password)
+                self.phase = .signedIn(userID: session.user.id)
+                self.step = .email
                 return
             }
 
@@ -139,9 +142,13 @@ final class AuthController {
             // confirmation to an address it has never seen and a magic link to one
             // it has, and verifying with the generic email type accepts either —
             // so the client doesn't have to know whether this is a new account.
-            try await supabase.auth.verifyOTP(email: email, token: code, type: .email)
-            // `authStateChanges` moves `phase` for us.
+            let authResponse = try await supabase.auth.verifyOTP(email: email, token: code, type: .email)
+            self.phase = .signedIn(userID: authResponse.user.id)
+            self.step = .email
         } catch {
+            #if DEBUG
+            print("❌ Auth verification error: \(error)")
+            #endif
             errorMessage = Self.describe(error)
         }
     }

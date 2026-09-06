@@ -30,7 +30,7 @@ struct MealRecipeStepView: View {
                 }
 
                 SectionCard("Tags") {
-                    TextField("Tags, comma separated (e.g. quick, oven, pasta)", text: $tagsText)
+                    Input("Tags, comma separated (e.g. quick, oven, pasta)", text: $tagsText)
                         .textInputAutocapitalization(.never)
                         .autocorrectionDisabled()
                 }

@@ -40,7 +40,7 @@ struct FoodCalendarView: View {
             .screenTitle("Calendar")
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
-                    Button("Today") {
+                    AppButton("Today", variant: .neutral, style: .ghost, size: .sm) {
                         withAnimation(.snappy) {
                             visibleMonth = calendar.startOfMonth(for: .now)
                             selectedDay = calendar.startOfDay(for: .now)
@@ -59,27 +59,20 @@ struct FoodCalendarView: View {
 
     private var monthHeader: some View {
         HStack {
-            Button {
-                shiftMonth(by: -1)
-            } label: {
-                Image(systemName: "chevron.left")
-                    .padding(8)
-            }
-
-            Spacer()
-
-            Text(visibleMonth, format: .dateTime.month(.wide).year())
-                .font(AppTypography.displayM)
+            Text(visibleMonth.formatted(.dateTime.year().month(.wide)))
+                .font(.title2.weight(.bold))
                 .foregroundStyle(DS.Color.textPrimary)
-                .contentTransition(.numericText())
 
             Spacer()
 
-            Button {
-                shiftMonth(by: 1)
-            } label: {
-                Image(systemName: "chevron.right")
-                    .padding(8)
+            HStack(spacing: 4) {
+                AppButton(systemImage: "chevron.left", variant: .neutral, style: .ghost, size: .sm) {
+                    shiftMonth(by: -1)
+                }
+
+                AppButton(systemImage: "chevron.right", variant: .neutral, style: .ghost, size: .sm) {
+                    shiftMonth(by: 1)
+                }
             }
         }
         .padding(.horizontal)
@@ -98,15 +91,17 @@ struct FoodCalendarView: View {
         .padding(.horizontal, 12)
     }
 
-    // MARK: - Selected day
+    // MARK: - Day detail
 
     private var daySection: some View {
-        SectionCard(
-            title: selectedDay.formatted(.dateTime.weekday(.wide).day().month(.wide))
-        ) {
+        VStack(alignment: .leading, spacing: 12) {
+            Text(selectedDay.formatted(.dateTime.weekday(.wide).month().day()))
+                .font(.headline)
+                .foregroundStyle(DS.Color.textPrimary)
+
             VStack(spacing: 8) {
                 if selectedDayMeals.isEmpty {
-                    Text("Nothing logged for this day.")
+                    Text("No meals recorded for this day.")
                         .font(.subheadline)
                         .foregroundStyle(DS.Color.textTertiary)
                         .frame(maxWidth: .infinity, alignment: .leading)
@@ -123,19 +118,16 @@ struct FoodCalendarView: View {
                     }
                 }
 
-                Button {
+                AppButton(
+                    "Add meal",
+                    systemImage: "plus",
+                    variant: .primary,
+                    style: .outlined,
+                    size: .md,
+                    isFullWidth: true
+                ) {
                     addingForDay = selectedDay
-                } label: {
-                    HStack {
-                        Image(systemName: "plus")
-                        Text("Add meal")
-                    }
-                    .font(.subheadline.weight(.semibold))
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 6)
                 }
-                .buttonStyle(.bordered)
-                .tint(DS.Color.accent)
                 .padding(.top, 4)
             }
         }

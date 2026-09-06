@@ -85,7 +85,13 @@ struct RecipeFilterSheet: View {
 
                 if !draft.isDefault {
                     Section {
-                        Button("Reset to Defaults", role: .destructive) {
+                        AppButton(
+                            "Reset to Defaults",
+                            variant: .neutral,
+                            style: .ghost,
+                            size: .md,
+                            isFullWidth: true
+                        ) {
                             draft = RecipeFilterCriteria()
                         }
                     }

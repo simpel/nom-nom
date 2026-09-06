@@ -56,12 +56,18 @@ struct AssetPhotosPickerSection: View {
 
     // MARK: - Empty State Hero Deck
 
+    private var deckTitle: String {
+        if title.hasPrefix("Add ") {
+            return title
+        }
+        return "Add \(title)"
+    }
+
     private var emptyDeckView: some View {
         VStack(spacing: DS.Spacing.md) {
             EmptyPhotoDeckHeroView(
                 selectedPickerItems: $selectedPickerItems,
-                title: maxCount == 1 ? "Add Cover Photo" : "Add Photos",
-                subtitle: "Tap to choose",
+                title: deckTitle,
                 maxSelectionCount: maxCount,
                 onDeckTap: { showCamera = true }
             )
@@ -69,9 +75,7 @@ struct AssetPhotosPickerSection: View {
             .frame(maxWidth: .infinity)
             .padding(.vertical, 4)
 
-            if CameraPicker.isAvailable || isLoadingPhotos {
-                emptyActionButtons
-            }
+            emptyActionButtons
         }
         .frame(maxWidth: .infinity)
         .padding(.bottom, 6)
@@ -87,6 +91,14 @@ struct AssetPhotosPickerSection: View {
                 }
                 .buttonStyle(.plain)
             }
+
+            PhotosPicker(selection: $selectedPickerItems,
+                         maxSelectionCount: maxCount,
+                         matching: .images,
+                         photoLibrary: .shared()) {
+                SubtleCapsuleLabel(title: "Library", systemImage: "photo.on.rectangle")
+            }
+            .buttonStyle(.plain)
 
             if isLoadingPhotos {
                 ProgressView()
@@ -128,7 +140,7 @@ struct AssetPhotosPickerSection: View {
                              maxSelectionCount: 1,
                              matching: .images,
                              photoLibrary: .shared()) {
-                    SubtleCapsuleLabel(title: "Change", systemImage: "photo")
+                    SubtleCapsuleLabel(title: "Library", systemImage: "photo.on.rectangle")
                 }
                 .buttonStyle(.plain)
             } else if draft.count < maxCount {
@@ -136,7 +148,7 @@ struct AssetPhotosPickerSection: View {
                     Button {
                         showCamera = true
                     } label: {
-                        SubtleCapsuleLabel(title: "Camera", systemImage: "camera")
+                        SubtleCapsuleLabel(title: "Add photo", systemImage: "camera")
                     }
                     .buttonStyle(.plain)
                 }
@@ -145,7 +157,7 @@ struct AssetPhotosPickerSection: View {
                              maxSelectionCount: maxCount - draft.count,
                              matching: .images,
                              photoLibrary: .shared()) {
-                    SubtleCapsuleLabel(title: "Add more", systemImage: "plus")
+                    SubtleCapsuleLabel(title: "Library", systemImage: "photo.on.rectangle")
                 }
                 .buttonStyle(.plain)
             }

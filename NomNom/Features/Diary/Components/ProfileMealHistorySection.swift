@@ -53,15 +53,7 @@ struct ProfileMealHistorySection: View {
                             .font(.caption2)
                             .foregroundStyle(DS.Color.textTertiary)
 
-                        Text(rating.shortLabel)
-                            .font(.caption2.weight(.semibold))
-                            .foregroundStyle(rating.text)
-                            .padding(.horizontal, 6)
-                            .padding(.vertical, 2)
-                            .background(Capsule().fill(rating.fill.opacity(0.14)))
-                            .overlay(
-                                Capsule().strokeBorder(rating.fill.opacity(0.28), lineWidth: 0.5)
-                            )
+                        ScoreBadge(reaction: rating, format: .verdictOnly, size: .sm)
                     }
                 }
             }

@@ -16,11 +16,14 @@ struct SearchHistorySection: View {
 
                     Spacer()
 
-                    Button("Clear All") {
+                    AppButton(
+                        "Clear All",
+                        variant: .neutral,
+                        style: .ghost,
+                        size: .sm
+                    ) {
                         historyStore.clearAll()
                     }
-                    .font(.caption.weight(.medium))
-                    .foregroundStyle(DS.Color.textTertiary)
                 }
                 .padding(.horizontal, 16)
                 .padding(.top, 8)

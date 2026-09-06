@@ -18,31 +18,16 @@ struct PartyFollowButton: View {
 
     var body: some View {
         if !isMember && party.isPublic {
-            Button {
+            AppButton(
+                isFollowing ? "Following" : "Follow",
+                variant: isFollowing ? .neutral : .primary,
+                style: isFollowing ? .outlined : .normal,
+                size: .sm,
+                isPending: isProcessing,
+                disabled: isProcessing
+            ) {
                 handleTap()
-            } label: {
-                if isFollowing {
-                    Text("Following")
-                        .font(.caption.weight(.medium))
-                        .foregroundStyle(DS.Color.textSecondary)
-                        .pendingState(isProcessing, controlSize: .mini)
-                        .padding(.horizontal, 10)
-                        .padding(.vertical, 5)
-                        .background(Color(uiColor: .tertiarySystemFill))
-                        .clipShape(Capsule())
-                } else {
-                    Text("Follow")
-                        .font(.caption.weight(.semibold))
-                        .foregroundStyle(Color.accentColor)
-                        .pendingState(isProcessing, controlSize: .mini)
-                        .padding(.horizontal, 12)
-                        .padding(.vertical, 5)
-                        .background(Color.accentColor.opacity(0.12))
-                        .clipShape(Capsule())
-                }
             }
-            .buttonStyle(.plain)
-            .disabled(isProcessing)
             .accessibilityLabel(isFollowing ? "Unfollow \(party.name)" : "Follow \(party.name)")
         }
     }

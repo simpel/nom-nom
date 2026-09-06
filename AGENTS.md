@@ -166,7 +166,50 @@ To prevent duplication and ensure high consistency:
 
 ---
 
-## 8. Summary Checklist Before Creating or Modifying Code
+---
+
+## 8. Button System (`AppButton`) — Rules & Usage Matrix
+
+**ALL** action buttons in screens, sheets, cards, section headers, row accessories, and empty states **MUST** use the centralized `AppButton` component (`NomNom/Core/Components/AppButton.swift`). No exemptions for view-body buttons.
+
+### A. Dimensions & Options
+
+1. **`variant` (Intent & Hierarchy)**:
+   - **`.primary`**: The single primary call-to-action on a screen or modal. Brand accent background in `.normal` style, white text. (*Only one primary normal button per view*).
+   - **`.secondary`**: Supporting actions paired with a primary CTA, or branded actions (e.g. "Send", "Resend", "Follow"). Uses soft accent background (`DS.Color.accentSoft`) and accent text (`DS.Color.accentText`).
+   - **`.neutral`**: Alternative paths, utility actions, dismissive or non-accented secondary flows (e.g. "Use a different address", "Reset Filters", "Skip Step", "Clear Search"). Uses high-contrast text (`DS.Color.textSecondary` in ghost style, 8.3:1+ contrast) and neutral styling.
+   - **`.destructive`**: Irreversible or high-consequence actions (e.g. "Delete Meal", "Leave Party", "Sign out", "Delete account"). System red styling.
+
+2. **`style` (Visual Weight)**:
+   - **`.normal`**: Solid filled background. Highest visual weight for primary commitments.
+   - **`.outlined`**: Transparent background with a distinct 1.5pt border. Medium priority for card actions, secondary tools, or adjacent buttons.
+   - **`.ghost`**: 100% transparent background (`Color.clear`), no border. Lowest visual weight for alternatives, skips, and tertiary links.
+
+3. **`size` (Context & Touch Targets)**:
+   - **`.xl` (50pt)**: Full-width screen-bottom actions, auth flows, hero forms (matches 50pt input field height). `.headline.weight(.semibold)`.
+   - **`.md` (42pt)**: Standard screen section CTAs, empty-state callouts, dialog action buttons, card footers. `.callout.weight(.semibold)`.
+   - **`.sm` (34pt)**: Compact row actions (e.g. "Resend" in member row, "Edit" in section headers, follow/unfollow pill). `.subheadline.weight(.semibold)`.
+
+4. **Typography & Shape**:
+   - **Font weight**: Every button variant/style **MUST** maintain `Font.weight(.semibold)` for visual consistency.
+   - **Shape**: Always a clean `Capsule()` boundary.
+
+5. **Icon Support (`AppButtonIcon`)**:
+   - Accepts string literals (`icon: "plus"`), explicit SF symbols (`icon: .system("camera")`), named asset images (`icon: .asset("badge")`), or custom `Image`s (`icon: .image(...)`).
+   - Placement: `iconPosition: .leading` (default) or `.trailing` (e.g. `iconPosition: .trailing` for forward flow arrows).
+   - Icon-only buttons: omit `title` to get a circular button sized to `size.height` (34pt, 42pt, or 50pt).
+
+
+### B. Platform Exceptions (Native Constraints)
+
+Only these specific system-level APIs are exempt from `AppButton`:
+1. **Alerts & Dialogs (`alert`, `confirmationDialog`)**: Must use native `Button("Title", role: ...)` primitives required by SwiftUI.
+2. **System Menus & Swipes (`swipeActions`, `contextMenu`, `Menu`)**: Must use native `Button` primitives required by iOS system menus.
+3. **Sheet Navigation Toolbars**: Handled by `.sheetCommitToolbar` / `.sheetOverviewToolbar` per Section 5.
+
+---
+
+## 9. Summary Checklist Before Creating or Modifying Code
 
 - [ ] Will this change cause the file to exceed ~200–250 lines? If yes, extract a component first.
 - [ ] Is this new component or subview located in the correct `Components/` folder rather than inlined in a parent view?
@@ -176,7 +219,10 @@ To prevent duplication and ensure high consistency:
 - [ ] Do screens use `.screenTitle(...)` and `PageHeader` rather than ad-hoc navigation/header modifiers?
 - [ ] Do modal sheets place the close button (`Image(systemName: "xmark")`) on `.topBarLeading` alone?
 - [ ] Are primary actions (`+`, `checkmark` save, Next, Edit) placed on `.topBarTrailing` opposite to the close button?
+- [ ] Are all action buttons in screens, sheets, cards, and sections using `AppButton` rather than raw `Button`?
+- [ ] Are button variants (`primary`, `secondary`, `neutral`, `destructive`), styles (`normal`, `outlined`, `ghost`), and sizes (`sm`, `md`, `xl`) used according to Section 8?
 - [ ] Are emojis completely avoided across all UI and data representations?
 - [ ] Is iconography strictly minimal and purposeful rather than decorative?
+
 
 

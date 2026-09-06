@@ -50,23 +50,22 @@ struct PartyMembersSheet: View {
             .sheet(isPresented: $showingInviteSheet) {
                 PartyInviteView(party: party)
             }
-            .confirmationDialog(
+            .alert(
                 "Remove Member?",
                 isPresented: Binding(
                     get: { memberToRemove != nil },
                     set: { if !$0 { memberToRemove = nil } }
-                ),
-                titleVisibility: .visible
+                )
             ) {
+                Button("Cancel", role: .cancel) {
+                    memberToRemove = nil
+                }
                 if let member = memberToRemove {
                     Button("Remove \(member.shownName)", role: .destructive) {
                         Task {
                             await store.removeMember(user: member.id, from: party)
                         }
                     }
-                }
-                Button("Cancel", role: .cancel) {
-                    memberToRemove = nil
                 }
             } message: {
                 if let member = memberToRemove {
@@ -106,14 +105,14 @@ struct PartyMembersSheet: View {
                         Spacer()
 
                         if canRemove(member: member) {
-                            Button(role: .destructive) {
+                            AppButton(
+                                systemImage: "minus.circle",
+                                variant: .destructive,
+                                style: .ghost,
+                                size: .sm
+                            ) {
                                 memberToRemove = member
-                            } label: {
-                                Image(systemName: "minus.circle")
-                                    .font(.subheadline)
-                                    .foregroundStyle(.red)
                             }
-                            .buttonStyle(.plain)
                             .accessibilityLabel("Remove \(member.shownName)")
                         }
                     }
@@ -149,7 +148,7 @@ struct PartyMembersSheet: View {
                         Spacer()
 
                         HStack(spacing: 8) {
-                            Button("Resend") {
+                            AppButton("Resend", variant: .secondary, style: .outlined, size: .sm) {
                                 Task {
                                     let ok = await store.resendPartyInvite(invite)
                                     if ok {
@@ -157,17 +156,15 @@ struct PartyMembersSheet: View {
                                     }
                                 }
                             }
-                            .buttonStyle(.bordered)
-                            .controlSize(.small)
 
-                            Button(role: .destructive) {
+                            AppButton(
+                                systemImage: "trash",
+                                variant: .destructive,
+                                style: .ghost,
+                                size: .sm
+                            ) {
                                 Task { await store.revokePartyInvite(invite) }
-                            } label: {
-                                Image(systemName: "trash")
-                                    .font(.subheadline)
-                                    .foregroundStyle(.red)
                             }
-                            .buttonStyle(.plain)
                             .accessibilityLabel("Revoke invite")
                         }
                     }
@@ -182,26 +179,15 @@ struct PartyMembersSheet: View {
     }
 
     private var inviteButtonSection: some View {
-        Button {
+        AppButton(
+            "Invite New Member",
+            variant: .secondary,
+            style: .outlined,
+            size: .md,
+            isFullWidth: true
+        ) {
             showingInviteSheet = true
-        } label: {
-            HStack {
-                Image(systemName: "person.badge.plus")
-                    .fontWeight(.semibold)
-                Text("Invite New Member")
-                    .fontWeight(.semibold)
-            }
-            .frame(maxWidth: .infinity)
-            .padding(.vertical, 14)
-            .background(DS.Color.panel)
-            .foregroundStyle(DS.Color.accentText)
-            .clipShape(RoundedRectangle(cornerRadius: AppRadius.card, style: .continuous))
-            .overlay(
-                RoundedRectangle(cornerRadius: AppRadius.card, style: .continuous)
-                    .strokeBorder(DS.Color.line.opacity(0.35), lineWidth: 0.5)
-            )
         }
-        .buttonStyle(.plain)
     }
 
     // MARK: - Helpers

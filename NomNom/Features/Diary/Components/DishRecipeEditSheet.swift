@@ -18,7 +18,7 @@ struct DishRecipeEditSheet: View {
             ScrollView {
                 VStack(spacing: 16) {
                     SectionCard("Recipe Name") {
-                        TextField("Recipe name", text: $dishName)
+                        Input("Recipe name", text: $dishName)
                             .autocorrectionDisabled()
                     }
 
@@ -29,7 +29,7 @@ struct DishRecipeEditSheet: View {
                     }
 
                     SectionCard("Tags") {
-                        TextField("Tags, comma separated", text: $tagsText)
+                        Input("Tags, comma separated", text: $tagsText)
                             .textInputAutocapitalization(.never)
                             .autocorrectionDisabled()
                     }

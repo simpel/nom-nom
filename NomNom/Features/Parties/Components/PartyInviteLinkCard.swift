@@ -19,42 +19,31 @@ struct PartyInviteLinkCard: View {
                         subject: Text("Join \(party.name) on Nom Nom"),
                         message: Text(party.shareMessage)
                     ) {
-                        HStack(spacing: 6) {
+                        HStack(spacing: 8) {
                             Image(systemName: "square.and.arrow.up")
-                                .fontWeight(.semibold)
+                                .font(.callout.weight(.semibold))
                             Text("Share Link")
+                                .font(.callout)
                                 .fontWeight(.semibold)
                         }
-                        .font(.subheadline)
                         .frame(maxWidth: .infinity)
-                        .padding(.vertical, 10)
+                        .frame(height: 42)
+                        .padding(.horizontal, 16)
                         .background(DS.Color.accentSoft)
                         .foregroundStyle(DS.Color.accentText)
-                        .clipShape(RoundedRectangle(cornerRadius: AppRadius.button, style: .continuous))
+                        .clipShape(Capsule())
                     }
                     .buttonStyle(.plain)
 
-                    Button {
+                    AppButton(
+                        didCopy ? "Copied!" : "Copy",
+                        systemImage: didCopy ? "checkmark" : "doc.on.doc",
+                        variant: .neutral,
+                        style: .outlined,
+                        size: .md
+                    ) {
                         copyLink()
-                    } label: {
-                        HStack(spacing: 6) {
-                            Image(systemName: didCopy ? "checkmark" : "doc.on.doc")
-                                .fontWeight(.semibold)
-                            Text(didCopy ? "Copied!" : "Copy")
-                                .fontWeight(.semibold)
-                        }
-                        .font(.subheadline)
-                        .padding(.horizontal, 16)
-                        .padding(.vertical, 10)
-                        .background(DS.Color.panel)
-                        .foregroundStyle(didCopy ? DS.Color.Pine.pine600 : DS.Color.textPrimary)
-                        .clipShape(RoundedRectangle(cornerRadius: AppRadius.button, style: .continuous))
-                        .overlay(
-                            RoundedRectangle(cornerRadius: AppRadius.button, style: .continuous)
-                                .strokeBorder(DS.Color.line.opacity(0.4), lineWidth: 0.5)
-                        )
                     }
-                    .buttonStyle(.plain)
                 }
             }
         }

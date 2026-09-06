@@ -55,24 +55,28 @@ struct PartyInviteView: View {
         SectionCard("Invite by Email") {
             VStack(alignment: .leading, spacing: 10) {
                 HStack(spacing: 8) {
-                    TextField("friend@example.com", text: $email)
-                        .textContentType(.emailAddress)
-                        .keyboardType(.emailAddress)
-                        .textInputAutocapitalization(.never)
-                        .autocorrectionDisabled()
-                        .focused($focused)
-                        .submitLabel(.send)
-                        .onSubmit(sendEmailInvite)
+                    Input(
+                        "friend@example.com",
+                        text: $email,
+                        size: .sm,
+                        isFocused: $focused
+                    )
+                    .textContentType(.emailAddress)
+                    .keyboardType(.emailAddress)
+                    .textInputAutocapitalization(.never)
+                    .autocorrectionDisabled()
+                    .submitLabel(.send)
+                    .onSubmit(sendEmailInvite)
 
-                    Button {
-                        sendEmailInvite()
-                    } label: {
-                        Text("Send")
-                            .pendingState(isSending)
-                    }
-                    .disabled(!email.isValidEmail || isSending)
-                    .buttonStyle(.borderedProminent)
-                    .controlSize(.small)
+                    AppButton(
+                        "Send",
+                        variant: .primary,
+                        style: .normal,
+                        size: .sm,
+                        isPending: isSending,
+                        disabled: !email.isValidEmail || isSending,
+                        action: sendEmailInvite
+                    )
                 }
 
                 if let success = sentSuccessMessage {
@@ -115,7 +119,7 @@ struct PartyInviteView: View {
                         Spacer()
 
                         HStack(spacing: 8) {
-                            Button("Resend") {
+                            AppButton("Resend", variant: .secondary, style: .outlined, size: .sm) {
                                 Task {
                                     let ok = await store.resendPartyInvite(invite)
                                     if ok {
@@ -123,17 +127,15 @@ struct PartyInviteView: View {
                                     }
                                 }
                             }
-                            .buttonStyle(.bordered)
-                            .controlSize(.small)
 
-                            Button(role: .destructive) {
+                            AppButton(
+                                systemImage: "trash",
+                                variant: .destructive,
+                                style: .ghost,
+                                size: .sm
+                            ) {
                                 Task { await store.revokePartyInvite(invite) }
-                            } label: {
-                                Image(systemName: "trash")
-                                    .font(.subheadline)
-                                    .foregroundStyle(.red)
                             }
-                            .buttonStyle(.plain)
                             .accessibilityLabel("Revoke invite")
                         }
                     }

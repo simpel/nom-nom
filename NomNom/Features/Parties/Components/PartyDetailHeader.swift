@@ -91,7 +91,6 @@ struct PartyDetailHeader: View {
                 EmptyPhotoDeckHeroView(
                     selectedPickerItems: $selectedPickerItems,
                     title: "Add Cover Photo",
-                    subtitle: "Tap to choose",
                     maxSelectionCount: 1,
                     onDeckTap: { showCamera = true }
                 )
@@ -99,21 +98,43 @@ struct PartyDetailHeader: View {
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 4)
 
-                if CameraPicker.isAvailable || isUploadingPhoto {
-                    HStack(spacing: 10) {
-                        if CameraPicker.isAvailable {
-                            Button {
-                                showCamera = true
-                            } label: {
-                                SubtleCapsuleLabel(title: "Camera", systemImage: "camera")
-                            }
-                            .buttonStyle(.plain)
+                HStack(spacing: 10) {
+                    if CameraPicker.isAvailable {
+                        AppButton(
+                            "Camera",
+                            systemImage: "camera",
+                            variant: .neutral,
+                            style: .outlined,
+                            size: .sm
+                        ) {
+                            showCamera = true
                         }
+                    }
 
-                        if isUploadingPhoto {
-                            ProgressView()
-                                .controlSize(.small)
+                    PhotosPicker(selection: $selectedPickerItems,
+                                 maxSelectionCount: 1,
+                                 matching: .images,
+                                 photoLibrary: .shared()) {
+                        HStack(spacing: 8) {
+                            Image(systemName: "photo.on.rectangle")
+                                .font(.subheadline.weight(.semibold))
+                            Text("Library")
+                                .font(.subheadline)
+                                .fontWeight(.semibold)
                         }
+                        .frame(height: 34)
+                        .padding(.horizontal, 12)
+                        .foregroundStyle(DS.Color.textPrimary)
+                        .background(Color.clear)
+                        .clipShape(Capsule())
+                        .overlay {
+                            Capsule().strokeBorder(DS.Color.lineStrong, lineWidth: 1.5)
+                        }
+                    }
+
+                    if isUploadingPhoto {
+                        ProgressView()
+                            .controlSize(.small)
                     }
                 }
             }

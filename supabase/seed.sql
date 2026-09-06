@@ -74,7 +74,7 @@ insert into auth.users (
     'authenticated',
     'authenticated',
     'app@nomnom.casa',
-    '$2a$06$qO8OpK6eZDBkHYr27lnJt.UMmcBpydFNmBQ9qUe4BJGYZIpn5WklO',
+    '$2a$10$B/C2sWlVWr5GPQKP3BVN8ujZMddC7V7laP5jx5bgQEBgm./xkfq8W',
     now(),
     '{"provider": "email", "providers": ["email"]}'::jsonb,
     '{"first_name": "Test", "last_name": "Account", "full_name": "Test Account", "email_verified": true}'::jsonb,

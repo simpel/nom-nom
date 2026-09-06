@@ -159,7 +159,7 @@ struct PartySetupStepView: View {
 
                         if invite.isPending {
                             HStack(spacing: 8) {
-                                Button("Resend") {
+                                AppButton("Resend", variant: .secondary, style: .outlined, size: .sm) {
                                     Task {
                                         let success = await store.resendPartyInvite(invite)
                                         if success {
@@ -167,16 +167,16 @@ struct PartySetupStepView: View {
                                         }
                                     }
                                 }
-                                .buttonStyle(.bordered)
-                                .controlSize(.small)
 
-                                Button(role: .destructive) {
+                                AppButton(
+                                    systemImage: "trash",
+                                    variant: .destructive,
+                                    style: .ghost,
+                                    size: .sm
+                                ) {
                                     Task { await store.revokePartyInvite(invite) }
-                                } label: {
-                                    Image(systemName: "trash")
-                                        .foregroundStyle(.red)
                                 }
-                                .buttonStyle(.plain)
+                                .accessibilityLabel("Revoke invite")
                             }
                         }
                     }

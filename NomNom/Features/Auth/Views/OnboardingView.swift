@@ -1,25 +1,51 @@
 import SwiftUI
 
-/// Onboarding screen presented on first sign-in to collect first name, last name, optional profile photo,
-/// and optionally set up a first dinner party.
+/// Multi-step onboarding presented on first sign-in.
+/// Guides the user through:
+/// 0: Concept explanation (Dinner Parties, Recipes, Meals)
+/// 1: Profile setup (Name and optional photo)
+/// 2: Notification & Email permissions (with clear explanations)
+/// 3: First dinner party setup (or start solo)
 struct OnboardingView: View {
     @Environment(FoodStore.self) private var store
 
+    @State private var step = 0
     @State private var firstName = ""
     @State private var lastName = ""
     @State private var photoDraft = FoodStore.PhotosDraft()
+    @State private var enablePush = true
+    @State private var enableEmail = true
     @State private var partyName = ""
     @State private var isSaving = false
-    @State private var step = 0 // 0: Name/Profile, 1: First Party
+
+    private let totalSteps = 4
 
     var body: some View {
         NavigationStack {
             ScrollView {
-                VStack(spacing: DS.Spacing.section) {
-                    if step == 0 {
-                        profileStep
-                    } else {
-                        partyStep
+                VStack(spacing: DS.Spacing.sectionCompact) {
+                    OnboardingStepProgress(currentStep: step, totalSteps: totalSteps)
+
+                    switch step {
+                    case 0:
+                        OnboardingConceptsStep()
+                            .transition(.opacity)
+                    case 1:
+                        OnboardingProfileStep(
+                            firstName: $firstName,
+                            lastName: $lastName,
+                            photoDraft: $photoDraft
+                        )
+                        .transition(.opacity)
+                    case 2:
+                        OnboardingNotificationsStep(
+                            enablePush: $enablePush,
+                            enableEmail: $enableEmail
+                        )
+                        .transition(.opacity)
+                    default:
+                        OnboardingPartyStep(partyName: $partyName)
+                            .transition(.opacity)
                     }
 
                     bottomBar
@@ -30,99 +56,126 @@ struct OnboardingView: View {
             }
             .background(DS.Color.bg)
             .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                if step > 0 {
+                    ToolbarItem(placement: .topBarLeading) {
+                        Button {
+                            withAnimation(.easeInOut(duration: 0.25)) {
+                                step -= 1
+                            }
+                        } label: {
+                            HStack(spacing: 4) {
+                                Image(systemName: "chevron.backward")
+                                Text("Back")
+                            }
+                            .font(.subheadline)
+                        }
+                        .disabled(isSaving)
+                    }
+                }
+            }
         }
         .interactiveDismissDisabled()
-        .onAppear {
-            if let profile = store.myProfile {
-                firstName = profile.firstName
-                lastName = profile.lastName
-                if let photoPath = profile.photoPath, !photoPath.isEmpty {
-                    photoDraft = FoodStore.PhotosDraft(existingPaths: [photoPath])
-                }
-            }
-        }
-    }
-
-    // MARK: - Step 1: Profile
-
-    private var profileStep: some View {
-        VStack(spacing: DS.Spacing.section) {
-            PageHeader(title: "Welcome to Nom Nom")
-
-            AssetPhotosPickerSection(
-                draft: $photoDraft,
-                title: "Profile Photo",
-                bucket: SupabaseConfig.profileBucket,
-                maxCount: 1
-            )
-
-            SectionCard("Your Name") {
-                VStack(spacing: 8) {
-                    TextField("First name", text: $firstName)
-                        .textContentType(.givenName)
-                        .textInputAutocapitalization(.words)
-
-                    Divider()
-
-                    TextField("Last name", text: $lastName)
-                        .textContentType(.familyName)
-                        .textInputAutocapitalization(.words)
-                }
-            }
-        }
-    }
-
-    // MARK: - Step 2: Dinner Party
-
-    private var partyStep: some View {
-        VStack(spacing: DS.Spacing.section) {
-            PageHeader(title: "Dinner Party")
-
-            SectionCard("Party Name", caption: "Optional") {
-                TextField("Party name (e.g. Taco Night)", text: $partyName)
-                    .textInputAutocapitalization(.words)
-            }
-        }
+        .onAppear(perform: loadInitialState)
     }
 
     // MARK: - Bottom Actions
 
     private var bottomBar: some View {
         VStack(spacing: 12) {
-            if step == 0 {
-                Button {
-                    withAnimation { step = 1 }
-                } label: {
-                    Text("Continue")
-                        .frame(maxWidth: .infinity)
+            switch step {
+            case 0:
+                AppButton("Get Started", variant: .primary, style: .normal, size: .xl, isFullWidth: true) {
+                    withAnimation(.easeInOut(duration: 0.25)) { step = 1 }
                 }
-                .buttonStyle(.borderedProminent)
-                .controlSize(.large)
-                .disabled(firstName.trimmedName.isEmpty)
-            } else {
-                Button {
+
+            case 1:
+                AppButton(
+                    "Continue",
+                    variant: .primary,
+                    style: .normal,
+                    size: .xl,
+                    isFullWidth: true,
+                    disabled: firstName.trimmedName.isEmpty
+                ) {
+                    withAnimation(.easeInOut(duration: 0.25)) { step = 2 }
+                }
+
+            case 2:
+                AppButton(
+                    "Continue",
+                    variant: .primary,
+                    style: .normal,
+                    size: .xl,
+                    isFullWidth: true,
+                    isPending: isSaving,
+                    disabled: isSaving
+                ) {
+                    confirmNotificationsAndProceed()
+                }
+
+            default:
+                AppButton(
+                    partyName.trimmedName.isEmpty ? "Start Solo & Finish" : "Create Party & Finish",
+                    variant: .primary,
+                    style: .normal,
+                    size: .xl,
+                    isFullWidth: true,
+                    isPending: isSaving,
+                    disabled: isSaving
+                ) {
                     saveAndFinish()
-                } label: {
-                    Text(partyName.trimmedName.isEmpty ? "Start with Just Me" : "Create Party & Finish")
-                        .frame(maxWidth: .infinity)
-                        .pendingState(isSaving)
                 }
-                .buttonStyle(.borderedProminent)
-                .controlSize(.large)
-                .disabled(isSaving)
 
                 if !partyName.trimmedName.isEmpty {
-                    Button("Skip party creation") {
+                    AppButton(
+                        "Skip party creation",
+                        variant: .neutral,
+                        style: .ghost,
+                        size: .md,
+                        isFullWidth: true,
+                        disabled: isSaving
+                    ) {
                         partyName = ""
                         saveAndFinish()
                     }
-                    .font(.footnote)
-                    .foregroundStyle(DS.Color.textSecondary)
-                    .disabled(isSaving)
                 }
             }
         }
         .padding(.top, 8)
+    }
+
+    // MARK: - Actions
+
+    private func loadInitialState() {
+        if let profile = store.myProfile {
+            firstName = profile.firstName
+            lastName = profile.lastName
+            enablePush = profile.notifyPushPartyInvite || profile.notifyPushMealInvite
+            enableEmail = profile.notifyEmailPartyInvite || profile.notifyEmailMealInvite
+            if let photoPath = profile.photoPath, !photoPath.isEmpty {
+                photoDraft = FoodStore.PhotosDraft(existingPaths: [photoPath])
+            }
+        }
+    }
+
+    private func confirmNotificationsAndProceed() {
+        isSaving = true
+        Task {
+            if enablePush {
+                _ = await NotificationManager.shared.requestAuthorization()
+            }
+            await store.updateNotificationPreferences(
+                pushParty: enablePush,
+                emailParty: enableEmail,
+                pushMeal: enablePush,
+                emailMeal: enableEmail
+            )
+            isSaving = false
+            withAnimation(.easeInOut(duration: 0.25)) {
+                step = 3
+            }
+        }
     }
 
     private func saveAndFinish() {

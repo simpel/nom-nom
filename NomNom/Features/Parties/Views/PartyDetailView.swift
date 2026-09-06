@@ -127,18 +127,17 @@ struct PartyDetailView: View {
                         }
                     }
                 }
-                .confirmationDialog(
+                .alert(
                     "Leave Party?",
-                    isPresented: $confirmLeave,
-                    titleVisibility: .visible
+                    isPresented: $confirmLeave
                 ) {
+                    Button("Cancel", role: .cancel) {}
                     Button("Leave Party", role: .destructive) {
                         Task {
                             await store.leaveParty(party)
                             dismiss()
                         }
                     }
-                    Button("Cancel", role: .cancel) {}
                 } message: {
                     Text("You will lose access to meals served to this party. If you are the last member, the party will be deleted.")
                 }
@@ -201,7 +200,14 @@ struct PartyDetailView: View {
                 .foregroundStyle(DS.Color.textPrimary)
                 .multilineTextAlignment(.center)
 
-            Button {
+            AppButton(
+                "Join Dinner Party",
+                systemImage: "checkmark",
+                variant: .secondary,
+                style: .normal,
+                size: .md,
+                isFullWidth: true
+            ) {
                 Task {
                     if let invite = store.partyInvites.first(where: { $0.partyID == party.id && $0.inviteeID == store.userID && $0.status == .pending }) {
                         await store.acceptPartyInvite(invite)
@@ -210,20 +216,7 @@ struct PartyDetailView: View {
                     }
                     UINotificationFeedbackGenerator().notificationOccurred(.success)
                 }
-            } label: {
-                HStack(spacing: 6) {
-                    Image(systemName: "checkmark")
-                        .fontWeight(.bold)
-                    Text("Join Dinner Party")
-                        .fontWeight(.semibold)
-                }
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 10)
-                .background(DS.Color.accentSoft)
-                .foregroundStyle(DS.Color.accentText)
-                .clipShape(RoundedRectangle(cornerRadius: AppRadius.button, style: .continuous))
             }
-            .buttonStyle(.plain)
         }
         .padding(14)
         .background(DS.Color.panel)

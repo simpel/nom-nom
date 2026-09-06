@@ -22,7 +22,7 @@ struct CreateRecipeSheet: View {
                     AssetPhotosPickerSection(draft: $coverPhotosDraft, title: "Cover Photo")
 
                     SectionCard("Recipe Name") {
-                        TextField("Recipe name (e.g. Carbonara)", text: $name)
+                        Input("Recipe name (e.g. Carbonara)", text: $name)
                             .autocorrectionDisabled()
                     }
 
