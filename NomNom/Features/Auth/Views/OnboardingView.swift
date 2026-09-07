@@ -2,7 +2,7 @@ import SwiftUI
 
 /// Multi-step onboarding presented on first sign-in.
 /// Guides the user through:
-/// 0: Concept explanation (Dinner Parties, Recipes, Meals)
+/// 0: Concept explanation (Dinner Parties, Meals, Recipes)
 /// 1: Profile setup (Name and optional photo)
 /// 2: Notification & Email permissions (with clear explanations)
 /// 3: First dinner party setup (or start solo)
