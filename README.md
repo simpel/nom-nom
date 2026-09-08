@@ -38,12 +38,13 @@ Mailpit instead of sending it. The hosted project's built-in SMTP is rate limite
 a couple of messages an hour and only to authorised addresses.
 
 ```bash
-npx supabase@latest start      # the CLI is not installed globally here
-npx supabase@latest db reset   # applies the baseline migration
+npx supabase start      # start local Docker stack
+./scripts/seed.sh       # applies pending migrations & seeds 40 recipes, 58 meals, 5 parties
+# Or: ./scripts/seed.sh --reset  (full DB reset + migrate + seed)
 ```
 
 Then ⌘R. `SupabaseConfig.swift` picks the environment with `#if DEBUG`, so a
-release build goes to the hosted project instead.
+release build goes to the hosted project instead. (Note: database seeding is strictly local-only and must never be run against production).
 
 ### Signing in without signing in
 

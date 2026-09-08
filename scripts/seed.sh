@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 # ==============================================================================
 # Nom Nom — Local Database Seed Script
-# Seeds 3 dinner parties (4 members each), 40 recipes, and 58 meals with ratings.
+# STRICT LOCAL ONLY: Applies pending migrations and seeds test data into the
+# local Docker-based Supabase instance. NEVER run against production or remote.
 # ==============================================================================
 
 set -euo pipefail
@@ -19,8 +20,15 @@ RED='\033[0;31m'
 NC='\033[0m' # No Color
 
 echo -e "${BOLD}${CYAN}======================================================${NC}"
-echo -e "${BOLD}${CYAN}  Nom Nom — Seeding Local Supabase Database${NC}"
+echo -e "${BOLD}${CYAN}  Nom Nom — Seeding Local Supabase Database (Docker)${NC}"
 echo -e "${BOLD}${CYAN}======================================================${NC}"
+
+# Safety Check: Guarantee this script never targets remote/prod environments
+if [[ -n "${SUPABASE_URL:-}" && "${SUPABASE_URL:-}" != *"localhost"* && "${SUPABASE_URL:-}" != *"127.0.0.1"* ]]; then
+    echo -e "${RED}SAFETY ERROR: SUPABASE_URL points to a remote/hosted environment (${SUPABASE_URL}).${NC}"
+    echo -e "${RED}This seed script is destructive and MUST ONLY run against local Docker.${NC}"
+    exit 1
+fi
 
 # 1. Check if seed file exists
 if [[ ! -f "$SEED_FILE" ]]; then
@@ -32,13 +40,13 @@ fi
 CONTAINER_NAME=$(docker ps --filter "name=supabase_db" --format "{{.Names}}" | head -n 1)
 
 if [[ -z "$CONTAINER_NAME" ]]; then
-    echo -e "${RED}Error: Supabase database container is not running.${NC}"
+    echo -e "${RED}Error: Local Supabase database container is not running.${NC}"
     echo -e "${YELLOW}Please start your local Supabase stack with:${NC}"
     echo -e "  npx supabase start"
     exit 1
 fi
 
-echo -e "Found Supabase DB container: ${GREEN}${CONTAINER_NAME}${NC}"
+echo -e "Targeting local Docker container: ${GREEN}${CONTAINER_NAME}${NC}"
 
 # 3. Check for --reset flag
 if [[ "${1:-}" == "--reset" ]]; then

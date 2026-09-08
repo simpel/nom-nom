@@ -208,8 +208,28 @@ Only these specific system-level APIs are exempt from `AppButton`:
 3. **Sheet Navigation Toolbars**: Handled by `.sheetCommitToolbar` / `.sheetOverviewToolbar` per Section 5.
 
 ---
+ 
+## 10. Database Migrations & Local Seeding Protocol
 
-## 9. Summary Checklist Before Creating or Modifying Code
+- **STRICT LOCAL-ONLY SEEDING**:
+  - **NEVER seed, reset, or run destructive test scripts against remote or production Supabase.**
+  - Seed test data exists exclusively for local development in the Docker container (`supabase_db_food`).
+  - Production / remote databases must ONLY receive safe schema migrations (`supabase db push` or clean migration scripts), NEVER test seeds or wipe scripts.
+
+- **Automated Local Seed Script (`./scripts/seed.sh`)**:
+  - **Do NOT manually engineer or split seed queries.**
+  - To apply pending migrations and reseed local test data at any time, run:
+    ```bash
+    ./scripts/seed.sh
+    ```
+  - To completely reset and reseed local Postgres from scratch:
+    ```bash
+    ./scripts/seed.sh --reset
+    ```
+
+---
+
+## 11. Summary Checklist Before Creating or Modifying Code
 
 - [ ] Will this change cause the file to exceed ~200–250 lines? If yes, extract a component first.
 - [ ] Is this new component or subview located in the correct `Components/` folder rather than inlined in a parent view?
@@ -223,6 +243,7 @@ Only these specific system-level APIs are exempt from `AppButton`:
 - [ ] Are button variants (`primary`, `secondary`, `neutral`, `destructive`), styles (`normal`, `outlined`, `ghost`), and sizes (`sm`, `md`, `xl`) used according to Section 8?
 - [ ] Are emojis completely avoided across all UI and data representations?
 - [ ] Is iconography strictly minimal and purposeful rather than decorative?
+- [ ] Are database seeds executed strictly against the local Docker instance via `./scripts/seed.sh`, never against production?
 
 
 
