@@ -5,144 +5,89 @@ struct RecipeHealthRationaleSheet: View {
     let recipe: Recipe
     let healthIndex: HealthIndex
 
-    @Environment(\.dismiss) private var dismiss
-    @State private var showingExplainer = false
-
     var body: some View {
         NavigationStack {
             ScrollView {
-                VStack(alignment: .leading, spacing: DS.Spacing.sectionCompact) {
-                    // 1. High-impact score hero card
-                    scoreHeroCard
+                VStack(alignment: .leading, spacing: 20) {
+                    Text("Health Rationale")
+                        .font(Font.newsreader(.title2, weight: .regular))
+                        .foregroundStyle(DS.Color.textPrimary)
 
-                    // 2. Plain editorial explanation sentence
-                    rationaleSection
+                    DividedScoreCard(
+                        score: "\(healthIndex.score)",
+                        verdict: healthIndex.verdict,
+                        color: healthIndex.scoreColor
+                    )
 
-                    // 3. Cooking technique impact (above bar charts)
-                    if let impact = healthIndex.breakdown?.cookingImpact, !impact.isEmpty {
-                        cookingImpactSection(impact)
-                    }
-
-                    // 4. Macronutrient distribution infographic
-                    if let macros = healthIndex.breakdown?.macros {
-                        HealthMacroDistributionCard(macros: macros)
-                    }
-
-                    // 5. Nutritional highlights
-                    if let positives = healthIndex.breakdown?.positives, !positives.isEmpty {
-                        positivesSection(positives)
-                    }
-
-                    // 6. Methodology explainer button
-                    explainerButton
+                    RecipeHealthDetailContent(healthIndex: healthIndex)
                 }
                 .padding(.horizontal, DS.Spacing.screenHorizontal)
-                .padding(.top, DS.Spacing.screenTop)
+                .padding(.top, 28)
                 .padding(.bottom, DS.Spacing.screenBottom)
             }
             .background(DS.Color.bg)
-            .screenTitle("Health Rationale", displayMode: .inline)
-            .sheetCancelToolbar()
-            .sheet(isPresented: $showingExplainer) {
-                RecipeHealthExplainerSheet()
-            }
+            .navigationBarTitleDisplayMode(.inline)
+            .presentationDetents([.fraction(0.82), .large])
+            .presentationDragIndicator(.visible)
         }
     }
+}
 
-    // MARK: - Subviews
+/// Rationale text, cooking technique impact, and macronutrient breakdown for a recipe's
+/// health score. Used inside `RecipeHealthRationaleSheet`.
+struct RecipeHealthDetailContent: View {
+    let healthIndex: HealthIndex
 
-    @ViewBuilder
-    private var scoreHeroCard: some View {
-        HStack(spacing: 0) {
-            Text("\(healthIndex.score)")
-                .font(Font.newsreader(size: 46, weight: .bold))
-                .foregroundStyle(healthIndex.scoreColor)
-                .frame(maxWidth: .infinity, alignment: .center)
+    @State private var showingExplainer = false
 
-            Rectangle()
-                .fill(DS.Color.line.opacity(0.4))
-                .frame(width: 1, height: 42)
+    var body: some View {
+        VStack(alignment: .leading, spacing: 24) {
+            narrativeSection
 
-            Text(healthIndex.verdict)
-                .font(Font.newsreader(size: 26, weight: .bold))
-                .foregroundStyle(healthIndex.scoreColor)
-                .frame(maxWidth: .infinity, alignment: .center)
-        }
-        .padding(.vertical, 16)
-        .background {
-            RoundedRectangle(cornerRadius: AppRadius.card, style: .continuous)
-                .fill(
-                    LinearGradient(
-                        colors: [
-                            healthIndex.scoreColor.opacity(0.12),
-                            healthIndex.scoreColor.opacity(0.04),
-                            DS.Color.panel
-                        ],
-                        startPoint: .topLeading,
-                        endPoint: .bottomTrailing
-                    )
+            if let breakdown = healthIndex.breakdown,
+               breakdown.macros != nil || !breakdown.positives.isEmpty {
+                HealthMacroDistributionCard(
+                    macros: breakdown.macros,
+                    positives: breakdown.positives
                 )
-                .overlay {
-                    RoundedRectangle(cornerRadius: AppRadius.card, style: .continuous)
-                        .strokeBorder(healthIndex.scoreColor.opacity(0.25), lineWidth: 1)
-                }
-        }
-    }
+            }
 
-    @ViewBuilder
-    private var rationaleSection: some View {
-        Text(healthIndex.rationale)
-            .font(.body)
-            .foregroundStyle(DS.Color.textPrimary)
-            .lineSpacing(5)
-            .fixedSize(horizontal: false, vertical: true)
-            .padding(.horizontal, 4)
-    }
-
-    @ViewBuilder
-    private func cookingImpactSection(_ impact: String) -> some View {
-        SectionCard("Cooking Technique") {
-            Text(impact)
-                .font(.subheadline)
-                .foregroundStyle(DS.Color.textPrimary)
-                .lineSpacing(3)
-                .fixedSize(horizontal: false, vertical: true)
-        }
-    }
-
-    @ViewBuilder
-    private func positivesSection(_ items: [String]) -> some View {
-        SectionCard("Nutritional Highlights", color: DS.Color.Pine.pine600) {
-            VStack(alignment: .leading, spacing: DS.Spacing.xs) {
-                ForEach(items, id: \.self) { item in
-                    HStack(alignment: .top, spacing: DS.Spacing.xs) {
-                        Image(systemName: "checkmark.circle.fill")
-                            .font(.caption.weight(.semibold))
-                            .foregroundStyle(DS.Color.Pine.pine600)
-                            .padding(.top, 2)
-
-                        Text(item)
-                            .font(.subheadline)
-                            .foregroundStyle(DS.Color.textPrimary)
-                            .fixedSize(horizontal: false, vertical: true)
-                    }
-                }
+            Button {
+                showingExplainer = true
+            } label: {
+                Label("How this score is calculated", systemImage: "info.circle")
+                    .font(.subheadline.weight(.medium))
+                    .foregroundStyle(DS.Color.accentText)
             }
         }
+        .sheet(isPresented: $showingExplainer) {
+            RecipeHealthExplainerSheet()
+        }
     }
 
     @ViewBuilder
-    private var explainerButton: some View {
-        AppButton(
-            "How is this score calculated?",
-            icon: .system("info.circle"),
-            variant: .neutral,
-            style: .outlined,
-            size: .md,
-            isFullWidth: true
-        ) {
-            showingExplainer = true
+    private var narrativeSection: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            Text(healthIndex.rationale)
+                .font(.body)
+                .foregroundStyle(DS.Color.textPrimary)
+                .lineSpacing(5)
+                .fixedSize(horizontal: false, vertical: true)
+
+            if let impact = healthIndex.breakdown?.cookingImpact, !impact.isEmpty {
+                VStack(alignment: .leading, spacing: 6) {
+                    Text("Cooking Technique")
+                        .font(AppTypography.sectionHeading)
+                        .foregroundStyle(DS.Color.textPrimary)
+
+                    Text(impact)
+                        .font(.body)
+                        .foregroundStyle(DS.Color.textPrimary)
+                        .lineSpacing(5)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                .padding(.top, 24)
+            }
         }
-        .padding(.top, DS.Spacing.xs)
     }
 }

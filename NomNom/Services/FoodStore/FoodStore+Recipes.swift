@@ -116,8 +116,13 @@ extension FoodStore {
             }
         }
 
-        guard recipe.ingredients != cleanIngredients ||
-              recipe.instructions != cleanInstructions ||
+        let ingredientsChanged = recipe.ingredients != cleanIngredients || recipe.instructions != cleanInstructions
+        let healthScoreToSave = ingredientsChanged ? nil : recipe.healthScore
+        let healthVerdictToSave = ingredientsChanged ? nil : recipe.healthVerdict
+        let healthRationaleToSave = ingredientsChanged ? nil : recipe.healthRationale
+        let healthBreakdownToSave = ingredientsChanged ? nil : recipe.healthBreakdown
+
+        guard ingredientsChanged ||
               recipe.recipePhotoPaths != newPaths ||
               recipe.effort != effortToSave ||
               recipe.cuisine != cuisineToSave ||
@@ -133,7 +138,11 @@ extension FoodStore {
                 effort: effortToSave,
                 cuisine: cuisineToSave,
                 serves: servesToSave,
-                isPublic: isPublicToSave
+                isPublic: isPublicToSave,
+                healthScore: healthScoreToSave,
+                healthVerdict: healthVerdictToSave,
+                healthRationale: healthRationaleToSave,
+                healthBreakdown: healthBreakdownToSave
             ))
             .eq("id", value: recipe.id.uuidString)
             .select()
@@ -141,6 +150,12 @@ extension FoodStore {
             .execute()
             .value
         upsertLocal(recipe: updated)
+        if ingredientsChanged {
+            Self.log.info("Reset health score for recipe \(recipe.id, privacy: .public) due to modified ingredients or instructions.")
+            if !cleanIngredients.isEmpty {
+                Task { try? await analyzeHealth(for: updated) }
+            }
+        }
     }
 
     func deleteRecipeObject(_ path: String) async {

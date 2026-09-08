@@ -87,10 +87,10 @@ struct ScoreBadge: View {
         HStack(spacing: size.itemSpacing) {
             switch format {
             case .scoreOnly:
-                percentText
+                scoreText
             case .both:
-                percentText
-                separatorText
+                scoreText
+                hairlineDivider
                 verdictText
             case .verdictOnly:
                 verdictText
@@ -108,9 +108,9 @@ struct ScoreBadge: View {
     // MARK: - Subviews
 
     @ViewBuilder
-    private var percentText: some View {
+    private var scoreText: some View {
         if let percent {
-            Text("\(percent)%")
+            Text("\(percent)")
                 .font(size.font)
                 .monospacedDigit()
                 .foregroundStyle(foregroundColor)
@@ -118,10 +118,10 @@ struct ScoreBadge: View {
     }
 
     @ViewBuilder
-    private var separatorText: some View {
-        Text(separator)
-            .font(size.font)
-            .foregroundStyle(foregroundColor.opacity(0.6))
+    private var hairlineDivider: some View {
+        Rectangle()
+            .fill(foregroundColor.opacity(0.3))
+            .frame(width: 1, height: size.dividerHeight)
     }
 
     @ViewBuilder
@@ -158,9 +158,9 @@ struct ScoreBadge: View {
     private var accessibilityDescription: String {
         switch format {
         case .scoreOnly:
-            return "\(percent ?? 0) percent"
+            return "\(percent ?? 0)"
         case .both:
-            return "\(percent ?? 0) percent, \(reaction?.name ?? "")"
+            return "\(percent ?? 0), \(reaction?.name ?? "")"
         case .verdictOnly:
             return reaction?.name ?? ""
         }

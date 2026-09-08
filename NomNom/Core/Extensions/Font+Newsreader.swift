@@ -90,6 +90,16 @@ extension Font {
         mainHeading
     }
 
+    /// Unified editorial section heading (Newsreader Title 3 Medium).
+    static var sectionHeading: Font {
+        AppTypography.sectionHeading
+    }
+
+    /// Unified editorial sub-heading (Newsreader Headline Medium).
+    static var subHeading: Font {
+        AppTypography.subHeading
+    }
+
     /// Italic quote or chef reflection in Newsreader.
     static var editorialQuote: Font {
         newsreader(size: 16, weight: .regular, italic: true, relativeTo: .callout)

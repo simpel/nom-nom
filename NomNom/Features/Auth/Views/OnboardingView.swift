@@ -2,10 +2,10 @@ import SwiftUI
 
 /// Multi-step onboarding presented on first sign-in.
 /// Guides the user through:
-/// 0: Concept explanation (Dinner Parties, Meals, Recipes)
-/// 1: Profile setup (Name and optional photo)
-/// 2: Notification & Email permissions (with clear explanations)
-/// 3: First dinner party setup (or start solo)
+/// 0: Identity setup (Name and optional photo)
+/// 1: Pillar 01 — The Table (First dinner party setup or start solo)
+/// 2: Pillar 02 — Every Meal (Notification & Email delivery preferences)
+/// 3: Pillar 03 — The Living Cookbook (Recipes & finish setup)
 struct OnboardingView: View {
     @Environment(FoodStore.self) private var store
 
@@ -28,33 +28,34 @@ struct OnboardingView: View {
 
                     switch step {
                     case 0:
-                        OnboardingConceptsStep()
-                            .transition(.opacity)
-                    case 1:
                         OnboardingProfileStep(
                             firstName: $firstName,
                             lastName: $lastName,
                             photoDraft: $photoDraft
                         )
                         .transition(.opacity)
+                    case 1:
+                        OnboardingTableStep(partyName: $partyName)
+                            .transition(.opacity)
                     case 2:
-                        OnboardingNotificationsStep(
+                        OnboardingMealsStep(
                             enablePush: $enablePush,
                             enableEmail: $enableEmail
                         )
                         .transition(.opacity)
                     default:
-                        OnboardingPartyStep(partyName: $partyName)
+                        OnboardingCookbookStep()
                             .transition(.opacity)
                     }
-
-                    bottomBar
                 }
                 .padding(.horizontal, DS.Spacing.screenHorizontal)
                 .padding(.top, DS.Spacing.screenTop)
-                .padding(.bottom, DS.Spacing.screenBottom)
+                .padding(.bottom, DS.Spacing.md)
             }
             .background(DS.Color.bg)
+            .safeAreaInset(edge: .bottom) {
+                bottomBar
+            }
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 if step > 0 {
@@ -82,14 +83,9 @@ struct OnboardingView: View {
     // MARK: - Bottom Actions
 
     private var bottomBar: some View {
-        VStack(spacing: 12) {
+        VStack(spacing: 8) {
             switch step {
             case 0:
-                AppButton("Get Started", variant: .primary, style: .normal, size: .xl, isFullWidth: true) {
-                    withAnimation(.easeInOut(duration: 0.25)) { step = 1 }
-                }
-
-            case 1:
                 AppButton(
                     "Continue",
                     variant: .primary,
@@ -98,7 +94,31 @@ struct OnboardingView: View {
                     isFullWidth: true,
                     disabled: firstName.trimmedName.isEmpty
                 ) {
+                    withAnimation(.easeInOut(duration: 0.25)) { step = 1 }
+                }
+
+            case 1:
+                AppButton(
+                    partyName.trimmedName.isEmpty ? "Continue Solo" : "Continue with Party",
+                    variant: .primary,
+                    style: .normal,
+                    size: .xl,
+                    isFullWidth: true
+                ) {
                     withAnimation(.easeInOut(duration: 0.25)) { step = 2 }
+                }
+
+                if !partyName.trimmedName.isEmpty {
+                    AppButton(
+                        "Clear & Start Solo",
+                        variant: .neutral,
+                        style: .ghost,
+                        size: .md,
+                        isFullWidth: true
+                    ) {
+                        partyName = ""
+                        withAnimation(.easeInOut(duration: 0.25)) { step = 2 }
+                    }
                 }
 
             case 2:
@@ -116,7 +136,7 @@ struct OnboardingView: View {
 
             default:
                 AppButton(
-                    partyName.trimmedName.isEmpty ? "Start Solo & Finish" : "Create Party & Finish",
+                    "Get Cooking",
                     variant: .primary,
                     style: .normal,
                     size: .xl,
@@ -126,23 +146,15 @@ struct OnboardingView: View {
                 ) {
                     saveAndFinish()
                 }
-
-                if !partyName.trimmedName.isEmpty {
-                    AppButton(
-                        "Skip party creation",
-                        variant: .neutral,
-                        style: .ghost,
-                        size: .md,
-                        isFullWidth: true,
-                        disabled: isSaving
-                    ) {
-                        partyName = ""
-                        saveAndFinish()
-                    }
-                }
             }
         }
-        .padding(.top, 8)
+        .padding(.horizontal, DS.Spacing.screenHorizontal)
+        .padding(.top, DS.Spacing.sm)
+        .padding(.bottom, DS.Spacing.xs)
+        .background(
+            DS.Color.bg
+                .shadow(color: DS.Color.line.opacity(0.15), radius: 6, y: -2)
+        )
     }
 
     // MARK: - Actions
@@ -190,6 +202,7 @@ struct OnboardingView: View {
             if !partyName.trimmedName.isEmpty {
                 await store.createParty(name: partyName)
             }
+            await store.completeOnboarding()
             isSaving = false
         }
     }

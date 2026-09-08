@@ -191,11 +191,11 @@ enum HealthTier: String, CaseIterable, Identifiable {
         case .nutritious:
             return DS.Color.Pine.pine600
         case .balanced:
-            return DS.Color.Pine.pine500
+            return Color("ds/reaction/good/text")
         case .moderate:
-            return DS.Color.Stone.stone600
+            return Color("ds/reaction/meh/text")
         case .indulgent:
-            return DS.Color.Stone.stone500
+            return Color("ds/reaction/bad/text")
         }
     }
 }

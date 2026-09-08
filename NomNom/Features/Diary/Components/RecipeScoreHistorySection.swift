@@ -99,7 +99,7 @@ struct RecipeScoreHistorySection: View {
                 AxisGridLine()
                 AxisValueLabel {
                     if let intVal = value.as(Int.self), (0...100).contains(intVal) {
-                        Text("\(intVal)%").font(.caption2).foregroundStyle(.secondary)
+                        Text("\(intVal)").font(.caption2).foregroundStyle(.secondary)
                     }
                 }
             }

@@ -13,64 +13,22 @@ struct PartyAverageRatingCard: View {
     }
 
     var body: some View {
-        SectionCard("Average Rating") {
-            if let stats {
-                ratedContent(score: stats.score, reaction: stats.reaction)
-            } else {
-                unratedContent
-            }
+        if let stats {
+            let percent = Int((stats.score * 100).rounded())
+            DividedScoreCard(
+                "Average Rating",
+                score: "\(percent)",
+                verdict: stats.reaction.shortLabel,
+                color: stats.reaction.text
+            )
+        } else {
+            DividedScoreCard(
+                "Average Rating",
+                score: "—",
+                verdict: "Unrated",
+                color: DS.Color.textTertiary
+            )
         }
-    }
-
-    @ViewBuilder
-    private func ratedContent(score: Double, reaction: Reaction) -> some View {
-        let percent = Int((score * 100).rounded())
-        HStack(spacing: 0) {
-            // Numerical score
-            Text("\(percent)%")
-                .font(Font.newsreader(.title2, weight: .semibold))
-                .foregroundStyle(reaction.text)
-                .frame(maxWidth: .infinity, alignment: .center)
-                .lineLimit(1)
-                .minimumScaleFactor(0.8)
-
-            // Fine hairline divider between the two scores
-            Rectangle()
-                .fill(DS.Color.line.opacity(0.4))
-                .frame(width: 1, height: 28)
-
-            // Qualitative verdict score
-            Text(reaction.shortLabel)
-                .font(Font.newsreader(.title2, weight: .semibold))
-                .foregroundStyle(reaction.text)
-                .frame(maxWidth: .infinity, alignment: .center)
-                .lineLimit(1)
-                .minimumScaleFactor(0.8)
-        }
-        .padding(.vertical, 8)
-        .accessibilityElement(children: .combine)
-        .accessibilityLabel("Average rating: \(percent) percent, \(reaction.name)")
-    }
-
-    @ViewBuilder
-    private var unratedContent: some View {
-        HStack(spacing: 0) {
-            Text("—")
-                .font(Font.newsreader(.title2, weight: .medium))
-                .foregroundStyle(DS.Color.textTertiary)
-                .frame(maxWidth: .infinity, alignment: .center)
-
-            Rectangle()
-                .fill(DS.Color.line.opacity(0.4))
-                .frame(width: 1, height: 24)
-
-            Text("Unrated")
-                .font(Font.newsreader(.title2, weight: .medium))
-                .foregroundStyle(DS.Color.textTertiary)
-                .frame(maxWidth: .infinity, alignment: .center)
-        }
-        .padding(.vertical, 8)
-        .accessibilityLabel("Average rating: unrated")
     }
 }
 

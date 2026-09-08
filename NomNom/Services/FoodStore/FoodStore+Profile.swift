@@ -56,6 +56,26 @@ extension FoodStore {
         }
     }
 
+    /// Marks onboarding as done. Idempotent: once `onboarding_completed_at` is
+    /// set, later calls (e.g. re-running onboarding to edit details) are no-ops.
+    func completeOnboarding() async {
+        guard myProfile?.onboardingCompletedAt == nil else { return }
+        do {
+            let updated: Profile = try await supabase
+                .from("profiles")
+                .update(OnboardingCompletionPatch())
+                .eq("id", value: userID.uuidString)
+                .select()
+                .single()
+                .execute()
+                .value
+            profiles[updated.id] = updated
+            errorMessage = nil
+        } catch {
+            errorMessage = Self.describe(error)
+        }
+    }
+
     func updateNotificationPreferences(
         pushParty: Bool,
         emailParty: Bool,

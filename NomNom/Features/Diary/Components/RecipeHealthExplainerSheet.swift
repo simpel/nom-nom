@@ -12,6 +12,7 @@ struct RecipeHealthExplainerSheet: View {
                     introSection
                     tierBreakdownSection
                     cookingImpactSection
+                    scienceSection
                     disclaimerSection
                 }
                 .padding(.horizontal, DS.Spacing.screenHorizontal)
@@ -21,6 +22,8 @@ struct RecipeHealthExplainerSheet: View {
             .background(DS.Color.bg)
             .screenTitle("Health Methodology", displayMode: .inline)
             .sheetCancelToolbar()
+            .presentationDetents([.fraction(0.88), .large])
+            .presentationDragIndicator(.visible)
         }
     }
 
@@ -28,18 +31,12 @@ struct RecipeHealthExplainerSheet: View {
 
     @ViewBuilder
     private var introSection: some View {
-        SectionCard("Overview") {
-            VStack(alignment: .leading, spacing: DS.Spacing.xs) {
-                Text("Scientific Recipe Profiling")
-                    .font(.headline)
-                    .foregroundStyle(DS.Color.textPrimary)
-
-                Text("The Health Index is a 1–100 score evaluating both the nutrient density of raw ingredients and the chemical transformations from cooking methods.")
-                    .font(.subheadline)
-                    .foregroundStyle(DS.Color.textSecondary)
-                    .fixedSize(horizontal: false, vertical: true)
-            }
-        }
+        Text("The Health Index is a 1–100 score evaluating both the nutrient density of raw ingredients and the chemical transformations from cooking methods.")
+            .font(.body)
+            .foregroundStyle(DS.Color.textPrimary)
+            .lineSpacing(5)
+            .fixedSize(horizontal: false, vertical: true)
+            .padding(.horizontal, 4)
     }
 
     @ViewBuilder
@@ -47,29 +44,30 @@ struct RecipeHealthExplainerSheet: View {
         SectionCard("Score Tiers") {
             VStack(spacing: DS.Spacing.sm) {
                 ForEach(HealthTier.allCases) { tier in
-                    HStack(alignment: .top, spacing: DS.Spacing.sm) {
-                        VStack(alignment: .leading, spacing: 2) {
-                            HStack {
-                                Text(tier.displayName)
-                                    .font(.subheadline.weight(.semibold))
-                                    .foregroundStyle(tier.color)
+                    VStack(alignment: .leading, spacing: 4) {
+                        HStack(alignment: .firstTextBaseline) {
+                            Text(tier.displayName)
+                                .font(AppTypography.subHeading)
+                                .foregroundStyle(tier.color)
 
-                                Spacer()
+                            Spacer()
 
-                                Text(tier.rangeDescription)
-                                    .font(.caption.monospacedDigit().weight(.medium))
-                                    .foregroundStyle(DS.Color.textTertiary)
-                            }
-
-                            Text(tier.explanation)
-                                .font(.caption)
+                            Text(tier.rangeDescription)
+                                .font(.subheadline.monospacedDigit().weight(.medium))
                                 .foregroundStyle(DS.Color.textSecondary)
-                                .fixedSize(horizontal: false, vertical: true)
                         }
+
+                        Text(tier.explanation)
+                            .font(.subheadline)
+                            .foregroundStyle(DS.Color.textSecondary)
+                            .lineSpacing(3)
+                            .fixedSize(horizontal: false, vertical: true)
                     }
+
                     if tier != HealthTier.allCases.last {
                         Divider()
-                            .overlay(DS.Color.line.opacity(0.3))
+                            .overlay(DS.Color.line.opacity(0.35))
+                            .padding(.vertical, 2)
                     }
                 }
             }
@@ -78,18 +76,38 @@ struct RecipeHealthExplainerSheet: View {
 
     @ViewBuilder
     private var cookingImpactSection: some View {
-        SectionCard("Preparation & Cooking Methods") {
-            VStack(alignment: .leading, spacing: DS.Spacing.xs) {
-                Text("Why Cooking Matters")
-                    .font(.subheadline.weight(.semibold))
-                    .foregroundStyle(DS.Color.textPrimary)
+        VStack(alignment: .leading, spacing: 6) {
+            Text("Why Cooking Matters")
+                .font(AppTypography.sectionHeading)
+                .foregroundStyle(DS.Color.textPrimary)
+                .padding(.horizontal, 4)
 
-                Text("Identical ingredients yield drastically different nutritional profiles depending on preparation. Gentle methods (steaming, poaching, baking) preserve micronutrients and avoid oxidized fats, while deep-frying or high-heat charring significantly reduces the overall score.")
-                    .font(.caption)
-                    .foregroundStyle(DS.Color.textSecondary)
-                    .fixedSize(horizontal: false, vertical: true)
-            }
+            Text("Identical ingredients yield drastically different nutritional profiles depending on preparation. Gentle methods (steaming, poaching, baking) preserve micronutrients and avoid oxidized fats, while deep-frying or high-heat charring significantly reduces the overall score.")
+                .font(.body)
+                .foregroundStyle(DS.Color.textPrimary)
+                .lineSpacing(5)
+                .fixedSize(horizontal: false, vertical: true)
+                .padding(.horizontal, 4)
         }
+        .padding(.top, DS.Spacing.xxs)
+    }
+
+    @ViewBuilder
+    private var scienceSection: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text("The Science Behind the Score")
+                .font(AppTypography.sectionHeading)
+                .foregroundStyle(DS.Color.textPrimary)
+                .padding(.horizontal, 4)
+
+            Text("Calculations are grounded in validated nutritional profiling research, specifically the Tufts Food Compass and the Healthy Cooking Index. The index evaluates dishes across two pillars: ingredient nutrient density (favoring whole vegetables, fiber, and unsaturated fats over refined sugars and saturated fats) and thermal transformation (how heat and preparation alter micronutrient retention and fat oxidation).")
+                .font(.body)
+                .foregroundStyle(DS.Color.textPrimary)
+                .lineSpacing(5)
+                .fixedSize(horizontal: false, vertical: true)
+                .padding(.horizontal, 4)
+        }
+        .padding(.top, DS.Spacing.xxs)
     }
 
     @ViewBuilder
@@ -100,9 +118,12 @@ struct RecipeHealthExplainerSheet: View {
                 .foregroundStyle(DS.Color.textTertiary)
 
             Text("This index offers guidance on nutrient density and cooking quality. All meals have a place in a balanced, enjoyable diet.")
-                .font(.caption2)
+                .font(.caption)
                 .foregroundStyle(DS.Color.textTertiary)
+                .lineSpacing(3)
+                .fixedSize(horizontal: false, vertical: true)
         }
         .padding(.horizontal, 4)
+        .padding(.top, DS.Spacing.xs)
     }
 }

@@ -172,10 +172,7 @@ final class FoodStore {
 
     var myProfile: Profile? { profiles[userID] }
 
-    var isProfileSetup: Bool {
-        guard let p = myProfile else { return false }
-        return !p.firstName.trimmingCharacters(in: .whitespaces).isEmpty
-    }
+    var isProfileSetup: Bool { myProfile?.onboardingCompletedAt != nil }
 
     var unreadCount: Int { notifications.filter(\.isUnread).count }
 

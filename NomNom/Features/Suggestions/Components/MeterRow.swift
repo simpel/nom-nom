@@ -12,7 +12,7 @@ struct MeterRow: View {
             HStack {
                 Text(title)
                 Spacer()
-                Text(value == nil ? "–" : "\(Int(((value ?? 0) * 100).rounded()))%")
+                Text(value == nil ? "–" : "\(Int(((value ?? 0) * 100).rounded()))")
                     .font(.subheadline.monospacedDigit())
                     .foregroundStyle(DS.Color.textSecondary)
             }

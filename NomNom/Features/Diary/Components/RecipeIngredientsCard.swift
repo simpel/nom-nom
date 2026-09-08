@@ -14,7 +14,7 @@ struct RecipeIngredientsCard: View {
 
     var body: some View {
         if !validIngredients.isEmpty {
-            SectionCard("Ingredients", caption: "\(validIngredients.count) items") {
+            SectionCard("Ingredients") {
                 VStack(spacing: 0) {
                     // Column Headers
                     HStack(spacing: 14) {

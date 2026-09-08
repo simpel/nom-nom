@@ -34,8 +34,24 @@ enum AppTypography {
         Font.newsreader(.title2, weight: .semibold)
     }
 
+    /// Section heading in Newsreader medium (20pt Title 3)
     static var displayM: Font {
-        Font.newsreader(.title3)
+        Font.newsreader(.title3, weight: .medium)
+    }
+
+    /// Sub-section heading / item title in Newsreader medium (17pt Headline)
+    static var displayS: Font {
+        Font.newsreader(.headline, weight: .medium)
+    }
+
+    /// Unified editorial section heading token
+    static var sectionHeading: Font {
+        displayM
+    }
+
+    /// Unified editorial sub-heading token
+    static var subHeading: Font {
+        displayS
     }
 
     static var bodyL: Font {

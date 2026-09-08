@@ -13,6 +13,7 @@ struct Profile: Identifiable, Hashable, Decodable {
     var notifyEmailPartyInvite: Bool
     var notifyPushMealInvite: Bool
     var notifyEmailMealInvite: Bool
+    var onboardingCompletedAt: Date?
 
     enum CodingKeys: String, CodingKey {
         case id
@@ -25,6 +26,7 @@ struct Profile: Identifiable, Hashable, Decodable {
         case notifyEmailPartyInvite = "notify_email_party_invite"
         case notifyPushMealInvite = "notify_push_meal_invite"
         case notifyEmailMealInvite = "notify_email_meal_invite"
+        case onboardingCompletedAt = "onboarding_completed_at"
     }
 
     init(from decoder: Decoder) throws {
@@ -39,6 +41,7 @@ struct Profile: Identifiable, Hashable, Decodable {
         notifyEmailPartyInvite = try container.decodeIfPresent(Bool.self, forKey: .notifyEmailPartyInvite) ?? true
         notifyPushMealInvite = try container.decodeIfPresent(Bool.self, forKey: .notifyPushMealInvite) ?? true
         notifyEmailMealInvite = try container.decodeIfPresent(Bool.self, forKey: .notifyEmailMealInvite) ?? true
+        onboardingCompletedAt = try container.decodeTimestampIfPresent(.onboardingCompletedAt)
     }
 
     init(
@@ -51,7 +54,8 @@ struct Profile: Identifiable, Hashable, Decodable {
         notifyPushPartyInvite: Bool = true,
         notifyEmailPartyInvite: Bool = true,
         notifyPushMealInvite: Bool = true,
-        notifyEmailMealInvite: Bool = true
+        notifyEmailMealInvite: Bool = true,
+        onboardingCompletedAt: Date? = nil
     ) {
         self.id = id
         self.firstName = firstName
@@ -63,6 +67,7 @@ struct Profile: Identifiable, Hashable, Decodable {
         self.notifyEmailPartyInvite = notifyEmailPartyInvite
         self.notifyPushMealInvite = notifyPushMealInvite
         self.notifyEmailMealInvite = notifyEmailMealInvite
+        self.onboardingCompletedAt = onboardingCompletedAt
     }
 
     /// Prefer the first and last name if available, otherwise fall back to display name or "Someone".
@@ -96,4 +101,14 @@ struct ProfileNotificationPatch: Encodable {
     let notify_email_party_invite: Bool
     let notify_push_meal_invite: Bool
     let notify_email_meal_invite: Bool
+}
+
+struct OnboardingCompletionPatch: Encodable {
+    let onboarding_completed_at: String
+
+    init(at date: Date = .now) {
+        // ISO8601 with a zone: the column is timestamptz, and sending a bare local
+        // string would be read as whatever the server's zone happens to be.
+        self.onboarding_completed_at = ISO8601DateFormatter().string(from: date)
+    }
 }

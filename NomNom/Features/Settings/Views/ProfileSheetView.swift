@@ -10,7 +10,6 @@ struct ProfileSheetView: View {
     @State private var lastName = ""
     @State private var photoDraft = FoodStore.PhotosDraft()
     @State private var didLoadProfile = false
-    @State private var confirmSignOut = false
     @State private var confirmDelete = false
 
     var body: some View {
@@ -51,7 +50,6 @@ struct ProfileSheetView: View {
                     NotificationPreferencesSection()
 
                     AccountDangerSection(
-                        confirmSignOut: $confirmSignOut,
                         confirmDelete: $confirmDelete
                     )
                 }
@@ -66,14 +64,6 @@ struct ProfileSheetView: View {
                 dismiss()
             })
             .onAppear(perform: loadProfileIfNeeded)
-            .alert("Sign out?", isPresented: $confirmSignOut) {
-                Button("Sign out", role: .destructive) {
-                    Task { await auth.signOut() }
-                }
-                Button("Cancel", role: .cancel) {}
-            } message: {
-                Text("Your food log stays on the server and comes back when you sign in again.")
-            }
             .alert("Delete your account?", isPresented: $confirmDelete) {
                 Button("Delete everything", role: .destructive) {
                     Task { await auth.deleteAccount() }

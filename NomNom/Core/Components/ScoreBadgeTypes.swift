@@ -32,18 +32,26 @@ enum ScoreBadgeSize {
 
     var itemSpacing: CGFloat {
         switch self {
-        case .sm: return 4
-        case .md: return 5
-        case .lg: return 6
+        case .sm: return 5
+        case .md: return 6
+        case .lg: return 8
+        }
+    }
+
+    var dividerHeight: CGFloat {
+        switch self {
+        case .sm: return 9
+        case .md: return 11
+        case .lg: return 13
         }
     }
 }
 
 /// Content format options for ScoreBadge.
 enum ScoreBadgeFormat {
-    /// Displays score percentage only: "75%"
+    /// Displays score scalar integer only: "75"
     case scoreOnly
-    /// Displays combined score percentage and verdict: "83% · Great"
+    /// Displays miniature divided score and verdict: "75 │ Great"
     case both
     /// Displays qualitative verdict only: "Great"
     case verdictOnly

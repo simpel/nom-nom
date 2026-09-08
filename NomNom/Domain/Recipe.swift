@@ -238,6 +238,10 @@ struct RecipeContentPatch: Encodable {
     let cuisine: String?
     let serves: Int?
     let is_public: Bool
+    let health_score: Int?
+    let health_verdict: String?
+    let health_rationale: String?
+    let health_breakdown: HealthBreakdown?
 
     init(
         ingredients: [RecipeIngredient],
@@ -246,7 +250,11 @@ struct RecipeContentPatch: Encodable {
         effort: EffortLevel? = nil,
         cuisine: String? = nil,
         serves: Int? = nil,
-        isPublic: Bool = true
+        isPublic: Bool = true,
+        healthScore: Int? = nil,
+        healthVerdict: String? = nil,
+        healthRationale: String? = nil,
+        healthBreakdown: HealthBreakdown? = nil
     ) {
         self.ingredients = ingredients
         self.instructions = instructions
@@ -255,6 +263,10 @@ struct RecipeContentPatch: Encodable {
         self.cuisine = cuisine?.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty == false ? cuisine : nil
         self.serves = serves
         self.is_public = isPublic
+        self.health_score = healthScore
+        self.health_verdict = healthVerdict
+        self.health_rationale = healthRationale
+        self.health_breakdown = healthBreakdown
     }
 }
 
@@ -262,8 +274,8 @@ typealias DishRecipePatch = RecipeContentPatch
 
 /// Patch for updating recipe health score and rationale.
 struct RecipeHealthPatch: Encodable {
-    let health_score: Int
-    let health_verdict: String
-    let health_rationale: String
+    let health_score: Int?
+    let health_verdict: String?
+    let health_rationale: String?
     let health_breakdown: HealthBreakdown?
 }

@@ -1,6 +1,8 @@
 // Edge function to analyze recipe health index and rationale using Vercel AI Gateway.
 // Evaluates ingredients and cooking methods using validated nutritional profiling principles (Food Compass / Healthy Cooking Index).
 
+import { createClient } from "jsr:@supabase/supabase-js@2";
+
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
@@ -14,6 +16,7 @@ interface IngredientInput {
 }
 
 interface RequestPayload {
+  recipe_id?: string;
   name: string;
   ingredients: IngredientInput[];
   instructions: string[];
@@ -215,6 +218,33 @@ Return ONLY valid JSON without conversational text or markdown code fence blocks
       else if (parsed.health_score >= 60) parsed.health_verdict = "Balanced";
       else if (parsed.health_score >= 40) parsed.health_verdict = "Moderate";
       else parsed.health_verdict = "Indulgent";
+    }
+
+    // Persist directly to Postgres dishes table if recipe_id is provided
+    const supabaseUrl = Deno.env.get("SUPABASE_URL");
+    const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+
+    if (supabaseUrl && supabaseServiceKey && payload.recipe_id) {
+      try {
+        const admin = createClient(supabaseUrl, supabaseServiceKey);
+        const { error: updateErr } = await admin
+          .from("dishes")
+          .update({
+            health_score: parsed.health_score,
+            health_verdict: parsed.health_verdict,
+            health_rationale: parsed.health_rationale,
+            health_breakdown: parsed.health_breakdown,
+          })
+          .eq("id", payload.recipe_id);
+
+        if (updateErr) {
+          console.error("Failed to persist health score to dishes table in Edge Function:", updateErr);
+        } else {
+          console.log(`Successfully persisted health score to dish ${payload.recipe_id}`);
+        }
+      } catch (dbErr) {
+        console.error("Database error in analyze-recipe-health Edge Function:", dbErr);
+      }
     }
 
     return new Response(JSON.stringify(parsed), {

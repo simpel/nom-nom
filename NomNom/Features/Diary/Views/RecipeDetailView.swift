@@ -21,6 +21,7 @@ struct RecipeDetailView: View {
     @State private var selectedMealForDetail: Meal?
     @State private var selectedPhotoIndex: Int?
     @State private var confirmDeleteRecipe = false
+    @State private var isAnalyzingHealth = false
 
     init(recipeID: UUID, showCloseButton: Bool = false) {
         self.recipeID = recipeID
@@ -92,6 +93,14 @@ struct RecipeDetailView: View {
                 }
             } else if let rec = fallbackRecipe, store.recipe(recipeID) == nil {
                 store.upsertLocal(recipe: rec)
+            }
+
+            // Backfills the health score for recipes saved before this existed, or if a
+            // prior automatic analysis failed. Silent — no "generate" button in the UI.
+            if let recipe, recipe.healthIndex == nil, !recipe.ingredients.isEmpty {
+                isAnalyzingHealth = true
+                defer { isAnalyzingHealth = false }
+                try? await store.analyzeHealth(for: recipe)
             }
         }
         .toolbar {
@@ -195,22 +204,36 @@ struct RecipeDetailView: View {
                 )
                 .padding(.bottom, DS.Spacing.xs)
 
-                // Action row: "Use in Meal" button to the left, Health Score to the right
-                HStack(spacing: DS.Spacing.sm) {
-                    AppButton(
-                        "Use in Meal",
-                        variant: .primary,
-                        style: .normal,
-                        size: .md,
-                        isFullWidth: true
-                    ) {
-                        showMealEditor = true
-                    }
-
-                    RecipeHealthScoreButton(recipe: recipe)
-                        .frame(maxWidth: .infinity)
+                // Primary action: "Use in Meal"
+                AppButton(
+                    "Use in Meal",
+                    variant: .primary,
+                    style: .normal,
+                    size: .md
+                ) {
+                    showMealEditor = true
                 }
-                .padding(.horizontal, DS.Spacing.screenHorizontal)
+
+                // Health score hero, calculated automatically once the recipe is saved —
+                // no manual "generate" action needed. "Details" opens the full rationale sheet.
+                if let healthIndex = recipe.healthIndex {
+                    DividedScoreCard(
+                        score: "\(healthIndex.score)",
+                        verdict: healthIndex.verdict,
+                        color: healthIndex.scoreColor
+                    ) {
+                        RecipeHealthDetailsButton(recipe: recipe, healthIndex: healthIndex)
+                    }
+                    .padding(.horizontal, DS.Spacing.screenHorizontal)
+                } else if isAnalyzingHealth {
+                    HStack(spacing: 8) {
+                        ProgressView()
+                        Text("Calculating health score…")
+                            .font(.subheadline)
+                            .foregroundStyle(DS.Color.textSecondary)
+                    }
+                    .padding(.horizontal, DS.Spacing.screenHorizontal)
+                }
 
                 // 1. Ingredients
                 if !recipe.ingredients.isEmpty {
