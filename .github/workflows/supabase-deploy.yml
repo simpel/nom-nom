@@ -43,9 +43,12 @@ jobs:
 
       - name: Deploy Edge Functions
         run: |
+          supabase functions deploy analyze-recipe-health
           supabase functions deploy delete-account
           supabase functions deploy notify-invitees
+          supabase functions deploy parse-recipe
           supabase functions deploy send-invite-email
         env:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
           SUPABASE_PROJECT_REF: ${{ secrets.SUPABASE_PROJECT_REF || secrets.SUPABASE_PROJECT_ID }}
+
