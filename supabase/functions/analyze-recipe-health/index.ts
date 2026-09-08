@@ -19,10 +19,18 @@ interface RequestPayload {
   instructions: string[];
 }
 
+interface MacroNutrients {
+  calories?: number;
+  protein_g?: number;
+  carbs_g?: number;
+  fat_g?: number;
+}
+
 interface HealthBreakdown {
   positives: string[];
   considerations: string[];
   cooking_impact: string;
+  macros?: MacroNutrients;
 }
 
 interface HealthAnalysisResult {
@@ -125,11 +133,16 @@ Return a single JSON object matching this schema:
 {
   "health_score": integer (1-100),
   "health_verdict": "string (One of: 'Nutritious', 'Balanced', 'Moderate', 'Indulgent')",
-  "health_rationale": "string (A concise 2-3 sentence overview explaining how the ingredients and cooking methods produced this score)",
+  "health_rationale": "string (A crisp, concise 1-2 sentences strictly under 35 words explaining why the recipe earned this score number)",
   "health_breakdown": {
     "positives": ["string (key nutritional strength)", "string (key nutritional strength)"],
-    "considerations": ["string (point to note or moderate, e.g. sodium/fat)"],
-    "cooking_impact": "string (1-2 sentences on how the cooking/prep method helped or hurt the nutritional value)"
+    "cooking_impact": "string (1 concise sentence on how the cooking/prep method influenced the score)",
+    "macros": {
+      "calories": integer (estimated total kcal per serving),
+      "protein_g": number (estimated grams of protein per serving),
+      "carbs_g": number (estimated grams of carbohydrates per serving),
+      "fat_g": number (estimated grams of fat per serving)
+    }
   }
 }
 

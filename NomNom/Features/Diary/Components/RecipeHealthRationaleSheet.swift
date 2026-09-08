@@ -11,24 +11,29 @@ struct RecipeHealthRationaleSheet: View {
     var body: some View {
         NavigationStack {
             ScrollView {
-                VStack(spacing: DS.Spacing.sectionCompact) {
+                VStack(alignment: .leading, spacing: DS.Spacing.sectionCompact) {
+                    // 1. High-impact score hero card
                     scoreHeroCard
+
+                    // 2. Plain editorial explanation sentence
                     rationaleSection
 
-                    if let breakdown = healthIndex.breakdown {
-                        if !breakdown.positives.isEmpty {
-                            positivesSection(breakdown.positives)
-                        }
-
-                        if !breakdown.considerations.isEmpty {
-                            considerationsSection(breakdown.considerations)
-                        }
-
-                        if let impact = breakdown.cookingImpact, !impact.isEmpty {
-                            cookingImpactSection(impact)
-                        }
+                    // 3. Cooking technique impact (above bar charts)
+                    if let impact = healthIndex.breakdown?.cookingImpact, !impact.isEmpty {
+                        cookingImpactSection(impact)
                     }
 
+                    // 4. Macronutrient distribution infographic
+                    if let macros = healthIndex.breakdown?.macros {
+                        HealthMacroDistributionCard(macros: macros)
+                    }
+
+                    // 5. Nutritional highlights
+                    if let positives = healthIndex.breakdown?.positives, !positives.isEmpty {
+                        positivesSection(positives)
+                    }
+
+                    // 6. Methodology explainer button
                     explainerButton
                 }
                 .padding(.horizontal, DS.Spacing.screenHorizontal)
@@ -48,41 +53,59 @@ struct RecipeHealthRationaleSheet: View {
 
     @ViewBuilder
     private var scoreHeroCard: some View {
-        VStack(spacing: 8) {
-            HStack(spacing: 0) {
-                Text("\(healthIndex.score)")
-                    .font(Font.newsreader(.largeTitle, weight: .bold))
-                    .foregroundStyle(healthIndex.scoreColor)
-                    .frame(maxWidth: .infinity, alignment: .center)
+        HStack(spacing: 0) {
+            Text("\(healthIndex.score)")
+                .font(Font.newsreader(size: 46, weight: .bold))
+                .foregroundStyle(healthIndex.scoreColor)
+                .frame(maxWidth: .infinity, alignment: .center)
 
-                Rectangle()
-                    .fill(DS.Color.line.opacity(0.4))
-                    .frame(width: 1, height: 36)
+            Rectangle()
+                .fill(DS.Color.line.opacity(0.4))
+                .frame(width: 1, height: 42)
 
-                Text(healthIndex.verdict)
-                    .font(Font.newsreader(.title, weight: .semibold))
-                    .foregroundStyle(healthIndex.scoreColor)
-                    .frame(maxWidth: .infinity, alignment: .center)
-            }
-            .padding(.vertical, 12)
+            Text(healthIndex.verdict)
+                .font(Font.newsreader(size: 26, weight: .bold))
+                .foregroundStyle(healthIndex.scoreColor)
+                .frame(maxWidth: .infinity, alignment: .center)
         }
+        .padding(.vertical, 16)
         .background {
             RoundedRectangle(cornerRadius: AppRadius.card, style: .continuous)
-                .fill(DS.Color.panel)
+                .fill(
+                    LinearGradient(
+                        colors: [
+                            healthIndex.scoreColor.opacity(0.12),
+                            healthIndex.scoreColor.opacity(0.04),
+                            DS.Color.panel
+                        ],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    )
+                )
                 .overlay {
                     RoundedRectangle(cornerRadius: AppRadius.card, style: .continuous)
-                        .strokeBorder(DS.Color.line.opacity(0.35), lineWidth: 0.5)
+                        .strokeBorder(healthIndex.scoreColor.opacity(0.25), lineWidth: 1)
                 }
         }
     }
 
     @ViewBuilder
     private var rationaleSection: some View {
-        SectionCard("Nutritional Overview") {
-            Text(healthIndex.rationale)
-                .font(.body)
+        Text(healthIndex.rationale)
+            .font(.body)
+            .foregroundStyle(DS.Color.textPrimary)
+            .lineSpacing(5)
+            .fixedSize(horizontal: false, vertical: true)
+            .padding(.horizontal, 4)
+    }
+
+    @ViewBuilder
+    private func cookingImpactSection(_ impact: String) -> some View {
+        SectionCard("Cooking Technique") {
+            Text(impact)
+                .font(.subheadline)
                 .foregroundStyle(DS.Color.textPrimary)
-                .lineSpacing(4)
+                .lineSpacing(3)
                 .fixedSize(horizontal: false, vertical: true)
         }
     }
@@ -105,38 +128,6 @@ struct RecipeHealthRationaleSheet: View {
                     }
                 }
             }
-        }
-    }
-
-    @ViewBuilder
-    private func considerationsSection(_ items: [String]) -> some View {
-        SectionCard("Points of Moderation", color: DS.Color.Stone.stone600) {
-            VStack(alignment: .leading, spacing: DS.Spacing.xs) {
-                ForEach(items, id: \.self) { item in
-                    HStack(alignment: .top, spacing: DS.Spacing.xs) {
-                        Image(systemName: "info.circle.fill")
-                            .font(.caption.weight(.semibold))
-                            .foregroundStyle(DS.Color.Stone.stone600)
-                            .padding(.top, 2)
-
-                        Text(item)
-                            .font(.subheadline)
-                            .foregroundStyle(DS.Color.textPrimary)
-                            .fixedSize(horizontal: false, vertical: true)
-                    }
-                }
-            }
-        }
-    }
-
-    @ViewBuilder
-    private func cookingImpactSection(_ impact: String) -> some View {
-        SectionCard("Cooking Technique Impact") {
-            Text(impact)
-                .font(.subheadline)
-                .foregroundStyle(DS.Color.textSecondary)
-                .lineSpacing(3)
-                .fixedSize(horizontal: false, vertical: true)
         }
     }
 

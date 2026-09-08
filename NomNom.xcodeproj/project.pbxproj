@@ -99,6 +99,11 @@
 						CreatedOnToolsVersion = 16.0;
 						DevelopmentTeam = D4F66LSYSF;
 						ProvisioningStyle = Automatic;
+						SystemCapabilities = {
+							com.apple.SignInWithApple = {
+								enabled = 1;
+							};
+						};
 					};
 				};
 			};

@@ -117,11 +117,16 @@ Extract the recipe into a single JSON object matching this schema:
   ],
   "health_score": integer (1-100 based on nutritional profiling of ingredients and cooking method),
   "health_verdict": "string (One of: 'Nutritious' for 80-100, 'Balanced' for 60-79, 'Moderate' for 40-59, 'Indulgent' for 1-39)",
-  "health_rationale": "string (2-3 sentences summarizing nutritional value from ingredients & cooking method)",
+  "health_rationale": "string (A crisp, concise 1-2 sentences strictly under 35 words explaining why the recipe earned this score number)",
   "health_breakdown": {
     "positives": ["string", "string"],
-    "considerations": ["string"],
-    "cooking_impact": "string (e.g. raw/steamed preserves nutrients vs. deep frying penalty)"
+    "cooking_impact": "string (1 concise sentence on how the cooking method affected score)",
+    "macros": {
+      "calories": integer (estimated total kcal per serving),
+      "protein_g": number (estimated grams of protein per serving),
+      "carbs_g": number (estimated grams of carbohydrates per serving),
+      "fat_g": number (estimated grams of fat per serving)
+    }
   }
 }
 

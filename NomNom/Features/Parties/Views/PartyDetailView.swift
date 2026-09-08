@@ -105,7 +105,7 @@ struct PartyDetailView: View {
                                 Button(role: .destructive) {
                                     confirmLeave = true
                                 } label: {
-                                    Label("Leave party", systemImage: "arrow.right.door")
+                                    Label("Leave party", systemImage: "rectangle.portrait.and.arrow.right")
                                 }
                             } label: {
                                 Image(systemName: "ellipsis")

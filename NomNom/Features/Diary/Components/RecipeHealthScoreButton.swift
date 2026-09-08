@@ -46,16 +46,16 @@ struct RecipeHealthScoreButton: View {
                             .minimumScaleFactor(0.8)
                     }
                     .frame(height: AppButtonSize.md.height)
-                    .padding(.horizontal, 10)
+                    .padding(.horizontal, 12)
                     .background {
-                        RoundedRectangle(cornerRadius: AppRadius.card, style: .continuous)
-                            .fill(DS.Color.panel)
+                        Capsule()
+                            .fill(health.scoreColor.opacity(0.08))
                             .overlay {
-                                RoundedRectangle(cornerRadius: AppRadius.card, style: .continuous)
-                                    .strokeBorder(DS.Color.line.opacity(0.35), lineWidth: 0.5)
+                                Capsule()
+                                    .strokeBorder(health.scoreColor.opacity(0.35), lineWidth: 1.5)
                             }
                     }
-                    .contentShape(RoundedRectangle(cornerRadius: AppRadius.card, style: .continuous))
+                    .contentShape(Capsule())
                 }
                 .buttonStyle(AppPressableButtonStyle())
             } else {

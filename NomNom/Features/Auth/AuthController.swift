@@ -1,13 +1,12 @@
+import AuthenticationServices
+import CryptoKit
 import Foundation
 import Observation
 import Supabase
 
 /// Session state for the whole app.
 ///
-/// Email one-time code rather than Sign in with Apple: Apple's flow needs a paid
-/// developer account to get a signing identity, and there isn't one here, so it
-/// could be written but never run. A six-digit code needs nothing but a mail
-/// server and works identically against the local stack and the hosted project.
+/// Supports native Sign in with Apple and email one-time code (OTP).
 @MainActor
 @Observable
 final class AuthController {
@@ -80,6 +79,44 @@ final class AuthController {
                     }
                 }
             }
+        }
+    }
+
+    // MARK: - Sign in with Apple
+
+    func signInWithApple(idToken: String, nonce: String, fullName: PersonNameComponents?) async {
+        guard !isWorking else { return }
+        isWorking = true
+        errorMessage = nil
+        defer { isWorking = false }
+
+        do {
+            let session = try await supabase.auth.signInWithIdToken(
+                credentials: .init(
+                    provider: .apple,
+                    idToken: idToken,
+                    nonce: nonce
+                )
+            )
+
+            // fullName is provided only on the first sign-in (account creation),
+            // so we update profile metadata when present.
+            if let fullName {
+                let formatted = PersonNameComponentsFormatter.localizedString(from: fullName, style: .default).trimmingCharacters(in: .whitespacesAndNewlines)
+                if !formatted.isEmpty {
+                    _ = try? await supabase.auth.update(
+                        user: UserAttributes(data: ["full_name": .string(formatted)])
+                    )
+                }
+            }
+
+            self.phase = .signedIn(userID: session.user.id)
+            self.step = .email
+        } catch {
+            #if DEBUG
+            print("❌ Sign in with Apple error: \(error)")
+            #endif
+            errorMessage = Self.describe(error)
         }
     }
 
