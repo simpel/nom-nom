@@ -10,6 +10,8 @@ struct RecipeEditorSection: View {
     @State private var isLoadingPhotos = false
     @State private var previewIndex: Int?
     var body: some View {
+        RecipeServingsSection(serves: $draft.serves)
+
         RecipeIngredientsEditorSection(ingredients: $draft.ingredients)
 
         RecipeInstructionsEditorSection(instructions: $draft.instructions)

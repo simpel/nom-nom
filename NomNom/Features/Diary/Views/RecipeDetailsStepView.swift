@@ -91,6 +91,7 @@ struct RecipeDetailsStepView: View {
                         named: trimmedName,
                         tags: parsedTags,
                         cuisine: recipeDraft.cuisine,
+                        serves: recipeDraft.serves,
                         isPublic: recipeDraft.isPublic
                     )
                     try await store.applyCoverPhotos(coverPhotosDraft, to: recipe)

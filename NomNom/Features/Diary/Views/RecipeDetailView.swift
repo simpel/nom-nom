@@ -1,4 +1,5 @@
 import SwiftUI
+import Supabase
 
 /// Comprehensive detail view for a recipe:
 /// - Harmonized centered arc hero presentation with photos, recipe title, and last cooked date
@@ -13,6 +14,8 @@ struct RecipeDetailView: View {
     @Environment(FoodStore.self) private var store
     @Environment(\.dismiss) private var dismiss
 
+    @State private var fallbackRecipe: Recipe?
+    @State private var isLoadingRemote = false
     @State private var showEditSheet = false
     @State private var showMealEditor = false
     @State private var selectedMealForDetail: Meal?
@@ -22,29 +25,45 @@ struct RecipeDetailView: View {
     init(recipeID: UUID, showCloseButton: Bool = false) {
         self.recipeID = recipeID
         self.showCloseButton = showCloseButton
+        self._fallbackRecipe = State(initialValue: nil)
     }
 
     init(recipe: Recipe, showCloseButton: Bool = false) {
         self.recipeID = recipe.id
         self.showCloseButton = showCloseButton
+        self._fallbackRecipe = State(initialValue: recipe)
     }
 
     init(dishID: UUID, showCloseButton: Bool = false) {
         self.recipeID = dishID
         self.showCloseButton = showCloseButton
+        self._fallbackRecipe = State(initialValue: nil)
     }
 
-    private var recipe: Recipe? { store.recipe(recipeID) }
+    private var recipe: Recipe? { store.recipe(recipeID) ?? fallbackRecipe }
     private var history: [Meal] { store.servings(of: recipeID).sorted { $0.eatenOn > $1.eatenOn } }
 
     private var allPhotos: [String] {
-        store.photos(for: recipeID)
+        if let recipe {
+            var paths: [String] = []
+            for p in recipe.photoPaths where !paths.contains(p) {
+                paths.append(p)
+            }
+            for p in recipe.recipePhotoPaths where !paths.contains(p) {
+                paths.append(p)
+            }
+            return paths
+        }
+        return store.photos(for: recipeID)
     }
 
     var body: some View {
         Group {
             if let recipe {
                 content(for: recipe)
+            } else if store.isLoading || isLoadingRemote {
+                ProgressView()
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else {
                 ContentUnavailableView(
                     "Recipe is gone",
@@ -54,6 +73,27 @@ struct RecipeDetailView: View {
             }
         }
         .screenTitle(recipe?.name ?? "Recipe", displayMode: .inline)
+        .task {
+            if recipe == nil {
+                isLoadingRemote = true
+                defer { isLoadingRemote = false }
+                do {
+                    let fetched: Recipe = try await supabase
+                        .from("dishes")
+                        .select()
+                        .eq("id", value: recipeID.uuidString)
+                        .single()
+                        .execute()
+                        .value
+                    store.upsertLocal(recipe: fetched)
+                    fallbackRecipe = fetched
+                } catch {
+                    // Recipe not found or was deleted
+                }
+            } else if let rec = fallbackRecipe, store.recipe(recipeID) == nil {
+                store.upsertLocal(recipe: rec)
+            }
+        }
         .toolbar {
             if showCloseButton {
                 ToolbarItem(placement: .topBarLeading) {
@@ -155,16 +195,22 @@ struct RecipeDetailView: View {
                 )
                 .padding(.bottom, DS.Spacing.xs)
 
-                // Centered "Use in Meal" action button above ingredients
-                AppButton(
-                    "Use in Meal",
-                    variant: .primary,
-                    style: .normal,
-                    size: .md
-                ) {
-                    showMealEditor = true
+                // Action row: "Use in Meal" button to the left, Health Score to the right
+                HStack(spacing: DS.Spacing.sm) {
+                    AppButton(
+                        "Use in Meal",
+                        variant: .primary,
+                        style: .normal,
+                        size: .md,
+                        isFullWidth: true
+                    ) {
+                        showMealEditor = true
+                    }
+
+                    RecipeHealthScoreButton(recipe: recipe)
+                        .frame(maxWidth: .infinity)
                 }
-                .frame(maxWidth: .infinity, alignment: .center)
+                .padding(.horizontal, DS.Spacing.screenHorizontal)
 
                 // 1. Ingredients
                 if !recipe.ingredients.isEmpty {

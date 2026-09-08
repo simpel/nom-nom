@@ -30,7 +30,7 @@ struct RecipeHorizontalShelf: View {
                             .buttonStyle(.plain)
                         } else {
                             NavigationLink {
-                                RecipeDetailView(recipeID: recipe.id)
+                                RecipeDetailView(recipe: recipe)
                             } label: {
                                 MinimalRecipeCard(recipe: recipe)
                                     .frame(width: 156, height: 220, alignment: .top)

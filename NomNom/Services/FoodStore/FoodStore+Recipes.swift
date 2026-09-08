@@ -7,6 +7,7 @@ extension FoodStore {
         named name: String,
         tags: [String] = [],
         cuisine: String? = nil,
+        serves: Int? = nil,
         isPublic: Bool = true
     ) async throws -> Recipe {
         let key = name.normalizedForMatching
@@ -24,6 +25,7 @@ extension FoodStore {
                     name: name,
                     tags: tags,
                     cuisine: cuisine,
+                    serves: serves,
                     isPublic: isPublic
                 ))
                 .select()
@@ -89,6 +91,7 @@ extension FoodStore {
         guard recipe.ownerID == userID else { return }
         let effortToSave = draft.effort ?? recipe.effort
         let cuisineToSave = draft.cuisine ?? recipe.cuisine
+        let servesToSave = draft.serves ?? recipe.serves
         let isPublicToSave = draft.isPublic
         let cleanIngredients = draft.ingredients.filter { !$0.isEmpty }
         let cleanInstructions = draft.instructions
@@ -118,6 +121,7 @@ extension FoodStore {
               recipe.recipePhotoPaths != newPaths ||
               recipe.effort != effortToSave ||
               recipe.cuisine != cuisineToSave ||
+              recipe.serves != servesToSave ||
               recipe.isPublic != isPublicToSave else { return }
 
         let updated: Recipe = try await supabase
@@ -128,6 +132,7 @@ extension FoodStore {
                 recipe_photo_paths: newPaths,
                 effort: effortToSave,
                 cuisine: cuisineToSave,
+                serves: servesToSave,
                 isPublic: isPublicToSave
             ))
             .eq("id", value: recipe.id.uuidString)
@@ -212,7 +217,16 @@ extension FoodStore {
             for path in recipe.photoPaths { await deleteRecipeObject(path) }
             for path in recipe.recipePhotoPaths { await deleteRecipeObject(path) }
             try await supabase.from("dishes").delete().eq("id", value: recipe.id.uuidString).execute()
+            
+            // Mirror Postgres CASCADE in local store memory
+            let deletedMealIDs = Set(meals.filter { $0.recipeID == recipe.id }.map(\.id))
+            meals.removeAll { deletedMealIDs.contains($0.id) }
+            ratings.removeAll { deletedMealIDs.contains($0.mealID) }
+            invites.removeAll { deletedMealIDs.contains($0.mealID) }
+            mealParties.removeAll { deletedMealIDs.contains($0.mealID) }
+            recipeFavorites.removeAll { $0.recipeID == recipe.id }
             recipes.removeAll { $0.id == recipe.id }
+            
             reindex()
             errorMessage = nil
         } catch {

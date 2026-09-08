@@ -14,11 +14,23 @@ struct CreateRecipeSheet: View {
     @State private var recipeDraft = FoodStore.RecipeDraft()
     @State private var tagsText: String = ""
     @State private var navigateToDetails = false
+    @State private var showingScanner = false
 
     var body: some View {
         NavigationStack {
             ScrollView {
                 VStack(spacing: DS.Spacing.section) {
+                    AppButton(
+                        "Scan Photos or Cookbook",
+                        systemImage: "camera.viewfinder",
+                        variant: .secondary,
+                        style: .outlined,
+                        size: .md,
+                        isFullWidth: true
+                    ) {
+                        showingScanner = true
+                    }
+
                     AssetPhotosPickerSection(draft: $coverPhotosDraft, title: "Cover Photo")
 
                     SectionCard("Recipe Name") {
@@ -67,6 +79,11 @@ struct CreateRecipeSheet: View {
                     onDismiss: { dismiss() }
                 )
             }
+            .sheet(isPresented: $showingScanner) {
+                RecipeScannerSheet { result, photoDataList in
+                    applyParsedRecipe(result, photos: photoDataList)
+                }
+            }
             .onAppear {
                 if name.isEmpty && !initialName.isEmpty {
                     name = initialName
@@ -76,5 +93,36 @@ struct CreateRecipeSheet: View {
                 }
             }
         }
+    }
+
+    private func applyParsedRecipe(_ result: ParsedRecipeResult, photos: [Data]) {
+        if !result.name.isEmpty {
+            name = result.name
+        }
+        if let cuisine = result.cuisine {
+            recipeDraft.cuisine = cuisine
+        }
+        if let effort = result.effort, let level = EffortLevel(rawValue: effort) {
+            recipeDraft.effort = level
+        }
+        if let serves = result.serves {
+            recipeDraft.serves = serves
+        }
+        recipeDraft.ingredients = result.ingredients
+        recipeDraft.instructions = result.instructions
+        if !result.tags.isEmpty {
+            tagsText = result.tags.joined(separator: ", ")
+        }
+
+        // Attach scanned photos to drafts
+        for (index, photo) in photos.enumerated() {
+            if index == 0 && coverPhotosDraft.isEmpty {
+                coverPhotosDraft.append(photo)
+            } else {
+                recipeDraft.addPhotoData(photo)
+            }
+        }
+
+        navigateToDetails = true
     }
 }

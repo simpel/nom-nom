@@ -33,7 +33,7 @@ struct MinimalRecipeGrid: View {
                     .buttonStyle(.plain)
                 } else {
                     NavigationLink {
-                        RecipeDetailView(recipeID: recipe.id)
+                        RecipeDetailView(recipe: recipe)
                     } label: {
                         MinimalRecipeCard(recipe: recipe)
                     }

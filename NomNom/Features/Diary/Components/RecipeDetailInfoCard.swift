@@ -66,6 +66,20 @@ struct RecipeDetailInfoCard: View {
                     }
                 }
 
+                // Servings
+                if let serves = recipe.serves {
+                    Divider().overlay(DS.Color.line.opacity(0.3))
+                    HStack {
+                        Text("Servings")
+                            .font(.subheadline)
+                            .foregroundStyle(DS.Color.textSecondary)
+                        Spacer()
+                        Text(serves == 1 ? "1 serving" : "\(serves) servings")
+                            .font(.subheadline.weight(.medium))
+                            .foregroundStyle(DS.Color.textPrimary)
+                    }
+                }
+
                 // Tags
                 if !recipe.tags.isEmpty {
                     Divider().overlay(DS.Color.line.opacity(0.3))

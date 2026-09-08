@@ -441,3 +441,11 @@ verify_jwt = false
 # Called by a signed-in user to send an invitation email to a prospective dinner party member.
 [functions.send-invite-email]
 verify_jwt = true
+
+# Called by a signed-in user to extract recipe data from photos via Vercel AI Gateway.
+[functions.parse-recipe]
+verify_jwt = true
+
+# Called by a signed-in user to analyze recipe health index and rationale via Vercel AI Gateway.
+[functions.analyze-recipe-health]
+verify_jwt = true

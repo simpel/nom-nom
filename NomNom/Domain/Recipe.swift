@@ -28,9 +28,26 @@ struct Recipe: Identifiable, Hashable, Decodable {
     var effort: EffortLevel?
     /// Kitchen / cuisine classification (e.g. "asian", "mexican", "italian").
     var cuisine: String?
+    /// Number of servings / portions this recipe yields.
+    var serves: Int?
+    /// Nutritional health index score (1–100).
+    var healthScore: Int?
+    /// Nutritional health qualitative verdict.
+    var healthVerdict: String?
+    /// Scientific nutritional explanation.
+    var healthRationale: String?
+    /// Structured nutritional strengths and cooking impact.
+    var healthBreakdown: HealthBreakdown?
     /// Whether the recipe is public and visible to other dinner parties.
     var isPublic: Bool
     var createdAt: Date
+
+    var healthIndex: HealthIndex? {
+        guard let score = healthScore, let verdict = healthVerdict, let rationale = healthRationale else {
+            return nil
+        }
+        return HealthIndex(score: score, verdict: verdict, rationale: rationale, breakdown: healthBreakdown)
+    }
 
     enum CodingKeys: String, CodingKey {
         case id
@@ -44,6 +61,11 @@ struct Recipe: Identifiable, Hashable, Decodable {
         case recipePhotoPaths = "recipe_photo_paths"
         case effort
         case cuisine
+        case serves
+        case healthScore = "health_score"
+        case healthVerdict = "health_verdict"
+        case healthRationale = "health_rationale"
+        case healthBreakdown = "health_breakdown"
         case isPublic = "is_public"
         case createdAt = "created_at"
     }
@@ -65,6 +87,11 @@ struct Recipe: Identifiable, Hashable, Decodable {
             effort = nil
         }
         cuisine = try container.decodeIfPresent(String.self, forKey: .cuisine)
+        serves = try container.decodeIfPresent(Int.self, forKey: .serves)
+        healthScore = try container.decodeIfPresent(Int.self, forKey: .healthScore)
+        healthVerdict = try container.decodeIfPresent(String.self, forKey: .healthVerdict)
+        healthRationale = try container.decodeIfPresent(String.self, forKey: .healthRationale)
+        healthBreakdown = try container.decodeIfPresent(HealthBreakdown.self, forKey: .healthBreakdown)
         isPublic = try container.decodeIfPresent(Bool.self, forKey: .isPublic) ?? true
         createdAt = try container.decodeTimestamp(.createdAt)
     }
@@ -81,6 +108,11 @@ struct Recipe: Identifiable, Hashable, Decodable {
         recipePhotoPaths: [String] = [],
         effort: EffortLevel? = nil,
         cuisine: String? = nil,
+        serves: Int? = nil,
+        healthScore: Int? = nil,
+        healthVerdict: String? = nil,
+        healthRationale: String? = nil,
+        healthBreakdown: HealthBreakdown? = nil,
         isPublic: Bool = true,
         createdAt: Date = .now
     ) {
@@ -95,6 +127,11 @@ struct Recipe: Identifiable, Hashable, Decodable {
         self.recipePhotoPaths = recipePhotoPaths
         self.effort = effort
         self.cuisine = cuisine
+        self.serves = serves
+        self.healthScore = healthScore
+        self.healthVerdict = healthVerdict
+        self.healthRationale = healthRationale
+        self.healthBreakdown = healthBreakdown
         self.isPublic = isPublic
         self.createdAt = createdAt
     }
@@ -122,6 +159,11 @@ struct NewRecipe: Encodable {
     let recipe_photo_paths: [String]
     let effort: Int?
     let cuisine: String?
+    let serves: Int?
+    let health_score: Int?
+    let health_verdict: String?
+    let health_rationale: String?
+    let health_breakdown: HealthBreakdown?
     let is_public: Bool
 
     init(
@@ -134,6 +176,11 @@ struct NewRecipe: Encodable {
         recipePhotoPaths: [String] = [],
         effort: EffortLevel? = nil,
         cuisine: String? = nil,
+        serves: Int? = nil,
+        healthScore: Int? = nil,
+        healthVerdict: String? = nil,
+        healthRationale: String? = nil,
+        healthBreakdown: HealthBreakdown? = nil,
         isPublic: Bool = true
     ) {
         self.owner_id = ownerID
@@ -146,6 +193,11 @@ struct NewRecipe: Encodable {
         self.recipe_photo_paths = recipePhotoPaths
         self.effort = effort?.rawValue
         self.cuisine = cuisine?.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty == false ? cuisine : nil
+        self.serves = serves
+        self.health_score = healthScore
+        self.health_verdict = healthVerdict
+        self.health_rationale = healthRationale
+        self.health_breakdown = healthBreakdown
         self.is_public = isPublic
     }
 }
@@ -184,6 +236,7 @@ struct RecipeContentPatch: Encodable {
     let recipe_photo_paths: [String]
     let effort: Int?
     let cuisine: String?
+    let serves: Int?
     let is_public: Bool
 
     init(
@@ -192,6 +245,7 @@ struct RecipeContentPatch: Encodable {
         recipe_photo_paths: [String],
         effort: EffortLevel? = nil,
         cuisine: String? = nil,
+        serves: Int? = nil,
         isPublic: Bool = true
     ) {
         self.ingredients = ingredients
@@ -199,9 +253,17 @@ struct RecipeContentPatch: Encodable {
         self.recipe_photo_paths = recipe_photo_paths
         self.effort = effort?.rawValue
         self.cuisine = cuisine?.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty == false ? cuisine : nil
+        self.serves = serves
         self.is_public = isPublic
     }
 }
 
 typealias DishRecipePatch = RecipeContentPatch
 
+/// Patch for updating recipe health score and rationale.
+struct RecipeHealthPatch: Encodable {
+    let health_score: Int
+    let health_verdict: String
+    let health_rationale: String
+    let health_breakdown: HealthBreakdown?
+}

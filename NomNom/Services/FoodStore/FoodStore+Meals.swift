@@ -147,6 +147,7 @@ extension FoodStore {
         var removedPhotoPaths: [String] = []
         var effort: EffortLevel? = nil
         var cuisine: String? = nil
+        var serves: Int? = nil
         var isPublic: Bool = true
 
         var totalPhotosCount: Int {
@@ -164,7 +165,7 @@ extension FoodStore {
         }
 
         var hasContent: Bool {
-            if effort != nil || cuisine != nil || !isPublic { return true }
+            if effort != nil || cuisine != nil || serves != nil || !isPublic { return true }
             let hasIngredients = ingredients.contains { !$0.isEmpty }
             let hasInstructions = instructions.contains { !$0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
             return hasIngredients || hasInstructions || totalPhotosCount > 0

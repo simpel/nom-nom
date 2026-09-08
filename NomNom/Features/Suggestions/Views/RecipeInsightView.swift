@@ -11,21 +11,30 @@ struct RecipeInsightView: View {
     @State private var renaming = false
     @State private var newName = ""
 
-    private var recipe: Recipe? { store.recipe(suggestion.dish.id) }
+    private var recipe: Recipe? { store.recipe(suggestion.dish.id) ?? suggestion.dish }
     private var history: [Meal] { store.servings(of: suggestion.dish.id) }
 
     var body: some View {
         Group {
             if let recipe {
                 content(for: recipe)
+            } else if store.isLoading {
+                ProgressView()
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else {
-                ContentUnavailableView("Recipe is gone",
-                                       systemImage: "questionmark.folder",
-                                       description: Text("It was deleted."))
+                ContentUnavailableView(
+                    "Recipe is gone",
+                    systemImage: "questionmark.folder",
+                    description: Text("It was deleted.")
+                )
             }
         }
-        .navigationTitle("Recipe")
-        .navigationBarTitleDisplayMode(.inline)
+        .screenTitle(recipe?.name ?? "Recipe", displayMode: .inline)
+        .task {
+            if store.recipe(suggestion.dish.id) == nil {
+                store.upsertLocal(recipe: suggestion.dish)
+            }
+        }
         .sheet(isPresented: $showEditor) {
             MealEditorView(mealID: nil, prefilledDishID: suggestion.dish.id)
         }
@@ -39,7 +48,7 @@ struct RecipeInsightView: View {
                 Task { await store.rename(recipe: recipe, to: trimmed) }
             }
         }
-        }
+    }
 
     @ViewBuilder
     private func content(for recipe: Recipe) -> some View {

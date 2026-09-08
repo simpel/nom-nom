@@ -46,6 +46,7 @@ extension FoodStore {
             try await loadProfiles()
             errorMessage = nil
         } catch {
+            Self.log.error("FoodStore.load failed: \(error.localizedDescription, privacy: .public) - \(error)")
             errorMessage = Self.describe(error)
         }
     }
