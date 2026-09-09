@@ -1,20 +1,37 @@
 #!/usr/bin/env node
 
 /**
- * Generates an Apple OAuth client_secret JWT for Supabase Auth using the .p8 private key.
+ * Generates an Apple OAuth client_secret JWT for Supabase Auth (the value that
+ * goes in SUPABASE_AUTH_EXTERNAL_APPLE_SECRET). This is signed with the
+ * "Sign in with Apple" key — a different key from the APNs one. Keep them
+ * separate so a leak of either never forces you to rotate both.
  *
  * Usage:
- *   node scripts/generate_apple_client_secret.js
+ *   APPLE_SIWA_KEY_ID=XXXXXXXXXX node scripts/generate_apple_client_secret.js
+ *
+ * Defaults: KEY_PATH is keys/signinwithapple/AuthKey_<KEY_ID>.p8. Override with
+ * APPLE_SIWA_KEY_PATH (relative to the repo root). The keys/ directory is
+ * gitignored — never commit a .p8.
  */
 
 const crypto = require('crypto');
 const fs = require('fs');
 const path = require('path');
 
-const TEAM_ID = 'D4F66LSYSF';
-const KEY_ID = '6FLDB732GY';
-const CLIENT_ID = 'se.joelsanden.nomnom';
-const P8_PATH = path.resolve(__dirname, '..', 'AuthKey_6FLDB732GY.p8');
+const TEAM_ID = process.env.APPLE_TEAM_ID || 'D4F66LSYSF';
+const CLIENT_ID = process.env.APPLE_SIWA_CLIENT_ID || 'se.joelsanden.nomnom';
+const KEY_ID = process.env.APPLE_SIWA_KEY_ID;
+
+if (!KEY_ID) {
+  console.error('❌ Set APPLE_SIWA_KEY_ID to the Key ID of your Sign in with Apple key.');
+  process.exit(1);
+}
+
+const P8_PATH = path.resolve(
+  __dirname,
+  '..',
+  process.env.APPLE_SIWA_KEY_PATH || `keys/signinwithapple/AuthKey_${KEY_ID}.p8`,
+);
 
 if (!fs.existsSync(P8_PATH)) {
   console.error(`❌ Could not find .p8 file at: ${P8_PATH}`);
@@ -65,3 +82,4 @@ const jwt = `${signInput}.${signatureB64}`;
 console.log('\n--- Apple Client Secret (JWT) for Supabase ---');
 console.log(jwt);
 console.log('----------------------------------------------\n');
+console.log(`Expires: ${new Date(exp * 1000).toISOString()} (regenerate before then)\n`);

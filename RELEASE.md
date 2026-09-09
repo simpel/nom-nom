@@ -173,9 +173,11 @@ been exercised end to end. Do it before you ship, not after.
 
 ## Deliberately not blocking
 
-- **Push notifications.** `notify-invitees` returns `{"skipped":"apns-not-configured"}`
-  without the APNs secrets — a no-op, not an error. The in-app inbox works alone.
-  Add the APNs key after Phase 0 whenever you like.
+- **Push notifications.** The whole pipeline is built and deployed; it stays a
+  no-op returning `{"skipped":"apns-not-configured"}` until the `APNS_*` secrets
+  are set. The in-app inbox works alone meanwhile. Ordered setup — two Apple keys,
+  the secrets, verification — is in [docs/SETUP_APPLE_KEYS.md](docs/SETUP_APPLE_KEYS.md);
+  how the pipeline works is in [docs/PUSH_NOTIFICATIONS.md](docs/PUSH_NOTIFICATIONS.md).
 - **Offline mode.** Needs `updated_at` and tombstones in the schema first. A v1.1 conversation.
 - **Test target.** There isn't one. `RankingCore` is pure and testable and the 33-check
   RLS suite plus the 17-check `DevSelfCheck` cover the backend, but nothing automated

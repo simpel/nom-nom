@@ -29,6 +29,14 @@ extension FoodStore {
         }
     }
 
+    /// Drops this device's token before sign-out, so a push meant for the
+    /// account that just left never lands on whoever signs in next. Must run
+    /// while the session is still valid — the delete is RLS-scoped to `auth.uid()`.
+    func unregisterCurrentDevice() async {
+        guard let token = NotificationManager.shared.deviceToken else { return }
+        await unregisterDeviceToken(token)
+    }
+
     func unregisterDeviceToken(_ token: String) async {
         guard !token.isEmpty else { return }
 

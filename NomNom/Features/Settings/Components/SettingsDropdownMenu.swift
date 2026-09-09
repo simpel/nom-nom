@@ -64,7 +64,10 @@ struct SettingsDropdownMenu: View {
         }
         .alert("Sign out?", isPresented: $confirmSignOut) {
             Button("Sign out", role: .destructive) {
-                Task { await auth.signOut() }
+                Task {
+                    await store.unregisterCurrentDevice()
+                    await auth.signOut()
+                }
             }
             Button("Cancel", role: .cancel) {}
         } message: {

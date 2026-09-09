@@ -10,6 +10,8 @@ struct DividedScoreView<Accessory: View>: View {
     var verticalPadding: CGFloat = 0
     @ViewBuilder var accessory: () -> Accessory
 
+    @State private var accessoryWidth: CGFloat = 0
+
     private var cleanScore: String {
         score.replacingOccurrences(of: "%", with: "").trimmingCharacters(in: .whitespaces)
     }
@@ -36,13 +38,33 @@ struct DividedScoreView<Accessory: View>: View {
                 .frame(maxWidth: .infinity, alignment: .center)
                 .lineLimit(1)
                 .minimumScaleFactor(0.8)
-
-            accessory()
         }
+        // Reserve matching gutters on both sides so the hairline divider stays
+        // centered in the card regardless of the trailing accessory's width.
+        .padding(.horizontal, accessoryWidth)
+        .overlay(alignment: .trailing) {
+            accessory()
+                .background(
+                    GeometryReader { proxy in
+                        Color.clear.preference(
+                            key: AccessoryWidthKey.self,
+                            value: proxy.size.width
+                        )
+                    }
+                )
+        }
+        .onPreferenceChange(AccessoryWidthKey.self) { accessoryWidth = $0 }
         .offset(y: 2)
         .padding(.vertical, verticalPadding)
         .accessibilityElement(children: .combine)
         .accessibilityLabel("\(cleanScore), \(verdict)")
+    }
+}
+
+private struct AccessoryWidthKey: PreferenceKey {
+    static var defaultValue: CGFloat = 0
+    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
+        value = max(value, nextValue())
     }
 }
 

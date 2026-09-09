@@ -154,6 +154,10 @@ Deno.serve(async (req) => {
         authorization: `bearer ${jwt}`,
         "apns-topic": bundleId,
         "apns-push-type": "alert",
+        "apns-priority": "10",
+        // Store and retry for a day, then give up — an invite or rating nudge
+        // that's a week stale is noise, not news.
+        "apns-expiration": String(Math.floor(Date.now() / 1000) + 86_400),
       },
       body: JSON.stringify({
         aps: {

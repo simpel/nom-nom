@@ -11,6 +11,11 @@ xcuserdata/
 *.xccheckout
 .DS_Store
 
+# Apple .p8 signing keys — never commit these. The directory and its README
+# stay tracked so the layout is documented; everything else is ignored.
+keys/**/*
+!keys/README.md
+
 # Swift Package Manager
 .build/
 .swiftpm/
@@ -37,3 +42,4 @@ web/build/
 web/dist/
 *.tsbuildinfo
 NomNom.mobileprovision
+docs/SETUP_APPLE_KEYS.md

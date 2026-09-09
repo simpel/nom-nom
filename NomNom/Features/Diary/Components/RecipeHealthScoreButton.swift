@@ -17,15 +17,14 @@ struct RecipeHealthDetailsButton: View {
 
     var body: some View {
         AppButton(
-            "Details",
-            icon: .system("chevron.right"),
-            iconPosition: .trailing,
+            icon: .system("info.circle"),
             variant: .neutral,
             style: .ghost,
             size: .sm
         ) {
             presentedPayload = RecipeHealthSheetPayload(recipe: recipe, healthIndex: healthIndex)
         }
+        .accessibilityLabel("Health score details")
         .sheet(item: $presentedPayload) { payload in
             RecipeHealthRationaleSheet(recipe: payload.recipe, healthIndex: payload.healthIndex)
         }
