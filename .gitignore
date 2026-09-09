@@ -19,6 +19,8 @@ xcuserdata/
 .env
 .env.*
 supabase/functions/.env
+*.p8
+AuthKey_*.p8
 
 # Supabase
 supabase/.temp/
