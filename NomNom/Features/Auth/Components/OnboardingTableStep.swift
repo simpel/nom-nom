@@ -10,8 +10,10 @@ struct OnboardingTableStep: View {
 
             SectionCard("Party Name", caption: "Optional") {
                 VStack(alignment: .leading, spacing: 10) {
-                    Input("Party name (e.g. Sunday Dinners)", text: $partyName)
+                    Input("Party name (e.g. Sunday Dinners)", text: $partyName, style: .cardRow)
                         .textInputAutocapitalization(.words)
+
+                    Divider()
 
                     Text("Leave blank to start solo. You can always create or join parties later.")
                         .font(.caption)

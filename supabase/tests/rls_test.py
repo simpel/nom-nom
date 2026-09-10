@@ -139,6 +139,26 @@ check("party member can read dish served to the party", st == 200 and len(g_dish
 st, o_meals = call("GET", f"/rest/v1/meals?id=eq.{meal2_id}", o_tok)
 check("outsider cannot read meal served to the party", st == 200 and o_meals == [], f"{st} {o_meals}")
 
+print("\n== recipe like notifies the recipe owner ==")
+st, _ = call("PATCH", f"/rest/v1/dishes?id=eq.{dish2_id}", a_tok, {"is_public": True})
+check("owner can make a recipe public", st in (200, 204), f"{st}")
+st, fav = call("POST", "/rest/v1/recipe_favorites", o_tok,
+               {"recipe_id": dish2_id, "user_id": o_id}, REP)
+check("reader can favorite a public recipe", st == 201, f"{st} {fav}")
+st, a_notes = call("GET", "/rest/v1/notifications?select=kind,body", a_tok)
+check("recipe owner received a recipe_liked notification",
+      st == 200 and any(n["kind"] == "recipe_liked" for n in a_notes), f"{st} {a_notes}")
+
+print("\n== party follow notifies the party creator ==")
+st, _ = call("PATCH", f"/rest/v1/parties?id=eq.{party_id}", a_tok, {"is_public": True})
+check("creator can make a party public", st in (200, 204), f"{st}")
+st, follow = call("POST", "/rest/v1/party_followers", o_tok,
+                  {"party_id": party_id, "user_id": o_id}, REP)
+check("outsider can follow a public party", st == 201, f"{st} {follow}")
+st, a_notes = call("GET", "/rest/v1/notifications?select=kind,body", a_tok)
+check("party creator received a party_followed notification",
+      st == 200 and any(n["kind"] == "party_followed" for n in a_notes), f"{st} {a_notes}")
+
 print("\n== invite unregistered email to party, then sign up ==")
 future_party_email = f"futureparty-{tag}@example.com"
 st, pinv_future = call("POST", "/rest/v1/party_invites", a_tok,

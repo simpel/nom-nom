@@ -28,6 +28,7 @@ struct MealEditorPartiesSection: View {
                                     .foregroundStyle(DS.Color.textPrimary)
                             }
                         }
+                        .nativeToggle()
 
                         if party.id != store.myParties.last?.id {
                             Divider()

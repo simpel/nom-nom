@@ -25,12 +25,10 @@ struct MealRecipeStepView: View {
 
                 RecipeEditorSection(draft: $recipeDraft)
 
-                SectionCard("Cooking Effort") {
-                    TactileOptionPicker(selection: $recipeDraft.effort)
-                }
+                MealEditorCookingTimeSection(effort: $recipeDraft.effort)
 
                 SectionCard("Tags") {
-                    Input("Tags, comma separated (e.g. quick, oven, pasta)", text: $tagsText)
+                    Input("Tags, comma separated (e.g. quick, oven, pasta)", text: $tagsText, style: .cardRow)
                         .textInputAutocapitalization(.never)
                         .autocorrectionDisabled()
                 }

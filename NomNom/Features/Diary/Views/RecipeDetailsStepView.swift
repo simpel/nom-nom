@@ -19,7 +19,7 @@ struct RecipeDetailsStepView: View {
                 RecipeEditorSection(draft: $recipeDraft)
 
                 SectionCard("Tags") {
-                    Input("Tags, comma separated (e.g. pasta, quick, oven)", text: $tagsText)
+                    Input("Tags, comma separated (e.g. pasta, quick, oven)", text: $tagsText, style: .cardRow)
                         .textInputAutocapitalization(.never)
                         .autocorrectionDisabled()
                 }
@@ -28,6 +28,7 @@ struct RecipeDetailsStepView: View {
                     VStack(alignment: .leading, spacing: 6) {
                         Toggle("Make recipe public", isOn: $recipeDraft.isPublic)
                             .font(.body.weight(.medium))
+                            .nativeToggle()
 
                         Text("When enabled, other dinner parties and users can discover and cook this recipe.")
                             .font(.caption)

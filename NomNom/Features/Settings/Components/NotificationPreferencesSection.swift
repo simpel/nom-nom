@@ -1,102 +1,145 @@
 import SwiftUI
 import UserNotifications
 
-/// Form section for configuring delivery preferences (Notification, Email, Both, Off) per event.
+/// One on/off switch per event, plus two global delivery-channel switches.
+/// The in-app inbox always fills regardless — these only gate push and email.
 struct NotificationPreferencesSection: View {
     @Environment(FoodStore.self) private var store
     @Environment(NotificationManager.self) private var notifications
 
-    enum DeliveryPreference: String, CaseIterable, Identifiable {
-        case both = "Both"
-        case push = "Notification"
-        case email = "Email"
-        case none = "Off"
+    // Per-event switches.
+    @State private var mealInvite = true
+    @State private var mealRating = true
+    @State private var partyInvite = true
+    @State private var partyActivity = true
+    @State private var recipeLike = true
+    // Delivery channels.
+    @State private var viaPush = true
+    @State private var viaEmail = false
 
-        var id: String { rawValue }
+    @State private var hasLoaded = false
 
-        init(push: Bool, email: Bool) {
-            switch (push, email) {
-            case (true, true): self = .both
-            case (true, false): self = .push
-            case (false, true): self = .email
-            case (false, false): self = .none
-            }
-        }
-
-        var isPush: Bool { self == .both || self == .push }
-        var isEmail: Bool { self == .both || self == .email }
+    private var anyEventOn: Bool {
+        mealInvite || mealRating || partyInvite || partyActivity || recipeLike
     }
 
-    @State private var partyPreference: DeliveryPreference = .both
-    @State private var mealPreference: DeliveryPreference = .both
-    @State private var hasLoaded = false
+    private var showsPermissionWarning: Bool {
+        notifications.authorizationStatus == .denied && viaPush && anyEventOn
+    }
 
     var body: some View {
         SectionCard("Notifications") {
-            VStack(alignment: .leading, spacing: 14) {
-                if notifications.authorizationStatus == .denied && (partyPreference.isPush || mealPreference.isPush) {
-                    systemDisabledWarning
+            VStack(alignment: .leading, spacing: DS.Spacing.md) {
+                if showsPermissionWarning {
+                    permissionWarning
                     Divider()
                 }
 
-                VStack(alignment: .leading, spacing: 8) {
-                    Text("Dinner Party Invites")
-                        .font(.subheadline.weight(.medium))
-                        .foregroundStyle(DS.Color.textPrimary)
-
-                    Picker("Dinner Party Invites", selection: Binding(
-                        get: { partyPreference },
-                        set: { newPref in
-                            partyPreference = newPref
-                            handlePreferenceChange(pushEnabled: newPref.isPush)
-                        }
-                    )) {
-                        ForEach(DeliveryPreference.allCases) { pref in
-                            Text(pref.rawValue).tag(pref)
-                        }
-                    }
-                    .pickerStyle(.segmented)
+                VStack(spacing: DS.Spacing.sm) {
+                    eventRow(
+                        "Meal invitations",
+                        detail: "Someone asks you to rate a meal",
+                        isOn: $mealInvite
+                    )
+                    eventRow(
+                        "Ratings on your meals",
+                        detail: "Someone rates a dish you cooked",
+                        isOn: $mealRating
+                    )
+                    eventRow(
+                        "Dinner party invitations",
+                        detail: "Someone invites you to a party",
+                        isOn: $partyInvite
+                    )
+                    eventRow(
+                        "Party activity",
+                        detail: "Someone joins or follows your party",
+                        isOn: $partyActivity
+                    )
+                    eventRow(
+                        "Recipe likes",
+                        detail: "Someone likes one of your recipes",
+                        isOn: $recipeLike
+                    )
                 }
 
+                Divider()
 
+                VStack(alignment: .leading, spacing: DS.Spacing.sm) {
+                    Text("Deliver by")
+                        .font(.caption.weight(.semibold))
+                        .tracking(0.5)
+                        .textCase(.uppercase)
+                        .foregroundStyle(DS.Color.textTertiary)
 
-                VStack(alignment: .leading, spacing: 8) {
-                    Text("Meal Invitations")
-                        .font(.subheadline.weight(.medium))
-                        .foregroundStyle(DS.Color.textPrimary)
+                    channelRow("Push notifications", systemImage: "app.badge", isOn: $viaPush)
+                    channelRow("Email", systemImage: "envelope", isOn: $viaEmail)
 
-                    Picker("Meal Invitations", selection: Binding(
-                        get: { mealPreference },
-                        set: { newPref in
-                            mealPreference = newPref
-                            handlePreferenceChange(pushEnabled: newPref.isPush)
-                        }
-                    )) {
-                        ForEach(DeliveryPreference.allCases) { pref in
-                            Text(pref.rawValue).tag(pref)
-                        }
+                    if !viaPush && !viaEmail {
+                        Text("With both off, these only show in your in-app inbox.")
+                            .font(.caption)
+                            .foregroundStyle(DS.Color.textSecondary)
                     }
-                    .pickerStyle(.segmented)
                 }
             }
         }
-        .onAppear(perform: loadPreferences)
-        .onChange(of: store.myProfile) { _, _ in
+        .onAppear {
             loadPreferences()
+            Task { await notifications.refreshStatus() }
         }
+        .onChange(of: store.myProfile) { _, _ in loadPreferences() }
     }
 
-    // MARK: - Subviews
+    // MARK: - Rows
 
-    private var systemDisabledWarning: some View {
-        VStack(alignment: .leading, spacing: 4) {
+    private func eventRow(_ title: String, detail: String, isOn: Binding<Bool>) -> some View {
+        Toggle(isOn: Binding(
+            get: { isOn.wrappedValue },
+            set: { newValue in
+                isOn.wrappedValue = newValue
+                handleChange()
+            }
+        )) {
+            VStack(alignment: .leading, spacing: 2) {
+                Text(title)
+                    .font(.subheadline.weight(.medium))
+                    .foregroundStyle(DS.Color.textPrimary)
+                Text(detail)
+                    .font(.caption)
+                    .foregroundStyle(DS.Color.textSecondary)
+            }
+        }
+        .nativeToggle()
+    }
+
+    private func channelRow(_ title: String, systemImage: String, isOn: Binding<Bool>) -> some View {
+        Toggle(isOn: Binding(
+            get: { isOn.wrappedValue },
+            set: { newValue in
+                isOn.wrappedValue = newValue
+                handleChange()
+            }
+        )) {
+            Label(title, systemImage: systemImage)
+                .font(.subheadline.weight(.medium))
+                .foregroundStyle(DS.Color.textPrimary)
+        }
+        .nativeToggle()
+    }
+
+    private var permissionWarning: some View {
+        VStack(alignment: .leading, spacing: 6) {
             HStack(spacing: 6) {
                 Image(systemName: "bell.slash")
                     .foregroundStyle(.orange)
-                Text("Notifications Disabled in iOS Settings")
+                Text("Notifications are off in iOS Settings")
                     .font(.caption.weight(.semibold))
                     .foregroundStyle(DS.Color.textPrimary)
             }
+
+            Text("Push is on here, but iOS is blocking it. Turn it back on in Settings.")
+                .font(.caption)
+                .foregroundStyle(DS.Color.textSecondary)
 
             AppButton(
                 "Open iOS Settings",
@@ -114,33 +157,43 @@ struct NotificationPreferencesSection: View {
 
     private func loadPreferences() {
         guard let profile = store.myProfile else { return }
-        partyPreference = DeliveryPreference(push: profile.notifyPushPartyInvite, email: profile.notifyEmailPartyInvite)
-        mealPreference = DeliveryPreference(push: profile.notifyPushMealInvite, email: profile.notifyEmailMealInvite)
+        mealInvite = profile.notifyMealInvite
+        mealRating = profile.notifyMealRating
+        partyInvite = profile.notifyPartyInvite
+        partyActivity = profile.notifyPartyActivity
+        recipeLike = profile.notifyRecipeLike
+        viaPush = profile.notifyViaPush
+        viaEmail = profile.notifyViaEmail
         hasLoaded = true
     }
 
-    private func handlePreferenceChange(pushEnabled: Bool) {
-        persist()
-        if pushEnabled {
-            Task {
-                if notifications.authorizationStatus == .notDetermined {
-                    _ = await notifications.requestAuthorization()
-                } else if notifications.authorizationStatus == .authorized {
-                    UIApplication.shared.registerForRemoteNotifications()
-                }
-            }
-        }
-    }
-
-    private func persist() {
+    private func handleChange() {
         guard hasLoaded else { return }
+
         Task {
             await store.updateNotificationPreferences(
-                pushParty: partyPreference.isPush,
-                emailParty: partyPreference.isEmail,
-                pushMeal: mealPreference.isPush,
-                emailMeal: mealPreference.isEmail
+                mealInvite: mealInvite,
+                mealRating: mealRating,
+                partyInvite: partyInvite,
+                partyActivity: partyActivity,
+                recipeLike: recipeLike,
+                viaPush: viaPush,
+                viaEmail: viaEmail
             )
+        }
+
+        // Only meaningful once the user wants push for something.
+        guard viaPush, anyEventOn else { return }
+
+        switch notifications.authorizationStatus {
+        case .notDetermined:
+            // First time only — iOS shows the system prompt exactly once, ever.
+            Task { await notifications.requestAuthorization() }
+        case .authorized, .provisional:
+            UIApplication.shared.registerForRemoteNotifications()
+        default:
+            // .denied / .ephemeral — the warning banner points the user to Settings.
+            break
         }
     }
 }

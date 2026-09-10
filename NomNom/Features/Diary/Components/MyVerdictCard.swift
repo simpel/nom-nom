@@ -15,7 +15,7 @@ struct MyVerdictCard: View {
             caption: mine?.name
         ) {
             VStack(alignment: .leading, spacing: 10) {
-                TactileOptionPicker(selection: Binding(
+                TasteScoreSelector(selection: Binding(
                     get: { mine },
                     set: { newReaction in
                         guard let newReaction else { return }

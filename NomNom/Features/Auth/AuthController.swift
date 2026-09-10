@@ -62,19 +62,37 @@ final class AuthController {
     func start() {
         guard listener == nil else { return }
         listener = Task { [weak self] in
+            // Actively resolve the persisted session first to avoid race condition on launch
+            do {
+                let initialSession = try await supabase.auth.session
+                if !initialSession.isExpired {
+                    self?.phase = .signedIn(userID: initialSession.user.id)
+                    self?.step = .email
+                } else {
+                    self?.phase = .signedOut
+                }
+            } catch {
+                self?.phase = .signedOut
+            }
+
             for await (event, session) in supabase.auth.authStateChanges {
                 guard let self else { return }
                 switch event {
                 case .signedOut:
                     self.phase = .signedOut
                     self.step = .email
+                case .initialSession:
+                    if let session, !session.isExpired {
+                        self.phase = .signedIn(userID: session.user.id)
+                        self.step = .email
+                    }
                 default:
                     // A stored session can come back already expired; treating that
                     // as signed in shows the tabs and then fails every request.
                     if let session, !session.isExpired {
                         self.phase = .signedIn(userID: session.user.id)
                         self.step = .email
-                    } else if case .initialSession = event {
+                    } else {
                         self.phase = .signedOut
                     }
                 }

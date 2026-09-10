@@ -11,6 +11,10 @@ struct AppNotification: Identifiable, Hashable, Decodable {
         case partyInvite = "party_invite"
         /// Somebody joined a dinner party.
         case partyJoined = "party_joined"
+        /// Somebody started following one of your dinner parties.
+        case partyFollowed = "party_followed"
+        /// Somebody liked one of your recipes.
+        case recipeLiked = "recipe_liked"
         /// Unknown or future notification kind.
         case other = "other"
     }
@@ -18,6 +22,8 @@ struct AppNotification: Identifiable, Hashable, Decodable {
     let id: UUID
     var userID: UUID
     var mealID: UUID?
+    var partyID: UUID?
+    var dishID: UUID?
     var kind: Kind
     var title: String
     var body: String
@@ -28,6 +34,8 @@ struct AppNotification: Identifiable, Hashable, Decodable {
         case id
         case userID = "user_id"
         case mealID = "meal_id"
+        case partyID = "party_id"
+        case dishID = "dish_id"
         case kind
         case title
         case body
@@ -40,6 +48,8 @@ struct AppNotification: Identifiable, Hashable, Decodable {
         id = try container.decode(UUID.self, forKey: .id)
         userID = try container.decode(UUID.self, forKey: .userID)
         mealID = try container.decodeIfPresent(UUID.self, forKey: .mealID)
+        partyID = try container.decodeIfPresent(UUID.self, forKey: .partyID)
+        dishID = try container.decodeIfPresent(UUID.self, forKey: .dishID)
         let rawKind = try container.decode(String.self, forKey: .kind)
         kind = Kind(rawValue: rawKind) ?? .other
         title = try container.decode(String.self, forKey: .title)
@@ -56,6 +66,8 @@ struct AppNotification: Identifiable, Hashable, Decodable {
         case .ratingReceived: return "fork.knife"
         case .partyInvite: return "person.2.fill"
         case .partyJoined: return "person.badge.plus"
+        case .partyFollowed: return "heart.fill"
+        case .recipeLiked: return "heart.fill"
         case .other: return "bell.fill"
         }
     }

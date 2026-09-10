@@ -61,6 +61,7 @@ struct SuggestionFiltersView: View {
                                     )) {
                                         Text(person.name)
                                     }
+                                    .nativeToggle()
 
                                     if person.ref != roster.last?.ref {
                                         Divider()
@@ -91,10 +92,12 @@ struct SuggestionFiltersView: View {
                             Divider()
 
                             Toggle("Hide dishes somebody disliked", isOn: $filters.hideDisliked)
+                                .nativeToggle()
 
                             Divider()
 
                             Toggle("Include dishes we've never rated", isOn: $filters.includeUntried)
+                                .nativeToggle()
                         }
                     }
 
@@ -111,6 +114,7 @@ struct SuggestionFiltersView: View {
                                     )) {
                                         Text(tag)
                                     }
+                                    .nativeToggle()
 
                                     if tag != tags.last {
                                         Divider()

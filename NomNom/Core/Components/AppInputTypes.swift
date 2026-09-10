@@ -43,6 +43,8 @@ enum AppInputSize {
 enum AppInputStyle {
     /// Sunken surface background with subtle resting border and accented focus ring.
     case filled
+    /// Seamless flush row styling with hairline divider support inside SectionCard containers.
+    case cardRow
     /// Transparent surface with structural border.
     case outlined
     /// Transparent surface without borders, ideal for seamless inline table rows.

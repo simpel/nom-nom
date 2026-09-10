@@ -32,7 +32,7 @@ struct CreatePartySheet: View {
                     )
 
                     SectionCard("Party Name") {
-                        Input("Party name (e.g. Taco Night)", text: $name)
+                        Input("Party name (e.g. Taco Night)", text: $name, style: .cardRow)
                             .autocorrectionDisabled()
                             .onSubmit {
                                 if canProceed { navigateToSetup = true }

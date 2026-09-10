@@ -21,14 +21,25 @@ struct OnboardingProfileStep: View {
             )
 
             SectionCard("Your Name") {
-                VStack(spacing: 10) {
-                    Input("First name", text: $firstName)
-                        .textContentType(.givenName)
-                        .textInputAutocapitalization(.words)
+                VStack(spacing: 0) {
+                    Input(
+                        label: "First name",
+                        placeholder: "Required",
+                        text: $firstName
+                    )
+                    .textContentType(.givenName)
+                    .textInputAutocapitalization(.words)
 
-                    Input("Last name", text: $lastName)
-                        .textContentType(.familyName)
-                        .textInputAutocapitalization(.words)
+                    Divider()
+                        .padding(.vertical, 4)
+
+                    Input(
+                        label: "Last name",
+                        placeholder: "Required",
+                        text: $lastName
+                    )
+                    .textContentType(.familyName)
+                    .textInputAutocapitalization(.words)
                 }
             }
         }

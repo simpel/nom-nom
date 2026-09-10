@@ -25,11 +25,13 @@ struct ProfileSettingsSection: View {
                             .foregroundStyle(DS.Color.accentText)
                     }
 
-                    VStack(spacing: 8) {
-                        Input("First name", text: $firstName, size: .sm)
+                    VStack(spacing: 0) {
+                        Input(label: "First", placeholder: "First name", text: $firstName, size: .sm)
                             .textContentType(.givenName)
                             .onSubmit(saveProfile)
-                        Input("Last name", text: $lastName, size: .sm)
+                        Divider()
+                            .padding(.vertical, 2)
+                        Input(label: "Last", placeholder: "Last name", text: $lastName, size: .sm)
                             .textContentType(.familyName)
                             .onSubmit(saveProfile)
                     }

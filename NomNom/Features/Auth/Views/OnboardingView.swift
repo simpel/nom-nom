@@ -163,8 +163,8 @@ struct OnboardingView: View {
         if let profile = store.myProfile {
             firstName = profile.firstName
             lastName = profile.lastName
-            enablePush = profile.notifyPushPartyInvite || profile.notifyPushMealInvite
-            enableEmail = profile.notifyEmailPartyInvite || profile.notifyEmailMealInvite
+            enablePush = profile.notifyViaPush
+            enableEmail = profile.notifyViaEmail
             if let photoPath = profile.photoPath, !photoPath.isEmpty {
                 photoDraft = FoodStore.PhotosDraft(existingPaths: [photoPath])
             }
@@ -177,11 +177,16 @@ struct OnboardingView: View {
             if enablePush {
                 _ = await NotificationManager.shared.requestAuthorization()
             }
+            // Onboarding sets the delivery channels; every event class starts on
+            // and can be tuned later in Settings.
             await store.updateNotificationPreferences(
-                pushParty: enablePush,
-                emailParty: enableEmail,
-                pushMeal: enablePush,
-                emailMeal: enableEmail
+                mealInvite: true,
+                mealRating: true,
+                partyInvite: true,
+                partyActivity: true,
+                recipeLike: true,
+                viaPush: enablePush,
+                viaEmail: enableEmail
             )
             isSaving = false
             withAnimation(.easeInOut(duration: 0.25)) {

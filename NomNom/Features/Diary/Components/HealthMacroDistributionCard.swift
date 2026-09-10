@@ -107,23 +107,27 @@ struct HealthMacroDistributionCard: View {
             let cRatio = safeRatio(macros.carbsRatio)
             let fRatio = safeRatio(macros.fatRatio)
 
+            let activeCount = (pRatio > 0 ? 1 : 0) + (cRatio > 0 ? 1 : 0) + (fRatio > 0 ? 1 : 0)
+            let totalSpacing = CGFloat(max(0, activeCount - 1)) * 2
+            let barWidth = max(0, totalWidth - totalSpacing)
+
             HStack(spacing: 2) {
                 if pRatio > 0 {
                     Capsule()
                         .fill(Self.proteinColor)
-                        .frame(width: max(4, totalWidth * pRatio))
+                        .frame(width: max(4, barWidth * pRatio))
                 }
 
                 if cRatio > 0 {
                     Capsule()
                         .fill(Self.carbsColor)
-                        .frame(width: max(4, totalWidth * cRatio))
+                        .frame(width: max(4, barWidth * cRatio))
                 }
 
                 if fRatio > 0 {
                     Capsule()
                         .fill(Self.fatColor)
-                        .frame(width: max(4, totalWidth * fRatio))
+                        .frame(width: max(4, barWidth * fRatio))
                 }
             }
         }

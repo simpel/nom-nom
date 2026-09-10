@@ -9,10 +9,16 @@ struct Profile: Identifiable, Hashable, Decodable {
     var displayName: String
     var avatarEmoji: String
     var photoPath: String?
-    var notifyPushPartyInvite: Bool
-    var notifyEmailPartyInvite: Bool
-    var notifyPushMealInvite: Bool
-    var notifyEmailMealInvite: Bool
+    /// Per-event switches. Each turns one class of notification off entirely
+    /// (push and email both). The in-app inbox is unaffected.
+    var notifyMealInvite: Bool
+    var notifyMealRating: Bool
+    var notifyPartyInvite: Bool
+    var notifyPartyActivity: Bool
+    var notifyRecipeLike: Bool
+    /// Global delivery channels, applied on top of the per-event switches.
+    var notifyViaPush: Bool
+    var notifyViaEmail: Bool
     var onboardingCompletedAt: Date?
 
     enum CodingKeys: String, CodingKey {
@@ -22,10 +28,13 @@ struct Profile: Identifiable, Hashable, Decodable {
         case displayName = "display_name"
         case avatarEmoji = "avatar_emoji"
         case photoPath = "photo_path"
-        case notifyPushPartyInvite = "notify_push_party_invite"
-        case notifyEmailPartyInvite = "notify_email_party_invite"
-        case notifyPushMealInvite = "notify_push_meal_invite"
-        case notifyEmailMealInvite = "notify_email_meal_invite"
+        case notifyMealInvite = "notify_meal_invite"
+        case notifyMealRating = "notify_meal_rating"
+        case notifyPartyInvite = "notify_party_invite"
+        case notifyPartyActivity = "notify_party_activity"
+        case notifyRecipeLike = "notify_recipe_like"
+        case notifyViaPush = "notify_via_push"
+        case notifyViaEmail = "notify_via_email"
         case onboardingCompletedAt = "onboarding_completed_at"
     }
 
@@ -37,10 +46,13 @@ struct Profile: Identifiable, Hashable, Decodable {
         displayName = try container.decodeIfPresent(String.self, forKey: .displayName) ?? ""
         avatarEmoji = try container.decodeIfPresent(String.self, forKey: .avatarEmoji) ?? "🧑"
         photoPath = try container.decodeIfPresent(String.self, forKey: .photoPath)
-        notifyPushPartyInvite = try container.decodeIfPresent(Bool.self, forKey: .notifyPushPartyInvite) ?? true
-        notifyEmailPartyInvite = try container.decodeIfPresent(Bool.self, forKey: .notifyEmailPartyInvite) ?? true
-        notifyPushMealInvite = try container.decodeIfPresent(Bool.self, forKey: .notifyPushMealInvite) ?? true
-        notifyEmailMealInvite = try container.decodeIfPresent(Bool.self, forKey: .notifyEmailMealInvite) ?? true
+        notifyMealInvite = try container.decodeIfPresent(Bool.self, forKey: .notifyMealInvite) ?? true
+        notifyMealRating = try container.decodeIfPresent(Bool.self, forKey: .notifyMealRating) ?? true
+        notifyPartyInvite = try container.decodeIfPresent(Bool.self, forKey: .notifyPartyInvite) ?? true
+        notifyPartyActivity = try container.decodeIfPresent(Bool.self, forKey: .notifyPartyActivity) ?? true
+        notifyRecipeLike = try container.decodeIfPresent(Bool.self, forKey: .notifyRecipeLike) ?? true
+        notifyViaPush = try container.decodeIfPresent(Bool.self, forKey: .notifyViaPush) ?? true
+        notifyViaEmail = try container.decodeIfPresent(Bool.self, forKey: .notifyViaEmail) ?? false
         onboardingCompletedAt = try container.decodeTimestampIfPresent(.onboardingCompletedAt)
     }
 
@@ -51,10 +63,13 @@ struct Profile: Identifiable, Hashable, Decodable {
         displayName: String = "",
         avatarEmoji: String = "🧑",
         photoPath: String? = nil,
-        notifyPushPartyInvite: Bool = true,
-        notifyEmailPartyInvite: Bool = true,
-        notifyPushMealInvite: Bool = true,
-        notifyEmailMealInvite: Bool = true,
+        notifyMealInvite: Bool = true,
+        notifyMealRating: Bool = true,
+        notifyPartyInvite: Bool = true,
+        notifyPartyActivity: Bool = true,
+        notifyRecipeLike: Bool = true,
+        notifyViaPush: Bool = true,
+        notifyViaEmail: Bool = false,
         onboardingCompletedAt: Date? = nil
     ) {
         self.id = id
@@ -63,10 +78,13 @@ struct Profile: Identifiable, Hashable, Decodable {
         self.displayName = displayName
         self.avatarEmoji = avatarEmoji
         self.photoPath = photoPath
-        self.notifyPushPartyInvite = notifyPushPartyInvite
-        self.notifyEmailPartyInvite = notifyEmailPartyInvite
-        self.notifyPushMealInvite = notifyPushMealInvite
-        self.notifyEmailMealInvite = notifyEmailMealInvite
+        self.notifyMealInvite = notifyMealInvite
+        self.notifyMealRating = notifyMealRating
+        self.notifyPartyInvite = notifyPartyInvite
+        self.notifyPartyActivity = notifyPartyActivity
+        self.notifyRecipeLike = notifyRecipeLike
+        self.notifyViaPush = notifyViaPush
+        self.notifyViaEmail = notifyViaEmail
         self.onboardingCompletedAt = onboardingCompletedAt
     }
 
@@ -97,10 +115,13 @@ struct ProfilePatch: Encodable {
 }
 
 struct ProfileNotificationPatch: Encodable {
-    let notify_push_party_invite: Bool
-    let notify_email_party_invite: Bool
-    let notify_push_meal_invite: Bool
-    let notify_email_meal_invite: Bool
+    let notify_meal_invite: Bool
+    let notify_meal_rating: Bool
+    let notify_party_invite: Bool
+    let notify_party_activity: Bool
+    let notify_recipe_like: Bool
+    let notify_via_push: Bool
+    let notify_via_email: Bool
 }
 
 struct OnboardingCompletionPatch: Encodable {

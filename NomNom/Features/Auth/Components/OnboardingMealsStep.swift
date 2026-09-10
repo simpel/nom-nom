@@ -109,6 +109,7 @@ struct OnboardingMealsStep: View {
 
                 Toggle(title, isOn: isOn)
                     .labelsHidden()
+                    .nativeToggle()
             }
 
             Text(reason)

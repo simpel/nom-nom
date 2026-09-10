@@ -411,14 +411,16 @@ Deno.serve(async (req) => {
   if (recipientUserId) {
     const { data: recipientProfile } = await admin
       .from("profiles")
-      .select("notify_email_party_invite, notify_email_meal_invite")
+      .select("notify_via_email, notify_meal_invite, notify_party_invite")
       .eq("id", recipientUserId)
       .single();
 
     if (recipientProfile) {
-      const emailAllowed = meal_id
-        ? recipientProfile.notify_email_meal_invite !== false
-        : recipientProfile.notify_email_party_invite !== false;
+      // Both gates apply: the global email channel, and the per-event switch.
+      const eventOn = meal_id
+        ? recipientProfile.notify_meal_invite !== false
+        : recipientProfile.notify_party_invite !== false;
+      const emailAllowed = recipientProfile.notify_via_email === true && eventOn;
 
       if (!emailAllowed) {
         console.log(

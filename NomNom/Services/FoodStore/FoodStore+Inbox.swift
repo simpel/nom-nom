@@ -73,7 +73,7 @@ extension FoodStore {
             invites.append(created)
             reindex()
 
-            if member.notifyEmailMealInvite {
+            if member.notifyViaEmail && member.notifyMealInvite {
                 struct SendMemberMealInvitePayload: Encodable {
                     let meal_id: String
                     let invitee_user_id: String

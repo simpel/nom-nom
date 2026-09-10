@@ -15,8 +15,17 @@ struct NotificationThumbnailView: View {
     }
 
     private var matchedParty: Party? {
-        guard notification.kind == .partyInvite || notification.kind == .partyJoined else { return nil }
+        if let id = notification.partyID, let party = store.parties.first(where: { $0.id == id }) {
+            return party
+        }
+        // Fallback for rows written before party_id existed.
+        guard notification.kind == .partyInvite || notification.kind == .partyJoined || notification.kind == .partyFollowed else { return nil }
         return store.parties.first { notification.body.contains($0.name) }
+    }
+
+    private var likedRecipe: Recipe? {
+        guard let id = notification.dishID else { return nil }
+        return store.dish(id)
     }
 
     var body: some View {
@@ -41,6 +50,13 @@ struct NotificationThumbnailView: View {
             )
         } else if let matchedParty {
             PartyAvatar(party: matchedParty, size: size)
+        } else if let likedRecipe {
+            RecipeImageView(
+                recipe: likedRecipe,
+                photoPath: likedRecipe.photoPaths.first,
+                cuisine: likedRecipe.cuisine,
+                cornerRadius: isUnread ? 10 : 8
+            )
         } else {
             fallbackIconBase
         }

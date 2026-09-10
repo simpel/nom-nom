@@ -71,8 +71,8 @@ struct TextArea: View {
             .lineLimit(lineLimit)
             .foregroundStyle(disabled ? DS.Color.textTertiary : DS.Color.textPrimary)
             .disabled(disabled)
-            .padding(.horizontal, style == .plain ? 0 : 14)
-            .padding(.vertical, style == .plain ? 0 : 10)
+            .padding(.horizontal, (style == .plain || style == .cardRow) ? 0 : 14)
+            .padding(.vertical, (style == .plain || style == .cardRow) ? 0 : 10)
             .background {
                 if style == .filled {
                     RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
@@ -80,7 +80,7 @@ struct TextArea: View {
                 }
             }
             .overlay {
-                if style != .plain, let borderColor {
+                if style != .plain && style != .cardRow, let borderColor {
                     let width: CGFloat = (isFocused || isError) ? 1.5 : 0.5
                     RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
                         .strokeBorder(borderColor, lineWidth: width)
@@ -115,7 +115,7 @@ struct TextArea: View {
             return DS.Color.line.opacity(0.35)
         case .outlined:
             return DS.Color.lineStrong
-        case .plain:
+        case .plain, .cardRow:
             return nil
         }
     }

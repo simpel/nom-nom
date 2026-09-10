@@ -5,8 +5,15 @@ struct MealEditorCookingTimeSection: View {
     @Binding var effort: EffortLevel?
 
     var body: some View {
-        SectionCard("Cooking Time") {
-            TactileOptionPicker(selection: $effort)
+        VStack(alignment: .leading, spacing: 8) {
+            SectionHeader(
+                "Cooking Time",
+                trailingText: effort?.label,
+                trailingColor: DS.Color.accentText,
+                horizontalPadding: 4
+            )
+            CookingTimeSelector(selection: $effort)
         }
     }
 }
+

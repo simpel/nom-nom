@@ -16,6 +16,10 @@ struct DividedScoreView<Accessory: View>: View {
         score.replacingOccurrences(of: "%", with: "").trimmingCharacters(in: .whitespaces)
     }
 
+    private var hasAccessory: Bool {
+        Accessory.self != EmptyView.self
+    }
+
     var body: some View {
         HStack(spacing: 0) {
             // Numerical scalar score (0–100, no %)
@@ -41,19 +45,26 @@ struct DividedScoreView<Accessory: View>: View {
         }
         // Reserve matching gutters on both sides so the hairline divider stays
         // centered in the card regardless of the trailing accessory's width.
-        .padding(.horizontal, accessoryWidth)
+        .padding(.horizontal, hasAccessory ? accessoryWidth : 0)
         .overlay(alignment: .trailing) {
-            accessory()
-                .background(
-                    GeometryReader { proxy in
-                        Color.clear.preference(
-                            key: AccessoryWidthKey.self,
-                            value: proxy.size.width
-                        )
-                    }
-                )
+            if hasAccessory {
+                accessory()
+                    .fixedSize()
+                    .background(
+                        GeometryReader { proxy in
+                            Color.clear.preference(
+                                key: AccessoryWidthKey.self,
+                                value: proxy.size.width
+                            )
+                        }
+                    )
+            }
         }
-        .onPreferenceChange(AccessoryWidthKey.self) { accessoryWidth = $0 }
+        .onPreferenceChange(AccessoryWidthKey.self) { newWidth in
+            if hasAccessory {
+                accessoryWidth = newWidth
+            }
+        }
         .offset(y: 2)
         .padding(.vertical, verticalPadding)
         .accessibilityElement(children: .combine)

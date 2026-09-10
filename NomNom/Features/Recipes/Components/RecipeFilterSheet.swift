@@ -79,6 +79,7 @@ struct RecipeFilterSheet: View {
                     }
 
                     Toggle("Favourites Only", isOn: $draft.onlyFavorites)
+                        .nativeToggle()
                 } header: {
                     Text("FILTERS")
                 }

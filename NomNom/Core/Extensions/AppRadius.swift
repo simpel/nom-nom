@@ -5,22 +5,22 @@ import SwiftUI
 /// Modifying `AppRadius.standard` updates cards, buttons, input fields,
 /// pickers, and media elements across the entire app.
 public enum AppRadius {
-    /// Central/default radius applied across the app (2px).
-    public static var standard: CGFloat = 2
+    /// Central/default radius applied across the app (12px).
+    public static var standard: CGFloat = 12
 
-    /// Radius specifically for cards and container backgrounds.
-    public static var card: CGFloat { standard }
+    /// Radius specifically for cards and container backgrounds (14px).
+    public static var card: CGFloat = 14
 
-    /// Radius specifically for buttons and interactive controls.
-    public static var button: CGFloat { standard }
+    /// Radius specifically for buttons and interactive controls (50px / capsule).
+    public static var button: CGFloat = 50
 
-    /// Radius specifically for text fields, search bars, and input backgrounds.
-    public static var input: CGFloat { standard }
+    /// Radius specifically for text fields, search bars, and input backgrounds (10px).
+    public static var input: CGFloat = 10
 
-    /// Radius specifically for pickers and selector segments.
-    public static var picker: CGFloat { standard }
+    /// Radius specifically for pickers and selector segments (10px).
+    public static var picker: CGFloat = 10
 
-    /// Radius specifically for photos and media cards.
+    /// Radius specifically for photos and media cards (16px).
     public static var photo: CGFloat = 16
 
     /// Sharp corner (0px).

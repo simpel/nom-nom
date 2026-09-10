@@ -5,6 +5,7 @@ import SwiftUI
 /// Implements consistent sizing, background styling, borders, focus state rings,
 /// and icon placement across all screens, matching AppButton conventions.
 struct Input: View {
+    var label: String? = nil
     var placeholder: String = ""
     @Binding var text: String
     var leadingIcon: AppInputIcon? = nil
@@ -22,6 +23,7 @@ struct Input: View {
 
     init(
         _ placeholder: String = "",
+        label: String? = nil,
         text: Binding<String>,
         leadingIcon: AppInputIcon? = nil,
         leadingSystemImage: String? = nil,
@@ -37,6 +39,7 @@ struct Input: View {
         isFocused: FocusState<Bool>.Binding? = nil
     ) {
         self.placeholder = placeholder
+        self.label = label
         self._text = text
         if let leadingIcon {
             self.leadingIcon = leadingIcon
@@ -62,8 +65,51 @@ struct Input: View {
         self.externalFocus = isFocused
     }
 
+    init(
+        label: String,
+        placeholder: String = "",
+        text: Binding<String>,
+        leadingIcon: AppInputIcon? = nil,
+        leadingSystemImage: String? = nil,
+        trailingIcon: AppInputIcon? = nil,
+        trailingSystemImage: String? = nil,
+        size: AppInputSize = .md,
+        style: AppInputStyle = .cardRow,
+        shape: AppInputShape = .rounded(),
+        clearable: Bool = false,
+        isError: Bool = false,
+        disabled: Bool = false,
+        ghostText: String? = nil,
+        isFocused: FocusState<Bool>.Binding? = nil
+    ) {
+        self.init(
+            placeholder,
+            label: label,
+            text: text,
+            leadingIcon: leadingIcon,
+            leadingSystemImage: leadingSystemImage,
+            trailingIcon: trailingIcon,
+            trailingSystemImage: trailingSystemImage,
+            size: size,
+            style: style,
+            shape: shape,
+            clearable: clearable,
+            isError: isError,
+            disabled: disabled,
+            ghostText: ghostText,
+            isFocused: isFocused
+        )
+    }
+
     private var isFocused: Bool {
         externalFocus?.wrappedValue ?? internalFocus
+    }
+
+    private var calculatedHeight: CGFloat {
+        if let label, !label.isEmpty {
+            return size == .sm ? 44 : (size == .xl ? 58 : 52)
+        }
+        return size.height
     }
 
     var body: some View {
@@ -72,26 +118,35 @@ struct Input: View {
                 iconView(for: leadingIcon)
             }
 
-            ZStack(alignment: .leading) {
-                if text.isEmpty {
-                    Text(placeholder)
-                        .font(size.font)
-                        .foregroundStyle(DS.Color.textTertiary)
-                        .allowsHitTesting(false)
+            VStack(alignment: .leading, spacing: (label != nil && !label!.isEmpty) ? 2 : 0) {
+                if let label, !label.isEmpty {
+                    Text(label)
+                        .font(.caption2.weight(.medium))
+                        .foregroundStyle(isFocused ? DS.Color.accentText : DS.Color.textSecondary)
                         .lineLimit(1)
                 }
 
-                if let ghost = ghostText, !ghost.isEmpty {
-                    HStack(spacing: 0) {
-                        Text(text).foregroundStyle(.clear)
-                        Text(ghost).foregroundStyle(DS.Color.textTertiary)
+                ZStack(alignment: .leading) {
+                    if text.isEmpty {
+                        Text(placeholder)
+                            .font(size.font)
+                            .foregroundStyle(DS.Color.textTertiary)
+                            .allowsHitTesting(false)
+                            .lineLimit(1)
                     }
-                    .font(size.font)
-                    .lineLimit(1)
-                    .allowsHitTesting(false)
-                }
 
-                textField
+                    if let ghost = ghostText, !ghost.isEmpty {
+                        HStack(spacing: 0) {
+                            Text(text).foregroundStyle(.clear)
+                            Text(ghost).foregroundStyle(DS.Color.textTertiary)
+                        }
+                        .font(size.font)
+                        .lineLimit(1)
+                        .allowsHitTesting(false)
+                    }
+
+                    textField
+                }
             }
 
             if clearable && !text.isEmpty && !disabled {
@@ -111,8 +166,8 @@ struct Input: View {
             }
         }
         .frame(maxWidth: .infinity)
-        .frame(height: size.height)
-        .padding(.horizontal, style == .plain ? 0 : size.horizontalPadding)
+        .frame(height: calculatedHeight)
+        .padding(.horizontal, (style == .plain || style == .cardRow) ? 0 : size.horizontalPadding)
         .background(containerBackground)
         .clipShape(containerShape)
         .overlay {
@@ -179,14 +234,14 @@ struct Input: View {
         switch style {
         case .filled:
             DS.Color.sunken
-        case .outlined, .plain:
+        case .outlined, .plain, .cardRow:
             Color.clear
         }
     }
 
     @ViewBuilder
     private var containerBorder: some View {
-        if style != .plain, let borderColor {
+        if style != .plain && style != .cardRow, let borderColor {
             let width: CGFloat = (isFocused || isError) ? 1.5 : 0.5
             switch shape {
             case .capsule:
@@ -210,7 +265,7 @@ struct Input: View {
             return DS.Color.line.opacity(0.35)
         case .outlined:
             return DS.Color.lineStrong
-        case .plain:
+        case .plain, .cardRow:
             return nil
         }
     }

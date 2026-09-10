@@ -77,24 +77,33 @@ extension FoodStore {
     }
 
     func updateNotificationPreferences(
-        pushParty: Bool,
-        emailParty: Bool,
-        pushMeal: Bool,
-        emailMeal: Bool
+        mealInvite: Bool,
+        mealRating: Bool,
+        partyInvite: Bool,
+        partyActivity: Bool,
+        recipeLike: Bool,
+        viaPush: Bool,
+        viaEmail: Bool
     ) async {
         let patch = ProfileNotificationPatch(
-            notify_push_party_invite: pushParty,
-            notify_email_party_invite: emailParty,
-            notify_push_meal_invite: pushMeal,
-            notify_email_meal_invite: emailMeal
+            notify_meal_invite: mealInvite,
+            notify_meal_rating: mealRating,
+            notify_party_invite: partyInvite,
+            notify_party_activity: partyActivity,
+            notify_recipe_like: recipeLike,
+            notify_via_push: viaPush,
+            notify_via_email: viaEmail
         )
 
         // Optimistic update
         if var current = myProfile {
-            current.notifyPushPartyInvite = pushParty
-            current.notifyEmailPartyInvite = emailParty
-            current.notifyPushMealInvite = pushMeal
-            current.notifyEmailMealInvite = emailMeal
+            current.notifyMealInvite = mealInvite
+            current.notifyMealRating = mealRating
+            current.notifyPartyInvite = partyInvite
+            current.notifyPartyActivity = partyActivity
+            current.notifyRecipeLike = recipeLike
+            current.notifyViaPush = viaPush
+            current.notifyViaEmail = viaEmail
             profiles[userID] = current
         }
 

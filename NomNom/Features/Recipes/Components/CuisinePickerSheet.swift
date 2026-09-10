@@ -53,7 +53,7 @@ struct CuisinePickerSheet: View {
                     }
 
                     SectionCard("Other / Custom Kitchen") {
-                        Input("e.g. Ethiopian, Lebanese, Jamaican", text: $customText)
+                        Input("e.g. Ethiopian, Lebanese, Jamaican", text: $customText, style: .cardRow)
                             .autocorrectionDisabled()
                             .textInputAutocapitalization(.words)
                     }

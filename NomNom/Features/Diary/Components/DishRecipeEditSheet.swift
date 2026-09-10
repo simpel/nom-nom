@@ -18,18 +18,16 @@ struct DishRecipeEditSheet: View {
             ScrollView {
                 VStack(spacing: 16) {
                     SectionCard("Recipe Name") {
-                        Input("Recipe name", text: $dishName)
+                        Input("Recipe name", text: $dishName, style: .cardRow)
                             .autocorrectionDisabled()
                     }
 
                     RecipeEditorSection(draft: $recipeDraft)
 
-                    SectionCard("Cooking Effort") {
-                        TactileOptionPicker(selection: $recipeDraft.effort)
-                    }
+                    MealEditorCookingTimeSection(effort: $recipeDraft.effort)
 
                     SectionCard("Tags") {
-                        Input("Tags, comma separated", text: $tagsText)
+                        Input("Tags, comma separated", text: $tagsText, style: .cardRow)
                             .textInputAutocapitalization(.never)
                             .autocorrectionDisabled()
                     }

@@ -22,11 +22,11 @@ struct TasteScoreSelector: View {
                         .frame(maxWidth: .infinity)
                         .frame(height: 52)
                         .background {
-                            RoundedRectangle(cornerRadius: AppRadius.picker, style: .continuous)
+                            RoundedRectangle(cornerRadius: AppRadius.card, style: .continuous)
                                 .fill(isSelected ? reaction.fill.opacity(0.20) : DS.Color.panel)
                         }
                         .overlay {
-                            RoundedRectangle(cornerRadius: AppRadius.picker, style: .continuous)
+                            RoundedRectangle(cornerRadius: AppRadius.card, style: .continuous)
                                 .strokeBorder(
                                     isSelected ? reaction.fill : DS.Color.line.opacity(0.8),
                                     lineWidth: isSelected ? 1.5 : 0.6

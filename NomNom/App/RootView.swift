@@ -9,15 +9,19 @@ struct RootView: View {
             switch auth.phase {
             case .loading:
                 LaunchPlaceholder()
+                    .transition(.opacity)
 
             case .signedOut:
                 SignInView()
+                    .transition(.opacity)
 
             case .signedIn(let userID):
                 SignedInView(userID: userID)
                     .id(userID)
+                    .transition(.opacity)
             }
         }
+        .animation(.easeInOut(duration: 0.25), value: auth.phase)
     }
 }
 

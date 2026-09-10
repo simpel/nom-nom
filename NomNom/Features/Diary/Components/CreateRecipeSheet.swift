@@ -34,13 +34,11 @@ struct CreateRecipeSheet: View {
                     AssetPhotosPickerSection(draft: $coverPhotosDraft, title: "Cover Photo")
 
                     SectionCard("Recipe Name") {
-                        Input("Recipe name (e.g. Carbonara)", text: $name)
+                        Input("Recipe name (e.g. Carbonara)", text: $name, style: .cardRow)
                             .autocorrectionDisabled()
                     }
 
-                    SectionCard("Cooking Effort") {
-                        TactileOptionPicker(selection: $recipeDraft.effort)
-                    }
+                    MealEditorCookingTimeSection(effort: $recipeDraft.effort)
 
                     CuisinePickerSection(selection: $recipeDraft.cuisine)
                 }

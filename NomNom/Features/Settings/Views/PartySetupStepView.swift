@@ -39,6 +39,7 @@ struct PartySetupStepView: View {
                     VStack(alignment: .leading, spacing: 6) {
                         Toggle("Make dinner party public", isOn: $isPublic)
                             .font(.body.weight(.medium))
+                            .nativeToggle()
 
                         Text("When enabled, other foodies can discover and follow this dinner party.")
                             .font(.caption)

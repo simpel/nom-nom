@@ -8,11 +8,7 @@ struct RecipeHealthRationaleSheet: View {
     var body: some View {
         NavigationStack {
             ScrollView {
-                VStack(alignment: .leading, spacing: 20) {
-                    Text("Health Rationale")
-                        .font(Font.newsreader(.title2, weight: .regular))
-                        .foregroundStyle(DS.Color.textPrimary)
-
+                VStack(alignment: .leading, spacing: DS.Spacing.sectionCompact) {
                     DividedScoreCard(
                         score: "\(healthIndex.score)",
                         verdict: healthIndex.verdict,
@@ -22,12 +18,13 @@ struct RecipeHealthRationaleSheet: View {
                     RecipeHealthDetailContent(healthIndex: healthIndex)
                 }
                 .padding(.horizontal, DS.Spacing.screenHorizontal)
-                .padding(.top, 28)
+                .padding(.top, DS.Spacing.screenTop)
                 .padding(.bottom, DS.Spacing.screenBottom)
             }
             .background(DS.Color.bg)
-            .navigationBarTitleDisplayMode(.inline)
-            .presentationDetents([.fraction(0.82), .large])
+            .screenTitle("Health Rationale", displayMode: .inline)
+            .sheetCancelToolbar()
+            .presentationDetents([.fraction(0.85), .large])
             .presentationDragIndicator(.visible)
         }
     }
@@ -41,7 +38,7 @@ struct RecipeHealthDetailContent: View {
     @State private var showingExplainer = false
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 24) {
+        VStack(alignment: .leading, spacing: DS.Spacing.section) {
             narrativeSection
 
             if let breakdown = healthIndex.breakdown,
@@ -52,12 +49,14 @@ struct RecipeHealthDetailContent: View {
                 )
             }
 
-            Button {
+            AppButton(
+                "How this score is calculated",
+                icon: .system("info.circle"),
+                variant: .secondary,
+                style: .ghost,
+                size: .sm
+            ) {
                 showingExplainer = true
-            } label: {
-                Label("How this score is calculated", systemImage: "info.circle")
-                    .font(.subheadline.weight(.medium))
-                    .foregroundStyle(DS.Color.accentText)
             }
         }
         .sheet(isPresented: $showingExplainer) {
