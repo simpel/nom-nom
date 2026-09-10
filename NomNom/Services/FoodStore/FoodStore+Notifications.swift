@@ -9,7 +9,7 @@ private struct DeviceTokenUpsert: Encodable {
 
 extension FoodStore {
 
-    func registerDeviceToken(_ token: String, environment: String = "sandbox") async {
+    func registerDeviceToken(_ token: String, environment: String = NotificationManager.apnsEnvironment) async {
         guard !token.isEmpty else { return }
 
         let upsertPayload = DeviceTokenUpsert(

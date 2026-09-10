@@ -8,7 +8,7 @@ one never forces rotation of the other:
 | Path | Apple key capability | Key ID | Used by |
 |------|----------------------|--------|---------|
 | `keys/signinwithapple/AuthKey_D722M2ZZ9T.p8` | Sign in with Apple | `D722M2ZZ9T` | `scripts/generate_apple_client_secret.js` → Supabase Auth "Secret Key" |
-| `keys/notifications/AuthKey_B9NMV9DA2H.p8` | Apple Push Notifications service | `B9NMV9DA2H` | `supabase/functions/notify-invitees` via secret `APNS_PRIVATE_KEY` |
+| `keys/notifications/AuthKey_72Z5583A35.p8` | Apple Push Notifications service | `72Z5583A35` | `supabase/functions/notify-invitees` via secret `APNS_PRIVATE_KEY` |
 
 Keys are created at <https://developer.apple.com/account/resources/authkeys/list>.
 Apple only lets you download a key once — if you lose it, revoke and reissue.

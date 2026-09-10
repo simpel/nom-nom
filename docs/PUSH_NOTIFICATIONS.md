@@ -57,10 +57,10 @@ In short, the function stays a no-op until these Edge Function secrets exist
 
 | Secret | Value |
 |--------|-------|
-| `APNS_KEY_ID` | `B9NMV9DA2H` (the APNs key in `keys/notifications/`) |
+| `APNS_KEY_ID` | `72Z5583A35` (the APNs key in `keys/notifications/`) |
 | `APNS_TEAM_ID` | `D4F66LSYSF` |
 | `APNS_BUNDLE_ID` | `se.joelsanden.nomnom` |
-| `APNS_PRIVATE_KEY` | contents of `keys/notifications/AuthKey_B9NMV9DA2H.p8` |
+| `APNS_PRIVATE_KEY` | contents of `keys/notifications/AuthKey_72Z5583A35.p8` |
 | `WEBHOOK_SECRET` | must equal Vault `webhook_secret` on the hosted project |
 
 The two Vault rows (`project_url`, `webhook_secret`) already exist on hosted;

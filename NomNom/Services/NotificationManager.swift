@@ -19,6 +19,17 @@ final class NotificationManager: NSObject, UNUserNotificationCenterDelegate {
         super.init()
     }
 
+    /// APNs delivery environment for this build. The token APNs mints is tied to
+    /// the `aps-environment` entitlement, which follows the build configuration:
+    /// Debug builds get a sandbox token, Release builds a production one.
+    nonisolated static var apnsEnvironment: String {
+        #if DEBUG
+        "sandbox"
+        #else
+        "production"
+        #endif
+    }
+
     func start() {
         UNUserNotificationCenter.current().delegate = self
         Task { await refreshStatus() }
@@ -27,6 +38,14 @@ final class NotificationManager: NSObject, UNUserNotificationCenterDelegate {
     func refreshStatus() async {
         let settings = await UNUserNotificationCenter.current().notificationSettings()
         self.authorizationStatus = settings.authorizationStatus
+
+        // APNs can rotate a device token between launches, so a previously
+        // authorized user must re-register every launch to keep the stored token
+        // current. `didRegisterForRemoteNotificationsWithDeviceToken` then feeds
+        // the fresh token back through `handleDeviceToken`.
+        if authorizationStatus == .authorized || authorizationStatus == .provisional {
+            UIApplication.shared.registerForRemoteNotifications()
+        }
     }
 
     @discardableResult
@@ -52,15 +71,9 @@ final class NotificationManager: NSObject, UNUserNotificationCenterDelegate {
         self.deviceToken = token
         Self.log.info("Received APNs device token: \(token.prefix(8))…")
 
-        #if DEBUG
-        let environment = "sandbox"
-        #else
-        let environment = "production"
-        #endif
-
         if let store {
             Task {
-                await store.registerDeviceToken(token, environment: environment)
+                await store.registerDeviceToken(token, environment: Self.apnsEnvironment)
             }
         }
     }

@@ -170,11 +170,19 @@ Deno.serve(async (req) => {
       }),
     });
 
+    // APNs puts the failure detail in the body as {"reason":"…"}; surface it so
+    // a 4xx is diagnosable without guessing.
+    let reason: string | undefined;
+    if (!response.ok) {
+      reason = (await response.text()).trim() || undefined;
+      console.error("APNs rejected", { status: response.status, reason, host });
+    }
+
     // 410 Gone means the token is dead — clean it up rather than retrying forever.
     if (response.status === 410) {
       await admin.from("device_tokens").delete().eq("apns_token", device.apns_token);
     }
-    return { token: device.apns_token.slice(0, 8), status: response.status };
+    return { token: device.apns_token.slice(0, 8), status: response.status, reason };
   }));
 
   return Response.json({ sent: results });
