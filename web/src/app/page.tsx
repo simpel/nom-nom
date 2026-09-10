@@ -19,6 +19,12 @@ export default function HomePage() {
       </main>
 
       <footer className="minimal-footer">
+        <Link href="/support" className="minimal-footer-link">
+          Support
+        </Link>
+        <span aria-hidden="true" className="minimal-footer-sep">
+          &middot;
+        </span>
         <Link href="/privacy" className="minimal-footer-link">
           Privacy Policy
         </Link>

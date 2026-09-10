@@ -15,6 +15,11 @@ export function Footer() {
             </Link>
           </li>
           <li>
+            <Link href="/support" className="footer-link">
+              Support
+            </Link>
+          </li>
+          <li>
             <Link href="/privacy" className="footer-link">
               Privacy Policy
             </Link>

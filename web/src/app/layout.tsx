@@ -17,7 +17,7 @@ const newsreader = Newsreader({
 
 export const metadata: Metadata = {
   metadataBase: new URL(
-    process.env.NEXT_PUBLIC_SITE_URL || 'https://nomnom.app'
+    process.env.NEXT_PUBLIC_SITE_URL || 'https://www.nomnom.casa'
   ),
   title: 'Nom Nom — Dinner Diary & Recommendation Engine',
   description:
@@ -30,7 +30,7 @@ export const metadata: Metadata = {
     title: 'Nom Nom — Dinner Diary & Recommendation Engine',
     description:
       'Keep track of what you cooked, capture honest verdicts from everyone at the table, and settle the daily question of what to make next.',
-    url: 'https://nomnom.app',
+    url: 'https://www.nomnom.casa',
     siteName: 'Nom Nom',
     images: [
       {
