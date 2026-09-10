@@ -32,30 +32,26 @@ You need to add the following **App Store secrets**:
 | `P12_PASSWORD` | Password used when exporting the `.p12` certificate | Plain text string |
 | `BUILD_PROVISION_PROFILE_BASE64` | Base64-encoded `.mobileprovision` file | Raw base64 string |
 
-And the following **Supabase secrets** for automated database and edge function deployments:
-
-| Secret Name | Description | Example / Format |
-| :--- | :--- | :--- |
-| `SUPABASE_ACCESS_TOKEN` | Personal Access Token from Supabase Account settings | `sbp_...` |
-| `SUPABASE_PROJECT_REF` (or `SUPABASE_PROJECT_ID`) | Project Reference ID | `bctbqsrsmkyputxyiyzh` |
-| `SUPABASE_DB_PASSWORD` | Database password for your hosted Supabase instance | Plain text string |
+Backend deployment no longer needs any GitHub secret — see below.
 
 ---
 
 ## Supabase CI & Deployment Pipelines
 
-Nom Nom includes two GitHub Actions workflows for backend management:
+Backend changes are handled in two places:
 
-1. **`supabase-ci.yml` (Pull Request Validation)**:
+1. **`supabase-ci.yml` (Pull Request Validation)** — a GitHub Actions workflow:
    - Triggers on any PR touching `supabase/**`.
    - Spins up a local Supabase instance in CI.
    - Runs `supabase db reset` to verify that all SQL migrations execute cleanly from scratch.
    - Executes `python3 supabase/tests/rls_test.py` to test Row Level Security policies and triggers.
+   - Uses only the local stack, so it needs no secrets.
 
-2. **`supabase-deploy.yml` (Production Deployment)**:
-   - Triggers on merge to `main` when `supabase/**` changes.
-   - Links to your hosted Supabase project and runs `supabase db push` to apply pending migrations.
-   - Deploys Edge Functions (`delete-account`, `notify-invitees`, `send-invite-email`).
+2. **Production deployment** — the **Supabase GitHub integration** (Dashboard → Project Settings → Integrations → GitHub), *not* a workflow in this repo:
+   - On push/merge to `main`, Supabase itself applies new migrations and deploys the Edge Functions declared in `supabase/config.toml`.
+   - No `SUPABASE_*` GitHub secret is involved — deployment auth lives in the dashboard integration.
+   - One-time setup that the integration does **not** manage, and that stays manual: the Vault rows (`project_url`, `webhook_secret`) and the `APNS_*` function secrets. See [`docs/SETUP_APPLE_KEYS.md`](docs/SETUP_APPLE_KEYS.md).
+   - Enable "Require status checks to pass before merging" for the Supabase check so a broken migration can't land on `main`.
 
 > [!IMPORTANT]
 > **Expand & Contract Pattern:** Because mobile users take time to update their apps, all database migrations must be **backward-compatible and additive** (e.g. adding nullable columns or new tables). Do not drop or rename active columns until older app versions are deprecated.
