@@ -80,4 +80,67 @@ extension FoodStore {
 
         return result
     }
+
+    struct GenerateRecipeImagePayload: Encodable {
+        let recipe_id: String?
+        let name: String
+        let cuisine: String?
+        let ingredients: [RecipeIngredient]
+        let instructions: [String]
+    }
+
+    struct GenerateRecipeImageResult: Decodable {
+        let success: Bool
+        let photoPath: String?
+        let imageBase64: String?
+        let resolvedDish: String?
+        let resolvedElements: String?
+        let resolvedGarnish: String?
+
+        enum CodingKeys: String, CodingKey {
+            case success
+            case photoPath = "photo_path"
+            case imageBase64 = "image_base64"
+            case resolvedDish = "resolved_dish"
+            case resolvedElements = "resolved_elements"
+            case resolvedGarnish = "resolved_garnish"
+        }
+    }
+
+    /// Invokes the `generate-recipe-image` Edge Function to create an editorial photo for an unphotographed recipe.
+    @discardableResult
+    func generateRecipeImage(for recipe: Recipe) async throws -> GenerateRecipeImageResult {
+        Self.log.info("Generating AI recipe image for '\(recipe.name, privacy: .public)' (id: \(recipe.id, privacy: .public))")
+
+        let payload = GenerateRecipeImagePayload(
+            recipe_id: recipe.id.uuidString,
+            name: recipe.name,
+            cuisine: recipe.cuisine,
+            ingredients: recipe.ingredients,
+            instructions: recipe.instructions
+        )
+
+        let result: GenerateRecipeImageResult = try await supabase.functions.invoke(
+            "generate-recipe-image",
+            options: FunctionInvokeOptions(body: payload)
+        )
+
+        if let path = result.photoPath {
+            if let b64 = result.imageBase64, let data = Data(base64Encoded: b64) {
+                PhotoCache.shared.put(data, for: path)
+            }
+
+            var updated = recipe
+            if !updated.photoPaths.contains(path) {
+                updated.photoPaths = [path] + updated.photoPaths
+            }
+            upsertLocal(recipe: updated)
+            reindex()
+            Self.log.info("Successfully attached generated photo \(path, privacy: .public) to recipe \(recipe.id, privacy: .public)")
+        }
+
+        return result
+    }
 }
+
+

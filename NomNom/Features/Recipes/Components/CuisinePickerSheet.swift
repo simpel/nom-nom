@@ -35,15 +35,15 @@ struct CuisinePickerSheet: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 16) {
                     LazyVGrid(columns: categoryColumns, spacing: 12) {
-                        ForEach(Cuisine.allCases) { cuisine in
-                            let isSelected = draftSelection.contains(cuisine.rawValue.lowercased())
-                            let count = store.recipeCount(forCategory: cuisine.rawValue)
+                        ForEach(store.allCategories) { category in
+                            let isSelected = draftSelection.contains(category.name.lowercased())
+                            let count = store.recipeCount(forCategory: category.name)
 
                             Button {
-                                toggleSelection(for: cuisine)
+                                toggleSelection(for: category.name)
                             } label: {
                                 CategoryGridCard(
-                                    cuisine: cuisine,
+                                    category: category,
                                     count: count,
                                     isSelected: isSelected
                                 )
@@ -77,8 +77,8 @@ struct CuisinePickerSheet: View {
         }
     }
 
-    private func toggleSelection(for cuisine: Cuisine) {
-        let key = cuisine.rawValue.lowercased()
+    private func toggleSelection(for name: String) {
+        let key = name.lowercased()
         if draftSelection.contains(key) {
             draftSelection.remove(key)
         } else {

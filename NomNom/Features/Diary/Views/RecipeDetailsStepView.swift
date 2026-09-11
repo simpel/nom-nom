@@ -97,6 +97,13 @@ struct RecipeDetailsStepView: View {
                     )
                     try await store.applyCoverPhotos(coverPhotosDraft, to: recipe)
                     try await store.applyRecipe(recipeDraft, to: recipe)
+
+                    if coverPhotosDraft.isEmpty {
+                        Task {
+                            try? await store.generateRecipeImage(for: recipe)
+                        }
+                    }
+
                     isSaving = false
                     UINotificationFeedbackGenerator().notificationOccurred(.success)
                     onCreated?(recipe)

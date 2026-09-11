@@ -24,6 +24,7 @@ struct RecipeDetailView: View {
     @State private var isAnalyzingHealth = false
     @State private var showHealthRationale = false
     @State private var showGlobalLeaderboard = false
+    @State private var isGeneratingPhoto = false
     
     @State private var healthAnalysisFailed = false
 
@@ -157,6 +158,15 @@ struct RecipeDetailView: View {
 
                 if let recipe, recipe.ownerID == store.userID {
                     Menu {
+                        if recipe.photoPaths.isEmpty {
+                            Button {
+                                generatePhoto(for: recipe)
+                            } label: {
+                                Label(isGeneratingPhoto ? "Generating Photo…" : "Generate Photo with AI", systemImage: "sparkles")
+                            }
+                            .disabled(isGeneratingPhoto)
+                        }
+
                         Button {
                             showEditSheet = true
                         } label: {
@@ -320,6 +330,21 @@ struct RecipeDetailView: View {
             .padding(.bottom, DS.Spacing.screenBottom)
         }
         .background(DS.Color.bg)
+    }
+
+    private func generatePhoto(for recipe: Recipe) {
+        guard !isGeneratingPhoto else { return }
+        isGeneratingPhoto = true
+        UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+        Task {
+            defer { isGeneratingPhoto = false }
+            do {
+                try await store.generateRecipeImage(for: recipe)
+                UINotificationFeedbackGenerator().notificationOccurred(.success)
+            } catch {
+                UINotificationFeedbackGenerator().notificationOccurred(.error)
+            }
+        }
     }
 
     private func recipeSubtitle(for recipe: Recipe) -> String {

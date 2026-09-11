@@ -30,6 +30,41 @@ extension FoodStore {
         )
     }
 
+    /// Returns all category items (from database + presets + any custom categories present in recipes), with photo paths.
+    var allCategories: [CategoryItem] {
+        var items: [CategoryItem] = []
+        var seen = Set<String>()
+
+        // 1. Categories from the database
+        for cat in categories {
+            let key = cat.slug.lowercased()
+            seen.insert(key)
+            items.append(CategoryItem(record: cat))
+        }
+
+        // 2. Standard preset cuisines (if not already loaded from DB)
+        for cuisine in Cuisine.allCases {
+            let key = cuisine.rawValue.lowercased()
+            guard !seen.contains(key) else { continue }
+            seen.insert(key)
+            items.append(CategoryItem(cuisine: cuisine, photoPath: categoryPhotoPaths[key]))
+        }
+
+        // 3. Discover any custom cuisines added to recipes
+        for recipe in recipes {
+            guard let cuisineString = recipe.cuisine else { continue }
+            let parts = Cuisine.parseMultiple(from: cuisineString)
+            for part in parts {
+                let key = part.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+                guard !key.isEmpty, !seen.contains(key) else { continue }
+                seen.insert(key)
+                items.append(CategoryItem(name: part, photoPath: categoryPhotoPaths[key]))
+            }
+        }
+
+        return items
+    }
+
     /// All recipes matching a category name or cuisine, sorted by popularity.
     func recipes(inCategory categoryName: String) -> [Recipe] {
         let normalized = categoryName.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()

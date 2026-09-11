@@ -2,19 +2,52 @@ import SwiftUI
 
 /// Visual card for a cuisine/category within the search exploration grid.
 struct CategoryGridCard: View {
-    let cuisine: Cuisine
+    let name: String
+    let displayName: String
+    let assetImageName: String?
+    let photoPath: String?
     let count: Int
     var isSelected: Bool = false
 
+    init(category: CategoryItem, count: Int, isSelected: Bool = false) {
+        self.name = category.name
+        self.displayName = category.displayName
+        self.assetImageName = category.assetImageName
+        self.photoPath = category.photoPath
+        self.count = count
+        self.isSelected = isSelected
+    }
+
+    init(cuisine: Cuisine, count: Int, isSelected: Bool = false, photoPath: String? = nil) {
+        self.name = cuisine.rawValue
+        self.displayName = cuisine.displayName
+        self.assetImageName = cuisine.assetImageName
+        self.photoPath = photoPath
+        self.count = count
+        self.isSelected = isSelected
+    }
+
     var body: some View {
         ZStack(alignment: .bottomLeading) {
-            // Background image with fallback
-            Image(cuisine.assetImageName)
-                .resizable()
-                .scaledToFill()
-                .frame(maxWidth: .infinity)
-                .frame(height: 110)
-                .clipped()
+            // Background image: remote generated photo > preset asset > neutral card fallback
+            if let photoPath, !photoPath.isEmpty {
+                RemoteMealPhoto(path: photoPath, cornerRadius: 0, bucket: SupabaseConfig.recipeBucket)
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 110)
+                    .clipped()
+            } else if let assetImageName {
+                Image(assetImageName)
+                    .resizable()
+                    .scaledToFill()
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 110)
+                    .clipped()
+            } else {
+                Rectangle()
+                    .fill(DS.Color.sunken)
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 110)
+            }
 
             // Gradient scrim for contrast
             LinearGradient(
@@ -34,7 +67,7 @@ struct CategoryGridCard: View {
 
             // Text overlay
             VStack(alignment: .leading, spacing: 2) {
-                Text(cuisine.displayName)
+                Text(displayName)
                     .font(.headline.weight(.semibold))
                     .foregroundStyle(.white)
                     .lineLimit(1)
@@ -77,7 +110,7 @@ struct CategoryGridCard: View {
         )
         .contentShape(RoundedRectangle(cornerRadius: AppRadius.card, style: .continuous))
         .accessibilityElement(children: .combine)
-        .accessibilityLabel("\(cuisine.displayName), \(count) recipes\(isSelected ? ", selected" : "")")
+        .accessibilityLabel("\(displayName), \(count) recipes\(isSelected ? ", selected" : "")")
         .accessibilityAddTraits(isSelected ? .isSelected : [])
     }
 }

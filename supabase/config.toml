@@ -449,3 +449,9 @@ verify_jwt = true
 # Called by a signed-in user to analyze recipe health index and rationale via Vercel AI Gateway.
 [functions.analyze-recipe-health]
 verify_jwt = true
+
+# Called by a signed-in user for recipes, or by a database trigger webhook for categories.
+# Uses verify_jwt = false so database triggers over pg_net with x-webhook-secret can invoke it.
+[functions.generate-recipe-image]
+verify_jwt = false
+

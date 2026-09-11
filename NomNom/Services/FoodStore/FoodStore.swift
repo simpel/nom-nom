@@ -20,6 +20,8 @@ final class FoodStore {
     var invites: [MealInvite] = []
     var notifications: [AppNotification] = []
     var profiles: [UUID: Profile] = [:]
+    var categories: [CategoryRecord] = []
+    var categoryPhotoPaths: [String: String] = [:]
 
     // Dinner Parties
     var parties: [Party] = []

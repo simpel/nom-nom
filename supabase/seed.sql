@@ -7,7 +7,7 @@ do $$
 begin
     if not exists (select 1 from vault.secrets where name = 'project_url') then
         perform vault.create_secret(
-            'http://api.supabase.internal:8000',
+            'http://kong:8000',
             'project_url',
             'Base URL this environment reaches its own Edge Functions on.'
         );

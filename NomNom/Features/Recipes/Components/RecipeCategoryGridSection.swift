@@ -23,12 +23,12 @@ struct RecipeCategoryGridSection: View {
             SectionHeader(title)
 
             LazyVGrid(columns: categoryColumns, spacing: 12) {
-                ForEach(Cuisine.allCases) { cuisine in
-                    let count = store.recipeCount(forCategory: cuisine.rawValue)
+                ForEach(store.allCategories) { category in
+                    let count = store.recipeCount(forCategory: category.name)
                     NavigationLink {
-                        CategoryRecipesView(cuisine: cuisine, onSelectRecipe: onSelectRecipe)
+                        CategoryRecipesView(category: category, onSelectRecipe: onSelectRecipe)
                     } label: {
-                        CategoryGridCard(cuisine: cuisine, count: count)
+                        CategoryGridCard(category: category, count: count)
                     }
                     .buttonStyle(.plain)
                 }

@@ -28,6 +28,7 @@ extension FoodStore {
             async let partyFollowers: [PartyFollower] = supabase.from("party_followers").select().execute().value
             async let mealParties: [MealParty] = supabase.from("meal_parties").select().execute().value
             async let recipeFavorites: [RecipeFavorite] = supabase.from("recipe_favorites").select().execute().value
+            async let categories: [CategoryRecord] = supabase.from("categories").select().execute().value
 
             self.dishes = try await dishes
             self.meals = try await meals
@@ -41,6 +42,12 @@ extension FoodStore {
             self.partyFollowers = try await partyFollowers
             self.mealParties = try await mealParties
             self.recipeFavorites = try await recipeFavorites
+            self.categories = (try? await categories) ?? []
+            for cat in self.categories {
+                if let photoPath = cat.photoPath {
+                    self.categoryPhotoPaths[cat.slug.lowercased()] = photoPath
+                }
+            }
 
             reindex()
             try await loadProfiles()
