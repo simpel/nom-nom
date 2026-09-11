@@ -32,7 +32,8 @@ struct PartyDetailView: View {
                             selectedPhotoIndex = index
                         }
 
-                        if !store.isMember(of: party.id) {
+                        let hasPending = store.partyInvites.contains(where: { $0.partyID == party.id && $0.inviteeID == store.userID && $0.status == .pending })
+                        if !store.isMember(of: party.id) && hasPending {
                             joinPartyBanner(party: party)
                         }
 
@@ -192,10 +193,8 @@ struct PartyDetailView: View {
     }
 
     private func joinPartyBanner(party: Party) -> some View {
-        let hasPending = store.partyInvites.contains(where: { $0.partyID == party.id && $0.inviteeID == store.userID && $0.status == .pending })
-
         return VStack(spacing: 10) {
-            Text(hasPending ? "You've been invited to join \(party.name)!" : "Join \(party.name) to share meals and ratings.")
+            Text("You've been invited to join \(party.name)!")
                 .font(.subheadline.weight(.semibold))
                 .foregroundStyle(DS.Color.textPrimary)
                 .multilineTextAlignment(.center)
@@ -211,10 +210,8 @@ struct PartyDetailView: View {
                 Task {
                     if let invite = store.partyInvites.first(where: { $0.partyID == party.id && $0.inviteeID == store.userID && $0.status == .pending }) {
                         await store.acceptPartyInvite(invite)
-                    } else {
-                        await store.joinParty(party)
+                        UINotificationFeedbackGenerator().notificationOccurred(.success)
                     }
-                    UINotificationFeedbackGenerator().notificationOccurred(.success)
                 }
             }
         }

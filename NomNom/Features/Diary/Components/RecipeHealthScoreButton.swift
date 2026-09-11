@@ -9,6 +9,7 @@ struct RecipeHealthSheetPayload: Identifiable {
 
 /// Compact "Details" accessory, embedded as the trailing slot of the health score's
 /// `DividedScoreCard`. Tapping presents the full rationale sheet.
+@available(*, deprecated, message: "DividedScoreCard now handles tap gestures directly across the whole row")
 struct RecipeHealthDetailsButton: View {
     let recipe: Recipe
     let healthIndex: HealthIndex

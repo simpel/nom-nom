@@ -77,6 +77,10 @@ struct RootTabView: View {
         #endif
     }
     
+    private var partyTabTitle: String {
+        store.currentParty?.name ?? "Parties"
+    }
+
     @available(iOS 18.0, *)
     @ViewBuilder
     private var modernTabView: some View {
@@ -86,7 +90,7 @@ struct RootTabView: View {
             }
             .badge(store.awaitingMyRating.count)
 
-            Tab("Parties", systemImage: "person.2", value: 1) {
+            Tab(partyTabTitle, systemImage: "person.2", value: 1) {
                 DinnerPartiesView()
             }
 
@@ -119,7 +123,7 @@ struct RootTabView: View {
             DinnerPartiesView()
                 .tag(1)
                 .tabItem {
-                    Label("Parties", systemImage: "person.2")
+                    Label(partyTabTitle, systemImage: "person.2")
                 }
 
             RecipesView()

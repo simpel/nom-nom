@@ -14,10 +14,9 @@ struct PartyAverageRatingCard: View {
 
     var body: some View {
         if let stats {
-            let percent = Int((stats.score * 100).rounded())
             DividedScoreCard(
                 "Average Rating",
-                score: "\(percent)",
+                score: String(format: "%.1f", stats.score * 100),
                 verdict: stats.reaction.shortLabel,
                 color: stats.reaction.text
             )

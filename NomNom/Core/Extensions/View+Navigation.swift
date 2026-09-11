@@ -19,15 +19,17 @@ extension View {
     /// Houses the shared `SettingsDropdownMenu` alongside the `CreateDropdownMenu`,
     /// ensuring identical icon sizing, font weights, inter-item spacing, and edge insets.
     func mainTabToolbar() -> some View {
-        toolbar {
-            ToolbarItem(placement: .topBarTrailing) {
-                HStack(spacing: 12) {
-                    NotificationBellButton()
-                    SettingsDropdownMenu()
-                    CreateDropdownMenu()
+        self
+            .navigationTitle("")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    HStack(spacing: 12) {
+                        NotificationBellButton()
+                        SettingsDropdownMenu()
+                    }
                 }
             }
-        }
     }
 
     /// Overload for custom single action button where needed.

@@ -22,6 +22,10 @@ struct RecipeDetailView: View {
     @State private var selectedPhotoIndex: Int?
     @State private var confirmDeleteRecipe = false
     @State private var isAnalyzingHealth = false
+    @State private var showHealthRationale = false
+    @State private var showGlobalLeaderboard = false
+    
+    @State private var healthAnalysisFailed = false
 
     init(recipeID: UUID, showCloseButton: Bool = false) {
         self.recipeID = recipeID
@@ -56,6 +60,22 @@ struct RecipeDetailView: View {
             return paths
         }
         return store.photos(for: recipeID)
+    }
+
+    private var globalRank: Int? {
+        guard let recipe else { return nil }
+        let rankedRecipes = store.myDishes.compactMap { dish -> (UUID, Double)? in
+            if let score = store.averageScore(forDish: dish.id) {
+                return (dish.id, score)
+            }
+            return nil
+        }
+        .sorted { $0.1 > $1.1 }
+        
+        if let index = rankedRecipes.firstIndex(where: { $0.0 == recipe.id }) {
+            return index + 1
+        }
+        return nil
     }
 
     var body: some View {
@@ -97,10 +117,18 @@ struct RecipeDetailView: View {
 
             // Backfills the health score for recipes saved before this existed, or if a
             // prior automatic analysis failed. Silent — no "generate" button in the UI.
-            if let recipe, recipe.healthIndex == nil, !recipe.ingredients.isEmpty {
+            if let recipe, recipe.healthIndex == nil, !recipe.ingredients.isEmpty, !healthAnalysisFailed {
                 isAnalyzingHealth = true
-                defer { isAnalyzingHealth = false }
-                try? await store.analyzeHealth(for: recipe)
+                do {
+                    // Ensure the UI has time to render the loading spinners
+                    // before the network request potentially fails instantly
+                    try await Task.sleep(for: .milliseconds(250))
+                    try await store.analyzeHealth(for: recipe)
+                    isAnalyzingHealth = false
+                } catch {
+                    isAnalyzingHealth = false
+                    healthAnalysisFailed = true // Mark as failed so we show the null state
+                }
             }
         }
         .toolbar {
@@ -186,12 +214,20 @@ struct RecipeDetailView: View {
                 )
             }
         }
+        .sheet(isPresented: $showHealthRationale) {
+            if let recipe, let healthIndex = recipe.healthIndex {
+                RecipeHealthRationaleSheet(recipe: recipe, healthIndex: healthIndex)
+            }
+        }
+        .sheet(isPresented: $showGlobalLeaderboard) {
+            RecipeLeaderboardSheet(highlightedRecipeID: recipe?.id)
+        }
     }
 
     @ViewBuilder
     private func content(for recipe: Recipe) -> some View {
         ScrollView {
-            VStack(spacing: DS.Spacing.section) {
+            VStack(spacing: 0) {
                 ArcHeroHeaderView(
                     photoPaths: allPhotos,
                     cuisine: recipe.cuisine,
@@ -201,68 +237,83 @@ struct RecipeDetailView: View {
                     onSelectPhoto: { index in
                         selectedPhotoIndex = index
                     }
-                )
-                .padding(.bottom, DS.Spacing.xs)
-
-                // Primary action: "Use in Meal"
-                AppButton(
-                    "Use in Meal",
-                    variant: .primary,
-                    style: .normal,
-                    size: .md
                 ) {
-                    showMealEditor = true
-                }
-
-                // Health score hero, calculated automatically once the recipe is saved —
-                // no manual "generate" action needed. "Details" opens the full rationale sheet.
-                if let healthIndex = recipe.healthIndex {
-                    DividedScoreCard(
-                        score: "\(healthIndex.score)",
-                        verdict: healthIndex.verdict,
-                        color: healthIndex.scoreColor
+                    AppButton(
+                        "Use in Meal",
+                        variant: .primary,
+                        style: .normal,
+                        size: .md
                     ) {
-                        RecipeHealthDetailsButton(recipe: recipe, healthIndex: healthIndex)
+                        showMealEditor = true
                     }
-                    .padding(.horizontal, DS.Spacing.screenHorizontal)
-                } else if isAnalyzingHealth {
-                    HStack(spacing: 8) {
-                        ProgressView()
-                        Text("Calculating health score…")
-                            .font(.subheadline)
-                            .foregroundStyle(DS.Color.textSecondary)
+                }
+
+                VStack(spacing: DS.Spacing.section) {
+                    // Health score hero, calculated automatically once the recipe is saved —
+                    // no manual "generate" action needed. Tapping opens the full rationale sheet.
+                    let rank = globalRank
+                    let reaction = store.averageReaction(forDish: recipe.id)
+                    
+                    if let healthIndex = recipe.healthIndex {
+                        DividedScoreCard(
+                            score: "\(healthIndex.score)",
+                            verdict: healthIndex.verdict,
+                            color: healthIndex.scoreColor,
+                            globalScore: rank?.ordinalString ?? "—",
+                            globalColor: reaction?.text ?? DS.Color.textTertiary,
+                            action: {
+                                showHealthRationale = true
+                            },
+                            globalAction: {
+                                showGlobalLeaderboard = true
+                            }
+                        )
+                        .padding(.horizontal, DS.Spacing.screenHorizontal)
+                    } else {
+                        // Fallback if no health index yet.
+                        DividedScoreCard(
+                            score: healthAnalysisFailed ? "—" : "—",
+                            verdict: healthAnalysisFailed ? "Unrated" : "Unrated",
+                            color: DS.Color.textTertiary,
+                            globalScore: rank?.ordinalString ?? "—",
+                            globalColor: reaction?.text ?? DS.Color.textTertiary,
+                            isLoading: isAnalyzingHealth,
+                            globalAction: {
+                                showGlobalLeaderboard = true
+                            }
+                        )
+                        .padding(.horizontal, DS.Spacing.screenHorizontal)
                     }
-                    .padding(.horizontal, DS.Spacing.screenHorizontal)
-                }
 
-                // 1. Ingredients
-                if !recipe.ingredients.isEmpty {
-                    RecipeIngredientsCard(ingredients: recipe.ingredients)
-                        .padding(.horizontal, DS.Spacing.screenHorizontal)
-                }
-
-                // 2. Instructions
-                if !recipe.instructions.isEmpty {
-                    RecipeStepsCard(instructions: recipe.instructions)
-                        .padding(.horizontal, DS.Spacing.screenHorizontal)
-                }
-
-                // 3. Recipe Page Photos (if any)
-                if !recipe.recipePhotoPaths.isEmpty {
-                    RecipePhotosCard(recipe: recipe)
-                        .padding(.horizontal, DS.Spacing.screenHorizontal)
-                }
-
-                // 4. Details
-                RecipeDetailInfoCard(recipe: recipe)
-                    .padding(.horizontal, DS.Spacing.screenHorizontal)
-
-                // 5. History
-                if !history.isEmpty {
-                    RecipeHistorySection(history: history) { meal in
-                        selectedMealForDetail = meal
+                    // 1. Ingredients
+                    if !recipe.ingredients.isEmpty {
+                        RecipeIngredientsCard(ingredients: recipe.ingredients)
+                            .padding(.horizontal, DS.Spacing.screenHorizontal)
                     }
-                    .padding(.horizontal, DS.Spacing.screenHorizontal)
+
+                    // 2. Instructions
+                    if !recipe.instructions.isEmpty {
+                        RecipeStepsCard(instructions: recipe.instructions)
+                            .padding(.horizontal, DS.Spacing.screenHorizontal)
+                    }
+
+                    // 3. Recipe Page Photos (if any)
+                    if !recipe.recipePhotoPaths.isEmpty {
+                        RecipePhotosCard(recipe: recipe)
+                            .padding(.horizontal, DS.Spacing.screenHorizontal)
+                    }
+
+                    // 4. Details
+                    RecipeDetailInfoCard(recipe: recipe)
+                        .padding(.horizontal, DS.Spacing.screenHorizontal)
+
+                    // 5. History
+                    if !history.isEmpty {
+                        RecipeHistorySection(history: history) { meal in
+                            selectedMealForDetail = meal
+                        }
+                        .padding(.horizontal, DS.Spacing.screenHorizontal)
+                    }
                 }
             }
             .padding(.top, DS.Spacing.screenTop)

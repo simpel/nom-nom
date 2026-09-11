@@ -82,7 +82,7 @@ struct MealEditorView: View {
     var body: some View {
         NavigationStack {
             ScrollView {
-                VStack(spacing: DS.Spacing.section) {
+                VStack(spacing: 0) {
                     MealEditorRecipeSection(
                         title: $title,
                         existingMatchedRecipe: existingMatchedDish,
@@ -92,10 +92,12 @@ struct MealEditorView: View {
                         onRemoveRecipe: removeSelectedDish
                     )
 
-                    MealEditorDetailsSection(
-                        date: $date,
-                        notes: $notes
-                    )
+                    VStack(spacing: DS.Spacing.section) {
+                        MealEditorDetailsSection(
+                            date: $date,
+                            notes: $notes
+                        )
+                    }
                 }
                 .padding(.horizontal, DS.Spacing.screenHorizontal)
                 .padding(.top, DS.Spacing.screenTop)

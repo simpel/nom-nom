@@ -8,6 +8,9 @@ public enum AppRadius {
     /// Central/default radius applied across the app (12px).
     public static var standard: CGFloat = 12
 
+    /// Small radius for compact score boxes, badges, and segmented elements (8px).
+    public static var small: CGFloat = 8
+
     /// Radius specifically for cards and container backgrounds (14px).
     public static var card: CGFloat = 14
 

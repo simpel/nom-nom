@@ -86,11 +86,11 @@ struct MealEditorRecipeSection: View {
             .frame(height: 228)
             .frame(maxWidth: .infinity)
             .padding(.vertical, 4)
-            .padding(.bottom, 6)
+            .padding(.bottom, 36)
     }
 
     private var heroRecipeSelectedView: some View {
-        VStack(spacing: 12) {
+        VStack(spacing: DS.Spacing.heroInner) {
             HeroPhotoDeckView(
                 items: displayPhotoItems,
                 cuisine: existingMatchedRecipe?.cuisine,
@@ -101,42 +101,43 @@ struct MealEditorRecipeSection: View {
             .frame(maxWidth: .infinity)
             .padding(.vertical, 4)
 
-            VStack(spacing: 4) {
-                if let cuisineName = Cuisine.formatDisplayName(existingMatchedRecipe?.cuisine) {
-                    Text(cuisineName)
-                        .font(.subheadline.weight(.medium))
-                        .foregroundStyle(DS.Color.accentText)
-                }
-
-                Text(title)
-                    .font(AppTypography.pageTitleFont)
-                    .foregroundStyle(DS.Color.textPrimary)
-                    .multilineTextAlignment(.center)
-                    .padding(.horizontal, 20)
-            }
-
-            Menu {
-                Button(action: onPickRecipe) {
-                    Label("Change Recipe", systemImage: "arrow.triangle.2.circlepath")
-                }
-
-                if isCreator {
-                    Button(action: onEditRecipe) {
-                        Label("Edit Recipe Details", systemImage: "square.and.pencil")
+            VStack(spacing: 14) {
+                VStack(spacing: 4) {
+                    if let cuisineName = Cuisine.formatDisplayName(existingMatchedRecipe?.cuisine) {
+                        Text(cuisineName)
+                            .font(.subheadline.weight(.medium))
+                            .foregroundStyle(DS.Color.accentText)
                     }
+
+                    Text(title)
+                        .font(AppTypography.pageTitleFont)
+                        .foregroundStyle(DS.Color.textPrimary)
+                        .multilineTextAlignment(.center)
+                        .padding(.horizontal, 20)
                 }
 
-                Button(role: .destructive, action: onRemoveRecipe) {
-                    Label("Remove", systemImage: "trash")
+                Menu {
+                    Button(action: onPickRecipe) {
+                        Label("Change Recipe", systemImage: "arrow.triangle.2.circlepath")
+                    }
+
+                    if isCreator {
+                        Button(action: onEditRecipe) {
+                            Label("Edit Recipe Details", systemImage: "square.and.pencil")
+                        }
+                    }
+
+                    Button(role: .destructive, action: onRemoveRecipe) {
+                        Label("Remove", systemImage: "trash")
+                    }
+                } label: {
+                    SubtleCapsuleLabel(title: "Change recipe", systemImage: "arrow.triangle.2.circlepath")
                 }
-            } label: {
-                SubtleCapsuleLabel(title: "Change recipe", systemImage: "arrow.triangle.2.circlepath")
+                .buttonStyle(.plain)
             }
-            .buttonStyle(.plain)
-            .padding(.top, 2)
         }
         .frame(maxWidth: .infinity)
-        .padding(.bottom, 6)
+        .padding(.bottom, 36)
     }
 }
 

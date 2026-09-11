@@ -24,7 +24,11 @@ struct MealsView: View {
                     .refreshable { await store.load() }
                 } else {
                     ScrollView {
-                        LazyVStack(spacing: DS.Spacing.section) {
+                        LazyVStack(alignment: .leading, spacing: DS.Spacing.section) {
+                            PageHeading(title: "Meals", actionTitle: "Add meal") {
+                                editorTarget = .new
+                            }
+
                             MealsToRateSection()
 
                             ForEach(historySections, id: \.title) { section in
@@ -82,7 +86,6 @@ struct MealsView: View {
                     }
                     .background(DS.Color.bg)
                     .refreshable { await store.load() }
-                    .screenTitle(store.currentParty?.name ?? "Meals")
                 }
             }
             .mainTabToolbar()

@@ -18,6 +18,11 @@ struct RecipesView: View {
         NavigationStack {
             ScrollView {
                 VStack(alignment: .leading, spacing: DS.Spacing.sectionCompact) {
+                    PageHeading(title: "Recipes", actionTitle: "Add recipe") {
+                        showingCreateSheet = true
+                    }
+                    .padding(.horizontal, DS.Spacing.screenHorizontal)
+
                     Picker("View", selection: $selectedTab) {
                         ForEach(RecipeTab.allCases) { tab in
                             Text(tab.rawValue).tag(tab)
@@ -40,7 +45,6 @@ struct RecipesView: View {
                 .padding(.bottom, DS.Spacing.screenBottom)
             }
             .background(DS.Color.bg)
-            .screenTitle("Recipes")
             .refreshable {
                 await store.load()
             }

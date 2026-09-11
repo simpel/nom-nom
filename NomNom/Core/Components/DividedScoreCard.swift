@@ -1,202 +1,280 @@
 import SwiftUI
 
-/// Elegant divided score view with numerical value on the leading side,
-/// fine hairline vertical divider, qualitative verdict label on the trailing side,
-/// and an optional trailing accessory (e.g. a "Read More" button).
-struct DividedScoreView<Accessory: View>: View {
-    let score: String
-    let verdict: String
-    var color: Color = DS.Color.Pine.pine600
-    var verticalPadding: CGFloat = 0
-    @ViewBuilder var accessory: () -> Accessory
+/// Trend direction comparing the current meal score to past occasions for the same recipe.
+enum ScoreTrend: Hashable {
+    case up(delta: Int? = nil)
+    case down(delta: Int? = nil)
+    case neutral(delta: Int? = nil)
 
-    @State private var accessoryWidth: CGFloat = 0
-
-    private var cleanScore: String {
-        score.replacingOccurrences(of: "%", with: "").trimmingCharacters(in: .whitespaces)
+    var delta: Int? {
+        switch self {
+        case .up(let d), .down(let d), .neutral(let d):
+            return d
+        }
     }
 
-    private var hasAccessory: Bool {
-        Accessory.self != EmptyView.self
+    var systemImage: String {
+        switch self {
+        case .up: return "arrow.up.right"
+        case .down: return "arrow.down.right"
+        case .neutral: return "arrow.right"
+        }
     }
 
-    var body: some View {
-        HStack(spacing: 0) {
-            // Numerical scalar score (0–100, no %)
-            Text(cleanScore)
-                .font(Font.newsreader(.title2, weight: .semibold))
-                .foregroundStyle(color)
-                .frame(maxWidth: .infinity, alignment: .center)
-                .lineLimit(1)
-                .minimumScaleFactor(0.8)
-
-            // Fine hairline divider
-            Rectangle()
-                .fill(DS.Color.line.opacity(0.4))
-                .frame(width: 1, height: 24)
-
-            // Qualitative verdict
-            Text(verdict)
-                .font(Font.newsreader(.title2, weight: .semibold))
-                .foregroundStyle(color)
-                .frame(maxWidth: .infinity, alignment: .center)
-                .lineLimit(1)
-                .minimumScaleFactor(0.8)
+    var color: Color {
+        switch self {
+        case .up: return DS.Color.Pine.pine600
+        case .down: return Color("ds/reaction/bad/text")
+        case .neutral: return DS.Color.textSecondary
         }
-        // Reserve matching gutters on both sides so the hairline divider stays
-        // centered in the card regardless of the trailing accessory's width.
-        .padding(.horizontal, hasAccessory ? accessoryWidth : 0)
-        .overlay(alignment: .trailing) {
-            if hasAccessory {
-                accessory()
-                    .fixedSize()
-                    .background(
-                        GeometryReader { proxy in
-                            Color.clear.preference(
-                                key: AccessoryWidthKey.self,
-                                value: proxy.size.width
-                            )
-                        }
-                    )
-            }
-        }
-        .onPreferenceChange(AccessoryWidthKey.self) { newWidth in
-            if hasAccessory {
-                accessoryWidth = newWidth
-            }
-        }
-        .offset(y: 2)
-        .padding(.vertical, verticalPadding)
-        .accessibilityElement(children: .combine)
-        .accessibilityLabel("\(cleanScore), \(verdict)")
     }
 }
 
-private struct AccessoryWidthKey: PreferenceKey {
-    static var defaultValue: CGFloat = 0
-    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
-        value = max(value, nextValue())
-    }
-}
-
-extension DividedScoreView where Accessory == EmptyView {
-    init(
-        score: String,
-        verdict: String,
-        color: Color = DS.Color.Pine.pine600,
-        verticalPadding: CGFloat = 0
-    ) {
-        self.score = score
-        self.verdict = verdict
-        self.color = color
-        self.verticalPadding = verticalPadding
-        self.accessory = { EmptyView() }
-    }
-}
-
-/// Standalone SectionCard wrapper containing a DividedScoreView.
-/// Used consistently for Average Ratings (Meals, Parties) and Health Score hero cards.
-struct DividedScoreCard<Accessory: View>: View {
+/// Redesigned score component presenting numerical score, qualitative verdict,
+/// and an optional historical trend icon as distinct boxes on a single row.
+///
+/// Fully clickable across the entire row when an action is provided.
+struct DividedScoreCard: View {
     let title: String?
     let score: String
     let verdict: String
     var color: Color
-    var caption: String?
-    @ViewBuilder var accessory: () -> Accessory
+    var trend: ScoreTrend?
+    var mealCount: Int?
+    var globalScore: String?
+    var globalColor: Color?
+    var action: (() -> Void)?
+    var globalAction: (() -> Void)?
+    var isLoading: Bool
 
     init(
         _ title: String? = nil,
         score: String,
         verdict: String,
         color: Color = DS.Color.Pine.pine600,
-        caption: String? = nil,
-        @ViewBuilder accessory: @escaping () -> Accessory
+        trend: ScoreTrend? = nil,
+        mealCount: Int? = nil,
+        globalScore: String? = nil,
+        globalColor: Color? = nil,
+        isLoading: Bool = false,
+        action: (() -> Void)? = nil,
+        globalAction: (() -> Void)? = nil
     ) {
         self.title = title
         self.score = score
         self.verdict = verdict
         self.color = color
-        self.caption = caption
-        self.accessory = accessory
+        self.trend = trend
+        self.mealCount = mealCount
+        self.globalScore = globalScore
+        self.globalColor = globalColor
+        self.isLoading = isLoading
+        self.action = action
+        self.globalAction = globalAction
     }
 
-    /// Progress fraction (0–1) for the meter bar, derived from the raw scalar score.
-    private var progress: CGFloat? {
-        let cleaned = score.replacingOccurrences(of: "%", with: "").trimmingCharacters(in: .whitespaces)
-        guard let value = Int(cleaned) else { return nil }
-        return CGFloat(min(max(value, 0), 100)) / 100
+    private var cleanScore: String {
+        score.replacingOccurrences(of: "%", with: "").trimmingCharacters(in: .whitespaces)
+    }
+    
+    private var cleanGlobalScore: String? {
+        globalScore?.replacingOccurrences(of: "%", with: "").trimmingCharacters(in: .whitespaces)
     }
 
     var body: some View {
-        Group {
+        VStack(alignment: .leading, spacing: 6) {
             if let title {
-                SectionCard(title, caption: caption) {
-                    DividedScoreView(score: score, verdict: verdict, color: color, accessory: accessory)
-                }
+                Text(title.uppercased())
+                    .font(.caption2.weight(.bold))
+                    .tracking(0.5)
+                    .foregroundStyle(DS.Color.textSecondary)
+                    .padding(.leading, 2)
+            }
+
+            boxesRow
+        }
+    }
+
+    private var boxesRow: some View {
+        HStack(spacing: DS.Spacing.xs) {
+            // Box 1: Score (X/100 in colors)
+            if let action {
+                Button(action: action) { scoreBox }.buttonStyle(.plain).disabled(isLoading)
             } else {
-                DividedScoreView(score: score, verdict: verdict, color: color, accessory: accessory)
-                    .padding(16)
-                    .background {
-                        RoundedRectangle(cornerRadius: AppRadius.card, style: .continuous)
-                            .fill(DS.Color.panel)
-                            .overlay {
-                                RoundedRectangle(cornerRadius: AppRadius.card, style: .continuous)
-                                    .strokeBorder(DS.Color.line.opacity(0.35), lineWidth: 0.5)
-                            }
-                    }
+                scoreBox
             }
-        }
-        // Single continuous meter, flush to the card's bottom/side edges with no padding.
-        .overlay(alignment: .bottom) {
-            if let progress {
-                ScoreMeterBar(progress: progress, color: color)
+
+            // Box 2: Verdict in color
+            if let action {
+                Button(action: action) { verdictBox }.buttonStyle(.plain).disabled(isLoading)
+            } else {
+                verdictBox
+            }
+
+            // Box 3: Global Score
+            if let cleanGlobalScore, let globalColor {
+                if let globalAction {
+                    Button(action: globalAction) { 
+                        globalScoreBox(score: cleanGlobalScore, color: globalColor) 
+                    }.buttonStyle(.plain)
+                } else {
+                    globalScoreBox(score: cleanGlobalScore, color: globalColor)
+                }
+            }
+
+            // Box 4 (Optional): Meal count
+            if let mealCount {
+                if let action {
+                    Button(action: action) { mealsBox(mealCount) }.buttonStyle(.plain).disabled(isLoading)
+                } else {
+                    mealsBox(mealCount)
+                }
+            }
+
+            // Box 5 (Optional): Trend indicator when historical score exists
+            if let trend {
+                if let action {
+                    Button(action: action) { trendBox(trend) }.buttonStyle(.plain).disabled(isLoading)
+                } else {
+                    trendBox(trend)
+                }
             }
         }
     }
-}
 
-extension DividedScoreCard where Accessory == EmptyView {
-    init(
-        _ title: String? = nil,
-        score: String,
-        verdict: String,
-        color: Color = DS.Color.Pine.pine600,
-        caption: String? = nil
-    ) {
-        self.init(title, score: score, verdict: verdict, color: color, caption: caption) { EmptyView() }
+    private func mealsBox(_ count: Int) -> some View {
+        HStack(alignment: .firstTextBaseline, spacing: 3) {
+            Text("\(count)")
+                .font(Font.newsreader(.title2, weight: .semibold))
+                .foregroundStyle(DS.Color.textPrimary)
+                .monospacedDigit()
+
+            Text(count == 1 ? "meal" : "meals")
+                .font(Font.newsreader(.subheadline, weight: .medium))
+                .foregroundStyle(DS.Color.textSecondary)
+        }
+        .lineLimit(1)
+        .minimumScaleFactor(0.8)
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 14)
+        .padding(.horizontal, 10)
+        .background {
+            boxBackground
+        }
     }
-}
 
-/// A single continuous hairline progress track, meant to sit flush against a
-/// card's edges via `.overlay(alignment: .bottom)` — never inset as a padded child.
-private struct ScoreMeterBar: View {
-    let progress: CGFloat
-    let color: Color
+    private var scoreBox: some View {
+        HStack(alignment: .firstTextBaseline, spacing: 1) {
+            if isLoading {
+                ProgressView()
+                    .controlSize(.small)
+                    .tint(DS.Color.textTertiary)
+                    .frame(height: 28) // Matches the approximate height of title2 text
+            } else if cleanScore == "—" || Double(cleanScore) == nil {
+                Text(cleanScore)
+                    .font(Font.newsreader(.title2, weight: .semibold))
+                    .foregroundStyle(color)
+                    .frame(height: 28)
+            } else {
+                Text(cleanScore)
+                    .font(Font.newsreader(.title2, weight: .semibold))
+                    .foregroundStyle(color)
+                    .frame(height: 28)
 
-    var body: some View {
-        GeometryReader { proxy in
-            ZStack(alignment: .leading) {
-                Rectangle()
-                    .fill(color.opacity(0.18))
-                Rectangle()
-                    .fill(color)
-                    .frame(width: proxy.size.width * progress)
+                Text("/100")
+                    .font(Font.newsreader(.subheadline, weight: .medium))
+                    .foregroundStyle(color.opacity(0.65))
             }
         }
-        .frame(height: 4)
+        .lineLimit(1)
+        .minimumScaleFactor(0.8)
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 14)
+        .padding(.horizontal, 10)
+        .background {
+            boxBackground
+        }
     }
-}
 
-#Preview {
-    NomNomPreview { _ in
-        VStack(spacing: 24) {
-            DividedScoreCard("Average Rating", score: "75", verdict: "Great", color: Color("ds/reaction/good/text"))
-            DividedScoreCard("Health Score", score: "25", verdict: "Indulgent", color: Color("ds/reaction/bad/text"))
-            DividedScoreCard("Health Score", score: "88", verdict: "Nutritious", color: DS.Color.Pine.pine600)
-            DividedScoreCard(score: "25", verdict: "Indulgent", color: Color("ds/reaction/bad/text")) {
-                AppButton("Read More", icon: .system("chevron.right"), iconPosition: .trailing, variant: .neutral, style: .ghost, size: .sm) {}
+    private func globalScoreBox(score: String, color: Color) -> some View {
+        HStack(alignment: .firstTextBaseline, spacing: 1) {
+            if score == "—" || Double(score) == nil {
+                Text(score)
+                    .font(Font.newsreader(.title2, weight: .semibold))
+                    .foregroundStyle(color)
+                    .frame(height: 28)
+            } else {
+                Text(score)
+                    .font(Font.newsreader(.title2, weight: .semibold))
+                    .foregroundStyle(color)
+                    .frame(height: 28)
+                
+                Text("/100")
+                    .font(Font.newsreader(.subheadline, weight: .medium))
+                    .foregroundStyle(color.opacity(0.65))
             }
         }
-        .padding()
+        .lineLimit(1)
+        .minimumScaleFactor(0.8)
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 14)
+        .padding(.horizontal, 10)
+        .background {
+            boxBackground
+        }
+    }
+
+    private var verdictBox: some View {
+        Group {
+            if isLoading {
+                ProgressView()
+                    .controlSize(.small)
+                    .tint(DS.Color.textTertiary)
+                    .frame(height: 28)
+            } else {
+                Text(verdict)
+                    .font(Font.newsreader(.title2, weight: .semibold))
+                    .foregroundStyle(color)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.8)
+                    .frame(height: 28)
+            }
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 14)
+        .padding(.horizontal, 10)
+        .background {
+            boxBackground
+        }
+    }
+
+    private func trendBox(_ trend: ScoreTrend) -> some View {
+        HStack(spacing: 4) {
+            Image(systemName: trend.systemImage)
+                .font(.system(size: 15, weight: .semibold))
+
+            if let delta = trend.delta, delta != 0 {
+                Text(delta > 0 ? "+\(delta)" : "\(delta)")
+                    .font(Font.newsreader(.subheadline, weight: .semibold))
+            }
+        }
+        .foregroundStyle(trend.color)
+        .lineLimit(1)
+        .minimumScaleFactor(0.8)
+        .frame(maxWidth: .infinity, minHeight: 28)
+        .padding(.vertical, 14)
+        .padding(.horizontal, 10)
+        .background {
+            boxBackground
+        }
+    }
+
+    private var boxBackground: some View {
+        RoundedRectangle(cornerRadius: AppRadius.small, style: .continuous)
+            .fill(DS.Color.panel)
+            .overlay {
+                RoundedRectangle(cornerRadius: AppRadius.small, style: .continuous)
+                    .strokeBorder(DS.Color.line.opacity(0.35), lineWidth: 0.5)
+            }
     }
 }

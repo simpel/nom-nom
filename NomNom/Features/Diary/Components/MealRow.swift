@@ -82,6 +82,11 @@ struct MealRow: View {
             }
             .frame(maxWidth: .infinity, alignment: .leading)
 
+            if let score = store.averageScore(forMeal: meal.id),
+               let reaction = store.averageReaction(forMeal: meal.id) {
+                ScoreBadge(score: score, reaction: reaction, format: .scoreOnly, size: .sm)
+            }
+
             if !isMinimal {
                 Image(systemName: "chevron.right")
                     .font(.caption.weight(.semibold))

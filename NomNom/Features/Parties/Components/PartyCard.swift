@@ -1,14 +1,12 @@
 import SwiftUI
 
-/// Comprehensive, appetizing card representing a dinner party in My Parties, Following, and Discover.
+/// Appetizing card representing a dinner party in Following and Discover lists.
 ///
 /// Features:
-/// - Party identity with monogram avatar, follower/member count, and host attribution
-/// - Refined score pill badge in metadata row
-/// - Party description strictly capped at 2 lines
-/// - Horizontally scrollable list of meals with clean photo cards and names
-/// - Total meals logged footer
-/// - Interactive top-right follow icon button (when applicable)
+/// - Party identity with avatar, name, subtitle member names/host, and far-right follow button
+/// - Party description capped at 2 lines
+/// - Reuses DividedScoreCard for average rating and meal count
+/// - Horizontally scrollable list of meals with dish photo cards
 struct PartyCard: View {
     let party: Party
     var showFollowButton: Bool? = nil
@@ -17,8 +15,7 @@ struct PartyCard: View {
     @State private var showingInviteSheet = false
 
     private var isMember: Bool { store.isMember(of: party.id) }
-    private var memberCount: Int { store.members(of: party.id).count }
-    private var followerCount: Int { store.followers(of: party.id).count }
+    private var members: [Profile] { store.members(of: party.id) }
     private var partyMeals: [Meal] { store.meals(forParty: party.id) }
     private var hostName: String? { store.profiles[party.createdBy]?.shortName }
     private var scoreStats: FoodStore.PartyScoreStats? { store.partyAverageScore(partyID: party.id) }
@@ -28,36 +25,37 @@ struct PartyCard: View {
         return showFollowButton ?? true
     }
 
+    private var subtitleText: String {
+        if !members.isEmpty {
+            return members.map(\.shortName).joined(separator: ", ")
+        } else if let hostName {
+            return "Hosted by \(hostName)"
+        }
+        return ""
+    }
+
     var body: some View {
-        ZStack(alignment: .topTrailing) {
-            NavigationLink {
-                PartyDetailView(partyID: party.id)
-            } label: {
-                cardBody
-            }
-            .buttonStyle(.plain)
-            .contextMenu {
-                if isMember {
-                    Button {
-                        showingInviteSheet = true
-                    } label: {
-                        Label("Invite Member", systemImage: "person.badge.plus")
-                    }
-
-                    ShareLink(
-                        item: party.inviteURL,
-                        subject: Text("Join \(party.name) on Nom Nom"),
-                        message: Text(party.shareMessage)
-                    ) {
-                        Label("Share Invite Link", systemImage: "square.and.arrow.up")
-                    }
+        NavigationLink {
+            PartyDetailView(partyID: party.id)
+        } label: {
+            cardBody
+        }
+        .buttonStyle(.plain)
+        .contextMenu {
+            if isMember {
+                Button {
+                    showingInviteSheet = true
+                } label: {
+                    Label("Invite Member", systemImage: "person.badge.plus")
                 }
-            }
 
-            if shouldShowFollowButton {
-                PartyFollowIconButton(party: party)
-                    .padding(.top, scoreStats != nil ? 20 : 16)
-                    .padding(.trailing, 10)
+                ShareLink(
+                    item: party.inviteURL,
+                    subject: Text("Join \(party.name) on Nom Nom"),
+                    message: Text(party.shareMessage)
+                ) {
+                    Label("Share Invite Link", systemImage: "square.and.arrow.up")
+                }
             }
         }
         .sheet(isPresented: $showingInviteSheet) {
@@ -75,17 +73,14 @@ struct PartyCard: View {
                 Text(party.about)
                     .font(.subheadline)
                     .foregroundStyle(DS.Color.textSecondary)
-                    .lineSpacing(3)
                     .lineLimit(2)
-                    .truncationMode(.tail)
-                    .fixedSize(horizontal: false, vertical: true)
             }
+
+            scoreSection
 
             if !partyMeals.isEmpty {
                 mealsHorizontalScroll
             }
-
-            footerRow
         }
         .padding(DS.Spacing.md)
         .background(DS.Color.panel)
@@ -103,23 +98,46 @@ struct PartyCard: View {
         HStack(alignment: .center, spacing: 12) {
             PartyAvatar(party: party, size: 44)
 
-            VStack(alignment: .leading, spacing: 5) {
+            VStack(alignment: .leading, spacing: 2) {
                 Text(party.name)
-                    .font(.headline.weight(.semibold))
+                    .font(AppTypography.displayL)
                     .foregroundStyle(DS.Color.textPrimary)
                     .lineLimit(1)
 
-                if let stats = scoreStats {
-                    ScoreBadge(stats: stats, format: .both, size: .sm)
+                if !subtitleText.isEmpty {
+                    Text(subtitleText)
+                        .font(.subheadline)
+                        .foregroundStyle(DS.Color.textSecondary)
+                        .lineLimit(1)
                 }
             }
 
-            Spacer(minLength: 8)
+            Spacer()
 
             if shouldShowFollowButton {
-                // Invisible reservation matching the 32x32 circle of the follow button overlay
-                Color.clear
-                    .frame(width: 32, height: 32)
+                PartyFollowIconButton(party: party)
+            }
+        }
+    }
+
+    // MARK: - Score Section
+
+    private var scoreSection: some View {
+        Group {
+            if let stats = scoreStats {
+                DividedScoreCard(
+                    score: String(format: "%.1f", stats.score * 100),
+                    verdict: stats.reaction.shortLabel,
+                    color: stats.reaction.text,
+                    mealCount: partyMeals.count
+                )
+            } else {
+                DividedScoreCard(
+                    score: "—",
+                    verdict: "Unrated",
+                    color: DS.Color.textTertiary,
+                    mealCount: partyMeals.count
+                )
             }
         }
     }
@@ -173,46 +191,6 @@ struct PartyCard: View {
                 .lineLimit(2)
                 .multilineTextAlignment(.leading)
                 .frame(width: 148, height: 32, alignment: .topLeading)
-        }
-    }
-
-    // MARK: - Footer
-
-    private var footerRow: some View {
-        HStack(spacing: 6) {
-            if partyMeals.isEmpty {
-                Text("No meals logged yet")
-                    .font(.caption)
-                    .foregroundStyle(DS.Color.textTertiary)
-            } else {
-                Text("\(partyMeals.count) \(partyMeals.count == 1 ? "meal" : "meals") logged")
-                    .font(.caption.weight(.medium))
-                    .foregroundStyle(DS.Color.textSecondary)
-                    .monospacedDigit()
-            }
-
-            Spacer(minLength: 8)
-
-            HStack(spacing: 5) {
-                if let hostName {
-                    Text("Hosted by \(hostName)")
-                        .lineLimit(1)
-
-                    Text("•")
-                        .foregroundStyle(DS.Color.textTertiary)
-                }
-
-                if isMember {
-                    Text("\(memberCount) \(memberCount == 1 ? "member" : "members")")
-                        .monospacedDigit()
-                } else {
-                    Text("\(followerCount) \(followerCount == 1 ? "follower" : "followers")")
-                        .monospacedDigit()
-                }
-            }
-            .font(.caption)
-            .foregroundStyle(DS.Color.textSecondary)
-            .lineLimit(1)
         }
     }
 }

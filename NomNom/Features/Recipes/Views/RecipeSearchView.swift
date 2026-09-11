@@ -66,13 +66,29 @@ struct RecipeSearchView: View {
         }
     }
 
-    // MARK: - Idle Search History View
+    // MARK: - Idle Search View
 
     private var idleHistoryView: some View {
         ScrollView {
-            SearchHistorySection { query in
-                searchText = query
-                SearchHistoryStore.shared.addQuery(query)
+            VStack(alignment: .leading, spacing: DS.Spacing.sectionLarge) {
+                if !store.recentRecipes.isEmpty {
+                    RecipeHorizontalShelf(title: "Last Used Recipes", recipes: store.recentRecipes)
+                }
+
+                if !store.favoriteRecipes.isEmpty {
+                    RecipeHorizontalShelf(title: "Favourites", recipes: store.favoriteRecipes)
+                }
+
+                if !store.popularRecipes.isEmpty {
+                    PopularRecipesShelf(recipes: store.popularRecipes)
+                }
+
+                SearchHistorySection(
+                    showsEmptyState: store.recentRecipes.isEmpty && store.favoriteRecipes.isEmpty && store.popularRecipes.isEmpty
+                ) { query in
+                    searchText = query
+                    SearchHistoryStore.shared.addQuery(query)
+                }
             }
             .padding(.top, DS.Spacing.screenTop)
             .padding(.bottom, DS.Spacing.screenBottom)
