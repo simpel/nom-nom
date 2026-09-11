@@ -9,7 +9,7 @@ struct CategoryHeroCoverCard: View {
         ZStack(alignment: .bottomLeading) {
             // Background cover photo
             if let photoPath = category.photoPath, !photoPath.isEmpty {
-                RemoteMealPhoto(path: photoPath, cornerRadius: 0, bucket: SupabaseConfig.recipeBucket)
+                RemoteMealPhoto(path: photoPath, cornerRadius: 0, bucket: SupabaseConfig.categoryBucket)
                     .frame(maxWidth: .infinity)
                     .frame(height: 140)
                     .clipped()

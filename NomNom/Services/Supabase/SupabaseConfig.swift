@@ -42,6 +42,9 @@ enum SupabaseConfig {
 
     /// Private bucket holding profile avatar photos, keyed `<user_id>/avatar.jpg`.
     static let profileBucket = "profile-photos"
+
+    /// Public bucket holding category cover photos, keyed `<slug>.jpg`.
+    static let categoryBucket = "category-photos"
 }
 
 /// One client for the whole app. `SupabaseClient` keeps the session in the

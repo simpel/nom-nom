@@ -356,10 +356,10 @@ Return ONLY valid JSON matching:
             .toLowerCase()
             .replace(/[^a-z0-9]+/g, "-")
             .replace(/^-+|-+$/g, "");
-          const targetPath = `categories/${categorySlug}.jpg`;
+          const targetPath = `${categorySlug}.jpg`;
 
           const { error: uploadErr } = await admin.storage
-            .from("recipe-photos")
+            .from("category-photos")
             .upload(targetPath, imageBytes, {
               contentType: "image/jpeg",
               upsert: true,

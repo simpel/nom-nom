@@ -191,8 +191,8 @@ def generate_category_image(resolved_cat, resolved_dishes, vessels_narrative=Non
 
 
 def upload_to_storage_and_update_db(slug, name, image_bytes):
-    storage_path = f"categories/{slug}.jpg"
-    upload_url = f"{API_URL}/storage/v1/object/recipe-photos/{storage_path}"
+    storage_path = f"{slug}.jpg"
+    upload_url = f"{API_URL}/storage/v1/object/category-photos/{storage_path}"
 
     # 1. Upload to Supabase Storage
     req = urllib.request.Request(upload_url, data=image_bytes, method="POST")

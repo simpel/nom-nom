@@ -31,7 +31,7 @@ struct CategoryGridCard: View {
         ZStack(alignment: .bottomLeading) {
             // Background image: remote generated photo > preset asset > neutral card fallback
             if let photoPath, !photoPath.isEmpty {
-                RemoteMealPhoto(path: photoPath, cornerRadius: 0, bucket: SupabaseConfig.recipeBucket)
+                RemoteMealPhoto(path: photoPath, cornerRadius: 0, bucket: SupabaseConfig.categoryBucket)
                     .frame(maxWidth: .infinity)
                     .frame(height: 110)
                     .clipped()
