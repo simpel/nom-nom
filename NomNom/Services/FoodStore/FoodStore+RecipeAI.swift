@@ -107,7 +107,7 @@ extension FoodStore {
         }
     }
 
-    /// Invokes the `generate-recipe-image` Edge Function to create an editorial photo for an unphotographed recipe.
+    /// Invokes the `generate-dish-photo` Edge Function to create an editorial photo for an unphotographed recipe.
     @discardableResult
     func generateRecipeImage(for recipe: Recipe) async throws -> GenerateRecipeImageResult {
         Self.log.info("Generating AI recipe image for '\(recipe.name, privacy: .public)' (id: \(recipe.id, privacy: .public))")
@@ -121,7 +121,7 @@ extension FoodStore {
         )
 
         let result: GenerateRecipeImageResult = try await supabase.functions.invoke(
-            "generate-recipe-image",
+            "generate-dish-photo",
             options: FunctionInvokeOptions(body: payload)
         )
 

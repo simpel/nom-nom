@@ -71,7 +71,7 @@ Rules:
 1. Category Spread: Select 3 to 4 iconic, visually complementary dishes representing the authentic culinary tradition of this kitchen/category.
 2. Distinct Textures & Garnishes: Each dish should feature distinct textured components (e.g. braised, roasted, fresh, sauced) and classic culinary garnishes.
 3. Category-Specific Traditional Vessels: If this culinary category has traditional, iconic plates or serving vessels strongly associated with its heritage (for example: a shallow rustic terracotta cazuela in Mexican or Spanish cuisine, a dark textured Japanese ceramic yakimono or tenmoku plate, an Indian hammered brass/earthenware handi, a Korean stone ttukbaegi bowl, or a French enameled cast-iron gratin dish), replace 1 or 2 of the plates in the picture with these authentic traditional vessels to better portray the category. The remaining dishes should stay on round stoneware coupe plates. If no unique traditional vessel is customary, use matching stoneware coupe plates throughout.
-4. Strict Exclusion Rules: No Cutlery or Utensils (no forks, knives, spoons, chopsticks, skewers). No Table Props (no glasses, cups, napkins, ramekins, side bowls, condiment bottles, placemats).
+4. Strict Exclusion Rules: No Cutlery or Utensils (no forks, knives, spoons, chopsticks, skewers). No Table Props (no glasses, cups, napkins, ramekins, side bowls, condiment bottles, placemats). Never Render Empty Plates: every plate or vessel in the spread must be filled with food — no bare, unfilled, or empty dishware anywhere in frame.
 5. Identify:
    - resolved_category: Canonical display name of the kitchen/category (e.g. "{category_name} Kitchen").
    - resolved_dishes: A descriptive narrative detailing the 3 to 4 dishes plated across the spread, explicitly specifying the plate or vessel each dish is served on (e.g. "a central round stoneware coupe plate of slow-braised cochinita pibil; a second dish of charred street-style elote served in an authentic shallow rustic Mexican terracotta cazuela; and a third coupe plate of fresh citrus ceviche").
@@ -159,9 +159,11 @@ def generate_category_image(resolved_cat, resolved_dishes, vessels_narrative=Non
         f"no fill light, no rim light, no spotlighting, no harsh direct sun, no hard-edged shadows, no blown highlights, no crushed "
         f"shadows. Critical sharp focus on food surface textures, shallow depth of field softly blurring the background wood into "
         f"clean negative space. Minimalist food styling, absolutely no cutlery, no forks, no knives, no spoons, no chopsticks, "
-        f"no napkins, no glasses, no side bowls, curated dish vessels on wood only. --ar 1:1 --no cutlery, forks, knives, spoons, "
-        f"chopsticks, napkins, glassware, cups, bottles, wood seams, plank lines, grooves, panel joints, vertical wood grain, "
-        f"vertical grain, diagonal wood grain, table edges, walls, windows, curtains, room, background furniture --style raw --v 6.1"
+        f"no napkins, no glasses, no side bowls, curated dish vessels on wood only. Every plate and vessel in the spread must be "
+        f"generously filled with food — never render an empty, bare, or unfilled plate or vessel anywhere in frame. --ar 1:1 --no "
+        f"cutlery, forks, knives, spoons, chopsticks, napkins, glassware, cups, bottles, wood seams, plank lines, grooves, panel joints, "
+        f"vertical wood grain, vertical grain, diagonal wood grain, table edges, walls, windows, curtains, room, background furniture, "
+        f"empty plate, empty plates, bare plate, unfilled plate, empty vessel, empty bowl --style raw --v 6.1"
     )
 
     req = urllib.request.Request(
