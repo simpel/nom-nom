@@ -67,7 +67,7 @@ struct PartyRecentCompanionsSection: View {
             invitingID = nil
             if ok {
                 withAnimation {
-                    invitedIDs.insert(profile.id)
+                    _ = invitedIDs.insert(profile.id)
                 }
                 UINotificationFeedbackGenerator().notificationOccurred(.success)
             }

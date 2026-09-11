@@ -21,7 +21,7 @@ struct RecipeEditSheet: View {
         NavigationStack {
             ScrollView {
                 VStack(spacing: DS.Spacing.section) {
-                    if let recipe {
+                    if recipe != nil {
                         if isOwner {
                             AssetPhotosPickerSection(draft: $coverPhotosDraft, title: "Cover Photo")
 

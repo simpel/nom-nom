@@ -140,14 +140,12 @@ extension FoodStore {
             // Remove follow if previously following
             if partyFollowers.contains(where: { $0.partyID == party.id && $0.userID == userID }) {
                 partyFollowers.removeAll { $0.partyID == party.id && $0.userID == userID }
-                Task {
-                    try? await supabase
-                        .from("party_followers")
-                        .delete()
-                        .eq("party_id", value: party.id.uuidString)
-                        .eq("user_id", value: userID.uuidString)
-                        .execute()
-                }
+                _ = try? await supabase
+                    .from("party_followers")
+                    .delete()
+                    .eq("party_id", value: party.id.uuidString)
+                    .eq("user_id", value: userID.uuidString)
+                    .execute()
             }
 
             reindex()
@@ -186,14 +184,12 @@ extension FoodStore {
             }
             if partyFollowers.contains(where: { $0.partyID == invite.partyID && $0.userID == userID }) {
                 partyFollowers.removeAll { $0.partyID == invite.partyID && $0.userID == userID }
-                Task {
-                    try? await supabase
-                        .from("party_followers")
-                        .delete()
-                        .eq("party_id", value: invite.partyID.uuidString)
-                        .eq("user_id", value: userID.uuidString)
-                        .execute()
-                }
+                _ = try? await supabase
+                    .from("party_followers")
+                    .delete()
+                    .eq("party_id", value: invite.partyID.uuidString)
+                    .eq("user_id", value: userID.uuidString)
+                    .execute()
             }
             if !parties.contains(where: { $0.id == invite.partyID }) {
                 let fetched: Party = try await supabase

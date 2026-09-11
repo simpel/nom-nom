@@ -60,19 +60,21 @@ struct MealDetailAverageRatingCard: View {
                     score: String(format: "%.1f", score * 100),
                     verdict: reaction.shortLabel,
                     color: reaction.text,
-                    trend: trend
-                ) {
-                    showScoreSheet = true
-                }
+                    trend: trend,
+                    action: {
+                        showScoreSheet = true
+                    }
+                )
             } else {
                 DividedScoreCard(
                     score: "—",
                     verdict: "Unrated",
                     color: DS.Color.textTertiary,
-                    trend: trend
-                ) {
-                    showScoreSheet = true
-                }
+                    trend: trend,
+                    action: {
+                        showScoreSheet = true
+                    }
+                )
             }
         }
         .sheet(isPresented: $showScoreSheet) {
