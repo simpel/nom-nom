@@ -19,7 +19,6 @@ struct DiaryContextMenu: View {
                         }
                     }
                 }
-            }
         } label: {
             HStack(spacing: 4) {
                 Image(systemName: "person.2.fill")
