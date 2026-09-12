@@ -86,7 +86,7 @@ struct SettingsView: View {
                             Text("\(store.pendingPartyInvites.count) invite")
                                 .font(.caption2.bold())
                                 .padding(.horizontal, 6)
-                                .padding(.vertical, 2)
+                                .padding(.vertical, DS.Spacing.sm)
                                 .background(Color.orange)
                                 .foregroundStyle(.white)
                                 .clipShape(Capsule())
@@ -95,7 +95,7 @@ struct SettingsView: View {
                             .font(.caption2)
                             .foregroundStyle(DS.Color.textTertiary)
                     }
-                    .padding(.vertical, 2)
+                    .padding(.vertical, DS.Spacing.sm)
                 }
                 .buttonStyle(.plain)
 

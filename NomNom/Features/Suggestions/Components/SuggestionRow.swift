@@ -72,7 +72,7 @@ struct SuggestionRow: View {
                     }
                 }
             }
-            .padding(.vertical, 4)
+            .padding(.vertical, DS.Spacing.sm)
         }
     }
 

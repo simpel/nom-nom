@@ -71,12 +71,27 @@ struct RecipeLeaderboardSheet: View {
     }
 
     private var emptyState: some View {
-        ContentUnavailableView {
-            Label("No Ranked Dishes", systemImage: "chart.bar.xaxis")
-        } description: {
-            Text("Cook and rate meals to rank your recipes on the leaderboard.")
+        VStack(spacing: DS.Spacing.section) {
+            Spacer(minLength: 20)
+
+            CategoryPhotoArcView()
+                .padding(.vertical, DS.Spacing.sm)
+
+            VStack(spacing: 0) {
+                Text("No Ranked Dishes")
+                    .font(AppTypography.displayL)
+                    .foregroundStyle(DS.Color.textPrimary)
+
+                Text("Cook and rate meals to rank your recipes on the leaderboard.")
+                    .font(AppTypography.bodyM)
+                    .foregroundStyle(DS.Color.textSecondary)
+                    .multilineTextAlignment(.center)
+                    .lineSpacing(3)
+                    .padding(.horizontal, 28)
+            }
+
+            Spacer(minLength: 40)
         }
-        .padding(.top, 40)
     }
 }
 

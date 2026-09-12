@@ -19,7 +19,7 @@ struct MealDetailCookInfoCard: View {
 
     var body: some View {
         SectionCard(title: "Details") {
-            VStack(spacing: 12) {
+            VStack(spacing: 0) {
                 // Recipe Row (no button styling, still tappable table row)
                 if let onOpenRecipe {
                     Button(action: onOpenRecipe) {
@@ -39,6 +39,7 @@ struct MealDetailCookInfoCard: View {
                         }
                     }
                     .buttonStyle(.plain)
+                    .padding(.vertical, DS.Spacing.sm)
 
                     Divider().overlay(DS.Color.line.opacity(0.3))
                 }
@@ -71,6 +72,7 @@ struct MealDetailCookInfoCard: View {
                     }
                     .buttonStyle(.plain)
                 }
+                .padding(.vertical, DS.Spacing.sm)
 
                 // Dinner Party Row
                 if let party = parties.first {
@@ -104,6 +106,7 @@ struct MealDetailCookInfoCard: View {
                             }
                         }
                     }
+                    .padding(.vertical, DS.Spacing.sm)
                 }
 
                 // Cooking Time / Effort (if specified)
@@ -116,6 +119,7 @@ struct MealDetailCookInfoCard: View {
                         Spacer()
                         BurnerMeter(effort: effort, showLabel: true)
                     }
+                    .padding(.vertical, DS.Spacing.sm)
                 }
 
                 // Tags
@@ -126,6 +130,7 @@ struct MealDetailCookInfoCard: View {
                             Chip(text: tag, tint: DS.Color.textSecondary)
                         }
                     }
+                    .padding(.vertical, DS.Spacing.sm)
                 }
 
                 // Chef Notes
@@ -141,6 +146,7 @@ struct MealDetailCookInfoCard: View {
                             .foregroundStyle(DS.Color.textPrimary)
                             .multilineTextAlignment(.trailing)
                     }
+                    .padding(.vertical, DS.Spacing.sm)
                 }
             }
         }

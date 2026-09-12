@@ -59,7 +59,7 @@ struct HouseholdPendingInvitesSection: View {
                 }
             }
         }
-        .padding(.vertical, 2)
+        .padding(.vertical, DS.Spacing.sm)
         .swipeActions(edge: .trailing, allowsFullSwipe: false) {
             Button(role: .destructive) {
                 revoke(invite)

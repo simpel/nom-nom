@@ -75,13 +75,6 @@ struct InboxSheetView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: DS.Spacing.section) {
                 InboxHeaderView(unreadCount: store.unreadCount, totalCount: store.notifications.count)
-
-                ContentUnavailableView(
-                    "No Notifications",
-                    systemImage: "bell.slash",
-                    description: Text("You're all caught up. Invitations and meal ratings will appear here.")
-                )
-                .padding(.top, 40)
             }
             .padding(.top, DS.Spacing.screenTop)
             .padding(.bottom, DS.Spacing.screenBottom)
@@ -131,7 +124,7 @@ struct InboxSheetView: View {
                 horizontalPadding: DS.Spacing.screenHorizontal
             )
 
-            LazyVStack(spacing: 8) {
+            LazyVStack(spacing: 0) {
                 ForEach(items) { notification in
                     NotificationRow(
                         notification: notification,

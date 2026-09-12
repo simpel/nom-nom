@@ -4,12 +4,13 @@ import SwiftUI
 struct RecipesView: View {
     @Environment(FoodStore.self) private var store
 
-    @State private var selectedTab: RecipeTab = .myRecipes
+    @State private var selectedTab: RecipeTab = .favourites
     @State private var showingCreateSheet = false
 
     enum RecipeTab: String, CaseIterable, Identifiable {
-        case inspiration = "Inspiration"
+        case favourites = "Favourites"
         case myRecipes = "My Recipes"
+        case inspiration = "Inspiration"
 
         var id: String { rawValue }
     }
@@ -23,22 +24,46 @@ struct RecipesView: View {
                     }
                     .padding(.horizontal, DS.Spacing.screenHorizontal)
 
-                    Picker("View", selection: $selectedTab) {
-                        ForEach(RecipeTab.allCases) { tab in
-                            Text(tab.rawValue).tag(tab)
-                        }
-                    }
-                    .pickerStyle(.segmented)
-                    .padding(.horizontal, DS.Spacing.screenHorizontal)
-
-                    switch selectedTab {
-                    case .inspiration:
+                    if store.myRecipes.isEmpty {
                         RecipeInspirationSection()
-                    case .myRecipes:
-                        MyRecipesSection(
-                            recipes: store.myRecipes.sorted { $0.createdAt > $1.createdAt },
-                            onCreateRecipe: { showingCreateSheet = true }
-                        )
+                    } else {
+                        let availableTabs: [RecipeTab] = store.favoriteRecipes.isEmpty ? [.myRecipes, .inspiration] : [.favourites, .myRecipes, .inspiration]
+                        let resolvedTab: RecipeTab = availableTabs.contains(selectedTab) ? selectedTab : availableTabs.first!
+
+                        Picker("View", selection: Binding(
+                            get: { resolvedTab },
+                            set: { selectedTab = $0 }
+                        )) {
+                            ForEach(availableTabs) { tab in
+                                Text(tab.rawValue).tag(tab)
+                            }
+                        }
+                        .pickerStyle(.segmented)
+                        .padding(.horizontal, DS.Spacing.screenHorizontal)
+
+                        switch resolvedTab {
+                        case .favourites:
+                            VStack(alignment: .leading, spacing: DS.Spacing.md) {
+                                HStack {
+                                    Text("\(store.favoriteRecipes.count) recipe\(store.favoriteRecipes.count == 1 ? "" : "s")")
+                                        .font(.caption.weight(.medium))
+                                        .monospacedDigit()
+                                        .foregroundStyle(DS.Color.textSecondary)
+                                    Spacer()
+                                }
+                                .padding(.horizontal, DS.Spacing.screenHorizontal)
+                                .padding(.vertical, 4)
+                                
+                                MinimalRecipeGrid(recipes: store.favoriteRecipes.sorted { $0.createdAt > $1.createdAt })
+                            }
+                        case .inspiration:
+                            RecipeInspirationSection()
+                        case .myRecipes:
+                            MyRecipesSection(
+                                recipes: store.myRecipes.sorted { $0.createdAt > $1.createdAt },
+                                onCreateRecipe: { showingCreateSheet = true }
+                            )
+                        }
                     }
                 }
                 .padding(.top, DS.Spacing.screenTop)

@@ -106,7 +106,7 @@ struct PartySetupStepView: View {
 
                             Spacer()
                         }
-                        .padding(.vertical, 2)
+                        .padding(.vertical, DS.Spacing.sm)
 
                         if member.id != members.last?.id {
                             Divider()
@@ -134,7 +134,7 @@ struct PartySetupStepView: View {
                             .foregroundStyle(DS.Color.textSecondary)
                     }
                 }
-                .padding(.vertical, 2)
+                .padding(.vertical, DS.Spacing.sm)
             }
         }
     }
@@ -181,7 +181,7 @@ struct PartySetupStepView: View {
                             }
                         }
                     }
-                    .padding(.vertical, 2)
+                    .padding(.vertical, DS.Spacing.sm)
 
                     if invite.id != invites.last?.id {
                         Divider()

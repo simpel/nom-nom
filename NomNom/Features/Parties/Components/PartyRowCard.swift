@@ -54,7 +54,7 @@ struct PartyRowCard: View {
                 .font(.caption2.weight(.semibold))
                 .foregroundStyle(DS.Color.textTertiary)
         }
-        .padding(.vertical, 6)
+        .padding(.vertical, DS.Spacing.sm)
         .contentShape(Rectangle())
     }
 }

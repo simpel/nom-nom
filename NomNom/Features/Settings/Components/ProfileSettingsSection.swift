@@ -30,7 +30,7 @@ struct ProfileSettingsSection: View {
                             .textContentType(.givenName)
                             .onSubmit(saveProfile)
                         Divider()
-                            .padding(.vertical, 2)
+                            .padding(.vertical, DS.Spacing.sm)
                         Input(label: "Last", placeholder: "Last name", text: $lastName, size: .sm)
                             .textContentType(.familyName)
                             .onSubmit(saveProfile)

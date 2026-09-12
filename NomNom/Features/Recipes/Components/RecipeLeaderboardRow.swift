@@ -39,7 +39,7 @@ struct RecipeLeaderboardRow: View {
                 .font(.caption2.weight(.semibold))
                 .foregroundStyle(DS.Color.textTertiary)
         }
-        .padding(.vertical, 8)
+        .padding(.vertical, DS.Spacing.sm)
         .padding(.horizontal, 10)
         .background {
             if isHighlighted {

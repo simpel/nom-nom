@@ -39,9 +39,7 @@ struct PartyDetailView: View {
 
                         PartyAverageRatingCard(party: party)
 
-                        PartyMembersSection(party: party) {
-                            showingMembersSheet = true
-                        }
+                        PartyMembersSection(party: party)
 
                         PartyMealsSection(party: party)
                     }

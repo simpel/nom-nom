@@ -13,9 +13,9 @@ struct ProfileMealHistorySection: View {
                 Text("No meals logged yet.")
                     .font(.subheadline)
                     .foregroundStyle(DS.Color.textSecondary)
-                    .padding(.vertical, 4)
+                    .padding(.vertical, DS.Spacing.sm)
             } else {
-                VStack(spacing: 8) {
+                VStack(spacing: 0) {
                     ForEach(Array(meals.enumerated()), id: \.element.id) { index, meal in
                         NavigationLink {
                             MealDetailView(mealID: meal.id)
@@ -63,7 +63,7 @@ struct ProfileMealHistorySection: View {
                 .font(.caption2.weight(.semibold))
                 .foregroundStyle(DS.Color.textTertiary)
         }
-        .padding(.vertical, 3)
+        .padding(.vertical, DS.Spacing.sm)
         .contentShape(Rectangle())
     }
 

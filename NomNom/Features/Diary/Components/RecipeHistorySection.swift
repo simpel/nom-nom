@@ -20,7 +20,7 @@ struct RecipeHistorySection: View {
 
     var body: some View {
         SectionCard("Cooked History", caption: "\(filteredHistory.count) occasions") {
-            VStack(spacing: 8) {
+            VStack(spacing: 0) {
                 if filteredHistory.isEmpty {
                     Text(selectedPartyID == nil ? "No meals logged for this recipe yet." : "No meals logged for this dinner party.")
                         .font(.subheadline)

@@ -89,7 +89,7 @@ struct NotificationRow: View {
         }
         .padding(.leading, 8)
         .padding(.trailing, 14)
-        .padding(.vertical, 12)
+        .padding(.vertical, DS.Spacing.sm)
         .background(
             ZStack {
                 DS.Color.panel
@@ -132,7 +132,7 @@ struct NotificationRow: View {
             }
         }
         .padding(.horizontal, 12)
-        .padding(.vertical, 9)
+        .padding(.vertical, DS.Spacing.sm)
         .background(DS.Color.panel.opacity(0.55))
         .clipShape(RoundedRectangle(cornerRadius: AppRadius.card, style: .continuous))
         .overlay(

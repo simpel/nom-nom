@@ -35,7 +35,7 @@ struct ProfileSheetView: View {
                             .onSubmit { saveProfile() }
 
                             Divider()
-                                .padding(.vertical, 4)
+                                .padding(.vertical, DS.Spacing.sm)
 
                             Input(
                                 label: "Last name",

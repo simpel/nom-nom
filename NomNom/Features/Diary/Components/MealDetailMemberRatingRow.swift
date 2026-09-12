@@ -79,7 +79,7 @@ struct MealDetailMemberRatingRow: View {
 
             trailingAction
         }
-        .padding(.vertical, 2)
+        .padding(.vertical, DS.Spacing.sm)
     }
 
     @ViewBuilder

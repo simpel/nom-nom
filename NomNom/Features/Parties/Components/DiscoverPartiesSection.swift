@@ -10,12 +10,8 @@ struct DiscoverPartiesSection: View {
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            SectionHeader(
-                "Parties to Follow",
-                trailingText: discoverable.isEmpty ? nil : "\(discoverable.count)",
-                horizontalPadding: 0
-            )
+        VStack(alignment: .leading, spacing: 16) {
+            PageHeading(title: "Parties to follow")
 
             if discoverable.isEmpty {
                 SectionCard {
@@ -33,11 +29,16 @@ struct DiscoverPartiesSection: View {
                     .padding(.vertical, 8)
                 }
             } else {
-                VStack(spacing: DS.Spacing.md) {
-                    ForEach(discoverable) { party in
-                        PartyCard(party: party, showFollowButton: true)
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: DS.Spacing.md) {
+                        ForEach(discoverable) { party in
+                            PartyCard(party: party, showFollowButton: true)
+                                .frame(width: 320)
+                        }
                     }
+                    .padding(.horizontal, DS.Spacing.screenHorizontal)
                 }
+                .padding(.horizontal, -DS.Spacing.screenHorizontal)
             }
         }
     }

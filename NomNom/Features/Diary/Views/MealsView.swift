@@ -6,6 +6,8 @@ struct MealsView: View {
 
     @State private var editorTarget: MealEditorTarget?
 
+    @State private var mealToRemove: Meal?
+
     private var currentMeals: [Meal] {
         store.activeMeals
     }
@@ -24,7 +26,7 @@ struct MealsView: View {
                     .refreshable { await store.load() }
                 } else {
                     ScrollView {
-                        LazyVStack(alignment: .leading, spacing: DS.Spacing.section) {
+                        VStack(alignment: .leading, spacing: DS.Spacing.section) {
                             PageHeading(title: "Meals", actionTitle: "Add meal") {
                                 editorTarget = .new
                             }
@@ -32,51 +34,38 @@ struct MealsView: View {
                             MealsToRateSection()
 
                             ForEach(historySections, id: \.title) { section in
-                                VStack(alignment: .leading, spacing: 10) {
-                                    Text(section.title.uppercased())
-                                        .font(.caption.weight(.semibold))
-                                        .tracking(0.5)
-                                        .foregroundStyle(DS.Color.textSecondary)
-                                        .padding(.horizontal, 4)
-
-                                    VStack(spacing: 0) {
-                                        ForEach(Array(section.meals.enumerated()), id: \.element.id) { index, meal in
-                                            NavigationLink {
-                                                MealDetailView(mealID: meal.id)
+                                SwipeableListCard(
+                                    title: section.title,
+                                    data: section.meals,
+                                    dividerPadding: 74,
+                                    leadingIcon: { _ in "trash.fill" },
+                                    leadingColor: { _ in .red },
+                                    onLeadingAction: { meal in
+                                        mealToRemove = meal
+                                    }
+                                ) { meal in
+                                    NavigationLink {
+                                        MealDetailView(mealID: meal.id)
+                                    } label: {
+                                        MealRow(meal: meal, isMinimal: true)
+                                            .padding(.horizontal, 14)
+                                            .padding(.vertical, 8)
+                                    }
+                                    .buttonStyle(.plain)
+                                    .contextMenu {
+                                        if meal.createdBy == store.userID {
+                                            Button {
+                                                editorTarget = .existing(meal.id)
                                             } label: {
-                                                MealRow(meal: meal, isMinimal: true)
-                                                    .padding(.horizontal, 14)
-                                                    .padding(.vertical, 8)
+                                                Label("Edit", systemImage: "pencil")
                                             }
-                                            .buttonStyle(.plain)
-                                            .contextMenu {
-                                                if meal.createdBy == store.userID {
-                                                    Button {
-                                                        editorTarget = .existing(meal.id)
-                                                    } label: {
-                                                        Label("Edit", systemImage: "pencil")
-                                                    }
-                                                    Button(role: .destructive) {
-                                                        Task { await store.delete(meal: meal) }
-                                                    } label: {
-                                                        Label("Delete", systemImage: "trash")
-                                                    }
-                                                }
-                                            }
-
-                                            if index < section.meals.count - 1 {
-                                                Divider()
-                                                    .overlay(DS.Color.line.opacity(0.3))
-                                                    .padding(.leading, 74)
+                                            Button(role: .destructive) {
+                                                mealToRemove = meal
+                                            } label: {
+                                                Label("Delete", systemImage: "trash")
                                             }
                                         }
                                     }
-                                    .background(DS.Color.panel)
-                                    .clipShape(RoundedRectangle(cornerRadius: AppRadius.card, style: .continuous))
-                                    .overlay(
-                                        RoundedRectangle(cornerRadius: AppRadius.card, style: .continuous)
-                                            .strokeBorder(DS.Color.line.opacity(0.35), lineWidth: 0.5)
-                                    )
                                 }
                             }
                         }
@@ -91,6 +80,26 @@ struct MealsView: View {
             .mainTabToolbar()
             .sheet(item: $editorTarget) { target in
                 MealEditorView(mealID: target.mealID)
+            }
+            .alert(
+                "Delete Meal?",
+                isPresented: Binding(
+                    get: { mealToRemove != nil },
+                    set: { if !$0 { mealToRemove = nil } }
+                )
+            ) {
+                Button("Cancel", role: .cancel) {
+                    mealToRemove = nil
+                }
+                if let meal = mealToRemove {
+                    Button("Delete", role: .destructive) {
+                        Task {
+                            await store.delete(meal: meal)
+                        }
+                    }
+                }
+            } message: {
+                Text("Are you sure you want to delete this meal? This action cannot be undone.")
             }
         }
     }

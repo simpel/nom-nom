@@ -76,7 +76,7 @@ struct MealDetailPartyRatingsCard: View {
 
     var body: some View {
         SectionCard("Participants", caption: ratingsCaption) {
-            VStack(spacing: 12) {
+            VStack(spacing: 0) {
                 ForEach(partyMembers) { member in
                     let isMe = member.id == store.userID
                     let rating = store.rating(for: .account(member.id), on: meal.id)

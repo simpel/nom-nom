@@ -49,7 +49,7 @@ struct RecipeHistoryRow: View {
                 .font(.caption2)
                 .foregroundStyle(DS.Color.textTertiary)
         }
-        .padding(.vertical, 4)
+        .padding(.vertical, DS.Spacing.sm)
         .contentShape(Rectangle())
     }
 

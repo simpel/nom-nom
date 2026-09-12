@@ -1,70 +1,65 @@
 import SwiftUI
 
 /// Displays the members of a dinner party ("Who's in there") with their rate scores,
-/// navigation to their individual profiles, and an in-page action to edit members.
+/// and navigation to their individual profiles.
 struct PartyMembersSection: View {
     let party: Party
-    var onEditMembers: (() -> Void)? = nil
 
     @Environment(FoodStore.self) private var store
-
-    private var isMember: Bool {
-        store.isMember(of: party.id)
-    }
 
     private var members: [Profile] {
         store.members(of: party.id)
     }
 
+    @State private var memberToRemove: Profile?
+
     var body: some View {
-        SectionCard("Members") {
-            VStack(spacing: 8) {
-                if members.isEmpty {
-                    Text("No members listed.")
-                        .font(.subheadline)
-                        .foregroundStyle(DS.Color.textTertiary)
-                        .padding(.vertical, 4)
-                } else {
-                    ForEach(Array(members.enumerated()), id: \.element.id) { index, member in
-                        NavigationLink {
-                            PersonDetailView(raterRef: .account(member.id))
-                        } label: {
-                            memberRow(for: member)
-                        }
-                        .buttonStyle(.plain)
-
-                        if index < members.count - 1 {
-                            Divider()
-                        }
-                    }
-                }
-
-                if isMember, let onEditMembers {
-                    if !members.isEmpty {
-                        Divider()
-                    }
-
-                    Button {
-                        onEditMembers()
-                    } label: {
-                        HStack(spacing: 8) {
-                            Image(systemName: "person.badge.plus")
-                                .font(.subheadline)
-                            Text("Edit Members")
-                                .font(.subheadline.weight(.semibold))
-                            Spacer()
-                            Image(systemName: "chevron.right")
-                                .font(.caption2)
-                                .foregroundStyle(DS.Color.textTertiary)
-                        }
-                        .foregroundStyle(DS.Color.accentText)
-                        .padding(.vertical, 4)
-                        .contentShape(Rectangle())
-                    }
-                    .buttonStyle(.plain)
+        SwipeableListCard(
+            title: "Members",
+            data: members,
+            dividerPadding: 60,
+            leadingIcon: { canRemove(member: $0) ? "trash.fill" : nil },
+            leadingColor: { canRemove(member: $0) ? .red : nil },
+            onLeadingAction: { member in
+                if canRemove(member: member) {
+                    memberToRemove = member
                 }
             }
+        ) { member in
+            NavigationLink {
+                PersonDetailView(raterRef: .account(member.id))
+            } label: {
+                memberRow(for: member)
+                    .padding(.horizontal, 16)
+            }
+            .buttonStyle(.plain)
         }
+        .alert(
+            "Remove Member?",
+            isPresented: Binding(
+                get: { memberToRemove != nil },
+                set: { if !$0 { memberToRemove = nil } }
+            )
+        ) {
+            Button("Cancel", role: .cancel) {
+                memberToRemove = nil
+            }
+            if let member = memberToRemove {
+                Button("Remove \(member.shownName)", role: .destructive) {
+                    Task {
+                        await store.removeMember(user: member.id, from: party)
+                    }
+                }
+            }
+        } message: {
+            if let member = memberToRemove {
+                Text("\(member.shownName) will lose access to meals and ratings in this dinner party.")
+            }
+        }
+    }
+
+    private func canRemove(member: Profile) -> Bool {
+        member.id != store.userID
     }
 
     private func memberRow(for member: Profile) -> some View {
@@ -94,12 +89,8 @@ struct PartyMembersSection: View {
             if let stats {
                 ScoreBadge(stats: stats, format: .both, size: .sm)
             }
-
-            Image(systemName: "chevron.right")
-                .font(.caption2)
-                .foregroundStyle(DS.Color.textTertiary)
         }
-        .padding(.vertical, 2)
+        .padding(.vertical, DS.Spacing.sm)
         .contentShape(Rectangle())
     }
 }

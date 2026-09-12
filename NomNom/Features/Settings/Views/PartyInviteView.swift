@@ -139,7 +139,7 @@ struct PartyInviteView: View {
                             .accessibilityLabel("Revoke invite")
                         }
                     }
-                    .padding(.vertical, 2)
+                    .padding(.vertical, DS.Spacing.sm)
 
                     if index < pendingInvites.count - 1 {
                         Divider()

@@ -61,7 +61,7 @@ struct SearchHistorySection: View {
                                 .accessibilityLabel("Remove \(query)")
                             }
                             .padding(.horizontal, 16)
-                            .padding(.vertical, 10)
+                            .padding(.vertical, DS.Spacing.sm)
 
                             if query != historyStore.recentQueries.last {
                                 Divider()

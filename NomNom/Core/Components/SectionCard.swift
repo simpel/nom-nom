@@ -7,17 +7,20 @@ struct SectionCard<Content: View>: View {
     var title: String?
     var caption: String?
     var color: Color?
+    var innerPadding: CGFloat
     @ViewBuilder let content: () -> Content
 
     init(
         _ title: String,
         caption: String? = nil,
         color: Color? = nil,
+        innerPadding: CGFloat = 16,
         @ViewBuilder content: @escaping () -> Content
     ) {
         self.title = title
         self.caption = caption
         self.color = color
+        self.innerPadding = innerPadding
         self.content = content
     }
 
@@ -25,11 +28,13 @@ struct SectionCard<Content: View>: View {
         title: String? = nil,
         caption: String? = nil,
         color: Color? = nil,
+        innerPadding: CGFloat = 16,
         @ViewBuilder content: @escaping () -> Content
     ) {
         self.title = title
         self.caption = caption
         self.color = color
+        self.innerPadding = innerPadding
         self.content = content
     }
 
@@ -37,11 +42,13 @@ struct SectionCard<Content: View>: View {
         header: String,
         caption: String? = nil,
         color: Color? = nil,
+        innerPadding: CGFloat = 16,
         @ViewBuilder content: @escaping () -> Content
     ) {
         self.title = header
         self.caption = caption
         self.color = color
+        self.innerPadding = innerPadding
         self.content = content
     }
 
@@ -71,7 +78,7 @@ struct SectionCard<Content: View>: View {
 
             // Card container
             content()
-                .padding(16)
+                .padding(innerPadding)
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .background {
                     RoundedRectangle(cornerRadius: AppRadius.card, style: .continuous)
@@ -92,10 +99,11 @@ struct SectionCard<Content: View>: View {
                                 endPoint: .bottomTrailing
                             )
                         )
-                        .overlay {
-                            RoundedRectangle(cornerRadius: AppRadius.card, style: .continuous)
-                                .strokeBorder(DS.Color.line.opacity(0.35), lineWidth: 0.5)
-                        }
+                }
+                .clipShape(RoundedRectangle(cornerRadius: AppRadius.card, style: .continuous))
+                .overlay {
+                    RoundedRectangle(cornerRadius: AppRadius.card, style: .continuous)
+                        .strokeBorder(DS.Color.line.opacity(0.35), lineWidth: 0.5)
                 }
         }
         .animation(.spring(response: 0.35, dampingFraction: 0.8), value: color)

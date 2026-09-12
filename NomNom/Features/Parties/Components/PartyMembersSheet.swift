@@ -27,15 +27,42 @@ struct PartyMembersSheet: View {
         NavigationStack {
             ScrollView {
                 VStack(spacing: DS.Spacing.section) {
-                    PartyInviteLinkCard(party: party)
+                    VStack(spacing: 12) {
+                        ShareLink(
+                            item: party.webInviteURL,
+                            subject: Text("Join \(party.name) on Nom Nom"),
+                            message: Text(party.shareMessage)
+                        ) {
+                            HStack(spacing: 8) {
+                                Image(systemName: "square.and.arrow.up")
+                                Text("Share Link")
+                            }
+                            .font(.callout.weight(.semibold))
+                            .frame(maxWidth: .infinity)
+                            .frame(height: 42)
+                            .background(DS.Color.accentSoft)
+                            .foregroundStyle(DS.Color.accentText)
+                            .clipShape(Capsule())
+                        }
+                        .buttonStyle(.plain)
 
-                    membersSection
+                        AppButton(
+                            "Invite by Email",
+                            systemImage: "envelope",
+                            variant: .secondary,
+                            style: .outlined,
+                            size: .md,
+                            isFullWidth: true
+                        ) {
+                            showingInviteSheet = true
+                        }
+                    }
 
                     if !pendingInvites.isEmpty {
                         invitesSection
                     }
-
-                    inviteButtonSection
+                    
+                    membersSection
                 }
                 .padding(.horizontal, DS.Spacing.screenHorizontal)
                 .padding(.top, DS.Spacing.screenTop)
@@ -87,7 +114,7 @@ struct PartyMembersSheet: View {
 
     private var membersSection: some View {
         SectionCard("Current Members") {
-            VStack(spacing: 8) {
+            VStack(spacing: 0) {
                 ForEach(Array(members.enumerated()), id: \.element.id) { index, member in
                     HStack(spacing: 12) {
                         UserAvatar(profile: member, size: 36)
@@ -116,7 +143,7 @@ struct PartyMembersSheet: View {
                             .accessibilityLabel("Remove \(member.shownName)")
                         }
                     }
-                    .padding(.vertical, 3)
+                    .padding(.vertical, DS.Spacing.sm)
 
                     if index < members.count - 1 {
                         Divider()
@@ -128,7 +155,7 @@ struct PartyMembersSheet: View {
 
     private var invitesSection: some View {
         SectionCard("Pending Invitations") {
-            VStack(spacing: 8) {
+            VStack(spacing: 0) {
                 ForEach(Array(pendingInvites.enumerated()), id: \.element.id) { index, invite in
                     HStack(spacing: 12) {
                         Image(systemName: "envelope")
@@ -168,7 +195,7 @@ struct PartyMembersSheet: View {
                             .accessibilityLabel("Revoke invite")
                         }
                     }
-                    .padding(.vertical, 3)
+                    .padding(.vertical, DS.Spacing.sm)
 
                     if index < pendingInvites.count - 1 {
                         Divider()
@@ -178,17 +205,6 @@ struct PartyMembersSheet: View {
         }
     }
 
-    private var inviteButtonSection: some View {
-        AppButton(
-            "Invite New Member",
-            variant: .secondary,
-            style: .outlined,
-            size: .md,
-            isFullWidth: true
-        ) {
-            showingInviteSheet = true
-        }
-    }
 
     // MARK: - Helpers
 

@@ -68,7 +68,7 @@ struct RecipeRowCard: View {
                             .font(.caption2.weight(.medium))
                             .foregroundStyle(DS.Color.textSecondary)
                             .padding(.horizontal, 6)
-                            .padding(.vertical, 2)
+                            .padding(.vertical, DS.Spacing.sm)
                             .background(DS.Color.sunken)
                             .clipShape(Capsule())
                     }
@@ -119,7 +119,7 @@ struct RecipeRowCard: View {
                 .font(.caption.weight(.semibold))
                 .foregroundStyle(DS.Color.textTertiary)
         }
-        .padding(.vertical, 6)
+        .padding(.vertical, DS.Spacing.sm)
         .contentShape(Rectangle())
         .contextMenu {
             Button {

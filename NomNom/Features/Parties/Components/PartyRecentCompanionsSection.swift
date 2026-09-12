@@ -15,7 +15,7 @@ struct PartyRecentCompanionsSection: View {
     var body: some View {
         if !candidateProfiles.isEmpty {
             SectionCard("Recent Companions") {
-                VStack(spacing: 8) {
+                VStack(spacing: 0) {
                     ForEach(Array(candidateProfiles.prefix(5).enumerated()), id: \.element.id) { index, profile in
                         HStack(spacing: 12) {
                             UserAvatar(profile: profile, size: 34)

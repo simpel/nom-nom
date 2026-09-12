@@ -17,7 +17,7 @@ struct MealDetailHistoryCard: View {
     var body: some View {
         if !history.isEmpty {
             SectionCard(title: sectionTitle) {
-                VStack(spacing: 8) {
+                VStack(spacing: 0) {
                     ForEach(history.prefix(8)) { past in
                         NavigationLink {
                             MealDetailView(mealID: past.id)
@@ -73,6 +73,6 @@ struct MealDetailHistoryCard: View {
                 .font(.caption2)
                 .foregroundStyle(DS.Color.textTertiary)
         }
-        .padding(.vertical, 3)
+        .padding(.vertical, DS.Spacing.sm)
     }
 }

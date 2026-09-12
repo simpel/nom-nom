@@ -80,7 +80,7 @@ struct HouseholdMembersSection: View {
 
         if !partyMembers.isEmpty {
             SectionCard("Members (\(partyMembers.count))") {
-                VStack(spacing: 8) {
+                VStack(spacing: 0) {
                     ForEach(partyMembers) { member in
                         NavigationLink {
                             PersonDetailView(raterRef: .account(member.id))
@@ -110,7 +110,7 @@ struct HouseholdMembersSection: View {
                                     .font(.caption2)
                                     .foregroundStyle(DS.Color.textTertiary)
                             }
-                            .padding(.vertical, 2)
+                            .padding(.vertical, DS.Spacing.sm)
                         }
                         .buttonStyle(.plain)
 
@@ -129,7 +129,7 @@ struct HouseholdMembersSection: View {
 
         if !store.myEaters.isEmpty {
             SectionCard("Other Profiles (No account)") {
-                VStack(spacing: 8) {
+                VStack(spacing: 0) {
                     ForEach(store.myEaters) { eater in
                         EaterRow(eater: eater, emojiChoices: emojiChoices)
                         if eater.id != store.myEaters.last?.id {

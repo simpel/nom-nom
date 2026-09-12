@@ -19,7 +19,7 @@ struct RecipePartyHistorySection: View {
     var body: some View {
         if !parties.isEmpty {
             SectionCard("Dinner Parties History") {
-                VStack(spacing: 10) {
+                VStack(spacing: 0) {
                     ForEach(parties) { party in
                         Button {
                             selectedPartyForSheet = party
@@ -81,7 +81,7 @@ struct RecipePartyHistorySection: View {
                     .font(.subheadline.weight(.medium).monospacedDigit())
                     .foregroundStyle(.secondary)
                     .padding(.horizontal, 8)
-                    .padding(.vertical, 3)
+                    .padding(.vertical, DS.Spacing.sm)
                     .background(Color(uiColor: .tertiarySystemFill))
                     .clipShape(Capsule())
             }
@@ -90,7 +90,7 @@ struct RecipePartyHistorySection: View {
                 .font(.caption2)
                 .foregroundStyle(DS.Color.textTertiary)
         }
-        .padding(.vertical, 2)
+        .padding(.vertical, DS.Spacing.sm)
         .contentShape(Rectangle())
     }
 }

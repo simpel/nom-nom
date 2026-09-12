@@ -93,7 +93,7 @@ struct MealRow: View {
                     .foregroundStyle(DS.Color.textTertiary)
             }
         }
-        .padding(.vertical, 4)
+        .padding(.vertical, DS.Spacing.sm)
         .contentShape(Rectangle())
     }
 

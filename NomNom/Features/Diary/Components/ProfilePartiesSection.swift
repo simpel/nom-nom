@@ -13,9 +13,9 @@ struct ProfilePartiesSection: View {
                 Text("No dinner party memberships.")
                     .font(.subheadline)
                     .foregroundStyle(DS.Color.textSecondary)
-                    .padding(.vertical, 4)
+                    .padding(.vertical, DS.Spacing.sm)
             } else {
-                VStack(spacing: 8) {
+                VStack(spacing: 0) {
                     ForEach(Array(parties.enumerated()), id: \.element.id) { index, party in
                         let stats = store.partyAverageScore(partyID: party.id, for: raterRef, limit: 20)
 
@@ -44,7 +44,7 @@ struct ProfilePartiesSection: View {
                                     .font(.caption2.weight(.semibold))
                                     .foregroundStyle(DS.Color.textTertiary)
                             }
-                            .padding(.vertical, 4)
+                            .padding(.vertical, DS.Spacing.sm)
                             .contentShape(Rectangle())
                         }
                         .buttonStyle(.plain)
