@@ -12,6 +12,9 @@ final class NotificationManager: NSObject, UNUserNotificationCenterDelegate {
     var deviceToken: String?
     var pendingRateMealID: UUID?
     var pendingViewMealID: UUID?
+    /// A URL (invite link, deep link) opened before `RootTabView` existed yet —
+    /// e.g. while the sign-in screen was showing. Replayed once the tab view appears.
+    var pendingURL: URL?
 
     private static let log = Logger(subsystem: "se.joelsanden.nomnom", category: "notifications")
 

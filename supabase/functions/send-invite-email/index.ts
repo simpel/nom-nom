@@ -9,7 +9,7 @@
 // Environment variables required:
 //   RESEND_API_KEY: Your Resend API key (from https://resend.com/api-keys)
 //   SENDER_EMAIL: Sender email address (defaults to "Nom Nom <me@joelsanden.se>")
-//   APP_URL: App deep link or web landing URL (defaults to "nomnom://invite")
+//   APP_URL: Web landing URL fallback (defaults to "https://www.nomnom.casa/invite")
 //
 // Deploy with:
 //   supabase functions deploy send-invite-email
@@ -311,7 +311,7 @@ Deno.serve(async (req) => {
   const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
   const resendApiKey = Deno.env.get("RESEND_API_KEY");
   const senderEmail = Deno.env.get("SENDER_EMAIL") || "Nom Nom <me@joelsanden.se>";
-  const appUrl = Deno.env.get("APP_URL") || "nomnom://invite";
+  const appUrl = Deno.env.get("APP_URL") || "https://www.nomnom.casa/invite";
 
   if (!resendApiKey) {
     console.error("Missing RESEND_API_KEY environment variable in Edge Function secrets.");
@@ -363,7 +363,9 @@ Deno.serve(async (req) => {
     subject = `${inviterName} invited you to rate ${dishName} on Nom Nom`;
     description = `<strong>${inviterName}</strong> cooked / shared <strong>${dishName}</strong> and invited you to rate it on <strong>Nom Nom</strong>.`;
     ctaText = "Rate Meal";
-    actionUrl = `nomnom://rate-meal?id=${meal_id}`;
+    // /invite (not /rate-meal) because that's the only path both the AASA
+    // universal-link config and the web landing page actually serve.
+    actionUrl = `https://www.nomnom.casa/invite?meal_id=${meal_id}`;
   } else {
     const { data: party } = await admin
       .from("parties")
@@ -377,7 +379,7 @@ Deno.serve(async (req) => {
     subject = `${inviterName} invited you to join ${partyName} on Nom Nom`;
     description = `<strong>${inviterName}</strong> has invited you to join <strong>${partyName}</strong> on <strong>Nom Nom</strong> to share meal logs and rate food together.`;
     ctaText = "Join Dinner Party";
-    actionUrl = party_id ? `nomnom://invite?party_id=${party_id}` : (appUrl || "nomnom://invite");
+    actionUrl = party_id ? `https://www.nomnom.casa/invite?party_id=${party_id}` : appUrl;
   }
 
   let recipientUserId = invitee_user_id;

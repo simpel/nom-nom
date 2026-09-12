@@ -113,12 +113,8 @@ struct CreateRecipeSheet: View {
         }
 
         // Attach scanned photos to drafts
-        for (index, photo) in photos.enumerated() {
-            if index == 0 && coverPhotosDraft.isEmpty {
-                coverPhotosDraft.append(photo)
-            } else {
-                recipeDraft.addPhotoData(photo)
-            }
+        for photo in photos {
+            recipeDraft.addPhotoData(photo)
         }
 
         navigateToDetails = true

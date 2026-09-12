@@ -15,6 +15,11 @@ struct NomNomApp: App {
             RootView()
                 .environment(auth)
                 .environment(NotificationManager.shared)
+                .onOpenURL { url in
+                    // Captured here (above the auth gate) so an invite link tapped
+                    // while signed out isn't dropped while SignInView is on screen.
+                    NotificationManager.shared.pendingURL = url
+                }
                 .task {
                     auth.start()
                 }

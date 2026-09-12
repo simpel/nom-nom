@@ -96,7 +96,7 @@ struct PartyDetailView: View {
                                 }
 
                                 ShareLink(
-                                    item: party.inviteURL,
+                                    item: party.webInviteURL,
                                     subject: Text("Join \(party.name) on Nom Nom"),
                                     message: Text(party.shareMessage)
                                 ) {

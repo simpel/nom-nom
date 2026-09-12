@@ -39,8 +39,11 @@ struct RootTabView: View {
                 PartyDetailView(partyID: target.id, showCloseButton: true)
             }
         }
-        .onOpenURL { url in
-            handleIncomingURL(url)
+        .onChange(of: notifications.pendingURL) { _, newURL in
+            if let newURL {
+                handleIncomingURL(newURL)
+                notifications.pendingURL = nil
+            }
         }
         .onChange(of: notifications.pendingRateMealID) { _, newID in
             if let newID {
@@ -55,6 +58,10 @@ struct RootTabView: View {
             }
         }
         .onAppear {
+            if let pending = notifications.pendingURL {
+                handleIncomingURL(pending)
+                notifications.pendingURL = nil
+            }
             if let pending = notifications.pendingRateMealID {
                 activeRateMealID = pending
                 notifications.pendingRateMealID = nil

@@ -108,60 +108,6 @@ extension FoodStore {
         }
     }
 
-    /// Joins a party directly (e.g. from an invite link or discover page).
-    @discardableResult
-    func joinParty(_ party: Party) async -> Bool {
-        do {
-            let member: PartyMember = try await supabase
-                .from("party_members")
-                .insert(NewPartyMember(party_id: party.id, user_id: userID))
-                .select()
-                .single()
-                .execute()
-                .value
-
-            partyMembers.append(member)
-            if !parties.contains(where: { $0.id == party.id }) {
-                parties.append(party)
-            }
-
-            // If there's a pending invite for this party for the current user, mark it accepted
-            if let pending = partyInvites.first(where: { $0.partyID == party.id && $0.inviteeID == userID && $0.status == .pending }) {
-                _ = try? await supabase
-                    .from("party_invites")
-                    .update(["status": InviteStatus.accepted.rawValue])
-                    .eq("id", value: pending.id.uuidString)
-                    .execute()
-                if let idx = partyInvites.firstIndex(where: { $0.id == pending.id }) {
-                    partyInvites[idx].status = .accepted
-                }
-            }
-
-            // Remove follow if previously following
-            if partyFollowers.contains(where: { $0.partyID == party.id && $0.userID == userID }) {
-                partyFollowers.removeAll { $0.partyID == party.id && $0.userID == userID }
-                _ = try? await supabase
-                    .from("party_followers")
-                    .delete()
-                    .eq("party_id", value: party.id.uuidString)
-                    .eq("user_id", value: userID.uuidString)
-                    .execute()
-            }
-
-            reindex()
-            errorMessage = nil
-            return true
-        } catch let error as PostgrestError where error.code == "23505" {
-            // Already a member
-            reindex()
-            errorMessage = nil
-            return true
-        } catch {
-            errorMessage = Self.describe(error)
-            return false
-        }
-    }
-
     func acceptPartyInvite(_ invite: PartyInvite) async {
         do {
             let member: PartyMember = try await supabase

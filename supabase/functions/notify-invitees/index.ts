@@ -105,11 +105,13 @@ async function apnsToken(keyId: string, teamId: string, privateKeyPem: string): 
 }
 
 function deepLink(record: NotificationRow): string {
-  // Only routes the app actually handles today. A recipe like opens the app.
-  if (record.kind === "rating_request" && record.meal_id) return `nomnom://rate-meal?id=${record.meal_id}`;
-  if (record.meal_id) return `nomnom://meal?id=${record.meal_id}`;
-  if (record.party_id) return `nomnom://party?id=${record.party_id}`;
-  return "nomnom://";
+  // https://www.nomnom.casa/invite universal-links into the app when it's
+  // installed and falls back to the web landing page when it isn't — unlike
+  // a bare nomnom:// scheme link, which does nothing without the app.
+  if (record.meal_id) return `https://www.nomnom.casa/invite?meal_id=${record.meal_id}`;
+  if (record.party_id) return `https://www.nomnom.casa/invite?party_id=${record.party_id}`;
+  // recipe_liked carries only a dish_id, which has no deep-link target today.
+  return "https://www.nomnom.casa";
 }
 
 function buildEmailHtml(title: string, body: string, actionUrl: string): string {
