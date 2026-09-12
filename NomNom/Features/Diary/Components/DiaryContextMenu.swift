@@ -8,19 +8,7 @@ struct DiaryContextMenu: View {
 
     var body: some View {
         Menu {
-            Button {
-                store.currentParty = nil
-            } label: {
-                if store.currentParty == nil {
-                    Label("Just me", systemImage: "checkmark")
-                } else {
-                    Text("Just me")
-                }
-            }
-
-            if !store.myParties.isEmpty {
-                Divider()
-                ForEach(store.myParties) { party in
+            ForEach(store.myParties) { party in
                     Button {
                         store.currentParty = party
                     } label: {
@@ -34,8 +22,8 @@ struct DiaryContextMenu: View {
             }
         } label: {
             HStack(spacing: 4) {
-                Image(systemName: store.currentParty == nil ? "person.crop.circle" : "person.2.fill")
-                Text(store.currentParty?.name ?? "Just me")
+                Image(systemName: "person.2.fill")
+                Text(store.currentParty?.name ?? "Dinner Party")
                     .font(.subheadline.weight(.semibold))
                     .lineLimit(1)
                 Image(systemName: "chevron.down")

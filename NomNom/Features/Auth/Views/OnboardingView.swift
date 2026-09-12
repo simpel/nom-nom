@@ -24,8 +24,6 @@ struct OnboardingView: View {
         NavigationStack {
             ScrollView {
                 VStack(spacing: DS.Spacing.sectionCompact) {
-                    OnboardingStepProgress(currentStep: step, totalSteps: totalSteps)
-
                     switch step {
                     case 0:
                         OnboardingProfileStep(
@@ -58,11 +56,18 @@ struct OnboardingView: View {
             }
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
+                ToolbarItem(placement: .principal) {
+                    OnboardingStepProgress(currentStep: step, totalSteps: totalSteps)
+                }
                 if step > 0 {
                     ToolbarItem(placement: .topBarLeading) {
                         Button {
                             withAnimation(.easeInOut(duration: 0.25)) {
-                                step -= 1
+                                if step == 2 && NotificationManager.shared.pendingURL != nil {
+                                    step = 0
+                                } else {
+                                    step -= 1
+                                }
                             }
                         } label: {
                             HStack(spacing: 4) {
@@ -94,31 +99,25 @@ struct OnboardingView: View {
                     isFullWidth: true,
                     disabled: firstName.trimmedName.isEmpty
                 ) {
-                    withAnimation(.easeInOut(duration: 0.25)) { step = 1 }
+                    withAnimation(.easeInOut(duration: 0.25)) {
+                        if NotificationManager.shared.pendingURL != nil {
+                            step = 2
+                        } else {
+                            step = 1
+                        }
+                    }
                 }
 
             case 1:
                 AppButton(
-                    partyName.trimmedName.isEmpty ? "Continue Solo" : "Continue with Party",
+                    "Create Party",
                     variant: .primary,
                     style: .normal,
                     size: .xl,
-                    isFullWidth: true
+                    isFullWidth: true,
+                    disabled: partyName.trimmedName.isEmpty
                 ) {
                     withAnimation(.easeInOut(duration: 0.25)) { step = 2 }
-                }
-
-                if !partyName.trimmedName.isEmpty {
-                    AppButton(
-                        "Clear & Start Solo",
-                        variant: .neutral,
-                        style: .ghost,
-                        size: .md,
-                        isFullWidth: true
-                    ) {
-                        partyName = ""
-                        withAnimation(.easeInOut(duration: 0.25)) { step = 2 }
-                    }
                 }
 
             case 2:
@@ -163,8 +162,13 @@ struct OnboardingView: View {
         if let profile = store.myProfile {
             firstName = profile.firstName
             lastName = profile.lastName
-            enablePush = profile.notifyViaPush
-            enableEmail = profile.notifyViaEmail
+            if profile.onboardingCompletedAt == nil {
+                enablePush = true
+                enableEmail = true
+            } else {
+                enablePush = profile.notifyViaPush
+                enableEmail = profile.notifyViaEmail
+            }
             if let photoPath = profile.photoPath, !photoPath.isEmpty {
                 photoDraft = FoodStore.PhotosDraft(existingPaths: [photoPath])
             }

@@ -26,7 +26,7 @@ struct MealsEmptyStateView: View {
                         .padding(.vertical, DS.Spacing.xs)
 
                     VStack(spacing: 10) {
-                        Text("Nothing logged yet")
+                        Text("Log your first meal")
                             .font(AppTypography.displayL)
                             .foregroundStyle(DS.Color.textPrimary)
 

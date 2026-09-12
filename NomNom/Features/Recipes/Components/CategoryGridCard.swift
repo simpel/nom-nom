@@ -32,21 +32,21 @@ struct CategoryGridCard: View {
             // Background image: remote generated photo > preset asset > neutral card fallback
             if let photoPath, !photoPath.isEmpty {
                 RemoteMealPhoto(path: photoPath, cornerRadius: 0, bucket: SupabaseConfig.categoryBucket)
+                    .aspectRatio(1.0, contentMode: .fill)
                     .frame(maxWidth: .infinity)
-                    .frame(height: 110)
                     .clipped()
             } else if let assetImageName {
                 Image(assetImageName)
                     .resizable()
                     .scaledToFill()
+                    .aspectRatio(1.0, contentMode: .fill)
                     .frame(maxWidth: .infinity)
-                    .frame(height: 110)
                     .clipped()
             } else {
                 Rectangle()
                     .fill(DS.Color.sunken)
+                    .aspectRatio(1.0, contentMode: .fill)
                     .frame(maxWidth: .infinity)
-                    .frame(height: 110)
             }
 
             // Gradient scrim for contrast
@@ -99,7 +99,7 @@ struct CategoryGridCard: View {
                 }
             }
         }
-        .frame(height: 110)
+        .aspectRatio(1.0, contentMode: .fill)
         .clipShape(RoundedRectangle(cornerRadius: AppRadius.card, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: AppRadius.card, style: .continuous)

@@ -4,7 +4,7 @@ import SwiftUI
 struct RecipesView: View {
     @Environment(FoodStore.self) private var store
 
-    @State private var selectedTab: RecipeTab = .inspiration
+    @State private var selectedTab: RecipeTab = .myRecipes
     @State private var showingCreateSheet = false
 
     enum RecipeTab: String, CaseIterable, Identifiable {

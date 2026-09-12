@@ -117,5 +117,10 @@ extension FoodStore {
                   let savedParty = partyByID[savedID] {
             currentParty = savedParty
         }
+        
+        // No solo state: default to a party if one is available
+        if currentParty == nil {
+            currentParty = myParties.first
+        }
     }
 }

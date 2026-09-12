@@ -19,12 +19,9 @@ struct SettingsDropdownMenu: View {
                     set: { selectedID in
                         if let selectedID, let party = store.party(selectedID) {
                             store.currentParty = party
-                        } else {
-                            store.currentParty = nil
                         }
                     }
                 )) {
-                    Text("Just me").tag(nil as UUID?)
                     ForEach(store.myParties) { party in
                         Text(party.name).tag(party.id as UUID?)
                     }
