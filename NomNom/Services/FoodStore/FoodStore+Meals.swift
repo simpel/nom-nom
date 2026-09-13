@@ -3,6 +3,46 @@ import Supabase
 
 extension FoodStore {
 
+    /// Fetches a single meal (plus its dish, ratings and invites) directly by
+    /// ID when it isn't in the local cache — e.g. a "rate this meal" push or
+    /// email deep link tapped after the last full `load()`, most commonly
+    /// right after `askToRate`/`invite(email:toMeal:)` just made this meal
+    /// visible to the recipient for the first time.
+    func fetchMealIfMissing(_ id: UUID) async {
+        guard mealByID[id] == nil else { return }
+        do {
+            let fetched: Meal = try await supabase
+                .from("meals")
+                .select()
+                .eq("id", value: id.uuidString)
+                .single()
+                .execute()
+                .value
+            async let fetchedDish: [Dish] = supabase
+                .from("dishes").select().eq("id", value: fetched.dishID.uuidString).execute().value
+            async let fetchedRatings: [MealRating] = supabase
+                .from("meal_ratings").select().eq("meal_id", value: id.uuidString).execute().value
+            async let fetchedInvites: [MealInvite] = supabase
+                .from("meal_invites").select().eq("meal_id", value: id.uuidString).execute().value
+
+            meals.append(fetched)
+            for dish in (try? await fetchedDish) ?? [] where dishByID[dish.id] == nil {
+                dishes.append(dish)
+            }
+            for rating in (try? await fetchedRatings) ?? [] where !ratings.contains(where: { $0.id == rating.id }) {
+                ratings.append(rating)
+            }
+            for invite in (try? await fetchedInvites) ?? [] where !invites.contains(where: { $0.id == invite.id }) {
+                invites.append(invite)
+            }
+            reindex()
+            try? await loadProfiles()
+            errorMessage = nil
+        } catch {
+            Self.log.error("fetchMealIfMissing failed for \(id): \(error.localizedDescription)")
+        }
+    }
+
     struct PhotosDraft: Equatable {
         static let maxCount: Int = 5
 

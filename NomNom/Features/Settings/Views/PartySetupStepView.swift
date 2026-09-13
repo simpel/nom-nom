@@ -165,6 +165,9 @@ struct PartySetupStepView: View {
                                         let success = await store.resendPartyInvite(invite)
                                         if success {
                                             resentAlertMessage = "Invitation resent to \(invite.inviteeEmail ?? "member")."
+                                        } else {
+                                            errorMessage = store.errorMessage
+                                            store.errorMessage = nil
                                         }
                                     }
                                 }
@@ -175,7 +178,13 @@ struct PartySetupStepView: View {
                                     style: .ghost,
                                     size: .sm
                                 ) {
-                                    Task { await store.revokePartyInvite(invite) }
+                                    Task {
+                                        await store.revokePartyInvite(invite)
+                                        if let message = store.errorMessage {
+                                            errorMessage = message
+                                            store.errorMessage = nil
+                                        }
+                                    }
                                 }
                                 .accessibilityLabel("Revoke invite")
                             }
@@ -209,8 +218,13 @@ struct PartySetupStepView: View {
                     removePhoto: removePhoto
                 )
                 isSaving = false
-                UINotificationFeedbackGenerator().notificationOccurred(.success)
-                onDismiss()
+                if store.errorMessage == nil {
+                    UINotificationFeedbackGenerator().notificationOccurred(.success)
+                    onDismiss()
+                } else {
+                    errorMessage = store.errorMessage
+                    store.errorMessage = nil
+                }
             } else {
                 let photoData = photoDraft.addedData.first
                 if let newParty = await store.createParty(

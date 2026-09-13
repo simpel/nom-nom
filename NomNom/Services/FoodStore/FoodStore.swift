@@ -104,7 +104,15 @@ final class FoodStore {
 
     var myParties: [Party] {
         let ids = myPartyIDs
-        return parties.filter { ids.contains($0.id) }
+        let unsorted = parties.filter { ids.contains($0.id) }
+        return unsorted.sorted { p1, p2 in
+            let date1 = meals(forParty: p1.id).map(\.eatenOn).max() ?? Date.distantPast
+            let date2 = meals(forParty: p2.id).map(\.eatenOn).max() ?? Date.distantPast
+            if date1 != date2 {
+                return date1 > date2
+            }
+            return p1.name < p2.name
+        }
     }
 
     var followedPartyIDs: Set<UUID> {

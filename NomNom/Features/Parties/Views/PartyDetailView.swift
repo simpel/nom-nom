@@ -15,6 +15,8 @@ struct PartyDetailView: View {
     @State private var showingCreateMeal = false
     @State private var confirmLeave = false
     @State private var selectedPhotoIndex: Int?
+    @State private var didAttemptFetch = false
+    @State private var actionError: String?
 
     private var party: Party? { store.party(partyID) }
 
@@ -39,9 +41,13 @@ struct PartyDetailView: View {
 
                         PartyAverageRatingCard(party: party)
 
-                        PartyMembersSection(party: party)
-
-                        PartyMealsSection(party: party)
+                        if store.isMember(of: party.id) {
+                            PartyMembersSection(party: party)
+                            PartyMealsSection(party: party)
+                        } else {
+                            PartyMealsSection(party: party)
+                            PartyMembersSection(party: party)
+                        }
                     }
                     .padding(.horizontal, DS.Spacing.screenHorizontal)
                     .padding(.top, DS.Spacing.screenTop)
@@ -116,6 +122,10 @@ struct PartyDetailView: View {
                             Button {
                                 Task {
                                     await store.toggleFollow(party: party)
+                                    if let message = store.errorMessage {
+                                        actionError = message
+                                        store.errorMessage = nil
+                                    }
                                 }
                             } label: {
                                 Image(systemName: isFollowing ? "checkmark" : "plus")
@@ -134,11 +144,24 @@ struct PartyDetailView: View {
                     Button("Leave Party", role: .destructive) {
                         Task {
                             await store.leaveParty(party)
-                            dismiss()
+                            if store.errorMessage == nil {
+                                dismiss()
+                            } else {
+                                actionError = store.errorMessage
+                                store.errorMessage = nil
+                            }
                         }
                     }
                 } message: {
                     Text("You will lose access to meals served to this party. If you are the last member, the party will be deleted.")
+                }
+                .alert("Something Went Wrong", isPresented: Binding(
+                    get: { actionError != nil },
+                    set: { if !$0 { actionError = nil } }
+                )) {
+                    Button("OK") { actionError = nil }
+                } message: {
+                    Text(actionError ?? "")
                 }
                 .sheet(isPresented: $showingSettings) {
                     PartySettingsSheet(party: party) {
@@ -167,6 +190,9 @@ struct PartyDetailView: View {
                         )
                     }
                 }
+            } else if !didAttemptFetch {
+                ProgressView()
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else {
                 ContentUnavailableView(
                     "Party Not Found",
@@ -188,6 +214,11 @@ struct PartyDetailView: View {
                 }
             }
         }
+        .task(id: partyID) {
+            guard party == nil else { return }
+            await store.fetchPartyIfMissing(partyID)
+            didAttemptFetch = true
+        }
     }
 
     private func joinPartyBanner(party: Party) -> some View {
@@ -208,7 +239,12 @@ struct PartyDetailView: View {
                 Task {
                     if let invite = store.partyInvites.first(where: { $0.partyID == party.id && $0.inviteeID == store.userID && $0.status == .pending }) {
                         await store.acceptPartyInvite(invite)
-                        UINotificationFeedbackGenerator().notificationOccurred(.success)
+                        if store.errorMessage == nil {
+                            UINotificationFeedbackGenerator().notificationOccurred(.success)
+                        } else {
+                            actionError = store.errorMessage
+                            store.errorMessage = nil
+                        }
                     }
                 }
             }

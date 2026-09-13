@@ -7,6 +7,7 @@ struct MealDetailPartyRatingsCard: View {
     @Environment(FoodStore.self) private var store
     @State private var invitingMemberID: UUID?
     @State private var showRatingSheet = false
+    @State private var askError: String?
 
     private var parties: [Party] {
         let mealParties = store.parties(forMeal: meal.id)
@@ -113,13 +114,25 @@ struct MealDetailPartyRatingsCard: View {
         .sheet(isPresented: $showRatingSheet) {
             MealRatingSheet(mealID: meal.id)
         }
+        .alert("Couldn't Send", isPresented: Binding(
+            get: { askError != nil },
+            set: { if !$0 { askError = nil } }
+        )) {
+            Button("OK") { askError = nil }
+        } message: {
+            Text(askError ?? "")
+        }
     }
 
     private func askToRate(_ member: Profile) {
         invitingMemberID = member.id
         Task {
-            _ = await store.askToRate(member: member, forMeal: meal.id)
+            let ok = await store.askToRate(member: member, forMeal: meal.id)
             invitingMemberID = nil
+            if !ok {
+                askError = store.errorMessage
+                store.errorMessage = nil
+            }
         }
     }
 }

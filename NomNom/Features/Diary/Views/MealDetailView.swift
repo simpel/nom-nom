@@ -19,6 +19,8 @@ struct MealDetailView: View {
     @State private var selectedPhotoIndex: Int?
     @State private var selectedRecipePhotoIndex: Int?
     @State private var confirmDeleteMeal = false
+    @State private var didAttemptFetch = false
+    @State private var deleteError: String?
 
     private var meal: Meal? { store.meal(mealID) }
 
@@ -26,6 +28,9 @@ struct MealDetailView: View {
         Group {
             if let meal {
                 content(for: meal)
+            } else if !didAttemptFetch {
+                ProgressView()
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else {
                 ContentUnavailableView(
                     "Meal is gone",
@@ -33,6 +38,11 @@ struct MealDetailView: View {
                     description: Text("It looks like this meal was deleted.")
                 )
             }
+        }
+        .task {
+            guard meal == nil else { return }
+            await store.fetchMealIfMissing(mealID)
+            didAttemptFetch = true
         }
         .navigationTitle(meal.map { store.dishName(forMeal: $0) } ?? "Meal")
         .navigationBarTitleDisplayMode(.inline)
@@ -80,12 +90,25 @@ struct MealDetailView: View {
                 if let meal {
                     Task {
                         await store.delete(meal: meal)
-                        dismiss()
+                        if store.errorMessage == nil {
+                            dismiss()
+                        } else {
+                            deleteError = store.errorMessage
+                            store.errorMessage = nil
+                        }
                     }
                 }
             }
         } message: {
             Text("This will permanently remove this meal log.")
+        }
+        .alert("Couldn't Delete Meal", isPresented: Binding(
+            get: { deleteError != nil },
+            set: { if !$0 { deleteError = nil } }
+        )) {
+            Button("OK") { deleteError = nil }
+        } message: {
+            Text(deleteError ?? "")
         }
         .sheet(isPresented: $showEditor) {
             MealEditorView(mealID: mealID)

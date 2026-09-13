@@ -11,9 +11,6 @@ struct DinnerPartiesView: View {
 
     @State private var showingCreateSheet = false
 
-    private var activeParty: Party? {
-        store.currentParty ?? store.myParties.first
-    }
 
     var body: some View {
         NavigationStack {
@@ -27,8 +24,18 @@ struct DinnerPartiesView: View {
 
                     PendingPartyInvitesSection()
 
-                    CurrentPartyHeroView(party: activeParty) {
-                        showingCreateSheet = true
+                    if store.myParties.isEmpty {
+                        CurrentPartyHeroView(party: nil) {
+                            showingCreateSheet = true
+                        }
+                    } else {
+                        VStack(spacing: DS.Spacing.md) {
+                            ForEach(store.myParties) { party in
+                                CurrentPartyHeroView(party: party) {
+                                    showingCreateSheet = true
+                                }
+                            }
+                        }
                     }
 
                     FollowedPartiesSection()
@@ -45,11 +52,7 @@ struct DinnerPartiesView: View {
             .refreshable {
                 await store.load()
             }
-            .onAppear {
-                if store.currentParty == nil, let first = store.myParties.first {
-                    store.currentParty = first
-                }
-            }
+
             .toolbar {
                 if isSheet {
                     ToolbarItem(placement: .topBarLeading) {

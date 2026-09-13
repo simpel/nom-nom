@@ -20,6 +20,7 @@ struct MealRatingSheet: View {
     @State private var didLoad = false
     @State private var selectedPhotoIndex: Int?
     @State private var selectedRecipePhotoIndex: Int?
+    @State private var didAttemptFetch = false
 
     private var meal: Meal? { store.meal(mealID) }
     private var mealTitle: String {
@@ -61,6 +62,9 @@ struct MealRatingSheet: View {
             Group {
                 if let meal {
                     ratingForm(for: meal)
+                } else if !didAttemptFetch {
+                    ProgressView()
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
                 } else {
                     ContentUnavailableView(
                         "Meal Not Found",
@@ -76,6 +80,12 @@ struct MealRatingSheet: View {
                 onSave: save
             )
             .onAppear(perform: loadData)
+            .task {
+                guard meal == nil else { return }
+                await store.fetchMealIfMissing(mealID)
+                didAttemptFetch = true
+                loadData()
+            }
             .sheet(item: Binding(
                 get: { selectedPhotoIndex.map { PhotoIndexWrapper(index: $0) } },
                 set: { selectedPhotoIndex = $0?.index }

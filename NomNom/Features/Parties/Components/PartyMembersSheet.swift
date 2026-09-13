@@ -10,6 +10,7 @@ struct PartyMembersSheet: View {
     @State private var showingInviteSheet = false
     @State private var memberToRemove: Profile?
     @State private var resentAlertMessage: String?
+    @State private var actionError: String?
 
     private var members: [Profile] {
         store.members(of: party.id)
@@ -91,6 +92,10 @@ struct PartyMembersSheet: View {
                     Button("Remove \(member.shownName)", role: .destructive) {
                         Task {
                             await store.removeMember(user: member.id, from: party)
+                            if let message = store.errorMessage {
+                                actionError = message
+                                store.errorMessage = nil
+                            }
                         }
                     }
                 }
@@ -106,6 +111,14 @@ struct PartyMembersSheet: View {
                 Button("OK") { resentAlertMessage = nil }
             } message: {
                 Text(resentAlertMessage ?? "")
+            }
+            .alert("Something Went Wrong", isPresented: Binding(
+                get: { actionError != nil },
+                set: { if !$0 { actionError = nil } }
+            )) {
+                Button("OK") { actionError = nil }
+            } message: {
+                Text(actionError ?? "")
             }
         }
     }
@@ -180,6 +193,9 @@ struct PartyMembersSheet: View {
                                     let ok = await store.resendPartyInvite(invite)
                                     if ok {
                                         resentAlertMessage = "Invitation resent to \(invite.inviteeEmail ?? "member")."
+                                    } else {
+                                        actionError = store.errorMessage
+                                        store.errorMessage = nil
                                     }
                                 }
                             }
@@ -190,7 +206,13 @@ struct PartyMembersSheet: View {
                                 style: .ghost,
                                 size: .sm
                             ) {
-                                Task { await store.revokePartyInvite(invite) }
+                                Task {
+                                    await store.revokePartyInvite(invite)
+                                    if let message = store.errorMessage {
+                                        actionError = message
+                                        store.errorMessage = nil
+                                    }
+                                }
                             }
                             .accessibilityLabel("Revoke invite")
                         }

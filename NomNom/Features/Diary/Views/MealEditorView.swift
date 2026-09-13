@@ -210,9 +210,11 @@ struct MealEditorView: View {
                 loadRecipe(from: dish)
             }
             if let prefilledPartyID {
-                selectedParties.insert(prefilledPartyID)
-            } else if let party = store.currentParty {
-                selectedParties.insert(party.id)
+                selectedParties = [prefilledPartyID]
+            } else if let lastParty = store.myParties.first {
+                selectedParties = [lastParty.id]
+            } else {
+                selectedParties = []
             }
             return
         }

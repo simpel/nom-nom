@@ -59,7 +59,7 @@ struct PartyMembersSection: View {
     }
 
     private func canRemove(member: Profile) -> Bool {
-        member.id != store.userID
+        store.isMember(of: party.id) && member.id != store.userID
     }
 
     private func memberRow(for member: Profile) -> some View {

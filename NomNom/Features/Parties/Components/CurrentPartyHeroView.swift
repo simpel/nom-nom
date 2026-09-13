@@ -88,46 +88,6 @@ struct CurrentPartyHeroView: View {
             }
 
             Spacer()
-
-            partySwitcherMenu(currentParty: party)
-        }
-    }
-
-    private func partySwitcherMenu(currentParty: Party) -> some View {
-        Menu {
-            Section("Switch Dinner Party") {
-                ForEach(store.myParties) { p in
-                    Button {
-                        store.currentParty = p
-                        UISelectionFeedbackGenerator().selectionChanged()
-                    } label: {
-                        HStack {
-                            Text(p.name)
-                            if p.id == currentParty.id {
-                                Image(systemName: "checkmark")
-                            }
-                        }
-                    }
-                }
-            }
-
-            Divider()
-
-            Button {
-                onCreateParty()
-            } label: {
-                Label("New Dinner Party", systemImage: "plus")
-            }
-        } label: {
-            Image(systemName: "arrow.left.arrow.right")
-                .font(.system(size: 13, weight: .semibold))
-                .foregroundStyle(DS.Color.textSecondary)
-                .frame(width: 32, height: 32)
-                .background(DS.Color.bg.opacity(0.8))
-                .clipShape(Circle())
-                .overlay(
-                    Circle().strokeBorder(DS.Color.line.opacity(0.35), lineWidth: 0.5)
-                )
         }
     }
 

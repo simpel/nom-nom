@@ -7,56 +7,67 @@ struct PartyRecentCompanionsSection: View {
     @Environment(FoodStore.self) private var store
     @State private var invitingID: UUID?
     @State private var invitedIDs: Set<UUID> = []
+    @State private var inviteError: String?
 
     private var candidateProfiles: [Profile] {
         store.recentUninvitedProfiles(for: party.id)
     }
 
     var body: some View {
-        if !candidateProfiles.isEmpty {
-            SectionCard("Recent Companions") {
-                VStack(spacing: 0) {
-                    ForEach(Array(candidateProfiles.prefix(5).enumerated()), id: \.element.id) { index, profile in
-                        HStack(spacing: 12) {
-                            UserAvatar(profile: profile, size: 34)
+        Group {
+            if !candidateProfiles.isEmpty {
+                SectionCard("Recent Companions") {
+                    VStack(spacing: 0) {
+                        ForEach(Array(candidateProfiles.prefix(5).enumerated()), id: \.element.id) { index, profile in
+                            HStack(spacing: 12) {
+                                UserAvatar(profile: profile, size: 34)
 
-                            VStack(alignment: .leading, spacing: 2) {
-                                Text(profile.shownName)
-                                    .font(.body.weight(.medium))
-                                    .foregroundStyle(DS.Color.textPrimary)
-                            }
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text(profile.shownName)
+                                        .font(.body.weight(.medium))
+                                        .foregroundStyle(DS.Color.textPrimary)
+                                }
 
-                            Spacer()
+                                Spacer()
 
-                            if invitedIDs.contains(profile.id) {
-                                Text("Invited")
-                                    .font(.caption.weight(.semibold))
-                                    .foregroundStyle(DS.Color.accentText)
-                                    .padding(.horizontal, 10)
-                                    .padding(.vertical, 5)
-                                    .background(DS.Color.accentSoft)
-                                    .clipShape(Capsule())
-                            } else {
-                                AppButton(
-                                    "Invite",
-                                    variant: .primary,
-                                    style: .normal,
-                                    size: .sm,
-                                    isPending: invitingID == profile.id,
-                                    disabled: invitingID != nil
-                                ) {
-                                    invite(profile)
+                                if invitedIDs.contains(profile.id) {
+                                    Text("Invited")
+                                        .font(.caption.weight(.semibold))
+                                        .foregroundStyle(DS.Color.accentText)
+                                        .padding(.horizontal, 10)
+                                        .padding(.vertical, 5)
+                                        .background(DS.Color.accentSoft)
+                                        .clipShape(Capsule())
+                                } else {
+                                    AppButton(
+                                        "Invite",
+                                        variant: .primary,
+                                        style: .normal,
+                                        size: .sm,
+                                        isPending: invitingID == profile.id,
+                                        disabled: invitingID != nil
+                                    ) {
+                                        invite(profile)
+                                    }
                                 }
                             }
-                        }
-                        .padding(.vertical, 2)
+                            .padding(.vertical, 2)
 
-                        if index < min(candidateProfiles.count, 5) - 1 {
-                            Divider()
+                            if index < min(candidateProfiles.count, 5) - 1 {
+                                Divider()
+                            }
                         }
                     }
                 }
             }
+        }
+        .alert("Couldn't Send Invite", isPresented: Binding(
+            get: { inviteError != nil },
+            set: { if !$0 { inviteError = nil } }
+        )) {
+            Button("OK") { inviteError = nil }
+        } message: {
+            Text(inviteError ?? "")
         }
     }
 
@@ -70,6 +81,9 @@ struct PartyRecentCompanionsSection: View {
                     _ = invitedIDs.insert(profile.id)
                 }
                 UINotificationFeedbackGenerator().notificationOccurred(.success)
+            } else {
+                inviteError = store.errorMessage
+                store.errorMessage = nil
             }
         }
     }

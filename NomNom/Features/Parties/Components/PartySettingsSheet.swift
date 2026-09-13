@@ -14,6 +14,7 @@ struct PartySettingsSheet: View {
     @State private var photoDraft = FoodStore.PhotosDraft()
     @State private var isSaving = false
     @State private var didLoad = false
+    @State private var saveError: String?
 
     private var canSave: Bool {
         !name.trimmedName.isEmpty && !isSaving
@@ -64,6 +65,14 @@ struct PartySettingsSheet: View {
                 onSave: { save() }
             )
             .onAppear(perform: populate)
+            .alert("Couldn't Save", isPresented: Binding(
+                get: { saveError != nil },
+                set: { if !$0 { saveError = nil } }
+            )) {
+                Button("OK") { saveError = nil }
+            } message: {
+                Text(saveError ?? "")
+            }
         }
     }
 
@@ -95,8 +104,13 @@ struct PartySettingsSheet: View {
                 removePhoto: removePhoto
             )
             isSaving = false
-            UINotificationFeedbackGenerator().notificationOccurred(.success)
-            dismiss()
+            if store.errorMessage == nil {
+                UINotificationFeedbackGenerator().notificationOccurred(.success)
+                dismiss()
+            } else {
+                saveError = store.errorMessage
+                store.errorMessage = nil
+            }
         }
     }
 }

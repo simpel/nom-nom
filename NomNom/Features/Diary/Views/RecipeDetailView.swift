@@ -21,6 +21,7 @@ struct RecipeDetailView: View {
     @State private var selectedMealForDetail: Meal?
     @State private var selectedPhotoIndex: Int?
     @State private var confirmDeleteRecipe = false
+    @State private var deleteError: String?
     @State private var isAnalyzingHealth = false
     @State private var showHealthRationale = false
     @State private var showGlobalLeaderboard = false
@@ -195,12 +196,25 @@ struct RecipeDetailView: View {
                 if let recipe {
                     Task {
                         await store.delete(recipe: recipe)
-                        dismiss()
+                        if store.errorMessage == nil {
+                            dismiss()
+                        } else {
+                            deleteError = store.errorMessage
+                            store.errorMessage = nil
+                        }
                     }
                 }
             }
         } message: {
             Text("This will permanently remove this recipe.")
+        }
+        .alert("Couldn't Delete Recipe", isPresented: Binding(
+            get: { deleteError != nil },
+            set: { if !$0 { deleteError = nil } }
+        )) {
+            Button("OK") { deleteError = nil }
+        } message: {
+            Text(deleteError ?? "")
         }
         .sheet(isPresented: $showEditSheet) {
             RecipeEditSheet(recipeID: recipeID)

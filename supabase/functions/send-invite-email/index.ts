@@ -53,6 +53,9 @@ function buildEmailHtml(params: {
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <title>You're invited to Nom Nom</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Newsreader:opsz,wght@6..72,400;500;600;700;800&display=swap" rel="stylesheet">
   <!--[if mso]>
   <style>
     * { font-family: sans-serif !important; }
@@ -60,9 +63,9 @@ function buildEmailHtml(params: {
   <![endif]-->
   <style>
     body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-      background-color: #0d0e12;
-      color: #f1f5f9;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      background-color: #f8fafc;
+      color: #0f172a;
       margin: 0;
       padding: 0;
       -webkit-font-smoothing: antialiased;
@@ -86,17 +89,17 @@ function buildEmailHtml(params: {
     .wrapper {
       width: 100%;
       table-layout: fixed;
-      background-color: #0d0e12;
+      background-color: #f8fafc;
       padding: 40px 0 60px 0;
     }
     .container {
       max-width: 560px;
       margin: 0 auto;
-      background-color: #16181f;
-      border: 1px solid #272a38;
+      background-color: #ffffff;
+      border: 1px solid #e2e8f0;
       border-radius: 20px;
       overflow: hidden;
-      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.45);
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.08);
     }
     .header {
       background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
@@ -118,6 +121,7 @@ function buildEmailHtml(params: {
       text-align: center;
     }
     .brand-title {
+      font-family: 'Newsreader', ui-serif, Georgia, serif;
       font-size: 26px;
       font-weight: 800;
       letter-spacing: -0.5px;
@@ -132,14 +136,15 @@ function buildEmailHtml(params: {
     }
     .content {
       padding: 36px 32px 28px 32px;
-      color: #cbd5e1;
+      color: #334155;
       font-size: 16px;
       line-height: 1.6;
     }
     .headline {
+      font-family: 'Newsreader', ui-serif, Georgia, serif;
       font-size: 22px;
       font-weight: 700;
-      color: #ffffff;
+      color: #0f172a;
       margin: 0 0 14px 0;
       line-height: 1.3;
       text-align: center;
@@ -147,13 +152,13 @@ function buildEmailHtml(params: {
     .lead-text {
       text-align: center;
       font-size: 16px;
-      color: #94a3b8;
+      color: #475569;
       margin: 0 0 24px 0;
       line-height: 1.5;
     }
     .item-card {
-      background-color: #1e2230;
-      border: 1px solid #33384c;
+      background-color: #f1f5f9;
+      border: 1px solid #e2e8f0;
       border-radius: 14px;
       padding: 22px 20px;
       margin: 0 0 28px 0;
@@ -165,16 +170,17 @@ function buildEmailHtml(params: {
       font-weight: 700;
       text-transform: uppercase;
       letter-spacing: 1.2px;
-      color: #f97316;
+      color: #ea580c;
       background: rgba(249, 115, 22, 0.12);
       padding: 4px 12px;
       border-radius: 100px;
       margin-bottom: 10px;
     }
     .item-name {
+      font-family: 'Newsreader', ui-serif, Georgia, serif;
       font-size: 22px;
       font-weight: 800;
-      color: #ffffff;
+      color: #0f172a;
       margin: 0;
       letter-spacing: -0.3px;
     }
@@ -186,7 +192,7 @@ function buildEmailHtml(params: {
       display: inline-block;
       background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
       color: #ffffff !important;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
       font-size: 17px;
       font-weight: 700;
       text-decoration: none;
@@ -196,13 +202,13 @@ function buildEmailHtml(params: {
       letter-spacing: -0.2px;
     }
     .helper-box {
-      background-color: #12141a;
-      border: 1px solid #232736;
+      background-color: #f8fafc;
+      border: 1px solid #e2e8f0;
       border-radius: 12px;
       padding: 18px 20px;
       margin-top: 24px;
       font-size: 14px;
-      color: #94a3b8;
+      color: #64748b;
       line-height: 1.5;
     }
     .helper-title {
@@ -210,19 +216,19 @@ function buildEmailHtml(params: {
       font-weight: 700;
       text-transform: uppercase;
       letter-spacing: 0.8px;
-      color: #cbd5e1;
+      color: #475569;
       margin: 0 0 6px 0;
     }
     .footer {
-      background-color: #0f1117;
+      background-color: #f1f5f9;
       padding: 24px 32px;
       font-size: 12px;
       color: #64748b;
       text-align: center;
-      border-top: 1px solid #232736;
+      border-top: 1px solid #e2e8f0;
     }
     .footer a {
-      color: #94a3b8;
+      color: #475569;
       text-decoration: underline;
     }
   </style>
@@ -233,7 +239,7 @@ function buildEmailHtml(params: {
       
       <!-- Header -->
       <div class="header">
-        <div class="logo-badge">NN</div>
+        <img src="https://www.nomnom.casa/icon.png" width="64" height="64" alt="Nom Nom Logo" style="border-radius: 14px; margin-bottom: 12px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);" />
         <h1 class="brand-title">Nom Nom</h1>
         <p class="brand-subtitle">Share good food with the people you care about</p>
       </div>

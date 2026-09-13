@@ -11,6 +11,7 @@ struct PartyInviteView: View {
     @State private var isSending = false
     @State private var sentSuccessMessage: String?
     @State private var resentAlertMessage: String?
+    @State private var inviteError: String?
     @FocusState private var focused: Bool
 
     private var pendingInvites: [PartyInvite] {
@@ -45,6 +46,14 @@ struct PartyInviteView: View {
                 Button("OK") { resentAlertMessage = nil }
             } message: {
                 Text(resentAlertMessage ?? "")
+            }
+            .alert("Couldn't Send Invite", isPresented: Binding(
+                get: { inviteError != nil },
+                set: { if !$0 { inviteError = nil } }
+            )) {
+                Button("OK") { inviteError = nil }
+            } message: {
+                Text(inviteError ?? "")
             }
         }
     }
@@ -124,6 +133,9 @@ struct PartyInviteView: View {
                                     let ok = await store.resendPartyInvite(invite)
                                     if ok {
                                         resentAlertMessage = "Invitation resent to \(invite.inviteeEmail ?? "member")."
+                                    } else {
+                                        inviteError = store.errorMessage
+                                        store.errorMessage = nil
                                     }
                                 }
                             }
@@ -134,7 +146,13 @@ struct PartyInviteView: View {
                                 style: .ghost,
                                 size: .sm
                             ) {
-                                Task { await store.revokePartyInvite(invite) }
+                                Task {
+                                    await store.revokePartyInvite(invite)
+                                    if let message = store.errorMessage {
+                                        inviteError = message
+                                        store.errorMessage = nil
+                                    }
+                                }
                             }
                             .accessibilityLabel("Revoke invite")
                         }
@@ -171,6 +189,9 @@ struct PartyInviteView: View {
                         sentSuccessMessage = nil
                     }
                 }
+            } else {
+                inviteError = store.errorMessage
+                store.errorMessage = nil
             }
         }
     }

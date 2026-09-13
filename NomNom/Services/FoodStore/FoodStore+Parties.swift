@@ -58,6 +58,41 @@ extension FoodStore {
         }
     }
 
+    /// Fetches a single party (plus its members/invites) directly by ID when
+    /// it isn't in the local cache yet — e.g. a deep link into a party the
+    /// user was just invited to, which the last full `load()` predates.
+    /// Relies on `parties_select`'s RLS clause for pending invitees to make
+    /// this resolve instead of silently returning nothing.
+    func fetchPartyIfMissing(_ id: UUID) async {
+        guard partyByID[id] == nil else { return }
+        do {
+            let fetched: Party = try await supabase
+                .from("parties")
+                .select()
+                .eq("id", value: id.uuidString)
+                .single()
+                .execute()
+                .value
+            async let fetchedMembers: [PartyMember] = supabase
+                .from("party_members").select().eq("party_id", value: id.uuidString).execute().value
+            async let fetchedInvites: [PartyInvite] = supabase
+                .from("party_invites").select().eq("party_id", value: id.uuidString).execute().value
+
+            parties.append(fetched)
+            partyMembers.append(contentsOf: (try? await fetchedMembers) ?? [])
+            for invite in (try? await fetchedInvites) ?? [] {
+                if !partyInvites.contains(where: { $0.id == invite.id }) {
+                    partyInvites.append(invite)
+                }
+            }
+            reindex()
+            try? await loadProfiles()
+            errorMessage = nil
+        } catch {
+            Self.log.error("fetchPartyIfMissing failed for \(id): \(error.localizedDescription)")
+        }
+    }
+
     func updateParty(_ party: Party, name newName: String) async {
         let trimmed = newName.trimmedName
         guard !trimmed.isEmpty, trimmed != party.name else { return }

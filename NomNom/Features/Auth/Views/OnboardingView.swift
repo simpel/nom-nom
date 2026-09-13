@@ -83,6 +83,14 @@ struct OnboardingView: View {
         }
         .interactiveDismissDisabled()
         .onAppear(perform: loadInitialState)
+        .alert("Couldn't Save", isPresented: Binding(
+            get: { store.errorMessage != nil },
+            set: { if !$0 { store.errorMessage = nil } }
+        )) {
+            Button("OK") { store.errorMessage = nil }
+        } message: {
+            Text(store.errorMessage ?? "")
+        }
     }
 
     // MARK: - Bottom Actions
@@ -193,6 +201,7 @@ struct OnboardingView: View {
                 viaEmail: enableEmail
             )
             isSaving = false
+            guard store.errorMessage == nil else { return }
             withAnimation(.easeInOut(duration: 0.25)) {
                 step = 3
             }
@@ -208,8 +217,10 @@ struct OnboardingView: View {
                 lastName: lastName,
                 newPhotoData: photoData
             )
+            guard store.errorMessage == nil else { isSaving = false; return }
             if !partyName.trimmedName.isEmpty {
                 await store.createParty(name: partyName)
+                guard store.errorMessage == nil else { isSaving = false; return }
             }
             await store.completeOnboarding()
             isSaving = false
