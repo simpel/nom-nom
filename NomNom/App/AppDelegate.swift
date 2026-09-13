@@ -1,5 +1,6 @@
 import UIKit
 import UserNotifications
+import RevenueCat
 
 /// Application delegate for lifecycle events and APNs push notification handling.
 final class AppDelegate: NSObject, UIApplicationDelegate {
@@ -9,6 +10,10 @@ final class AppDelegate: NSObject, UIApplicationDelegate {
         didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil
     ) -> Bool {
         Self.configureGlobalTypography()
+        
+        // Initialize RevenueCat for in-app billing
+        Purchases.configure(withAPIKey: BillingConfig.revenueCatKey)
+        
         Task { @MainActor in
             NotificationManager.shared.start()
         }

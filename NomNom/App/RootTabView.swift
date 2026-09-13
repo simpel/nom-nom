@@ -104,8 +104,12 @@ struct RootTabView: View {
             Tab("Recipes", systemImage: "book.pages", value: 2) {
                 RecipesView()
             }
+            
+            Tab("Insights", systemImage: "chart.bar", value: 3) {
+                InsightsTabView()
+            }
 
-            Tab(value: 3, role: .search) {
+            Tab(value: 4, role: .search) {
                 RecipeSearchView()
             }
         }
@@ -138,9 +142,15 @@ struct RootTabView: View {
                 .tabItem {
                     Label("Recipes", systemImage: "book.pages")
                 }
+                
+            InsightsTabView()
+                .tag(3)
+                .tabItem {
+                    Label("Insights", systemImage: "chart.bar")
+                }
 
             RecipeSearchView()
-                .tag(3)
+                .tag(4)
                 .tabItem {
                     Label("Search", systemImage: "magnifyingglass")
                 }

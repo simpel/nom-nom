@@ -20,6 +20,11 @@ struct Profile: Identifiable, Hashable, Decodable {
     var notifyViaPush: Bool
     var notifyViaEmail: Bool
     var onboardingCompletedAt: Date?
+    
+    // MARK: - Subscription (Nom Nom Pro)
+    var subscriptionStatus: String?
+    var subscriptionExpiresAt: Date?
+    var revenuecatAppUserId: UUID?
 
     enum CodingKeys: String, CodingKey {
         case id
@@ -36,6 +41,9 @@ struct Profile: Identifiable, Hashable, Decodable {
         case notifyViaPush = "notify_via_push"
         case notifyViaEmail = "notify_via_email"
         case onboardingCompletedAt = "onboarding_completed_at"
+        case subscriptionStatus = "subscription_status"
+        case subscriptionExpiresAt = "subscription_expires_at"
+        case revenuecatAppUserId = "revenuecat_app_user_id"
     }
 
     init(from decoder: Decoder) throws {
@@ -54,6 +62,9 @@ struct Profile: Identifiable, Hashable, Decodable {
         notifyViaPush = try container.decodeIfPresent(Bool.self, forKey: .notifyViaPush) ?? true
         notifyViaEmail = try container.decodeIfPresent(Bool.self, forKey: .notifyViaEmail) ?? false
         onboardingCompletedAt = try container.decodeTimestampIfPresent(.onboardingCompletedAt)
+        subscriptionStatus = try container.decodeIfPresent(String.self, forKey: .subscriptionStatus)
+        subscriptionExpiresAt = try container.decodeTimestampIfPresent(.subscriptionExpiresAt)
+        revenuecatAppUserId = try container.decodeIfPresent(UUID.self, forKey: .revenuecatAppUserId)
     }
 
     init(
@@ -70,7 +81,10 @@ struct Profile: Identifiable, Hashable, Decodable {
         notifyRecipeLike: Bool = true,
         notifyViaPush: Bool = true,
         notifyViaEmail: Bool = false,
-        onboardingCompletedAt: Date? = nil
+        onboardingCompletedAt: Date? = nil,
+        subscriptionStatus: String? = nil,
+        subscriptionExpiresAt: Date? = nil,
+        revenuecatAppUserId: UUID? = nil
     ) {
         self.id = id
         self.firstName = firstName
@@ -86,6 +100,9 @@ struct Profile: Identifiable, Hashable, Decodable {
         self.notifyViaPush = notifyViaPush
         self.notifyViaEmail = notifyViaEmail
         self.onboardingCompletedAt = onboardingCompletedAt
+        self.subscriptionStatus = subscriptionStatus
+        self.subscriptionExpiresAt = subscriptionExpiresAt
+        self.revenuecatAppUserId = revenuecatAppUserId
     }
 
     /// Prefer the first and last name if available, otherwise fall back to display name or "Someone".

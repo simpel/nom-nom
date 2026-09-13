@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		82277D363056B73500EF5972 /* RevenueCat in Frameworks */ = {isa = PBXBuildFile; productRef = 82277D353056B73500EF5972 /* RevenueCat */; };
+		82277D383056B73500EF5972 /* RevenueCatUI in Frameworks */ = {isa = PBXBuildFile; productRef = 82277D373056B73500EF5972 /* RevenueCatUI */; };
 		FA0000010000000000000012 /* Supabase in Frameworks */ = {isa = PBXBuildFile; productRef = FA0000010000000000000011 /* Supabase */; };
 		FA0000010000000000000016 /* Inject in Frameworks */ = {isa = PBXBuildFile; productRef = FA0000010000000000000017 /* Inject */; };
 		FA0000010000000000000019 /* InjectionLite in Frameworks */ = {isa = PBXBuildFile; productRef = FA000001000000000000001A /* InjectionLite */; };
@@ -32,6 +34,8 @@
 			files = (
 				FA0000010000000000000012 /* Supabase in Frameworks */,
 				FA0000010000000000000016 /* Inject in Frameworks */,
+				82277D383056B73500EF5972 /* RevenueCatUI in Frameworks */,
+				82277D363056B73500EF5972 /* RevenueCat in Frameworks */,
 				FA0000010000000000000019 /* InjectionLite in Frameworks */,
 				FA000001000000000000001E /* Parsing in Frameworks */,
 			);
@@ -80,6 +84,8 @@
 				FA0000010000000000000017 /* Inject */,
 				FA000001000000000000001A /* InjectionLite */,
 				FA000001000000000000001D /* Parsing */,
+				82277D353056B73500EF5972 /* RevenueCat */,
+				82277D373056B73500EF5972 /* RevenueCatUI */,
 			);
 			productName = NomNom;
 			productReference = FA0000010000000000000001 /* NomNom.app */;
@@ -121,6 +127,7 @@
 				FA0000010000000000000018 /* XCRemoteSwiftPackageReference "Inject" */,
 				FA000001000000000000001B /* XCRemoteSwiftPackageReference "InjectionLite" */,
 				FA000001000000000000001C /* XCRemoteSwiftPackageReference "swift-parsing" */,
+				82277D343056B73500EF5972 /* XCRemoteSwiftPackageReference "purchases-ios-spm" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = FA0000010000000000000005 /* Products */;
@@ -331,6 +338,14 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
+		82277D343056B73500EF5972 /* XCRemoteSwiftPackageReference "purchases-ios-spm" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/RevenueCat/purchases-ios-spm.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 5.89.0;
+			};
+		};
 		FA0000010000000000000010 /* XCRemoteSwiftPackageReference "supabase-swift" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/supabase/supabase-swift.git";
@@ -366,6 +381,16 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
+		82277D353056B73500EF5972 /* RevenueCat */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 82277D343056B73500EF5972 /* XCRemoteSwiftPackageReference "purchases-ios-spm" */;
+			productName = RevenueCat;
+		};
+		82277D373056B73500EF5972 /* RevenueCatUI */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 82277D343056B73500EF5972 /* XCRemoteSwiftPackageReference "purchases-ios-spm" */;
+			productName = RevenueCatUI;
+		};
 		FA0000010000000000000011 /* Supabase */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = FA0000010000000000000010 /* XCRemoteSwiftPackageReference "supabase-swift" */;
