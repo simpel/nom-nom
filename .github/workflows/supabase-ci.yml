@@ -3,7 +3,7 @@ name: Supabase CI (Verify Migrations & RLS)
 on:
   pull_request:
     paths:
-      - 'supabase/**'
+      - 'apps/supabase/**'
       - '.github/workflows/supabase-*.yml'
   workflow_dispatch:
 
@@ -27,10 +27,10 @@ jobs:
           version: latest
 
       - name: Start Supabase local stack
-        run: supabase start
+        run: cd apps/supabase && supabase start
 
       - name: Verify clean migration reset
-        run: supabase db reset
+        run: cd apps/supabase && supabase db reset
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -38,8 +38,8 @@ jobs:
           python-version: '3.11'
 
       - name: Run RLS & Database Tests
-        run: python3 supabase/tests/rls_test.py
+        run: python3 apps/supabase/tests/rls_test.py
 
       - name: Stop Supabase stack
         if: always()
-        run: supabase stop
+        run: cd apps/supabase && supabase stop

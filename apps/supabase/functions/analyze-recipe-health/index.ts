@@ -1,0 +1,314 @@
+// Edge function to analyze recipe health index and rationale using Vercel AI Gateway.
+// Evaluates ingredients and cooking methods using validated nutritional profiling principles (Food Compass / Healthy Cooking Index).
+
+import { z } from "npm:zod";
+import { GenerationLogger } from "../_shared/generation-logger.ts";
+
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
+};
+
+interface IngredientInput {
+  quantity?: string;
+  measurement?: string;
+  ingredient: string;
+}
+
+interface RequestPayload {
+  recipe_id?: string;
+  name: string;
+  ingredients: IngredientInput[];
+  instructions: string[];
+}
+
+interface MacroNutrients {
+  calories?: number;
+  protein_g?: number;
+  carbs_g?: number;
+  fat_g?: number;
+}
+
+interface HealthBreakdown {
+  positives: string[];
+  considerations: string[];
+  cooking_impact: string;
+  macros?: MacroNutrients;
+}
+
+interface HealthAnalysisResult {
+  health_score: number;
+  health_verdict: string;
+  health_rationale: string;
+  health_breakdown: HealthBreakdown;
+  canonical_ingredients: string[];
+}
+
+Deno.serve(async (req) => {
+  if (req.method === "OPTIONS") {
+    return new Response("ok", { headers: corsHeaders });
+  }
+
+  if (req.method !== "POST") {
+    return new Response(JSON.stringify({ error: "Method not allowed" }), {
+      status: 405,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+
+  const apiKey =
+    Deno.env.get("VERCEL_AI_GATEWAY") ||
+    Deno.env.get("VERCEL_AI_GATEWAY_KEY") ||
+    Deno.env.get("AI_GATEWAY_API_KEY") ||
+    Deno.env.get("VERCEL_AI_GATEWAY_TOKEN");
+
+  if (!apiKey) {
+    return new Response(
+      JSON.stringify({ error: "AI Gateway API key is not configured" }),
+      {
+        status: 500,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      }
+    );
+  }
+
+  let payload: RequestPayload;
+  try {
+    payload = await req.json();
+  } catch {
+    return new Response(JSON.stringify({ error: "Invalid JSON body" }), {
+      status: 400,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+
+  if (!payload.name || !payload.ingredients || payload.ingredients.length === 0) {
+    return new Response(
+      JSON.stringify({ error: "Recipe name and ingredients are required" }),
+      {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      }
+    );
+  }
+
+  const model = Deno.env.get("AI_GATEWAY_MODEL") || "google/gemini-2.5-flash";
+  const gatewayBaseUrl =
+    Deno.env.get("AI_GATEWAY_BASE_URL") || "https://ai-gateway.vercel.sh/v1";
+
+  const ingredientsList = payload.ingredients
+    .map((ing) => {
+      const amt = [ing.quantity, ing.measurement].filter(Boolean).join(" ");
+      return amt ? `${amt} ${ing.ingredient}` : ing.ingredient;
+    })
+    .join("\n- ");
+
+  const instructionsList = (payload.instructions || []).join("\n1. ");
+
+  const promptText = `You are an expert nutritional scientist and recipe profiler.
+Evaluate the healthiness of this recipe based on validated nutritional profiling principles (such as Tufts Food Compass, Nutri-Score, and Healthy Cooking Index).
+
+Recipe Name: ${payload.name}
+
+Ingredients:
+- ${ingredientsList}
+
+Cooking Instructions:
+1. ${instructionsList || "No specific instructions provided."}
+
+Assessment Framework:
+1. Ingredients Assessment:
+   - Positive points (+): Whole vegetables, leafy greens, legumes, whole grains, lean proteins (poultry, fish, tofu), healthy fats (olive/rapeseed oil, nuts, seeds), high fiber, antioxidant herbs & spices.
+   - Negative points (-): High saturated fats (butter, heavy cream, fatty processed meats), refined sugars/syrups, high sodium/salt, ultra-processed items.
+2. Cooking Method Impact:
+   - Beneficial (+): Raw/fresh, steaming, light grilling, baking, gentle boiling/poaching, light sautéing.
+   - Detrimental (-): Deep-frying, heavy pan-frying in excess fat, deep charring/burning, prolonged boiling that leaches micronutrients.
+   Example: Lean chicken steamed or baked scores much higher than deep-fried chicken.
+
+Score Scale (1 to 100):
+- 80-100: "Nutritious" (High nutrient density, whole foods, minimal unhealthy fats/sugar)
+- 60-79: "Balanced" (Good everyday meal, well-rounded macronutrients)
+- 40-59: "Moderate" (Enjoyable, but higher in sodium, refined carbs, or calories)
+- 1-39: "Indulgent" (Rich comfort food, treat, or deep-fried / high-sugar meal)
+
+3. Ingredient Normalization:
+   Reduce this recipe's ingredient list to a short list of core ingredient categories — the
+   general food each ingredient line is, stripped of quantity, prep, and cut/variety detail.
+   Merge synonyms and variants under one canonical, singular, lowercase category name so the
+   same category is reused consistently across different recipes (e.g. "boneless chicken
+   thighs", "chicken breast", and "chicken cutlets" all become "chicken"; "extra virgin olive
+   oil" becomes "olive oil"; "grated parmesan" becomes "parmesan"). Skip ubiquitous seasonings
+   that don't distinguish one recipe's flavor from another (salt, pepper, water, cooking oil in
+   general). Aim for the ingredients most likely to actually drive whether someone likes or
+   dislikes the dish: proteins, distinctive vegetables/produce, dairy, and strong flavor
+   drivers (garlic, chili, specific herbs/spices). One category per distinct ingredient — do
+   not list the same category twice.
+
+Return a single JSON object matching this schema:
+{
+  "health_score": integer (1-100),
+  "health_verdict": "string (One of: 'Nutritious', 'Balanced', 'Moderate', 'Indulgent')",
+  "health_rationale": "string (A crisp, concise 1-2 sentences strictly under 35 words explaining why the recipe earned this score number)",
+  "health_breakdown": {
+    "positives": ["string (key nutritional strength)", "string (key nutritional strength)"],
+    "cooking_impact": "string (1 concise sentence on how the cooking/prep method influenced the score)",
+    "macros": {
+      "calories": integer (estimated total kcal per serving),
+      "protein_g": number (estimated grams of protein per serving),
+      "carbs_g": number (estimated grams of carbohydrates per serving),
+      "fat_g": number (estimated grams of fat per serving)
+    }
+  },
+  "canonical_ingredients": ["string (lowercase, singular core ingredient category)", "..."]
+}
+
+Return ONLY valid JSON without conversational text or markdown code fence blocks outside JSON.`;
+
+  const logger = GenerationLogger.fromEnv();
+  const admin = logger.client;
+  if (payload.recipe_id) {
+    await logger.start({
+      type: "recipe_health",
+      entityId: payload.recipe_id,
+      prompt: promptText,
+      model,
+    });
+  }
+
+  try {
+    const response = await fetch(`${gatewayBaseUrl}/chat/completions`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify({
+        model: model,
+        messages: [
+          {
+            role: "user",
+            content: promptText,
+          },
+        ],
+        response_format: { type: "json_object" },
+        temperature: 0.2,
+      }),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error("AI Gateway request failed:", response.status, errorText);
+      await logger.failure(`AI Gateway error (${response.status}): ${errorText}`);
+      return new Response(
+        JSON.stringify({
+          error: `AI Gateway error (${response.status}): ${errorText}`,
+        }),
+        {
+          status: 502,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        }
+      );
+    }
+
+    const completion = await response.json();
+    const rawContent = completion.choices?.[0]?.message?.content;
+    if (!rawContent) {
+      await logger.failure("Empty response from AI Gateway");
+      return new Response(
+        JSON.stringify({ error: "Empty response from AI Gateway" }),
+        {
+          status: 502,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        }
+      );
+    }
+
+    let sanitizedJson = rawContent.trim();
+    if (sanitizedJson.startsWith("```json")) {
+      sanitizedJson = sanitizedJson.slice(7);
+    }
+    if (sanitizedJson.startsWith("```")) {
+      sanitizedJson = sanitizedJson.slice(3);
+    }
+    if (sanitizedJson.endsWith("```")) {
+      sanitizedJson = sanitizedJson.slice(0, -3);
+    }
+    sanitizedJson = sanitizedJson.trim();
+
+    await logger.success(rawContent);
+
+    let parsedData;
+    try {
+      parsedData = JSON.parse(sanitizedJson);
+    } catch (e) {
+      throw new Error('Response is not valid JSON');
+    }
+
+    const HealthSchema = z.object({
+      health_score: z.number().min(1).max(100),
+      health_verdict: z.string(),
+      health_rationale: z.string(),
+      health_breakdown: z.object({
+        positives: z.array(z.string()),
+        cooking_impact: z.string(),
+        macros: z.object({
+          calories: z.number(),
+          protein_g: z.number(),
+          carbs_g: z.number(),
+          fat_g: z.number(),
+        })
+      }),
+      canonical_ingredients: z.array(z.string()).default([]),
+    });
+
+    const parsed: HealthAnalysisResult = HealthSchema.parse(parsedData);
+
+    if (!["Nutritious", "Balanced", "Moderate", "Indulgent"].includes(parsed.health_verdict)) {
+      if (parsed.health_score >= 80) parsed.health_verdict = "Nutritious";
+      else if (parsed.health_score >= 60) parsed.health_verdict = "Balanced";
+      else if (parsed.health_score >= 40) parsed.health_verdict = "Moderate";
+      else parsed.health_verdict = "Indulgent";
+    }
+
+    // Persist directly to Postgres dishes table if recipe_id is provided
+    if (admin && payload.recipe_id) {
+      try {
+        const { error: updateErr } = await admin
+          .from("dishes")
+          .update({
+            health_score: parsed.health_score,
+            health_verdict: parsed.health_verdict,
+            health_rationale: parsed.health_rationale,
+            health_breakdown: parsed.health_breakdown,
+            canonical_ingredients: parsed.canonical_ingredients,
+          })
+          .eq("id", payload.recipe_id);
+
+        if (updateErr) {
+          console.error("Failed to persist health score to dishes table in Edge Function:", updateErr);
+        } else {
+          console.log(`Successfully persisted health score to dish ${payload.recipe_id}`);
+        }
+      } catch (dbErr) {
+        console.error("Database error in analyze-recipe-health Edge Function:", dbErr);
+      }
+    }
+
+    return new Response(JSON.stringify(parsed), {
+      status: 200,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : String(err);
+    console.error("Failed to analyze recipe health:", err);
+    await logger.failure(message);
+    return new Response(
+      JSON.stringify({ error: `Internal error: ${message}` }),
+      {
+        status: 500,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      }
+    );
+  }
+});

@@ -28,18 +28,20 @@ supabase/functions/.env
 AuthKey_*.p8
 
 # Supabase
-supabase/.temp/
-supabase/.branches/
+.temp/
+.branches/
 
 # Scratch
 scratch/
 
-# Web (Next.js / Node)
-web/node_modules/
-web/.next/
-web/.vercel/
-web/build/
-web/dist/
+# Web (Next.js / Node) — monorepo-wide
+node_modules/
+.next/
+.vercel/
+.turbo/
+.pnpm-store/
+dist/
+build/
 *.tsbuildinfo
 NomNom.mobileprovision
 docs/SETUP_APPLE_KEYS.md

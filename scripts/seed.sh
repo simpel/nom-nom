@@ -9,7 +9,7 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 WORKSPACE_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
-SEED_FILE="$WORKSPACE_ROOT/supabase/seed.sql"
+SEED_FILE="$WORKSPACE_ROOT/apps/supabase/seed.sql"
 
 # Text styles
 BOLD='\033[1m'
@@ -51,7 +51,7 @@ echo -e "Targeting local Docker container: ${GREEN}${CONTAINER_NAME}${NC}"
 # 3. Check for --reset flag
 if [[ "${1:-}" == "--reset" ]]; then
     echo -e "${YELLOW}Reset flag passed. Resetting database with 'supabase db reset' (this will run migrations and seed)...${NC}"
-    cd "$WORKSPACE_ROOT"
+    cd "$WORKSPACE_ROOT/apps/supabase"
     if command -v /opt/homebrew/bin/supabase >/dev/null 2>&1; then
         /opt/homebrew/bin/supabase db reset --local
     elif command -v supabase >/dev/null 2>&1; then
@@ -61,7 +61,7 @@ if [[ "${1:-}" == "--reset" ]]; then
     fi
 else
     echo -e "Checking and applying migrations..."
-    for migration in "$WORKSPACE_ROOT"/supabase/migrations/*.sql; do
+    for migration in "$WORKSPACE_ROOT"/apps/supabase/migrations/*.sql; do
         migration_file=$(basename "$migration")
         migration_version=$(echo "$migration_file" | cut -d'_' -f1)
         applied=$(docker exec -i "$CONTAINER_NAME" psql -U postgres -d postgres -t -A -c "SELECT 1 FROM supabase_migrations.schema_migrations WHERE version = '$migration_version';" 2>/dev/null || echo "")

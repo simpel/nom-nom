@@ -8,7 +8,7 @@ and invite others to rate it.
 Sign-in is an emailed six-digit code — no password, and signing in for the first
 time creates the account.
 
-Open `NomNom.xcodeproj` in Xcode and run. Deployment target iOS 17. A debug build
+Open `apps/ios/NomNom.xcodeproj` in Xcode and run. Deployment target iOS 17. A debug build
 talks to a local Supabase; see [Running it](#running-it).
 
 > Earlier versions kept everything on-device with SwiftData and no account. That
@@ -38,12 +38,12 @@ Mailpit instead of sending it. The hosted project's built-in SMTP is rate limite
 a couple of messages an hour and only to authorised addresses.
 
 ```bash
-npx supabase start      # start local Docker stack
-./scripts/seed.sh       # applies pending migrations & seeds 40 recipes, 58 meals, 5 parties
+cd apps/supabase && npx supabase start   # start local Docker stack
+cd - && ./scripts/seed.sh                # applies pending migrations & seeds 40 recipes, 58 meals, 5 parties
 # Or: ./scripts/seed.sh --reset  (full DB reset + migrate + seed)
 ```
 
-Then ⌘R. `SupabaseConfig.swift` picks the environment with `#if DEBUG`, so a
+Then ⌘R. `Services/Supabase/SupabaseConfig.swift` picks the environment with `#if DEBUG`, so a
 release build goes to the hosted project instead. (Note: database seeding is strictly local-only and must never be run against production).
 
 ### Signing in without signing in
@@ -146,8 +146,8 @@ flag is Debug-only. Checked rather than assumed — a release build has no
 
 The thing that makes the rest work is that "Tacos" cooked in March and "tacos"
 cooked in June are the same dish. Three mechanisms, in
-[`DishRepository.swift`](NomNom/Store/DishRepository.swift) and
-[`StringMatching.swift`](NomNom/Store/StringMatching.swift):
+[`DishRepository.swift`](apps/ios/NomNom/Features/Suggestions/Engine/DishRepository.swift) and
+[`String+Matching.swift`](apps/ios/NomNom/Core/Extensions/String+Matching.swift):
 
 1. **Ranked autofill** under the title field — exact match, then whole-name prefix,
    then word prefix ("kött" → "Köttbullar"), then substring, then near-typo. Ties
@@ -168,10 +168,10 @@ once both miss locally and both insert, and the loser gets a `23505` — which
 
 ## How the suggestions are scored
 
-The maths lives in [`RankingCore.swift`](NomNom/Store/RankingCore.swift), which is
-deliberately free of SwiftData and SwiftUI so it can be reasoned about on its own.
-[`SuggestionEngine.swift`](NomNom/Store/SuggestionEngine.swift) adapts the models
-onto it, applies the filters, and writes the explanation chips.
+The maths lives in [`RankingCore.swift`](apps/ios/NomNom/Features/Suggestions/Engine/RankingCore.swift),
+which is deliberately free of SwiftData and SwiftUI so it can be reasoned about on
+its own. [`SuggestionEngine.swift`](apps/ios/NomNom/Features/Suggestions/Engine/SuggestionEngine.swift)
+adapts the models onto it, applies the filters, and writes the explanation chips.
 
 Each dish gets five numbers:
 
@@ -218,24 +218,27 @@ ranking you can't interrogate is one you stop trusting.
 
 ## Layout
 
+Monorepo (pnpm + Turborepo): `apps/ios` (this app), `apps/web` (Next.js site + `/admin`
+dashboard), `apps/supabase` (migrations + Edge Functions), `packages/*` (shared lint/TS
+config). Full folder-by-folder rules live in [AGENTS.md](AGENTS.md). Shape, condensed:
+
 ```
-NomNom/
-  Models/       Dish, Meal, MealRating, Eater, Profile,
-                MealInvite, AppNotification, Reaction        — plain values, UUID keys
-                PostgresDate     the two date shapes PostgREST returns
-  Supabase/     SupabaseConfig   which project, and the shared client
-                AuthController   session state + the email-code flow
-                FoodStore        every read and write; the app's one data layer
-                PhotoCache       authenticated photo fetches, memory + disk
-                DevSignIn        DEBUG: sign in via Mailpit
-                DevSelfCheck     DEBUG: exercise the store's writes
-  Store/        RankingCore      pure scoring maths, no framework dependencies
-                SuggestionEngine model adapter + filters + explanations
-                DishRepository   autofill ranking and typo matching
-                StringMatching   name folding + Levenshtein
-                SampleData       DEBUG-only history generator
-  Views/        Auth/ Log/ Calendar/ Suggestions/ Invites/ Settings/ Shared/
+apps/ios/NomNom/
+  App/          Root navigation & app lifecycle (RootTabView, RootView, NomNomApp)
+  Features/     Auth, Calendar, Diary, Insights, Notifications, Parties,
+                Recipes, Settings, Suggestions — each with Views/ + Components/
+                (+ Engine/ where there's non-UI logic, e.g. Suggestions, Recipes)
+  Core/         Components/ (AppButton, design-system primitives), Design/ (tokens),
+                Extensions/, Fonts/, Parsing/
+  Domain/       Plain models — Meal, Recipe, Party, Profile, Reaction, HealthIndex,
+                PostgresDate — no UI code
+  Services/     FoodStore/ (every read & write, split FoodStore+<Domain>.swift),
+                Supabase/ (SupabaseConfig, PhotoCache), Billing/ (RevenueCat)
 ```
+
+Auth lives in `Features/Auth` (`AuthController`, `Dev/DevSelfCheck`); recipe-name
+matching (`DishRepository`, `String+Matching`) lives in `Features/Suggestions/Engine`
+and `Core/Extensions` respectively — see [Keeping the names consistent](#keeping-the-names-consistent).
 
 Each row type has a matching insert or patch struct (`NewMeal`, `MealPatch`, …)
 rather than being `Encodable` itself, because the database fills in `id` and
@@ -362,7 +365,7 @@ for a six-digit code has nothing to type, and sign-in simply cannot be completed
 The code and the link are the same verification underneath; which one reaches the
 user is decided entirely by the template.
 
-Locally this is committed: `supabase/templates/` plus the
+Locally this is committed: `apps/supabase/templates/` plus the
 `[auth.email.template.magic_link]` and `.confirmation` blocks in `config.toml`. Both
 are overridden because `magic_link` is what an address with an account receives and
 `confirmation` covers a brand new one.
@@ -502,7 +505,7 @@ An audit of all nine original migrations found thirteen instances of the pattern
 Rather than patch them one by one against a project nobody could fully inventory, a
 **new Supabase project** was created and the migrations squashed into
 `20260827000000_baseline.sql`. Re-pointing the app cost two lines in
-`SupabaseConfig.swift`; there was no data to move.
+`Services/Supabase/SupabaseConfig.swift`; there was no data to move.
 
 So the baseline is plain — a fresh project has no previous tenant to work around —
 but two habits survived, each because it cost a real bug:
@@ -514,19 +517,19 @@ but two habits survived, each because it cost a real bug:
 - **Privileges are revoked before they are granted.** "We deliberately withheld
   `INSERT` on `notifications`" is only true if the role did not already have it.
 
-`supabase/maintenance/` still holds inventory scripts written for the old project.
+`apps/supabase/maintenance/` still holds inventory scripts written for the old project.
 They have not been re-verified against the new one and one of them carries a stale
 keep-list, so treat them as historical rather than as tools.
 
 ## Verifying
 
-`supabase/tests/rls_test.py` drives the REST API with real user JWTs — no
+`apps/supabase/tests/rls_test.py` drives the REST API with real user JWTs — no
 service-role shortcuts except to create the test users — and asserts the negative
 cases, not just the happy path:
 
 ```bash
-supabase start && supabase db reset
-python3 supabase/tests/rls_test.py
+cd apps/supabase && npx supabase start && npx supabase db reset
+python3 tests/rls_test.py
 ```
 
 33 checks, covering: an outsider can read neither the meal nor the dish and cannot
@@ -592,15 +595,18 @@ XCUITest target, and driving the simulator's UI needs an accessibility permissio
 this environment does not have, so the buttons were checked by reading the code and
 by screenshotting each tab, not by pressing them.
 
-## Web site & Vercel deployment (`web/`)
+## Web site & Vercel deployment (`apps/web/`)
 
-The repository includes a standalone Next.js 15 web application in `web/` that provides the landing page, App Store Review Guideline 5.1.1(v) compliant Privacy Policy, and interactive previews matching the iOS Stone & Pine design system.
+The repository is a pnpm/Turborepo workspace; `apps/web/` is a Next.js 15 app providing
+the landing page, App Store Review Guideline 5.1.1(v) compliant Privacy Policy,
+interactive previews matching the iOS Stone & Pine design system, and the `/admin`
+dashboard (recipe/health-score moderation, generation logs).
 
 ### Local development
 
 ```bash
-cd web
-pnpm install
+pnpm install         # from the repo root — installs all workspace apps
+cd apps/web
 pnpm dev
 ```
 
@@ -615,8 +621,8 @@ pnpm build
 
 When importing this repository into Vercel:
 - **Framework Preset**: Next.js (auto-detected)
-- **Root Directory**: `web`
-- **Ignored Build Step**: `web/vercel.json` configures `"ignoreCommand": "git diff --quiet HEAD^ HEAD ./"` so Vercel automatically skips deployments when commits only touch iOS code (`NomNom/`), database migrations, or root documentation.
+- **Root Directory**: `apps/web`
+- **Ignored Build Step**: `apps/web/vercel.json` configures `"ignoreCommand": "git diff --quiet HEAD^ HEAD ./"` so Vercel automatically skips deployments when commits only touch iOS code (`apps/ios/`), database migrations, or root documentation.
 
 ## Push notifications
 

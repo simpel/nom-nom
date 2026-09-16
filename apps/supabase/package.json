@@ -1,0 +1,16 @@
+{
+  "name": "supabase",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "lint": "eslint functions/**/*.ts",
+    "check": "echo 'Deno types checked by Supabase CLI'",
+    "build": "echo 'Edge functions built by Supabase CLI'"
+  },
+  "devDependencies": {
+    "@food/eslint-config": "workspace:*",
+    "@food/typescript-config": "workspace:*",
+    "eslint": "^8.57.0",
+    "typescript": "^5.8.2"
+  }
+}

@@ -6,37 +6,34 @@ These instructions define how the Nom Nom codebase is structured and the rules t
 
 ## 1. Directory & Folder Architecture
 
-All Swift source code lives under `NomNom/` and is divided into clear layers:
+This is a pnpm/Turborepo monorepo. Three apps under `apps/`, shared configs under `packages/`.
+Every `NomNom/...` path elsewhere in this doc is shorthand for `apps/ios/NomNom/...`.
 
 ```
-NomNom/
-├── App/                # App lifecycle, Root navigation (RootTabView, RootView, NomNomApp)
-├── Features/           # Vertical slices of user-facing features
-│   ├── Auth/           # Sign-in, verification, auth controller & dev helpers
-│   ├── Calendar/       # Calendar month grid and date meal listings
-│   │   ├── Components/ # Calendar-specific subviews, cells, headers
-│   │   └── Views/      # Primary screen-level calendar views
-│   ├── Diary/          # Meal log, dish detail, meal detail, meal editor
-│   │   ├── Components/ # Sections, cards, sheets, pickers specific to Diary/Meals
-│   │   └── Views/      # Screen-level views (MealsView, MealDetailView, etc.)
-│   ├── Settings/       # User profile, parties, preferences
-│   │   ├── Components/ # Party cards, member rows, invite sheets
-│   │   └── Views/      # Screen-level settings views
-│   └── Suggestions/    # "What to eat" recommendation engine & UI
-│       ├── Components/ # Filter sheets, suggestion cards, score breakdowns
-│       ├── Engine/     # Scoring, ranking algorithms, filtering logic
-│       └── Views/      # Screen-level suggestion views
-├── Core/               # Shared, feature-agnostic reusable primitives
-│   ├── Components/     # Design system components (Chip, VerdictStrip, TastePicker, CameraPicker, etc.)
-│   ├── Extensions/     # Foundation & SwiftUI extensions (String+Matching, Date+Formatting, etc.)
-│   └── Parsing/        # Parsers, formatters, text helpers
-├── Domain/             # Core models and entities (Meal, Dish, Party, Profile, Reaction, etc.) — NO UI code
-└── Services/           # Backend, networking, and data store
-    ├── FoodStore/      # FoodStore split into domain extensions (FoodStore+Dishes, FoodStore+Meals, etc.)
-    └── Supabase/       # Supabase client configuration and DTOs
-supabase/
-├── migrations/         # SQL migration scripts
-└── functions/          # Deno/Edge functions (e.g., invite notifications)
+apps/
+├── ios/NomNom/         # SwiftUI app
+│   ├── App/            # App lifecycle, root navigation (RootTabView, RootView, NomNomApp)
+│   ├── Features/       # Vertical slices: Auth, Calendar, Diary, Insights, Notifications,
+│   │   │                 Parties, Recipes, Settings, Suggestions
+│   │   ├── Components/ # Feature-specific subviews, cards, sheets, pickers
+│   │   ├── Views/      # Screen-level views
+│   │   └── Engine/     # Feature-specific non-UI logic where present (e.g. Suggestions/, Recipes/)
+│   ├── Core/           # Shared, feature-agnostic primitives
+│   │   ├── Components/ # Design system components (AppButton, Chip, VerdictStrip, SectionCard, etc.)
+│   │   ├── Design/     # Design tokens
+│   │   ├── Extensions/ # Foundation & SwiftUI extensions
+│   │   ├── Fonts/      # Bundled font files + registry
+│   │   └── Parsing/    # Parsers, formatters, text helpers
+│   ├── Domain/         # Models and entities (Meal, Recipe, Party, Profile, Reaction, HealthIndex, etc.) — NO UI code
+│   └── Services/       # Backend, networking, data store
+│       ├── FoodStore/  # FoodStore split into domain extensions (FoodStore+Meals, +Recipes, +Parties, etc.)
+│       ├── Supabase/   # Supabase client config + PhotoCache
+│       └── Billing/    # RevenueCat / subscription config
+├── web/                # Next.js app — marketing site, privacy/support pages, and /admin dashboard
+└── supabase/           # Backend: migrations/, functions/ (Edge Functions), seed.sql, tests/
+packages/
+├── eslint-config/
+└── typescript-config/
 ```
 
 ---
@@ -82,15 +79,8 @@ When creating or moving a file, use this decision tree:
 
 Never add new domain methods directly into `FoodStore.swift`.
 - `FoodStore.swift` contains only core `@Observable` state declarations and shared initialization.
-- Group all async actions, database calls, and domain-specific mutations into `FoodStore+<Domain>.swift` files:
-  - `FoodStore+Meals.swift`
-  - `FoodStore+Dishes.swift`
-  - `FoodStore+Parties.swift`
-  - `FoodStore+Ratings.swift`
-  - `FoodStore+Inbox.swift`
-  - `FoodStore+Profile.swift`
-  - `FoodStore+Loading.swift`
-- When adding a new domain concept or feature domain, create a new `FoodStore+<NewDomain>.swift` extension file.
+- Group all async actions, database calls, and domain-specific mutations into `FoodStore+<Domain>.swift` files (one per domain — `Meals`, `Recipes`, `RecipeAI`, `RecipeDiscovery`, `RecipeFavorites`, `Parties`, `PartyFollowing`, `PartyInvites`, `PartyScores`, `Ratings`, `Health`, `Insights`, `Notifications`, `Inbox`, `Categories`, `Eaters`, `Profile`, `Loading`, `Errors`, `Preview`).
+- When adding a new domain concept, create a new `FoodStore+<NewDomain>.swift` extension file rather than growing an existing one or `FoodStore.swift` itself.
 
 ---
 

@@ -1,0 +1,156 @@
+import SwiftUI
+
+/// Dedicated Search tab screen.
+/// Surfaces search history when idle, and a minimalist 2-column gallery for live query results.
+struct RecipeSearchView: View {
+    @Environment(FoodStore.self) private var store
+
+    @State private var searchText = ""
+    @State private var showingFilterSheet = false
+    @State private var filterCriteria = RecipeFilterCriteria()
+
+    private var trimmedSearch: String {
+        searchText.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
+    private var rawSearchResults: [Recipe] {
+        guard !trimmedSearch.isEmpty else { return [] }
+        let suggestions = DishRepository.suggestions(
+            for: trimmedSearch,
+            in: store.recipes,
+            history: store.dishHistory,
+            favoriteIDs: store.favoriteRecipeIDs,
+            limit: 50
+        )
+        return suggestions.compactMap { store.recipe($0.dishID) }
+    }
+
+    private var displayedSearchResults: [Recipe] {
+        RecipeFilterEngine.apply(
+            criteria: filterCriteria,
+            to: rawSearchResults,
+            store: store
+        )
+    }
+
+    var body: some View {
+        NavigationStack {
+            Group {
+                if !trimmedSearch.isEmpty {
+                    searchResultsView
+                } else {
+                    idleHistoryView
+                }
+            }
+            .background(DS.Color.bg)
+            .screenTitle("Search")
+            .searchable(text: $searchText, prompt: "Search recipes, tags, or cuisines")
+            .onSubmit(of: .search) {
+                SearchHistoryStore.shared.addQuery(trimmedSearch)
+            }
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button {
+                        showingFilterSheet = true
+                    } label: {
+                        Image(systemName: filterCriteria.isDefault
+                              ? "line.3.horizontal.decrease.circle"
+                              : "line.3.horizontal.decrease.circle.fill")
+                    }
+                    .accessibilityLabel("Sort and Filter")
+                }
+            }
+            .sheet(isPresented: $showingFilterSheet) {
+                RecipeFilterSheet(criteria: $filterCriteria)
+            }
+        }
+    }
+
+    // MARK: - Idle Search View
+
+    private var idleHistoryView: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: DS.Spacing.sectionLarge) {
+                RecommendedForYouShelf()
+
+                if !store.recentRecipes.isEmpty {
+                    RecipeHorizontalShelf(title: "Last Used Recipes", recipes: store.recentRecipes)
+                }
+
+                if !store.favoriteRecipes.isEmpty {
+                    RecipeHorizontalShelf(title: "Favourites", recipes: store.favoriteRecipes)
+                }
+
+                if !store.popularRecipes.isEmpty {
+                    PopularRecipesShelf(recipes: store.popularRecipes)
+                }
+
+                SearchHistorySection(
+                    showsEmptyState: store.recentRecipes.isEmpty && store.favoriteRecipes.isEmpty && store.popularRecipes.isEmpty
+                ) { query in
+                    searchText = query
+                    SearchHistoryStore.shared.addQuery(query)
+                }
+            }
+            .padding(.top, DS.Spacing.screenTop)
+            .padding(.bottom, DS.Spacing.screenBottom)
+        }
+    }
+
+    // MARK: - Search Results View (2-Column Minimalist Grid)
+
+    @ViewBuilder
+    private var searchResultsView: some View {
+        if rawSearchResults.isEmpty {
+            ContentUnavailableView {
+                Label("No matching recipes", systemImage: "magnifyingglass")
+            } description: {
+                Text("Try searching with a different term, ingredient, or cuisine.")
+            } actions: {
+                AppButton("Clear Search", variant: .neutral, style: .outlined, size: .md) {
+                    searchText = ""
+                }
+            }
+        } else if displayedSearchResults.isEmpty {
+            ContentUnavailableView {
+                Label("No filtered results", systemImage: "line.3.horizontal.decrease")
+            } description: {
+                Text("No recipes match your current sort and filter criteria.")
+            } actions: {
+                AppButton("Reset Filters", variant: .neutral, style: .outlined, size: .md) {
+                    filterCriteria = RecipeFilterCriteria()
+                }
+            }
+        } else {
+            ScrollView {
+                VStack(alignment: .leading, spacing: DS.Spacing.md) {
+                    searchSubHeader
+                    MinimalRecipeGrid(recipes: displayedSearchResults, onNavigate: { _ in
+                        SearchHistoryStore.shared.addQuery(trimmedSearch)
+                    })
+                }
+                .padding(.top, DS.Spacing.sm)
+                .padding(.bottom, DS.Spacing.screenBottom)
+            }
+        }
+    }
+
+    private var searchSubHeader: some View {
+        HStack {
+            Text("\(displayedSearchResults.count) result\(displayedSearchResults.count == 1 ? "" : "s")")
+                .font(.caption.weight(.medium))
+                .monospacedDigit()
+                .foregroundStyle(DS.Color.textSecondary)
+
+            Spacer()
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 4)
+    }
+}
+
+#Preview {
+    NomNomPreview {
+        RecipeSearchView()
+    }
+}

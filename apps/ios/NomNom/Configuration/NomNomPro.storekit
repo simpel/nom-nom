@@ -1,0 +1,69 @@
+{
+  "identifier" : "44D63A80-ABFA-4500-B7CA-9940F53B6408",
+  "nonRenewingSubscriptions" : [],
+  "products" : [],
+  "settings" : {
+    "_applicationInternalID" : "0",
+    "_developerTeamID" : "0",
+    "_failTransactionsEnabled" : false,
+    "_lastSynchronizedDate" : 0,
+    "_locale" : "en_US",
+    "_storefront" : "USA",
+    "_storeKitErrors" : []
+  },
+  "subscriptionGroups" : [
+    {
+      "id" : "71975925-02B2-4C51-8258-C5815D44C0CA",
+      "localizations" : [],
+      "name" : "Nom Nom Pro",
+      "subscriptions" : [
+        {
+          "adHocOffers" : [],
+          "codeOffers" : [],
+          "displayPrice" : "4.99",
+          "familyShareable" : false,
+          "groupNumber" : 1,
+          "internalID" : "A6B5850D-2BFE-4CDB-9DBC-48EABAD76C9C",
+          "introductoryOffer" : null,
+          "localizations" : [
+            {
+              "description" : "Unlock Nom Nom Pro insights, monthly",
+              "displayName" : "Nom Nom Pro Monthly",
+              "locale" : "en_US"
+            }
+          ],
+          "productID" : "se.joelsanden.nomnom.pro.monthly",
+          "recurringSubscriptionPeriod" : "P1M",
+          "referenceName" : "Nom Nom Pro Monthly",
+          "subscriptionGroupID" : "71975925-02B2-4C51-8258-C5815D44C0CA",
+          "type" : "RecurringSubscription"
+        },
+        {
+          "adHocOffers" : [],
+          "codeOffers" : [],
+          "displayPrice" : "39.99",
+          "familyShareable" : false,
+          "groupNumber" : 1,
+          "internalID" : "430B6134-6CB3-40FF-AFCA-ACECDF81F5CC",
+          "introductoryOffer" : null,
+          "localizations" : [
+            {
+              "description" : "Unlock Nom Nom Pro insights, yearly (save 33%)",
+              "displayName" : "Nom Nom Pro Yearly",
+              "locale" : "en_US"
+            }
+          ],
+          "productID" : "se.joelsanden.nomnom.pro.annual",
+          "recurringSubscriptionPeriod" : "P1Y",
+          "referenceName" : "Nom Nom Pro Yearly",
+          "subscriptionGroupID" : "71975925-02B2-4C51-8258-C5815D44C0CA",
+          "type" : "RecurringSubscription"
+        }
+      ]
+    }
+  ],
+  "version" : {
+    "major" : 3,
+    "minor" : 0
+  }
+}
