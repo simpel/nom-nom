@@ -59,17 +59,10 @@ jobs:
           if [ -n "$LATEST_XCODE" ]; then
             sudo xcode-select -s "$LATEST_XCODE"
           fi
-          if command -v xcbeautify >/dev/null 2>&1; then
-            xcodebuild -project apps/ios/NomNom.xcodeproj -scheme NomNom \
-              -destination 'generic/platform=iOS Simulator' \
-              -skipPackagePluginValidation \
-              CODE_SIGNING_ALLOWED=NO build | xcbeautify
-          else
-            xcodebuild -project apps/ios/NomNom.xcodeproj -scheme NomNom \
-              -destination 'generic/platform=iOS Simulator' \
-              -skipPackagePluginValidation \
-              CODE_SIGNING_ALLOWED=NO build
-          fi
+          xcodebuild -project apps/ios/NomNom.xcodeproj -scheme NomNom \
+            -destination 'generic/platform=iOS Simulator' \
+            -skipPackagePluginValidation \
+            CODE_SIGNING_ALLOWED=NO build
 
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@v3
