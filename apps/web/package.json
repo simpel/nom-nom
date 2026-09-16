@@ -35,7 +35,7 @@
     "@types/node": "^22.13.9",
     "@types/react": "^19.0.10",
     "@types/react-dom": "^19.0.4",
-    "eslint": "^9.39.5",
+    "eslint": "^10.10.0",
     "eslint-config-next": "^16.3.5",
     "tailwindcss": "^4.3.3",
     "typescript": "^5.8.2"
