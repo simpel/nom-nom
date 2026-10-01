@@ -24,33 +24,9 @@ struct PartySettingsSheet: View {
         NavigationStack {
             ScrollView {
                 VStack(spacing: DS.Spacing.section) {
-                    AssetPhotosPickerSection(
-                        draft: $photoDraft,
-                        title: "Cover Photo",
-                        bucket: SupabaseConfig.partyBucket,
-                        maxCount: 1
-                    )
+                    PartyFormFields(photoDraft: $photoDraft, name: $name, about: $about)
 
-                    SectionCard("Party Name") {
-                        Input("Party name (e.g. Taco Night)", text: $name, style: .cardRow)
-                            .autocorrectionDisabled()
-                    }
-
-                    SectionCard("About", caption: "Optional") {
-                        TextArea("What is this dinner party about?", text: $about, lineLimit: 3...5)
-                    }
-
-                    SectionCard("Sharing & Visibility") {
-                        VStack(alignment: .leading, spacing: 6) {
-                            Toggle("Make dinner party public", isOn: $isPublic)
-                                .font(.body.weight(.medium))
-                                .nativeToggle()
-
-                            Text("When enabled, other foodies can discover and follow this dinner party.")
-                                .font(.caption)
-                                .foregroundStyle(DS.Color.textSecondary)
-                        }
-                    }
+                    VisibilityToggleCard.party(isPublic: $isPublic)
                 }
                 .padding(.horizontal, DS.Spacing.screenHorizontal)
                 .padding(.top, DS.Spacing.screenTop)

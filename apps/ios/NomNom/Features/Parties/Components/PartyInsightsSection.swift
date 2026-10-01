@@ -18,6 +18,18 @@ struct PartyInsightsSection: View {
         store.trendline(forParty: partyID)
     }
 
+    /// Member lines, coloured by their stable position in the store's rater order.
+    private var memberSeries: [TrendSeries] {
+        store.memberTrendlines(forParty: partyID).enumerated().map { index, member in
+            TrendSeries(
+                id: member.ref,
+                name: member.name,
+                colorIndex: index,
+                points: member.points.map { TrendPoint(date: $0.date, value: $0.score / 100) }
+            )
+        }
+    }
+
     var body: some View {
         VStack(alignment: .leading, spacing: DS.Spacing.section) {
             Text("Insights")
@@ -26,7 +38,11 @@ struct PartyInsightsSection: View {
 
             ProGate {
                 VStack(alignment: .leading, spacing: DS.Spacing.section) {
-                    PartyTasteTrendChart(totalTrend: trendData, memberSeries: store.memberTrendlines(forParty: partyID))
+                    TrendChart(
+                        total: trendData.map { TrendPoint(date: $0.date, value: $0.averageScore / 100) },
+                        series: memberSeries,
+                        visibleDays: 14
+                    )
 
                     PartyTasteMatchCard(matches: store.memberTasteMatches(forParty: partyID, insights: insights)) { member in
                         selectedMember = member

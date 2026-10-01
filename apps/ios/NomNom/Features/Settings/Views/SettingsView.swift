@@ -5,12 +5,8 @@ typealias EatersView = SettingsView
 /// Settings tab/sheet: dinner parties, household members, profile settings, and account management.
 struct SettingsView: View {
     @Environment(FoodStore.self) private var store
-    @Environment(AuthController.self) private var auth
 
     @State private var isSeeding = false
-    @State private var confirmSignOut = false
-    @State private var confirmDelete = false
-
 
     var body: some View {
         ScrollView {
@@ -18,11 +14,11 @@ struct SettingsView: View {
                 partiesSection
                 HouseholdMembersSection()
                 NotificationPreferencesSection()
-                ProfileSettingsSection(confirmSignOut: $confirmSignOut)
+                ProfileSettingsSection()
                 #if DEBUG
                 sampleDataSection
                 #endif
-                DangerZoneSection(confirmDelete: $confirmDelete)
+                AccountActionsSection()
             }
             .padding(.horizontal, DS.Spacing.screenHorizontal)
             .padding(.top, DS.Spacing.screenTop)
@@ -30,32 +26,6 @@ struct SettingsView: View {
         }
         .background(DS.Color.bg)
         .navigationTitle("Settings")
-        .alert("Sign out?", isPresented: $confirmSignOut) {
-            Button("Sign out", role: .destructive) {
-                Task {
-                    await store.unregisterCurrentDevice()
-                    await auth.signOut()
-                }
-            }
-            Button("Cancel", role: .cancel) {}
-        } message: {
-            Text("Your food log stays on the server and comes back when you sign in again.")
-        }
-        .alert("Delete your account?", isPresented: $confirmDelete) {
-            Button("Delete everything", role: .destructive) {
-                Task { await auth.deleteAccount() }
-            }
-            Button("Cancel", role: .cancel) {}
-        } message: {
-            Text("This removes your account, every meal and photo you've logged, and the people you track. It cannot be undone.")
-        }
-        .alert("Couldn't delete your account",
-               isPresented: Binding(get: { auth.errorMessage != nil },
-                                    set: { if !$0 { auth.errorMessage = nil } })) {
-            Button("OK") { auth.errorMessage = nil }
-        } message: {
-            Text(auth.errorMessage ?? "")
-        }
     }
 
     // MARK: - Dinner Parties Section

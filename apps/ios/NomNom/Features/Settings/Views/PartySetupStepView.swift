@@ -34,17 +34,7 @@ struct PartySetupStepView: View {
 
                 membersSection
 
-                SectionCard("Sharing & Visibility") {
-                    VStack(alignment: .leading, spacing: 6) {
-                        Toggle("Make dinner party public", isOn: $isPublic)
-                            .font(.body.weight(.medium))
-                            .nativeToggle()
-
-                        Text("When enabled, other foodies can discover and follow this dinner party.")
-                            .font(.caption)
-                            .foregroundStyle(DS.Color.textSecondary)
-                    }
-                }
+                VisibilityToggleCard.party(isPublic: $isPublic)
             }
             .padding(.horizontal, DS.Spacing.screenHorizontal)
             .padding(.top, DS.Spacing.screenTop)
@@ -52,22 +42,8 @@ struct PartySetupStepView: View {
         }
         .background(DS.Color.bg)
         .screenTitle("Party Setup", displayMode: .inline)
-        .toolbar {
-            ToolbarItem(placement: .topBarTrailing) {
-                if isSaving {
-                    ProgressView().controlSize(.small)
-                } else {
-                    Button {
-                        save()
-                    } label: {
-                        Image(systemName: "checkmark")
-                            .fontWeight(.semibold)
-                    }
-                }
-            }
-        }
+        .stepCommitToolbar(isSaving: isSaving, onSave: save)
         .presentationDragIndicator(.visible)
-        .interactiveDismissDisabled(isSaving)
         .alert("Couldn't save dinner party",
                isPresented: Binding(get: { errorMessage != nil },
                                     set: { if !$0 { errorMessage = nil } })) {

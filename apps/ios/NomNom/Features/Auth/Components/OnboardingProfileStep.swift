@@ -20,28 +20,7 @@ struct OnboardingProfileStep: View {
                 maxCount: 1
             )
 
-            SectionCard("Your Name") {
-                VStack(spacing: 0) {
-                    Input(
-                        label: "First name",
-                        placeholder: "Required",
-                        text: $firstName
-                    )
-                    .textContentType(.givenName)
-                    .textInputAutocapitalization(.words)
-
-                    Divider()
-                        .padding(.vertical, 4)
-
-                    Input(
-                        label: "Last name",
-                        placeholder: "Required",
-                        text: $lastName
-                    )
-                    .textContentType(.familyName)
-                    .textInputAutocapitalization(.words)
-                }
-            }
+            NameFieldsCard(firstName: $firstName, lastName: $lastName)
         }
     }
 }
