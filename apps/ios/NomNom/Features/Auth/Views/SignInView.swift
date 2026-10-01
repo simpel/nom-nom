@@ -10,9 +10,8 @@ struct SignInView: View {
             VStack {
                 Spacer()
 
-                VStack(spacing: DS.Spacing.md) {
-                    AuthHeroArcView()
-                        .padding(.bottom, DS.Spacing.xs)
+                VStack(spacing: DS.Spacing.s5) {
+                    AppIconMark()
 
                     PageHeader(
                         title: "Nom Nom",

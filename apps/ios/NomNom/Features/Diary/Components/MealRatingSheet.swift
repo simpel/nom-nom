@@ -33,28 +33,9 @@ struct MealRatingSheet: View {
         return store.recipe(meal.dishID)
     }
 
-    private var mealPhotos: [HeroPhotoItem] {
+    private var mealPhotos: [PhotoCardSource] {
         guard let meal else { return [] }
-        return meal.photoPaths.map { .remote(path: $0, bucket: SupabaseConfig.photoBucket) }
-    }
-
-    private var recipePhotos: [HeroPhotoItem] {
-        guard let recipe = mealRecipe else { return [] }
-        var items: [HeroPhotoItem] = []
-        for p in recipe.recipePhotoPaths {
-            if !items.contains(where: { $0.id == "\(SupabaseConfig.recipeBucket):\(p)" }) {
-                items.append(.remote(path: p, bucket: SupabaseConfig.recipeBucket))
-            }
-        }
-        for p in recipe.photoPaths {
-            if !items.contains(where: { $0.id == "\(SupabaseConfig.recipeBucket):\(p)" }) {
-                items.append(.remote(path: p, bucket: SupabaseConfig.recipeBucket))
-            }
-        }
-        if items.isEmpty {
-            items.append(.fallback(cuisine: recipe.cuisine))
-        }
-        return items
+        return meal.photoPaths.map { .remote(path: $0, cuisine: mealRecipe?.cuisine) }
     }
 
     var body: some View {
@@ -98,12 +79,8 @@ struct MealRatingSheet: View {
                 get: { selectedRecipePhotoIndex.map { PhotoIndexWrapper(index: $0) } },
                 set: { selectedRecipePhotoIndex = $0?.index }
             )) { wrapper in
-                if let recipe = mealRecipe {
-                    let paths = recipe.recipePhotoPaths.isEmpty ? recipe.photoPaths : recipe.recipePhotoPaths
-                    let bucket = SupabaseConfig.recipeBucket
-                    if !paths.isEmpty {
-                        MediaViewerSheet(.paths(paths, bucket: bucket), startIndex: wrapper.index, title: "Recipe")
-                    }
+                if let paths = mealRecipe?.ratingHeaderPhotoPaths, !paths.isEmpty {
+                    MediaViewerSheet(.paths(paths, bucket: SupabaseConfig.recipeBucket), startIndex: wrapper.index, title: "Recipe")
                 }
             }
         }
@@ -114,14 +91,12 @@ struct MealRatingSheet: View {
     private func ratingForm(for meal: Meal) -> some View {
         ScrollView {
             VStack(spacing: DS.Spacing.section) {
-                // Top Hero Section: Harmonized Dual Arc Hero Header
-                ArcHeroHeaderView(
-                    items: mealPhotos,
-                    recipeItems: recipePhotos,
+                MealRatingPhotoHeader(
+                    mealPhotos: mealPhotos,
+                    recipePhotos: mealRecipe?.ratingHeaderPhotos ?? [],
                     cuisine: mealRecipe?.cuisine,
                     title: mealTitle,
                     date: meal.eatenOn,
-                    alignment: .center,
                     onSelectMealPhoto: { index in
                         selectedPhotoIndex = index
                     },

@@ -39,59 +39,37 @@ struct RecipeLeaderboardSheet: View {
     // MARK: - Subviews
 
     private var rankedList: some View {
-        VStack(alignment: .leading, spacing: DS.Spacing.section) {
-            SectionCard(
-                "Ranked Dishes",
-                caption: "\(rankedRecipes.count) \(rankedRecipes.count == 1 ? "dish" : "dishes")"
-            ) {
-                VStack(spacing: 0) {
-                    ForEach(Array(rankedRecipes.enumerated()), id: \.element.recipe.id) { index, item in
-                        NavigationLink(value: item.recipe) {
-                            RecipeLeaderboardRow(
-                                rank: index + 1,
-                                recipe: item.recipe,
-                                score: item.score,
-                                reaction: item.reaction,
-                                isHighlighted: item.recipe.id == highlightedRecipeID
-                            )
-                        }
-                        .buttonStyle(.plain)
-
-                        if index < rankedRecipes.count - 1 {
-                            Divider()
-                                .padding(.leading, 46)
-                        }
+        DSSection(
+            "Ranked Dishes",
+            trailing: "\(rankedRecipes.count) \(rankedRecipes.count == 1 ? "dish" : "dishes")"
+        ) {
+            Card(layout: .list) {
+                ForEach(Array(rankedRecipes.enumerated()), id: \.element.recipe.id) { index, item in
+                    NavigationLink(value: item.recipe) {
+                        RecipeLeaderboardRow(
+                            rank: index + 1,
+                            recipe: item.recipe,
+                            score: item.score,
+                            reaction: item.reaction,
+                            isHighlighted: item.recipe.id == highlightedRecipeID
+                        )
                     }
+                    .buttonStyle(.plain)
                 }
             }
         }
-        .padding(.horizontal, DS.Spacing.screenHorizontal)
-        .padding(.top, DS.Spacing.screenTop)
-        .padding(.bottom, DS.Spacing.screenBottom)
+        .padding(.horizontal, DS.Spacing.gutter)
+        .padding(.top, DS.Spacing.s5)
+        .padding(.bottom, DS.Spacing.s11)
     }
 
     private var emptyState: some View {
-        VStack(spacing: DS.Spacing.section) {
-            Spacer(minLength: 20)
-
-            CategoryPhotoArcView()
-                .padding(.vertical, DS.Spacing.sm)
-
-            VStack(spacing: 0) {
-                Text("No Ranked Dishes")
-                    .font(DS.TextStyle.serifSm.font)
-                    .foregroundStyle(DS.Color.textPrimary)
-
-                Text("Cook and rate meals to rank your recipes on the leaderboard.")
-                    .font(DS.TextStyle.sansMd.font)
-                    .foregroundStyle(DS.Color.textSecondary)
-                    .multilineTextAlignment(.center)
-                    .lineSpacing(3)
-                    .padding(.horizontal, 28)
-            }
-
-            Spacer(minLength: 40)
-        }
+        EmptyState(
+            "No ranked dishes",
+            message: "Cook and rate meals to rank your recipes on the leaderboard."
+        )
+        .padding(.horizontal, DS.Spacing.gutter)
+        .padding(.top, DS.Spacing.s10)
     }
 }
 

@@ -29,16 +29,16 @@ struct PartyMemberPartyRatingsSection: View {
     }
 
     private func ratingsGroup(title: String, records: [PartyMemberMealRecord]) -> some View {
-        SectionCard(title: title, innerPadding: 0) {
-            AppList(data: records, dividerPadding: 74) { record in
-                NavigationLink {
-                    MealDetailView(mealID: record.meal.id)
-                } label: {
-                    MealRow(meal: record.meal, raterRef: memberRef, isMinimal: true)
-                        .padding(.horizontal, 14)
-                        .padding(.vertical, 8)
+        DSSection(title) {
+            Card(layout: .list) {
+                ForEach(records) { record in
+                    NavigationLink {
+                        MealDetailView(mealID: record.meal.id)
+                    } label: {
+                        MealRow(meal: record.meal, raterRef: memberRef, isMinimal: true)
+                    }
+                    .buttonStyle(.plain)
                 }
-                .buttonStyle(.plain)
             }
         }
     }
