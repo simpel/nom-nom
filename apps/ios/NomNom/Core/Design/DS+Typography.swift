@@ -61,6 +61,12 @@ extension DS {
             }
         }
 
+        /// `tracking-wider` (0.05em): badges.
+        var trackingWider: CGFloat { 0.05 * size }
+
+        /// `tracking-widest` (0.1em): uppercase overlines and section headers.
+        var trackingWidest: CGFloat { 0.1 * size }
+
         /// The Dynamic Type style this step scales with.
         var relativeTo: Font.TextStyle {
             switch self {

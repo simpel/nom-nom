@@ -31,6 +31,8 @@ extension DS {
 
         static let tint = o10
         static let reactionBadge = o15
+        /// ProgressBar track on a featured card (`primary` at 18% over `panel`).
+        static let featuredTrack: Double = 0.18
         static let selected = o20
         static let hairline = o30
         static let disabled = o50
