@@ -32,6 +32,13 @@ extension DS {
         /// Sheet grabber handle.
         static let grabber = C(light: "#c9ccd0", dark: H.stone700)
 
+        // MARK: - Over photos (fixed in both themes)
+
+        /// Glyphs drawn straight on a photo (PhotoCard's favourite heart).
+        static let onPhoto = C(light: "#ffffff")
+        /// Black 45% disc behind a glyph on a photo (PhotoCard README).
+        static let photoDisc = C(light: "#00000073")
+
         // MARK: - Text
 
         static let textPrimary = C(light: "#16181a", dark: H.stone100)
