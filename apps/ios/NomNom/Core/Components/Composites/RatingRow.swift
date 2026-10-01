@@ -16,9 +16,9 @@ struct RatingListEntry: Identifiable {
     var name: String
     /// A short role after the name, e.g. "chef".
     var role: String?
-    /// 0–100, or nil when unrated.
+    /// Normalised 0–1 (domain scale), or nil when unrated.
     var score: Double?
-    /// Change vs their usual score; 0 reads "As usual".
+    /// Change vs their usual score in display points (0–100 scale); 0 reads "As usual".
     var delta: Int?
     /// Their first rating: a `secondary` "New" Badge instead of a delta.
     var isNew: Bool = false

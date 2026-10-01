@@ -25,7 +25,7 @@ enum ScoreValueSize: Equatable, CaseIterable {
 /// A score as type: the numeral in `primary-text` (tabular) and its verdict word,
 /// baseline-aligned. Never in a Badge and never on a photo.
 struct ScoreValue: View {
-    /// 0–100, or nil when unrated.
+    /// Normalised 0–1 (domain scale), or nil when unrated; shown as 0–100.
     let score: Double?
     var verdict: String?
     var size: ScoreValueSize
@@ -40,12 +40,12 @@ struct ScoreValue: View {
 
     private var numeralText: String {
         guard let score else { return "\u{2014}" }
-        return "\(Int(score.rounded()))"
+        return "\(Int((score * 100).rounded()))"
     }
 
     private var verdictText: String {
         guard let score else { return "Unrated" }
-        return verdict ?? Reaction(score: score / 100).shortLabel
+        return verdict ?? Reaction(score: score).shortLabel
     }
 
     private var showsVerdict: Bool { showVerdict && size != .xs }
@@ -73,8 +73,8 @@ struct ScoreValue: View {
 private struct ScoreValueGallery: View {
     var body: some View {
         VStack(alignment: .leading, spacing: DS.Spacing.s4) {
-            ForEach(ScoreValueSize.allCases, id: \.self) { ScoreValue(score: 83, size: $0) }
-            ScoreValue(score: 42, verdict: "Divided", size: .md)
+            ForEach(ScoreValueSize.allCases, id: \.self) { ScoreValue(score: 0.83, size: $0) }
+            ScoreValue(score: 0.42, verdict: "Divided", size: .md)
             ScoreValue(score: nil, size: .sm)
         }
         .padding(DS.Spacing.s4)

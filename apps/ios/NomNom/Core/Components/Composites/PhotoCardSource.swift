@@ -87,6 +87,9 @@ enum PhotoCardBadge {
 
 /// PhotoCard tiles: frame, corner radius and badge inset.
 enum PhotoCardSize: Equatable, CaseIterable {
+    /// DS-GAP: `s12` square, `radius-xl`, no badge: ListRow leading thumbnails
+    /// (xs is taller than a `rowMin` row). See Core/Design/DS-GAPS.md.
+    case thumb
     /// `s20` square, `radius-xl`, no badge: RecipeLinkCard and row thumbnails.
     case xs
     /// `s36` × `s48` (3:4), `radius-2xl`: Timeline.
@@ -95,9 +98,14 @@ enum PhotoCardSize: Equatable, CaseIterable {
     case md
     /// `s64` × `s72`, `radius-3xl`: PhotoStrip.
     case lg
+    /// DS-GAP: 4:5 (`s16` × `s20`), `radius-3xl`; use with `fillsWidth` for a
+    /// full-width cover (LabeledPhotoCard). See Core/Design/DS-GAPS.md.
+    case cover
 
     var width: CGFloat {
         switch self {
+        case .cover: return DS.Spacing.s16
+        case .thumb: return DS.Spacing.s12
         case .xs: return DS.Spacing.s20
         case .sm: return DS.Spacing.s36
         case .md: return DS.Spacing.s48
@@ -107,6 +115,8 @@ enum PhotoCardSize: Equatable, CaseIterable {
 
     var height: CGFloat {
         switch self {
+        case .cover: return DS.Spacing.s20
+        case .thumb: return DS.Spacing.s12
         case .xs: return DS.Spacing.s20
         case .sm: return DS.Spacing.s48
         case .md: return DS.Spacing.s48
@@ -118,22 +128,23 @@ enum PhotoCardSize: Equatable, CaseIterable {
 
     var radius: CGFloat {
         switch self {
-        case .xs: return DS.Radius.xl
+        case .thumb, .xs: return DS.Radius.xl
         case .sm, .md: return DS.Radius.xl2
-        case .lg: return DS.Radius.xl3
+        case .lg, .cover: return DS.Radius.xl3
         }
     }
 
-    var badgeInset: CGFloat { self == .lg ? DS.Spacing.s3 : DS.Spacing.s2 }
-    var showsBadge: Bool { self != .xs }
-    var showsCaption: Bool { self == .sm || self == .lg }
+    var badgeInset: CGFloat { self == .lg || self == .cover ? DS.Spacing.s3 : DS.Spacing.s2 }
+    var showsBadge: Bool { self != .xs && self != .thumb }
+    var showsCaption: Bool { self == .sm || self == .lg || self == .cover }
 
     /// Fork-and-knife glyph step on the no-photo tile.
     var glyphStyle: DS.TextStyle {
         switch self {
+        case .thumb: return .sansSm
         case .xs: return .sansMd
         case .sm: return .sansLg
-        case .md, .lg: return .sansXl
+        case .md, .lg, .cover: return .sansXl
         }
     }
 }

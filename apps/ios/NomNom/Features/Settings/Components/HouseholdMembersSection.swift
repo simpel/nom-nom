@@ -121,10 +121,7 @@ struct HouseholdMembersSection: View {
             }
         }
 
-        HouseholdPendingInvitesSection(
-            pendingInvites: pendingInvites,
-            successAlertMessage: $successAlertMessage
-        )
+        HouseholdPendingInvitesSection(pendingInvites: pendingInvites)
 
         if !store.myEaters.isEmpty {
             SectionCard("Other Profiles (No account)") {

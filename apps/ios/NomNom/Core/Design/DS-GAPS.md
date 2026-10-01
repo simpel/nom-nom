@@ -24,6 +24,15 @@ This file lists UI patterns that exist in the app but not in the design system. 
 | 14 | **Form blocks** | Name fields, party form, visibility toggle card, account/danger actions | Duplicated form cards |
 | 15 | **Sheet step toolbars** | "Next" and step-commit toolbars for multi-step sheets (native; the convention needs documenting) | 8 hand-written toolbars |
 
+### Interim files and token stretches
+
+- `Interim/ListRow.swift` + `ListRowSlots.swift` (#1), `PendingInviteRow.swift` (#2), `EmptyState.swift` (#3), `SegmentedBar.swift` (#4), `ValueStepper.swift` (#5), `LabeledPhotoCard.swift` (#9), `RecipeShelf.swift` (#10), `PartySummaryCard.swift` (#11; renamed `PartyCard` once the feature PartyCard is replaced in Phase 5).
+- **PhotoCard `.thumb`**: `s12` square, `radius-xl`, no badge, for ListRow leading thumbnails. The DS's smallest tile (`xs`, `s20`) is taller than a `rowMin` row.
+- **PhotoCard `.cover`**: 4:5 (`s16` × `s20` ratio, used with `fillsWidth`), `radius-3xl`, for LabeledPhotoCard `.portrait`. The DS has no 4:5 tile; 4:5 is one of the two safe crops of the square category photography.
+- **Category hero cover**: today a wide 140pt banner. A wide crop is not safe (README: only 1:1 and 4:5), so it becomes a full-width LabeledPhotoCard `.square`. That is tall for a header; the DS should decide whether drill-downs get a cover at all.
+- **PartySummaryCard score**: ScoreCard `compact` is itself a Card and Cards don't nest, so the party card draws ScoreCard compact's content (ScoreValue `sm`, count, ProgressBar) without the surface.
+- **PendingInviteRow feedback**: "Invitation resent" and errors show in the row's meta line instead of alerts.
+
 ## Kept as-is, tokens applied only (the DS lists these as "not synced")
 
 - Selectors: BurnerMeter, CookingTimeSelector, RotationGoalSelector, TactileOptionPicker, TactileTasteSelector (household eater rows)

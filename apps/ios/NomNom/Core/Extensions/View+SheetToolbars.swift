@@ -111,7 +111,7 @@ private struct DSSheetPreview: View {
             .sheet(isPresented: $isPresented) {
                 NavigationStack {
                     VStack(spacing: DS.Spacing.s6) {
-                        SheetHero(score: 100, lead: "16 above Joel\u{2019}s usual of 84", emphasis: "16 above")
+                        SheetHero(score: 1, lead: "16 above Joel\u{2019}s usual of 84", emphasis: "16 above")
                         SheetCard(
                             "Why Joel loved it",
                             provenance: "AI summary of Joel\u{2019}s 54 past ratings",

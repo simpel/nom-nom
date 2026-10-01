@@ -13,7 +13,6 @@ struct PartySetupStepView: View {
     @Environment(FoodStore.self) private var store
     @State private var isSaving = false
     @State private var errorMessage: String?
-    @State private var resentAlertMessage: String?
 
     private var isEditing: Bool { partyID != nil }
     private var party: Party? { partyID.flatMap { store.party($0) } }
@@ -76,14 +75,6 @@ struct PartySetupStepView: View {
         } message: {
             Text(errorMessage ?? "")
         }
-        .alert("Invitation Resent", isPresented: Binding(
-            get: { resentAlertMessage != nil },
-            set: { if !$0 { resentAlertMessage = nil } }
-        )) {
-            Button("OK") { resentAlertMessage = nil }
-        } message: {
-            Text(resentAlertMessage ?? "")
-        }
     }
 
     private var membersSection: some View {
@@ -140,61 +131,10 @@ struct PartySetupStepView: View {
     }
 
     private var invitesSection: some View {
-        SectionCard("Invited") {
-            VStack(spacing: 8) {
+        DSSection("Invited") {
+            Card(layout: .list) {
                 ForEach(invites) { invite in
-                    HStack(spacing: 12) {
-                        Image(systemName: "envelope")
-                            .foregroundStyle(DS.Color.textSecondary)
-
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text(invite.inviteeEmail ?? "Invited member")
-                                .font(.subheadline)
-                                .foregroundStyle(DS.Color.textPrimary)
-                            Text(invite.status.rawValue.capitalized)
-                                .font(.caption2)
-                                .foregroundStyle(invite.status == .pending ? DS.Color.accentText : DS.Color.textSecondary)
-                        }
-
-                        Spacer()
-
-                        if invite.isPending {
-                            HStack(spacing: 8) {
-                                AppButton("Resend", variant: .secondary, style: .outlined, size: .sm) {
-                                    Task {
-                                        let success = await store.resendPartyInvite(invite)
-                                        if success {
-                                            resentAlertMessage = "Invitation resent to \(invite.inviteeEmail ?? "member")."
-                                        } else {
-                                            errorMessage = store.errorMessage
-                                            store.errorMessage = nil
-                                        }
-                                    }
-                                }
-
-                                AppButton(
-                                    systemImage: "trash",
-                                    variant: .destructive,
-                                    style: .ghost,
-                                    size: .sm
-                                ) {
-                                    Task {
-                                        await store.revokePartyInvite(invite)
-                                        if let message = store.errorMessage {
-                                            errorMessage = message
-                                            store.errorMessage = nil
-                                        }
-                                    }
-                                }
-                                .accessibilityLabel("Revoke invite")
-                            }
-                        }
-                    }
-                    .padding(.vertical, DS.Spacing.sm)
-
-                    if invite.id != invites.last?.id {
-                        Divider()
-                    }
+                    PendingInviteRow(invite: invite, store: store)
                 }
             }
         }

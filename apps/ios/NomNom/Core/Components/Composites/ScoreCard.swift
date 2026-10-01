@@ -9,7 +9,8 @@ enum ScoreCardLayout: Equatable {
 }
 
 /// One score readout: title pre-header, ScoreValue (+ count and delta), a
-/// ProgressBar at score/100 and an optional caption, on a Card.
+/// ProgressBar at the score and an optional caption, on a Card. `score` is the
+/// normalised 0–1 domain scale (shown as 0–100); `delta` is in display points.
 ///
 /// `featured` (one per screen, e.g. the health score) tints the card `primary`
 /// at 10%, turns the title `primary-text`, steps the compact numeral up to
@@ -17,8 +18,8 @@ enum ScoreCardLayout: Equatable {
 /// card a button with a trailing chevron. `isLoading` shows a redacted placeholder.
 ///
 /// ```swift
-/// ScoreCard(score: 88, delta: -2, deltaText: "from last time this group had it", deltaReference: "(90 on 20 Mar)")
-/// ScoreCard(score: 82, layout: .compact, title: "Household score", delta: 6, count: "12 meals")
+/// ScoreCard(score: 0.88, delta: -2, deltaText: "from last time this group had it", deltaReference: "(90 on 20 Mar)")
+/// ScoreCard(score: 0.82, layout: .compact, title: "Household score", delta: 6, count: "12 meals")
 /// ```
 struct ScoreCard: View {
     let score: Double?
@@ -95,7 +96,7 @@ struct ScoreCard: View {
             }
 
             ProgressBar(
-                value: isLoading ? nil : score,
+                value: isLoading ? nil : score.map { $0 * 100 },
                 size: featured ? .lg : .md,
                 featured: featured
             )
@@ -115,7 +116,7 @@ struct ScoreCard: View {
         HStack(alignment: .firstTextBaseline, spacing: DS.Spacing.s3) {
             Group {
                 if isLoading {
-                    ScoreValue(score: 88, verdict: "Loading", size: scoreSize)
+                    ScoreValue(score: 0.88, verdict: "Loading", size: scoreSize)
                         .redacted(reason: .placeholder)
                         .accessibilityLabel("Loading score")
                 } else {
@@ -163,13 +164,13 @@ private struct ScoreCardGallery: View {
         ScrollView {
             VStack(spacing: DS.Spacing.s4) {
                 ScoreCard(
-                    score: 88, delta: -2,
+                    score: 0.88, delta: -2,
                     deltaText: "from last time this group had it", deltaReference: "(90 on 20 Mar)",
                     action: {}
                 )
-                ScoreCard(score: 82, layout: .compact, title: "Household score", delta: 6, count: "12 meals")
+                ScoreCard(score: 0.82, layout: .compact, title: "Household score", delta: 6, count: "12 meals")
                 ScoreCard(
-                    score: 64, verdict: "Balanced", layout: .compact, featured: true,
+                    score: 0.64, verdict: "Balanced", layout: .compact, featured: true,
                     title: "Health score", systemImage: "leaf",
                     caption: "Plenty of veg and fibre; on the salty side.", action: {}
                 )

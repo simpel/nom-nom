@@ -5,9 +5,10 @@ import SwiftUI
 /// figure is set semibold in `primary-text`.
 ///
 /// ```swift
-/// SheetHero(score: 100, lead: "16 above Joel\u{2019}s usual of 84", emphasis: "16 above")
+/// SheetHero(score: 1, lead: "16 above Joel\u{2019}s usual of 84", emphasis: "16 above")
 /// ```
 struct SheetHero: View {
+    /// Normalised 0–1 (domain scale), or nil when unrated.
     let score: Double?
     var verdict: String?
     var lead: String?
@@ -24,7 +25,7 @@ struct SheetHero: View {
     var body: some View {
         VStack(alignment: .leading, spacing: DS.Spacing.s3) {
             ScoreValue(score: score, verdict: verdict, size: .lg)
-            ProgressBar(value: score, size: .md)
+            ProgressBar(value: score.map { $0 * 100 }, size: .md)
                 .accessibilityHidden(true)
             if let lead, !lead.isEmpty {
                 Text(Self.emphasised(lead, fragment: emphasis))
@@ -48,8 +49,8 @@ struct SheetHero: View {
 private struct SheetHeroGallery: View {
     var body: some View {
         VStack(spacing: DS.Spacing.s8) {
-            SheetHero(score: 100, lead: "16 above Joel\u{2019}s usual of 84", emphasis: "16 above")
-            SheetHero(score: 64, verdict: "Balanced", lead: "Plenty of veg and fibre; on the salty side.")
+            SheetHero(score: 1, lead: "16 above Joel\u{2019}s usual of 84", emphasis: "16 above")
+            SheetHero(score: 0.64, verdict: "Balanced", lead: "Plenty of veg and fibre; on the salty side.")
             SheetHero(score: nil, lead: "Nobody has rated this yet.")
         }
         .padding(DS.Spacing.s5)

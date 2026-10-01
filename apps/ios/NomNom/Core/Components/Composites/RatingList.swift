@@ -45,10 +45,10 @@ struct RatingList: View {
 private struct RatingListGallery: View {
     private let entries: [RatingListEntry] = [
         RatingListEntry(id: "viewer", name: "Joel", isViewer: true, action: .rate {}),
-        RatingListEntry(id: "anna", name: "Anna", role: "chef", score: 92, delta: 16),
-        RatingListEntry(id: "leo", name: "Leo", score: 64, delta: -4),
-        RatingListEntry(id: "sam", name: "Sam", score: 78, delta: 0),
-        RatingListEntry(id: "mia", name: "Mia", score: 85, isNew: true),
+        RatingListEntry(id: "anna", name: "Anna", role: "chef", score: 0.92, delta: 16),
+        RatingListEntry(id: "leo", name: "Leo", score: 0.64, delta: -4),
+        RatingListEntry(id: "sam", name: "Sam", score: 0.78, delta: 0),
+        RatingListEntry(id: "mia", name: "Mia", score: 0.85, isNew: true),
         RatingListEntry(id: "ola", name: "Ola", action: .ask {}),
         RatingListEntry(id: "eva", name: "Eva", action: .asked),
         RatingListEntry(id: "kim", name: "Kim"),
