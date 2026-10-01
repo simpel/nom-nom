@@ -18,7 +18,6 @@ struct MealEditorView: View {
     @State private var effort: EffortLevel?
     @State private var repeatDesire: RotationGoal?
     @State private var verdicts: [RaterRef: Reaction] = [:]
-    @State private var tagsText = ""
     @State private var selectedParties: Set<UUID> = []
 
     @State private var photosDraft = FoodStore.PhotosDraft()
@@ -46,14 +45,12 @@ struct MealEditorView: View {
 
     private var currentDraft: FoodStore.MealDraft {
         let name = title.trimmedName
-        let tags = TagsParser.parse(tagsText)
 
         return FoodStore.MealDraft(mealID: mealID,
                                    dishName: name,
                                    linkedDishID: linkedDishID ?? existingMatchedDish?.id,
                                    eatenOn: date,
                                    notes: notes,
-                                   tags: tags,
                                    photos: photosDraft,
                                    effort: effort,
                                    repeatDesire: repeatDesire,
@@ -70,7 +67,6 @@ struct MealEditorView: View {
                 selectedParties = updated.servedParties ?? selectedParties
                 date = updated.eatenOn
                 recipeDraft = updated.recipe ?? recipeDraft
-                tagsText = updated.tags.joined(separator: ", ")
                 notes = updated.notes
                 effort = updated.effort
                 repeatDesire = updated.repeatDesire
@@ -129,15 +125,13 @@ struct MealEditorView: View {
             }
             .sheet(isPresented: $showRecipeEditorSheet) {
                 DishRecipeEditSheet(dishName: $title,
-                                    recipeDraft: $recipeDraft,
-                                    tagsText: $tagsText)
+                                    recipeDraft: $recipeDraft)
             }
             .sheet(isPresented: $showDishPickerSheet) {
                 RecipePickerSheet(
                     onSelectExistingRecipe: { recipe in
                         title = recipe.name
                         linkedDishID = recipe.id
-                        tagsText = recipe.tags.joined(separator: ", ")
                         loadRecipe(from: recipe)
                     },
                     onSelectNewRecipe: { name in
@@ -145,7 +139,6 @@ struct MealEditorView: View {
                         linkedDishID = nil
                         loadedRecipeDishID = nil
                         recipeDraft = FoodStore.RecipeDraft()
-                        tagsText = ""
                     }
                 )
             }
@@ -168,7 +161,6 @@ struct MealEditorView: View {
         linkedDishID = nil
         loadedRecipeDishID = nil
         recipeDraft = FoodStore.RecipeDraft()
-        tagsText = ""
     }
 
     private func proceed() {
@@ -183,7 +175,6 @@ struct MealEditorView: View {
 
     private func loadRecipe(from dish: Dish) {
         loadedRecipeDishID = dish.id
-        tagsText = dish.tags.joined(separator: ", ")
         recipeDraft = FoodStore.RecipeDraft(
             ingredients: dish.ingredients,
             instructions: dish.instructions,
@@ -206,7 +197,6 @@ struct MealEditorView: View {
             if let prefilledDishID, let dish = store.dish(prefilledDishID) {
                 title = dish.name
                 linkedDishID = dish.id
-                tagsText = dish.tags.joined(separator: ", ")
                 loadRecipe(from: dish)
             }
             if let prefilledPartyID {
@@ -227,7 +217,6 @@ struct MealEditorView: View {
         effort = meal.effort
         repeatDesire = meal.repeatDesire
         photosDraft = FoodStore.PhotosDraft(existingPaths: meal.photoPaths)
-        tagsText = (dish?.tags ?? []).joined(separator: ", ")
         selectedParties = Set(store.parties(forMeal: meal.id).map(\.id))
 
         if let dish {

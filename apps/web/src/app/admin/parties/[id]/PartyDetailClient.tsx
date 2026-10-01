@@ -120,23 +120,28 @@ export default function PartyDetailClient({ party }: { party: any }) {
                   <p className="text-sm text-gray-500">Not enough rated meals to calculate matches.</p>
                 ) : (
                   advancedMetrics.tasteStats.map((s: any, i: number) => (
-                    <div key={i} className="flex justify-between items-center">
-                      <span className="text-sm font-medium">{s.member}</span>
-                      <div className="flex items-center gap-2">
-                        {s.trend && (
-                          <span
-                            className={`text-xs font-semibold px-1.5 py-0.5 rounded ${
-                              s.trend === 'up' ? 'text-green-700 bg-green-100' :
-                              s.trend === 'down' ? 'text-red-700 bg-red-100' :
-                              'text-gray-500 bg-gray-200'
-                            }`}
-                            title={`Their own average rating is trending ${s.trend}`}
-                          >
-                            {s.trend === 'up' ? '↑' : s.trend === 'down' ? '↓' : '→'}
-                          </span>
-                        )}
-                        <span className="text-sm font-bold text-green-600 bg-green-100 px-2 py-0.5 rounded-full">{s.score}% Match</span>
+                    <div key={i} className="space-y-1">
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm font-medium">{s.member}</span>
+                        <div className="flex items-center gap-2">
+                          {s.trend && (
+                            <span
+                              className={`text-xs font-semibold px-1.5 py-0.5 rounded ${
+                                s.trend === 'up' ? 'text-green-700 bg-green-100' :
+                                s.trend === 'down' ? 'text-red-700 bg-red-100' :
+                                'text-gray-500 bg-gray-200'
+                              }`}
+                              title={`Their own average rating is trending ${s.trend}`}
+                            >
+                              {s.trend === 'up' ? '↑' : s.trend === 'down' ? '↓' : '→'}
+                            </span>
+                          )}
+                          <span className="text-sm font-bold text-green-600 bg-green-100 px-2 py-0.5 rounded-full">{s.score}% Match</span>
+                        </div>
                       </div>
+                      {s.explanation && (
+                        <p className="text-xs text-gray-600 pl-0.5">{s.explanation}</p>
+                      )}
                     </div>
                   ))
                 )}
@@ -219,10 +224,6 @@ export default function PartyDetailClient({ party }: { party: any }) {
           <div className="bg-white p-6 rounded-lg shadow-sm border space-y-4">
             <h2 className="text-xl font-semibold">AI Generated Summary</h2>
             <p className="text-gray-800 italic text-lg">{insight.summary_sentence}</p>
-            <div className="pt-4 border-t">
-              <h3 className="font-medium text-gray-700 mb-2">Food Profile</h3>
-              <p className="text-gray-600">{insight.food_profile}</p>
-            </div>
             {insight.health_analysis && (
               <div className="pt-4 border-t">
                 <div className="flex items-center justify-between mb-2">

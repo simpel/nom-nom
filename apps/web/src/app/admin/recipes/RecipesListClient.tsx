@@ -8,7 +8,6 @@ type RecipeData = {
   id: string
   name: string
   cuisine: string | null
-  tags: string[] | null
   effort: string | null
   serves: number | null
   hasEmbedding: boolean

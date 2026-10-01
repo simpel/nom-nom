@@ -62,7 +62,7 @@ struct CategoryRecipesView: View {
                     ContentUnavailableView {
                         Label("No \(displayName) recipes", systemImage: "fork.knife")
                     } description: {
-                        Text("Add a new recipe tagged with \(displayName) to see it here.")
+                        Text("Add a new recipe categorized under \(displayName) to see it here.")
                     } actions: {
                         AppButton("Create Recipe", variant: .primary, style: .normal, size: .md) {
                             showingCreateSheet = true

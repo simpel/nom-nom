@@ -77,13 +77,9 @@ extension FoodStore {
     func recipes(inCategory categoryName: String) -> [Recipe] {
         let normalized = categoryName.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
         let matching = recipes.filter { recipe in
-            if let cuisine = recipe.cuisine?.lowercased() {
-                let parts = Cuisine.parseMultiple(from: cuisine).map { $0.lowercased() }
-                if parts.contains(normalized) || cuisine == normalized {
-                    return true
-                }
-            }
-            return recipe.tags.contains { $0.lowercased() == normalized }
+            guard let cuisine = recipe.cuisine?.lowercased() else { return false }
+            let parts = Cuisine.parseMultiple(from: cuisine).map { $0.lowercased() }
+            return parts.contains(normalized) || cuisine == normalized
         }
         let allScores = Dictionary(uniqueKeysWithValues: meals.compactMap { meal in
             averageScore(forMeal: meal.id).map { (meal.id, $0) }
@@ -99,13 +95,9 @@ extension FoodStore {
     func recipeCount(forCategory categoryName: String) -> Int {
         let normalized = categoryName.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
         return recipes.filter { recipe in
-            if let cuisine = recipe.cuisine?.lowercased() {
-                let parts = Cuisine.parseMultiple(from: cuisine).map { $0.lowercased() }
-                if parts.contains(normalized) || cuisine == normalized {
-                    return true
-                }
-            }
-            return recipe.tags.contains { $0.lowercased() == normalized }
+            guard let cuisine = recipe.cuisine?.lowercased() else { return false }
+            let parts = Cuisine.parseMultiple(from: cuisine).map { $0.lowercased() }
+            return parts.contains(normalized) || cuisine == normalized
         }.count
     }
 

@@ -4,7 +4,7 @@
 /// - Harmonized centered arc photo deck, dinner party sentence title, and date
 /// - Dedicated Average Rating card finely divided between numerical score and qualitative verdict
 /// - Participants card with individual member ratings
-/// - Details card with chef, cooking time / effort, and tags (date excluded)
+/// - Details card with chef, cooking time / effort, dish kind, and cooking method (date excluded)
 /// - Past occasions the dinner party had with this specific recipe
 struct MealDetailView: View {
     let mealID: UUID

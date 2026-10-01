@@ -6,7 +6,7 @@ extension FoodStore {
     /// Fetches the cached insights for a given party.
     func fetchInsights(for partyID: UUID) async throws -> PartyInsights? {
         do {
-            let result: [PartyInsights] = try await supabase.database
+            let result: [PartyInsights] = try await supabase
                 .from("party_insights")
                 .select()
                 .eq("party_id", value: partyID)
@@ -42,7 +42,7 @@ extension FoodStore {
             if ratings.isEmpty { continue }
 
             let totalScore = ratings.reduce(0.0) { $0 + $1.reaction.score }
-            let avgScore = totalScore / Double(ratings.count)
+            let avgScore = (totalScore / Double(ratings.count)) * 100.0
             trend.append((meal.eatenOn, avgScore))
         }
 
@@ -65,7 +65,7 @@ extension FoodStore {
         var pointsByRater: [RaterRef: [(date: Date, score: Double)]] = [:]
         for meal in meals {
             for rating in ratingsByMeal[meal.id] ?? [] {
-                pointsByRater[rating.source, default: []].append((meal.eatenOn, rating.reaction.score))
+                pointsByRater[rating.source, default: []].append((meal.eatenOn, rating.reaction.score * 100.0))
             }
         }
 
@@ -165,5 +165,96 @@ extension FoodStore {
             averageMacros: avgMacros,
             healthScoreTrend: trend
         )
+    }
+
+    /// Calculates the taste match for each rater in a party:
+    /// - Match %: How closely their ratings track the meal consensus (1 - mean(|userScore - mealAvg|))
+    /// - Trend: Whether their ratings are trending up, down, or flat over time
+    /// - Explanation: AI-generated taste explanation from cached PartyInsights
+    func memberTasteMatches(forParty partyID: UUID, insights: PartyInsights? = nil) -> [MemberTasteMatch] {
+        let sortedMeals = meals(forParty: partyID).sorted { lhs, rhs in
+            if lhs.eatenOn != rhs.eatenOn {
+                return lhs.eatenOn < rhs.eatenOn
+            }
+            return lhs.createdAt < rhs.createdAt
+        }
+
+        var raterMealRecords: [RaterRef: [(date: Date, userScore: Double, mealAvgScore: Double)]] = [:]
+
+        for meal in sortedMeals {
+            let ratings = ratingsByMeal[meal.id] ?? []
+            guard !ratings.isEmpty else { continue }
+
+            let mealAvg: Double?
+            if ratings.count >= 2 {
+                let totalScore = ratings.reduce(0.0) { $0 + $1.reaction.score }
+                mealAvg = totalScore / Double(ratings.count)
+            } else {
+                mealAvg = averageScore(forDish: meal.dishID)
+            }
+
+            guard let consensus = mealAvg else { continue }
+
+            for rating in ratings {
+                raterMealRecords[rating.source, default: []].append(
+                    (date: meal.eatenOn, userScore: rating.reaction.score, mealAvgScore: consensus)
+                )
+            }
+        }
+
+        let threshold = 0.05
+        let result: [MemberTasteMatch] = raterMealRecords.compactMap { ref, records in
+            guard records.count >= 2 else { return nil }
+
+            let avgDiff = records.reduce(0.0) { $0 + abs($1.userScore - $1.mealAvgScore) } / Double(records.count)
+            let matchScore = max(0, min(100, Int(((1.0 - avgDiff) * 100).rounded())))
+
+            var trend: TasteTrendDirection? = nil
+            var trendDelta: Int? = nil
+
+            if records.count >= 4 {
+                let half = records.count / 2
+                let earlyAvg = records.prefix(half).reduce(0.0) { $0 + $1.userScore } / Double(half)
+                let lateAvg = records.suffix(half).reduce(0.0) { $0 + $1.userScore } / Double(half)
+                let delta = lateAvg - earlyAvg
+                if delta > threshold {
+                    trend = .up
+                } else if delta < -threshold {
+                    trend = .down
+                } else {
+                    trend = .flat
+                }
+                trendDelta = Int((delta * 100).rounded())
+            }
+
+            let who = label(for: ref)
+
+            var explanation: String? = nil
+            if let insights {
+                if let matched = insights.memberMatches.first(where: { match in
+                    if let mID = match.memberID, case .account(let uID) = ref {
+                        return mID.lowercased() == uID.uuidString.lowercased()
+                    }
+                    return match.memberName.localizedCaseInsensitiveCompare(who.name) == .orderedSame
+                }) {
+                    explanation = matched.explanation
+                }
+            }
+
+            return MemberTasteMatch(
+                ref: ref,
+                name: who.name,
+                emoji: who.emoji,
+                matchScore: matchScore,
+                ratedMealsCount: records.count,
+                trend: trend,
+                trendDelta: trendDelta,
+                explanation: explanation
+            )
+        }
+
+        return result.sorted { a, b in
+            a.name.localizedCaseInsensitiveCompare(b.name) == .orderedAscending
+        }
     }
 }

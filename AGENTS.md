@@ -198,6 +198,16 @@ Only these specific system-level APIs are exempt from `AppButton`:
 3. **Sheet Navigation Toolbars**: Handled by `.sheetCommitToolbar` / `.sheetOverviewToolbar` per Section 5.
 
 ---
+
+## 9. Native Tool Usage & Direct Execution Over Manual Workarounds
+
+- **Always Use Native Agent Tools Directly**:
+  - Use provided tools (`run_command`, `replace_file_content`, `write_to_file`, `view_file`, `grep_search`, `find_by_name`, etc.) to execute tasks directly rather than instructing the user to do them manually.
+  - **No Ad-Hoc Scripts for Standard Operations**: Do NOT write temporary shell scripts, Python runner scripts, or throwaway scratch scripts to perform tasks that standard tools or direct shell commands handle cleanly.
+  - **Direct File Editing & Creation**: Always perform edits with `replace_file_content` and create new files with `write_to_file` directly. Do not use shell redirection tricks (e.g., `cat << EOF`, `echo ... > file`, sed/awk scripts) or ask the user to manually copy-paste code changes.
+  - **Execute via `run_command`**: When builds, tests, migrations, checks, or package commands need to be run, execute them via `run_command` directly rather than expecting the user to switch terminals and run them manually.
+
+---
  
 ## 10. Database Migrations & Local Seeding Protocol
 
@@ -234,6 +244,7 @@ Only these specific system-level APIs are exempt from `AppButton`:
 - [ ] Are emojis completely avoided across all UI and data representations?
 - [ ] Is iconography strictly minimal and purposeful rather than decorative?
 - [ ] Are database seeds executed strictly against the local Docker instance via `./scripts/seed.sh`, never against production?
+- [ ] Are native agent tools (`run_command`, `replace_file_content`, `write_to_file`, etc.) used directly instead of generating throwaway scripts or deferring actions manually?
 
 
 

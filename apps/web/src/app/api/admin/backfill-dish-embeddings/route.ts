@@ -1,9 +1,17 @@
 import { NextResponse } from 'next/server';
+import { createClient } from '@/utils/supabase/server';
 import { createClient as createSupabaseClient } from '@supabase/supabase-js';
 
 export const maxDuration = 300;
 
 export async function POST(request: Request) {
+    const supabaseServer = await createClient();
+    const { data: { user } } = await supabaseServer.auth.getUser();
+
+    if (!user) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
     const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
     const adminSupabase = createSupabaseClient(supabaseUrl, supabaseServiceKey);

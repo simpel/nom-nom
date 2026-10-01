@@ -1,11 +1,18 @@
 import SwiftUI
 
-/// Modal sheet presenting detailed infographics on how the dinner party scored a meal,
-/// along with historical scores from past occasions.
+/// Modal sheet presenting detailed infographics on how members scored this specific meal,
+/// individual score analysis (dish kind, ingredients, baseline), and historical comparisons.
 struct MealScoreBreakdownSheet: View {
     let meal: Meal
 
     @Environment(FoodStore.self) private var store
+    @State private var selectedExplanation: ExplanationTarget?
+
+    private struct ExplanationTarget: Identifiable {
+        let id = UUID()
+        let raterName: String
+        let affinities: [RaterTagAffinity]
+    }
 
     private var averageScore: Double? {
         store.averageScore(forMeal: meal.id)
@@ -17,6 +24,20 @@ struct MealScoreBreakdownSheet: View {
 
     private var mealRatings: [MealRating] {
         store.ratings(forMeal: meal.id)
+    }
+
+    private var dishName: String {
+        store.dishName(forMeal: meal)
+    }
+
+    private var partyName: String {
+        let parties = store.parties(forMeal: meal.id)
+        if !parties.isEmpty {
+            return parties.map(\.name).joined(separator: " & ")
+        } else if let current = store.currentParty {
+            return current.name
+        }
+        return "You"
     }
 
     private var history: [Meal] {
@@ -63,7 +84,7 @@ struct MealScoreBreakdownSheet: View {
                     // 2. Consensus Distribution Infographic
                     MealRatingDistributionCard(ratings: mealRatings)
 
-                    // 3. Member Breakdown
+                    // 3. Member Breakdown with Taste Insights
                     memberBreakdownSection
 
                     // 4. Historical Scores Infographic
@@ -74,10 +95,13 @@ struct MealScoreBreakdownSheet: View {
                 .padding(.bottom, DS.Spacing.screenBottom)
             }
             .background(DS.Color.bg)
-            .screenTitle("Dinner Party Rating", displayMode: .inline)
+            .screenTitle("\(dishName) Rating", displayMode: .inline)
             .sheetCancelToolbar()
             .presentationDetents([.fraction(0.85), .large])
             .presentationDragIndicator(.visible)
+            .sheet(item: $selectedExplanation) { target in
+                MealRaterExplanationSheet(raterName: target.raterName, affinities: target.affinities)
+            }
         }
     }
 
@@ -109,17 +133,18 @@ struct MealScoreBreakdownSheet: View {
 
     private var narrativeSubtitle: String {
         guard let score = averageScore else {
-            return "No ratings have been submitted by the dinner party yet."
+            return "No ratings have been submitted for this meal yet."
         }
         let formattedPercent = String(format: "%.1f", score * 100)
         let count = mealRatings.count
         let countText = "\(count) \(count == 1 ? "member" : "members")"
+        let dateText = meal.eatenOn.formatted(date: .abbreviated, time: .omitted)
 
         if let trend, let delta = trend.delta, delta != 0 {
             let direction = delta > 0 ? "up \(delta) points" : "down \(abs(delta)) points"
-            return "Scored \(formattedPercent)/100 across \(countText) (\(direction) compared to last time)."
+            return "\(partyName) scored \(formattedPercent)/100 on \(dateText) (\(direction) vs last time)."
         }
-        return "Scored \(formattedPercent)/100 across \(countText)."
+        return "\(partyName) scored \(formattedPercent)/100 across \(countText) on \(dateText)."
     }
 
     private var memberBreakdownSection: some View {
@@ -127,10 +152,17 @@ struct MealScoreBreakdownSheet: View {
 
         return Group {
             if !details.isEmpty {
-                SectionCard("Party Member Scores", caption: "\(details.count) submitted") {
+                SectionCard("Member Scores", caption: "\(details.count) submitted") {
                     VStack(spacing: 8) {
                         ForEach(details) { detail in
-                            memberScoreRow(detail)
+                            let affinities = store.raterExplanation(for: detail.ref, meal: meal)
+                            MealMemberScoreRow(
+                                detail: detail,
+                                affinities: affinities,
+                                onTapExplain: {
+                                    selectedExplanation = ExplanationTarget(raterName: detail.name, affinities: affinities)
+                                }
+                            )
 
                             if detail.id != details.last?.id {
                                 Divider().overlay(DS.Color.line.opacity(0.3))
@@ -140,63 +172,5 @@ struct MealScoreBreakdownSheet: View {
                 }
             }
         }
-    }
-
-    private func memberScoreRow(_ detail: FoodStore.VerdictDetail) -> some View {
-        HStack(spacing: 12) {
-            // Initial circle avatar (Strictly NO EMOJIS)
-            ZStack {
-                Circle()
-                    .fill(DS.Color.panel)
-                    .overlay {
-                        Circle()
-                            .strokeBorder(DS.Color.line.opacity(0.4), lineWidth: 0.5)
-                    }
-                Text(String(detail.name.prefix(1)).uppercased())
-                    .font(.caption.weight(.bold))
-                    .foregroundStyle(DS.Color.textSecondary)
-            }
-            .frame(width: 32, height: 32)
-
-            Text(detail.name)
-                .font(.subheadline.weight(.medium))
-                .foregroundStyle(DS.Color.textPrimary)
-
-            Spacer()
-
-            if let reaction = detail.reaction {
-                let formattedPercent = String(format: "%.1f", reaction.score * 100)
-                HStack(alignment: .firstTextBaseline, spacing: 2) {
-                    Text(formattedPercent)
-                        .font(Font.newsreader(.subheadline, weight: .semibold))
-                        .foregroundStyle(reaction.text)
-                    Text("/100")
-                        .font(Font.newsreader(.caption2, weight: .medium))
-                        .foregroundStyle(reaction.text.opacity(0.6))
-                    Text("•")
-                        .font(.caption2)
-                        .foregroundStyle(DS.Color.textTertiary)
-                        .padding(.horizontal, 2)
-                    Text(reaction.shortLabel)
-                        .font(.caption.weight(.medium))
-                        .foregroundStyle(reaction.text)
-                }
-                .padding(.horizontal, 8)
-                .padding(.vertical, 3)
-                .background {
-                    RoundedRectangle(cornerRadius: AppRadius.small, style: .continuous)
-                        .fill(DS.Color.panel)
-                        .overlay {
-                            RoundedRectangle(cornerRadius: AppRadius.small, style: .continuous)
-                                .strokeBorder(DS.Color.line.opacity(0.3), lineWidth: 0.5)
-                        }
-                }
-            } else {
-                Text("Pending")
-                    .font(.caption)
-                    .foregroundStyle(DS.Color.textTertiary)
-            }
-        }
-        .padding(.vertical, 2)
     }
 }

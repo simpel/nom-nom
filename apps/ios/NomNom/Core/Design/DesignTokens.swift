@@ -56,6 +56,15 @@ enum DS {
         // that hue is reserved for Nom Nom Pro identity (see `Pro` below) and would
         // read as a Pro signal if reused here.
         enum Chart {
+            /// Primary party-level trendline color (bound to brand accent).
+            static let total = DS.Color.accent
+
+            /// Default secondary comparison series (Cerulean Blue).
+            static let primaryComparison = SwiftUI.Color("ds/chart/series1")
+
+            /// Subtle gridline styling token.
+            static let gridLine = SwiftUI.Color("ds/line")
+
             static let series: [SwiftUI.Color] = [
                 SwiftUI.Color("ds/chart/series1"),
                 SwiftUI.Color("ds/chart/series2"),

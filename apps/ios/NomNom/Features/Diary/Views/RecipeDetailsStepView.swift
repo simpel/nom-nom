@@ -1,12 +1,11 @@
 import SwiftUI
 
-/// Step 2 of creating or editing a recipe: ingredients, instructions, tags, and sharing visibility.
+/// Step 2 of creating or editing a recipe: ingredients, instructions, and sharing visibility.
 struct RecipeDetailsStepView: View {
     var recipeID: UUID? = nil
     let name: String
     let coverPhotosDraft: FoodStore.PhotosDraft
     @Binding var recipeDraft: FoodStore.RecipeDraft
-    @Binding var tagsText: String
     var onCreated: ((Recipe) -> Void)?
     var onDismiss: () -> Void
 
@@ -17,12 +16,6 @@ struct RecipeDetailsStepView: View {
         ScrollView {
             VStack(spacing: DS.Spacing.section) {
                 RecipeEditorSection(draft: $recipeDraft)
-
-                SectionCard("Tags") {
-                    Input("Tags, comma separated (e.g. pasta, quick, oven)", text: $tagsText, style: .cardRow)
-                        .textInputAutocapitalization(.never)
-                        .autocorrectionDisabled()
-                }
 
                 SectionCard("Sharing & Visibility") {
                     VStack(alignment: .leading, spacing: 6) {
@@ -75,12 +68,10 @@ struct RecipeDetailsStepView: View {
         UIImpactFeedbackGenerator(style: .medium).impactOccurred()
         Task {
             do {
-                let parsedTags = TagsParser.parse(tagsText)
                 if let recipeID, let recipe = store.recipe(recipeID) {
                     if trimmedName != recipe.name {
                         await store.rename(recipe: recipe, to: trimmedName)
                     }
-                    try await store.addTags(parsedTags, to: recipe)
                     try await store.applyCoverPhotos(coverPhotosDraft, to: recipe)
                     try await store.applyRecipe(recipeDraft, to: recipe)
                     isSaving = false
@@ -90,8 +81,10 @@ struct RecipeDetailsStepView: View {
                 } else {
                     let recipe = try await store.findOrCreateRecipe(
                         named: trimmedName,
-                        tags: parsedTags,
                         cuisine: recipeDraft.cuisine,
+                        cuisineID: recipeDraft.cuisineID,
+                        cookingMethodID: recipeDraft.cookingMethodID,
+                        dishKindID: recipeDraft.dishKindID,
                         serves: recipeDraft.serves,
                         isPublic: recipeDraft.isPublic
                     )

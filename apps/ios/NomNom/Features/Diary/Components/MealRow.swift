@@ -82,7 +82,9 @@ struct MealRow: View {
             }
             .frame(maxWidth: .infinity, alignment: .leading)
 
-            if let score = store.averageScore(forMeal: meal.id),
+            if let raterRef, let rating = store.rating(for: raterRef, on: meal.id) {
+                ScoreBadge(score: rating.reaction.score, reaction: rating.reaction, format: .scoreOnly, size: .sm)
+            } else if let score = store.averageScore(forMeal: meal.id),
                let reaction = store.averageReaction(forMeal: meal.id) {
                 ScoreBadge(score: score, reaction: reaction, format: .scoreOnly, size: .sm)
             }

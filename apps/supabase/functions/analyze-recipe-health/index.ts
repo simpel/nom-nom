@@ -3,6 +3,8 @@
 
 import { z } from "npm:zod";
 import { GenerationLogger } from "../_shared/generation-logger.ts";
+import { resolveTaxonomyTerm } from "../_shared/taxonomy-resolver.ts";
+import { getFeatureModel } from "../_shared/ai-config.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -43,7 +45,76 @@ interface HealthAnalysisResult {
   health_rationale: string;
   health_breakdown: HealthBreakdown;
   canonical_ingredients: string[];
+  dish_kind?: string;
+  dish_kind_id?: string;
+  cooking_method?: string;
+  cooking_method_id?: string;
+  cuisine?: string;
+  cuisine_id?: string;
 }
+
+const SYSTEM_PROMPT = `You are an expert nutritional scientist and recipe profiler.
+Evaluate the healthiness of this recipe based on validated nutritional profiling principles (such as Tufts Food Compass, Nutri-Score, and Healthy Cooking Index).
+
+Assessment Framework:
+1. Ingredients Assessment:
+   - Positive points (+): Whole vegetables, leafy greens, legumes, whole grains, lean proteins (poultry, fish, tofu), healthy fats (olive/rapeseed oil, nuts, seeds), high fiber, antioxidant herbs & spices.
+   - Negative points (-): High saturated fats (butter, heavy cream, fatty processed meats), refined sugars/syrups, high sodium/salt, ultra-processed items.
+2. Cooking Method Impact:
+   - Beneficial (+): Raw/fresh, steaming, light grilling, baking, gentle boiling/poaching, light sautéing.
+   - Detrimental (-): Deep-frying, heavy pan-frying in excess fat, deep charring/burning, prolonged boiling that leaches micronutrients.
+   Example: Lean chicken steamed or baked scores much higher than deep-fried chicken.
+
+Score Scale (1 to 100):
+- 80-100: "Nutritious" (High nutrient density, whole foods, minimal unhealthy fats/sugar)
+- 60-79: "Balanced" (Good everyday meal, well-rounded macronutrients)
+- 40-59: "Moderate" (Enjoyable, but higher in sodium, refined carbs, or calories)
+- 1-39: "Indulgent" (Rich comfort food, treat, or deep-fried / high-sugar meal)
+
+3. Ingredient Normalization:
+   Reduce this recipe's ingredient list to a short list of core ingredient categories — the
+   general food each ingredient line is, stripped of quantity, prep, and cut/variety detail.
+   Merge synonyms and variants under one canonical, singular, lowercase category name so the
+   same category is reused consistently across different recipes (e.g. "boneless chicken
+   thighs", "chicken breast", and "chicken cutlets" all become "chicken"; "extra virgin olive
+   oil" becomes "olive oil"; "grated parmesan" becomes "parmesan"). Skip ubiquitous seasonings
+   that don't distinguish one recipe's flavor from another (salt, pepper, water, cooking oil in
+   general). Aim for the ingredients most likely to actually drive whether someone likes or
+   dislikes the dish: proteins, distinctive vegetables/produce, dairy, and strong flavor
+   drivers (garlic, chili, specific herbs/spices). One category per distinct ingredient — do
+   not list the same category twice.
+
+4. Culinary Dish Kind:
+   Freely determine the culinary kind/format of this dish (e.g. 'stew', 'casserole', 'soup', 'bbq', 'pasta', 'pizza', 'curry', 'salad', 'roast', 'stir-fry', 'sandwich', 'pie', 'tacos', 'risotto', etc. Do NOT restrict yourself to these examples). Propose the most authentic culinary descriptor in English.
+
+5. Primary Cooking Method:
+   Identify the primary cooking method (e.g. 'baking', 'grilling', 'slow_cooking', 'roasting', 'steaming', 'frying', 'sauteing', 'simmering', 'raw_cured', 'smoking'). If none clearly dominates, set to null.
+
+6. Culinary Tradition (Cuisine):
+   Identify the culinary tradition with a wide, canonical category (e.g. 'asian', 'mexican', 'italian', 'nordic', 'mediterranean', 'indian', 'middle_eastern', 'american', 'french', 'japanese', 'thai', 'korean', 'greek', 'spanish', 'chinese', 'vietnamese', 'moroccan'). Never use compound, crossover, or hyperspecific variants (e.g. use 'mexican', NEVER 'mexican crossover' or 'mexican/south american'). If no specific kitchen clearly fits, set to null.
+
+Return a single JSON object matching this schema:
+{
+  "health_score": integer (1-100),
+  "health_verdict": "string (One of: 'Nutritious', 'Balanced', 'Moderate', 'Indulgent')",
+  "health_rationale": "string (A crisp, concise 1-2 sentences strictly under 35 words explaining why the recipe earned this score number)",
+  "health_breakdown": {
+    "positives": ["string (key nutritional strength)", "string (key nutritional strength)"],
+    "cooking_impact": "string (1 concise sentence on how the cooking/prep method influenced the score)",
+    "macros": {
+      "calories": integer (estimated total kcal per serving),
+      "protein_g": number (estimated grams of protein per serving),
+      "carbs_g": number (estimated grams of carbohydrates per serving),
+      "fat_g": number (estimated grams of fat per serving)
+    }
+  },
+  "canonical_ingredients": ["string (lowercase, singular core ingredient category)", "..."],
+  "dish_kind": "string or null (culinary format/kind of the dish)",
+  "cooking_method": "string or null (primary cooking method)",
+  "cuisine": "string or null (wide umbrella culinary tradition)"
+}
+
+Return ONLY valid JSON without conversational text or markdown code fence blocks outside JSON.\`;
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -93,7 +164,9 @@ Deno.serve(async (req) => {
     );
   }
 
-  const model = Deno.env.get("AI_GATEWAY_MODEL") || "google/gemini-2.5-flash";
+  const logger = GenerationLogger.fromEnv();
+  const admin = logger.client;
+  const model = await getFeatureModel(admin, "analyze-recipe-health");
   const gatewayBaseUrl =
     Deno.env.get("AI_GATEWAY_BASE_URL") || "https://ai-gateway.vercel.sh/v1";
 
@@ -106,72 +179,19 @@ Deno.serve(async (req) => {
 
   const instructionsList = (payload.instructions || []).join("\n1. ");
 
-  const promptText = `You are an expert nutritional scientist and recipe profiler.
-Evaluate the healthiness of this recipe based on validated nutritional profiling principles (such as Tufts Food Compass, Nutri-Score, and Healthy Cooking Index).
-
-Recipe Name: ${payload.name}
+  const userMessage = `Recipe Name: ${payload.name}
 
 Ingredients:
 - ${ingredientsList}
 
 Cooking Instructions:
-1. ${instructionsList || "No specific instructions provided."}
+1. ${instructionsList || "No specific instructions provided."}`;
 
-Assessment Framework:
-1. Ingredients Assessment:
-   - Positive points (+): Whole vegetables, leafy greens, legumes, whole grains, lean proteins (poultry, fish, tofu), healthy fats (olive/rapeseed oil, nuts, seeds), high fiber, antioxidant herbs & spices.
-   - Negative points (-): High saturated fats (butter, heavy cream, fatty processed meats), refined sugars/syrups, high sodium/salt, ultra-processed items.
-2. Cooking Method Impact:
-   - Beneficial (+): Raw/fresh, steaming, light grilling, baking, gentle boiling/poaching, light sautéing.
-   - Detrimental (-): Deep-frying, heavy pan-frying in excess fat, deep charring/burning, prolonged boiling that leaches micronutrients.
-   Example: Lean chicken steamed or baked scores much higher than deep-fried chicken.
-
-Score Scale (1 to 100):
-- 80-100: "Nutritious" (High nutrient density, whole foods, minimal unhealthy fats/sugar)
-- 60-79: "Balanced" (Good everyday meal, well-rounded macronutrients)
-- 40-59: "Moderate" (Enjoyable, but higher in sodium, refined carbs, or calories)
-- 1-39: "Indulgent" (Rich comfort food, treat, or deep-fried / high-sugar meal)
-
-3. Ingredient Normalization:
-   Reduce this recipe's ingredient list to a short list of core ingredient categories — the
-   general food each ingredient line is, stripped of quantity, prep, and cut/variety detail.
-   Merge synonyms and variants under one canonical, singular, lowercase category name so the
-   same category is reused consistently across different recipes (e.g. "boneless chicken
-   thighs", "chicken breast", and "chicken cutlets" all become "chicken"; "extra virgin olive
-   oil" becomes "olive oil"; "grated parmesan" becomes "parmesan"). Skip ubiquitous seasonings
-   that don't distinguish one recipe's flavor from another (salt, pepper, water, cooking oil in
-   general). Aim for the ingredients most likely to actually drive whether someone likes or
-   dislikes the dish: proteins, distinctive vegetables/produce, dairy, and strong flavor
-   drivers (garlic, chili, specific herbs/spices). One category per distinct ingredient — do
-   not list the same category twice.
-
-Return a single JSON object matching this schema:
-{
-  "health_score": integer (1-100),
-  "health_verdict": "string (One of: 'Nutritious', 'Balanced', 'Moderate', 'Indulgent')",
-  "health_rationale": "string (A crisp, concise 1-2 sentences strictly under 35 words explaining why the recipe earned this score number)",
-  "health_breakdown": {
-    "positives": ["string (key nutritional strength)", "string (key nutritional strength)"],
-    "cooking_impact": "string (1 concise sentence on how the cooking/prep method influenced the score)",
-    "macros": {
-      "calories": integer (estimated total kcal per serving),
-      "protein_g": number (estimated grams of protein per serving),
-      "carbs_g": number (estimated grams of carbohydrates per serving),
-      "fat_g": number (estimated grams of fat per serving)
-    }
-  },
-  "canonical_ingredients": ["string (lowercase, singular core ingredient category)", "..."]
-}
-
-Return ONLY valid JSON without conversational text or markdown code fence blocks outside JSON.`;
-
-  const logger = GenerationLogger.fromEnv();
-  const admin = logger.client;
   if (payload.recipe_id) {
     await logger.start({
       type: "recipe_health",
       entityId: payload.recipe_id,
-      prompt: promptText,
+      prompt: userMessage,
       model,
     });
   }
@@ -187,8 +207,12 @@ Return ONLY valid JSON without conversational text or markdown code fence blocks
         model: model,
         messages: [
           {
+            role: "system",
+            content: SYSTEM_PROMPT,
+          },
+          {
             role: "user",
-            content: promptText,
+            content: userMessage,
           },
         ],
         response_format: { type: "json_object" },
@@ -260,6 +284,9 @@ Return ONLY valid JSON without conversational text or markdown code fence blocks
         })
       }),
       canonical_ingredients: z.array(z.string()).default([]),
+      dish_kind: z.string().nullable().optional(),
+      cooking_method: z.string().nullable().optional(),
+      cuisine: z.string().nullable().optional(),
     });
 
     const parsed: HealthAnalysisResult = HealthSchema.parse(parsedData);
@@ -271,24 +298,100 @@ Return ONLY valid JSON without conversational text or markdown code fence blocks
       else parsed.health_verdict = "Indulgent";
     }
 
+    // Resolve taxonomy terms if present
+    let dishKindId: string | null = null;
+    let cookingMethodId: string | null = null;
+    let cuisineId: string | null = null;
+
+    if (admin) {
+      if (parsed.dish_kind) {
+        try {
+          const resolved = await resolveTaxonomyTerm({
+            client: admin,
+            dimension: "dish_kind",
+            proposedTerm: parsed.dish_kind,
+            apiKey,
+            gatewayBaseUrl,
+          });
+          if (resolved) {
+            dishKindId = resolved.id;
+            parsed.dish_kind_id = resolved.id;
+            parsed.dish_kind = resolved.name;
+          }
+        } catch (taxErr) {
+          console.warn("Failed to resolve dish_kind taxonomy term:", taxErr);
+        }
+      }
+
+      if (parsed.cooking_method) {
+        try {
+          const resolved = await resolveTaxonomyTerm({
+            client: admin,
+            dimension: "cooking_method",
+            proposedTerm: parsed.cooking_method,
+            apiKey,
+            gatewayBaseUrl,
+          });
+          if (resolved) {
+            cookingMethodId = resolved.id;
+            parsed.cooking_method_id = resolved.id;
+            parsed.cooking_method = resolved.name;
+          }
+        } catch (taxErr) {
+          console.warn("Failed to resolve cooking_method taxonomy term:", taxErr);
+        }
+      }
+
+      if (parsed.cuisine) {
+        try {
+          const resolved = await resolveTaxonomyTerm({
+            client: admin,
+            dimension: "cuisine",
+            proposedTerm: parsed.cuisine,
+            apiKey,
+            gatewayBaseUrl,
+          });
+          if (resolved) {
+            cuisineId = resolved.id;
+            parsed.cuisine_id = resolved.id;
+            parsed.cuisine = resolved.slug;
+          }
+        } catch (taxErr) {
+          console.warn("Failed to resolve cuisine taxonomy term:", taxErr);
+        }
+      }
+    }
+
     // Persist directly to Postgres dishes table if recipe_id is provided
     if (admin && payload.recipe_id) {
       try {
+        const updatePayload: Record<string, unknown> = {
+          health_score: parsed.health_score,
+          health_verdict: parsed.health_verdict,
+          health_rationale: parsed.health_rationale,
+          health_breakdown: parsed.health_breakdown,
+          canonical_ingredients: parsed.canonical_ingredients,
+        };
+        if (dishKindId) {
+          updatePayload.dish_kind_id = dishKindId;
+        }
+        if (cookingMethodId) {
+          updatePayload.cooking_method_id = cookingMethodId;
+        }
+        if (cuisineId) {
+          updatePayload.cuisine_id = cuisineId;
+          updatePayload.cuisine = parsed.cuisine;
+        }
+
         const { error: updateErr } = await admin
           .from("dishes")
-          .update({
-            health_score: parsed.health_score,
-            health_verdict: parsed.health_verdict,
-            health_rationale: parsed.health_rationale,
-            health_breakdown: parsed.health_breakdown,
-            canonical_ingredients: parsed.canonical_ingredients,
-          })
+          .update(updatePayload)
           .eq("id", payload.recipe_id);
 
         if (updateErr) {
-          console.error("Failed to persist health score to dishes table in Edge Function:", updateErr);
+          console.error("Failed to persist health score and taxonomy to dishes table in Edge Function:", updateErr);
         } else {
-          console.log(`Successfully persisted health score to dish ${payload.recipe_id}`);
+          console.log(`Successfully persisted health score and taxonomy to dish ${payload.recipe_id}`);
         }
       } catch (dbErr) {
         console.error("Database error in analyze-recipe-health Edge Function:", dbErr);

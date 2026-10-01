@@ -6,13 +6,14 @@ struct InsightsTrendChart: View {
     let domain: ClosedRange<Double>
     let valueFormat: String
     
-    init(trendData: [(date: Date, averageScore: Double)], domain: ClosedRange<Double> = 0...1.0, valueFormat: String = "%.2f") {
+    init(trendData: [(date: Date, averageScore: Double)], domain: ClosedRange<Double> = 0...100, valueFormat: String = "%.0f") {
         self.trendData = trendData
         self.domain = domain
         self.valueFormat = valueFormat
     }
     
     @State private var selectedDate: Date?
+    @State private var isSelectedDateOnRightSide: Bool = false
     
     var body: some View {
         if trendData.isEmpty {
@@ -26,62 +27,89 @@ struct InsightsTrendChart: View {
         } else {
             Chart {
                 ForEach(trendData, id: \.date) { item in
-                    LineMark(
-                        x: .value("Date", item.date),
-                        y: .value("Score", item.averageScore)
-                    )
-                    .foregroundStyle(DS.Color.accent)
-                    .lineStyle(StrokeStyle(lineWidth: 3))
-                    
                     AreaMark(
                         x: .value("Date", item.date),
                         y: .value("Score", item.averageScore)
                     )
                     .foregroundStyle(
                         LinearGradient(
-                            gradient: Gradient(colors: [DS.Color.accentSoft.opacity(0.3), DS.Color.accentSoft.opacity(0.0)]),
+                            stops: [
+                                .init(color: DS.Color.accent.opacity(0.35), location: 0.0),
+                                .init(color: DS.Color.accent.opacity(0.12), location: 0.55),
+                                .init(color: DS.Color.accent.opacity(0.0), location: 1.0)
+                            ],
                             startPoint: .top,
                             endPoint: .bottom
                         )
                     )
+                    .interpolationMethod(.monotone)
+
+                    LineMark(
+                        x: .value("Date", item.date),
+                        y: .value("Score", item.averageScore)
+                    )
+                    .foregroundStyle(DS.Color.Chart.total)
+                    .lineStyle(StrokeStyle(lineWidth: 3))
+                    .interpolationMethod(.monotone)
                 }
                 
                 if let selectedDate {
-                    RuleMark(
-                        x: .value("Selected", selectedDate)
-                    )
-                    .foregroundStyle(DS.Color.lineStrong)
-                    .annotation(position: .top) {
-                        if let score = score(for: selectedDate) {
-                            VStack(alignment: .leading, spacing: 4) {
-                                Text(selectedDate, format: .dateTime.month().day())
-                                    .font(.caption2)
-                                    .foregroundStyle(.secondary)
-                                Text(String(format: valueFormat, score))
-                                    .font(.headline)
-                                    .foregroundStyle(DS.Color.textPrimary)
-                            }
-                            .padding(8)
-                            .background(DS.Color.panel)
-                            .clipShape(RoundedRectangle(cornerRadius: 8))
-                            .shadow(radius: 3)
+                    RuleMark(x: .value("Selected", selectedDate))
+                        .foregroundStyle(DS.Color.line.opacity(0.45))
+                        .lineStyle(StrokeStyle(lineWidth: 1, dash: [3, 3]))
+                        .annotation(
+                            position: .top,
+                            alignment: isSelectedDateOnRightSide ? .trailing : .leading
+                        ) {
+                            PartyTrendTooltipCard(
+                                date: selectedDate,
+                                primaryLabel: "Health",
+                                primaryScore: score(for: selectedDate),
+                                primaryColor: DS.Color.Chart.total,
+                                valueFormat: valueFormat
+                            )
+                        }
+
+                    if let score = score(for: selectedDate) {
+                        PointMark(
+                            x: .value("Date", selectedDate),
+                            y: .value("Score", score)
+                        )
+                        .foregroundStyle(DS.Color.Chart.total)
+                        .symbol {
+                            Circle()
+                                .fill(DS.Color.Chart.total)
+                                .frame(width: 8, height: 8)
+                                .overlay(Circle().stroke(DS.Color.panel, lineWidth: 1.5))
                         }
                     }
                 }
             }
             .chartXAxis(.hidden)
-            .chartYAxis(.hidden)
+            .chartYAxis {
+                AxisMarks(position: .leading, values: [25.0, 50.0, 75.0, 100.0]) { _ in
+                    AxisGridLine(stroke: StrokeStyle(lineWidth: 0.5))
+                        .foregroundStyle(DS.Color.Chart.gridLine.opacity(0.35))
+                }
+            }
             .chartYScale(domain: domain)
+            .clipped()
             .chartOverlay { proxy in
                 GeometryReader { geometry in
                     Rectangle().fill(.clear).contentShape(Rectangle())
                         .gesture(
                             DragGesture(minimumDistance: 0)
                                 .onChanged { value in
-                                    let x = value.location.x - geometry[proxy.plotAreaFrame].origin.x
+                                    let plotFrame = geometry[proxy.plotAreaFrame]
+                                    let x = value.location.x - plotFrame.origin.x
                                     if let date: Date = proxy.value(atX: x) {
-                                        // find closest date
-                                        selectedDate = closestDate(to: date)
+                                        let closest = closestDate(to: date)
+                                        selectedDate = closest
+                                        if let closest, let posX = proxy.position(forX: closest) {
+                                            isSelectedDateOnRightSide = posX > (plotFrame.width * 0.5)
+                                        } else {
+                                            isSelectedDateOnRightSide = x > (plotFrame.width * 0.5)
+                                        }
                                     }
                                 }
                                 .onEnded { _ in
@@ -90,7 +118,7 @@ struct InsightsTrendChart: View {
                         )
                 }
             }
-            .frame(height: 150)
+            .frame(height: 190)
         }
     }
     

@@ -13,10 +13,6 @@ struct SuggestionsView: View {
         SuggestionEngine().rank(store.suggestionInputs, filters: filters)
     }
 
-    private var allTags: [String] {
-        Array(Set(store.myDishes.flatMap(\.tags))).sorted()
-    }
-
     var body: some View {
         NavigationStack {
             Group {
@@ -97,8 +93,7 @@ struct SuggestionsView: View {
                 switch destination {
                 case .filters:
                     SuggestionFiltersView(filters: $filters,
-                                          roster: store.raterRoster,
-                                          tags: allTags)
+                                          roster: store.raterRoster)
                 case .cook(let dishID):
                     MealEditorView(mealID: nil, prefilledDishID: dishID)
                 }

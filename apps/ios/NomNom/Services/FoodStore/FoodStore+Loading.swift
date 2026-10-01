@@ -29,6 +29,7 @@ extension FoodStore {
             async let mealParties: [MealParty] = supabase.from("meal_parties").select().execute().value
             async let recipeFavorites: [RecipeFavorite] = supabase.from("recipe_favorites").select().execute().value
             async let categories: [CategoryRecord] = supabase.from("categories").select().execute().value
+            async let taxonomyTerms: [TaxonomyTermRecord] = supabase.from("taxonomy_terms").select().execute().value
 
             self.dishes = try await dishes
             self.meals = try await meals
@@ -48,6 +49,8 @@ extension FoodStore {
                     self.categoryPhotoPaths[cat.slug.lowercased()] = photoPath
                 }
             }
+            let loadedTerms = (try? await taxonomyTerms) ?? []
+            self.taxonomyTerms = Dictionary(uniqueKeysWithValues: loadedTerms.map { ($0.id, $0) })
 
             reindex()
             try await loadProfiles()

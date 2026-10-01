@@ -187,6 +187,9 @@ extension FoodStore {
         var removedPhotoPaths: [String] = []
         var effort: EffortLevel? = nil
         var cuisine: String? = nil
+        var cuisineID: UUID? = nil
+        var cookingMethodID: UUID? = nil
+        var dishKindID: UUID? = nil
         var serves: Int? = nil
         var isPublic: Bool = true
 
@@ -205,7 +208,7 @@ extension FoodStore {
         }
 
         var hasContent: Bool {
-            if effort != nil || cuisine != nil || serves != nil || !isPublic { return true }
+            if effort != nil || cuisine != nil || serves != nil || !isPublic || dishKindID != nil || cookingMethodID != nil { return true }
             let hasIngredients = ingredients.contains { !$0.isEmpty }
             let hasInstructions = instructions.contains { !$0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
             return hasIngredients || hasInstructions || totalPhotosCount > 0
@@ -218,7 +221,6 @@ extension FoodStore {
         var linkedDishID: UUID?
         var eatenOn: Date
         var notes: String
-        var tags: [String]
         var photos: PhotosDraft = PhotosDraft()
         var effort: EffortLevel? = nil
         var repeatDesire: RotationGoal? = nil
@@ -236,9 +238,8 @@ extension FoodStore {
                existing.ownerID == userID,
                existing.normalizedName == draft.dishName.normalizedForMatching {
                 dish = existing
-                if !draft.tags.isEmpty { try await addTags(draft.tags, to: existing) }
             } else {
-                dish = try await findOrCreateDish(named: draft.dishName, tags: draft.tags)
+                dish = try await findOrCreateRecipe(named: draft.dishName)
             }
 
             if let recipeDraft = draft.recipe, dish.ownerID == userID {

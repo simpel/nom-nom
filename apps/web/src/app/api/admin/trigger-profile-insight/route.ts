@@ -5,6 +5,27 @@ import { z } from 'zod';
 
 export const maxDuration = 60; // 1 minute max duration
 
+const PROFILE_INSIGHT_SYSTEM_PROMPT = `Analyze the following individual user's cooking and eating history (meals they logged and/or rated, with a 0.0-1.0 score where available).
+Produce a JSON response analyzing their personal food preferences and suggesting new meals for them.
+Output MUST match this JSON schema exactly:
+{
+  "summary_sentence": "A fun, one-sentence summary of this person's tastes, formatted exactly like: '[Name] enjoys [flavor profiles] dishes with a preference for [cuisine/types]. Lately [dish A] and [dish B] have been favorites.'",
+  "recommendations": [
+    {
+      "title": "Recipe Name",
+      "description": "Short description of why it fits their profile",
+      "cuisine": "Cuisine type"
+    }
+  ],
+  "top_ingredients": ["ingredient 1", "ingredient 2"],
+  "ways_of_cooking": ["Grilling", "Baking"],
+  "health_analysis": {
+    "score": 85,
+    "summary": "A brief summary of how healthy their recent meals are.",
+    "details": ["High protein from frequent chicken", "Low carb options in recent weeks"]
+  }
+}`;
+
 export async function POST(request: Request) {
     const supabaseServer = await createClient();
     const { data: { user } } = await supabaseServer.auth.getUser();
@@ -25,7 +46,7 @@ export async function POST(request: Request) {
 
     const aiGatewayUrl = process.env.AI_GATEWAY_BASE_URL || 'https://ai-gateway.vercel.sh/v1';
     const apiKey = process.env.VERCEL_AI_GATEWAY || process.env.VERCEL_AI_GATEWAY_KEY;
-    const model = process.env.AI_GATEWAY_MODEL || 'openai/gpt-4o-mini';
+    const model = process.env.AI_GATEWAY_MODEL || 'google/gemini-2.5-flash';
 
     try {
         const { data: profile, error: profileError } = await adminSupabase
@@ -106,29 +127,7 @@ export async function POST(request: Request) {
             top_cuisines: cuisineFreq
         };
 
-        const prompt = `Analyze the following individual user's cooking and eating history (meals they logged and/or rated, with a 0.0-1.0 score where available).
-Produce a JSON response analyzing their personal food preferences and suggesting new meals for them.
-Output MUST match this JSON schema exactly:
-{
-  "summary_sentence": "A fun, one-sentence summary of this person's tastes, formatted exactly like: '[Name] enjoys [flavor profiles] dishes with a preference for [cuisine/types]. Lately [dish A] and [dish B] have been favorites.'",
-  "food_profile": "A short paragraph (2-3 sentences) analyzing their personal flavor preferences.",
-  "recommendations": [
-    {
-      "title": "Recipe Name",
-      "description": "Short description of why it fits their profile",
-      "cuisine": "Cuisine type"
-    }
-  ],
-  "top_ingredients": ["ingredient 1", "ingredient 2"],
-  "ways_of_cooking": ["Grilling", "Baking"],
-  "health_analysis": {
-    "score": 85,
-    "summary": "A brief summary of how healthy their recent meals are.",
-    "details": ["High protein from frequent chicken", "Low carb options in recent weeks"]
-  }
-}
-Data:
-${JSON.stringify(aggregatedContext)}`;
+        const userMessage = `Data:\n${JSON.stringify(aggregatedContext)}`;
 
         const headers: Record<string, string> = {
             'Content-Type': 'application/json'
@@ -143,7 +142,7 @@ ${JSON.stringify(aggregatedContext)}`;
             .insert({
                 generation_type: 'profile_insight',
                 entity_id: profile_id,
-                prompt: prompt,
+                prompt: userMessage,
                 status: 'running',
                 model_used: model
             })
@@ -155,7 +154,10 @@ ${JSON.stringify(aggregatedContext)}`;
             headers: headers,
             body: JSON.stringify({
                 model: model,
-                messages: [{ role: 'user', content: prompt }],
+                messages: [
+                    { role: 'system', content: PROFILE_INSIGHT_SYSTEM_PROMPT },
+                    { role: 'user', content: userMessage }
+                ],
                 response_format: { type: 'json_object' },
                 temperature: 0.7
             })
@@ -204,7 +206,6 @@ ${JSON.stringify(aggregatedContext)}`;
 
         const InsightSchema = z.object({
             summary_sentence: z.string(),
-            food_profile: z.string(),
             recommendations: z.array(z.object({
                 title: z.string(),
                 description: z.string(),
@@ -261,7 +262,6 @@ ${JSON.stringify(aggregatedContext)}`;
             .upsert({
                 profile_id: profile_id,
                 summary_sentence: validated.summary_sentence,
-                food_profile: validated.food_profile,
                 recommendations: validated.recommendations,
                 top_ingredients: validated.top_ingredients || [],
                 ways_of_cooking: validated.ways_of_cooking || [],

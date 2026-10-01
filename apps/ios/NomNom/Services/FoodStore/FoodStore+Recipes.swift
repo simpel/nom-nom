@@ -5,15 +5,16 @@ extension FoodStore {
 
     func findOrCreateRecipe(
         named name: String,
-        tags: [String] = [],
         cuisine: String? = nil,
+        cuisineID: UUID? = nil,
+        cookingMethodID: UUID? = nil,
+        dishKindID: UUID? = nil,
         serves: Int? = nil,
         isPublic: Bool = true
     ) async throws -> Recipe {
         let key = name.normalizedForMatching
 
         if let existing = myRecipes.first(where: { $0.normalizedName == key }) {
-            if !tags.isEmpty { try await addTags(tags, to: existing) }
             return existing
         }
 
@@ -23,9 +24,11 @@ extension FoodStore {
                 .insert(NewRecipe(
                     ownerID: userID,
                     name: name,
-                    tags: tags,
                     cuisine: cuisine,
+                    cuisineID: cuisineID,
+                    cookingMethodID: cookingMethodID,
                     serves: serves,
+                    dishKindID: dishKindID,
                     isPublic: isPublic
                 ))
                 .select()
@@ -45,24 +48,8 @@ extension FoodStore {
                 .execute()
                 .value
             upsertLocal(recipe: raced)
-            if !tags.isEmpty { try await addTags(tags, to: raced) }
             return raced
         }
-    }
-
-    func addTags(_ tags: [String], to recipe: Recipe) async throws {
-        guard recipe.ownerID == userID else { return }
-        let merged = Array(Set(recipe.tags).union(tags)).sorted()
-        guard merged != recipe.tags else { return }
-        let updated: Recipe = try await supabase
-            .from("dishes")
-            .update(RecipeTagsPatch(tags: merged))
-            .eq("id", value: recipe.id.uuidString)
-            .select()
-            .single()
-            .execute()
-            .value
-        upsertLocal(recipe: updated)
     }
 
     func rename(recipe: Recipe, to newName: String) async {
@@ -122,10 +109,17 @@ extension FoodStore {
         let healthRationaleToSave = ingredientsChanged ? nil : recipe.healthRationale
         let healthBreakdownToSave = ingredientsChanged ? nil : recipe.healthBreakdown
 
+        let cuisineIDToSave = draft.cuisineID ?? recipe.cuisineID
+        let cookingMethodIDToSave = draft.cookingMethodID ?? recipe.cookingMethodID
+        let dishKindIDToSave = draft.dishKindID ?? recipe.dishKindID
+
         guard ingredientsChanged ||
               recipe.recipePhotoPaths != newPaths ||
               recipe.effort != effortToSave ||
               recipe.cuisine != cuisineToSave ||
+              recipe.cuisineID != cuisineIDToSave ||
+              recipe.cookingMethodID != cookingMethodIDToSave ||
+              recipe.dishKindID != dishKindIDToSave ||
               recipe.serves != servesToSave ||
               recipe.isPublic != isPublicToSave else { return }
 
@@ -137,12 +131,15 @@ extension FoodStore {
                 recipe_photo_paths: newPaths,
                 effort: effortToSave,
                 cuisine: cuisineToSave,
+                cuisineID: cuisineIDToSave,
+                cookingMethodID: cookingMethodIDToSave,
                 serves: servesToSave,
                 isPublic: isPublicToSave,
                 healthScore: healthScoreToSave,
                 healthVerdict: healthVerdictToSave,
                 healthRationale: healthRationaleToSave,
-                healthBreakdown: healthBreakdownToSave
+                healthBreakdown: healthBreakdownToSave,
+                dishKindID: dishKindIDToSave
             ))
             .eq("id", value: recipe.id.uuidString)
             .select()
@@ -251,8 +248,8 @@ extension FoodStore {
 
     // MARK: - Compatibility Wrappers
 
-    func findOrCreateDish(named name: String, tags: [String]) async throws -> Recipe {
-        try await findOrCreateRecipe(named: name, tags: tags)
+    func findOrCreateDish(named name: String) async throws -> Recipe {
+        try await findOrCreateRecipe(named: name)
     }
 
     func rename(dish: Recipe, to newName: String) async {

@@ -6,8 +6,12 @@ struct ParsedRecipeResult: Decodable {
     let name: String
     let serves: Int?
     let cuisine: String?
+    let cuisineID: UUID?
+    let cookingMethod: String?
+    let cookingMethodID: UUID?
+    let dishKind: String?
+    let dishKindID: UUID?
     let effort: Int?
-    let tags: [String]
     let ingredients: [RecipeIngredient]
     let instructions: [String]
     let healthScore: Int?
@@ -26,8 +30,12 @@ struct ParsedRecipeResult: Decodable {
         case name
         case serves
         case cuisine
+        case cuisineID = "cuisine_id"
+        case cookingMethod = "cooking_method"
+        case cookingMethodID = "cooking_method_id"
+        case dishKind = "dish_kind"
+        case dishKindID = "dish_kind_id"
         case effort
-        case tags
         case ingredients
         case instructions
         case healthScore = "health_score"
@@ -41,8 +49,12 @@ struct ParsedRecipeResult: Decodable {
         name = try container.decodeIfPresent(String.self, forKey: .name) ?? ""
         serves = try container.decodeIfPresent(Int.self, forKey: .serves)
         cuisine = try container.decodeIfPresent(String.self, forKey: .cuisine)
+        cuisineID = try container.decodeIfPresent(UUID.self, forKey: .cuisineID)
+        cookingMethod = try container.decodeIfPresent(String.self, forKey: .cookingMethod)
+        cookingMethodID = try container.decodeIfPresent(UUID.self, forKey: .cookingMethodID)
+        dishKind = try container.decodeIfPresent(String.self, forKey: .dishKind)
+        dishKindID = try container.decodeIfPresent(UUID.self, forKey: .dishKindID)
         effort = try container.decodeIfPresent(Int.self, forKey: .effort)
-        tags = try container.decodeIfPresent([String].self, forKey: .tags) ?? []
         ingredients = try container.decodeIfPresent([RecipeIngredient].self, forKey: .ingredients) ?? []
         instructions = try container.decodeIfPresent([String].self, forKey: .instructions) ?? []
         healthScore = try container.decodeIfPresent(Int.self, forKey: .healthScore)

@@ -47,6 +47,7 @@ struct NomNomPreview<Content: View>: View {
                 content(store)
             }
         }
+        .enableHotReload()
         .environment(store)
         .environment(auth)
         .environment(NotificationManager.shared)

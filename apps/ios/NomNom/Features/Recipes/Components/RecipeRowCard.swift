@@ -105,8 +105,11 @@ struct RecipeRowCard: View {
                     }
                 }
 
-                if !recipe.tags.isEmpty {
-                    Text(recipe.tags.joined(separator: " • "))
+                let kindName = store.dishKind(for: recipe)?.name
+                let methodName = store.cookingMethod(for: recipe)?.name
+                let taxonomyText = [kindName, methodName].compactMap { $0 }.joined(separator: " • ")
+                if !taxonomyText.isEmpty {
+                    Text(taxonomyText)
                         .font(.caption2)
                         .foregroundStyle(DS.Color.textTertiary)
                         .lineLimit(1)

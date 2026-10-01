@@ -6,7 +6,6 @@ struct SuggestionFiltersView: View {
     @Binding var filters: SuggestionFilters
     /// Everyone who can hold an opinion — household members and account holders.
     let roster: [(ref: RaterRef, emoji: String, name: String)]
-    let tags: [String]
 
     @Environment(\.dismiss) private var dismiss
     @State private var originalFilters: SuggestionFilters?
@@ -101,28 +100,7 @@ struct SuggestionFiltersView: View {
                         }
                     }
 
-                    if !tags.isEmpty {
-                        SectionCard("Tags") {
-                            VStack(spacing: 10) {
-                                ForEach(tags, id: \.self) { tag in
-                                    Toggle(isOn: Binding(
-                                        get: { filters.requiredTags.contains(tag) },
-                                        set: { on in
-                                            if on { filters.requiredTags.insert(tag) }
-                                            else { filters.requiredTags.remove(tag) }
-                                        }
-                                    )) {
-                                        Text(tag)
-                                    }
-                                    .nativeToggle()
 
-                                    if tag != tags.last {
-                                        Divider()
-                                    }
-                                }
-                            }
-                        }
-                    }
 
                     SectionCard {
                         AppButton(

@@ -1,13 +1,12 @@
 import SwiftUI
 
-/// Step 2 of logging a new dish: attach recipe (text or photos) and tags/notes before verdicts.
+/// Step 2 of logging a new dish: attach recipe (text or photos) and details before verdicts.
 struct MealRecipeStepView: View {
     @Binding var draft: FoodStore.MealDraft
     var onDismiss: () -> Void
 
     @Environment(FoodStore.self) private var store
     @State private var recipeDraft = FoodStore.RecipeDraft()
-    @State private var tagsText = ""
     @State private var navigateToVerdict = false
 
     var body: some View {
@@ -17,7 +16,7 @@ struct MealRecipeStepView: View {
                     VStack(alignment: .leading, spacing: 6) {
                         Text(draft.dishName)
                             .font(.title3.bold())
-                        Text("New dish — add a recipe or tags to remember how you made it.")
+                        Text("New dish — add a recipe to remember how you made it.")
                             .font(.subheadline)
                             .foregroundStyle(.secondary)
                     }
@@ -26,12 +25,6 @@ struct MealRecipeStepView: View {
                 RecipeEditorSection(draft: $recipeDraft)
 
                 MealEditorCookingTimeSection(effort: $recipeDraft.effort)
-
-                SectionCard("Tags") {
-                    Input("Tags, comma separated (e.g. quick, oven, pasta)", text: $tagsText, style: .cardRow)
-                        .textInputAutocapitalization(.never)
-                        .autocorrectionDisabled()
-                }
             }
             .padding(.horizontal, DS.Spacing.screenHorizontal)
             .padding(.top, DS.Spacing.screenTop)
@@ -44,9 +37,6 @@ struct MealRecipeStepView: View {
             ToolbarItem(placement: .topBarTrailing) {
                 Button("Next") {
                     draft.recipe = recipeDraft
-                    if !tagsText.trimmingCharacters(in: .whitespaces).isEmpty {
-                        draft.tags = TagsParser.parse(tagsText)
-                    }
                     navigateToVerdict = true
                 }
                 .fontWeight(.semibold)
@@ -59,7 +49,6 @@ struct MealRecipeStepView: View {
             if let existingRecipe = draft.recipe {
                 recipeDraft = existingRecipe
             }
-            tagsText = draft.tags.joined(separator: ", ")
         }
     }
 }

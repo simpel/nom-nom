@@ -75,8 +75,6 @@ struct SuggestionFilters: Equatable {
     /// Keep dishes that exist but have no verdicts yet.
     var includeUntried: Bool = true
     var searchText: String = ""
-    /// Tags that must all be present (empty = no tag filter).
-    var requiredTags: Set<String> = []
 
     var isDefault: Bool {
         requiredRaters.isEmpty
@@ -84,7 +82,6 @@ struct SuggestionFilters: Equatable {
             && hideDisliked
             && includeUntried
             && searchText.isEmpty
-            && requiredTags.isEmpty
     }
 
     /// Number of non-default knobs, for the toolbar badge.
@@ -94,7 +91,6 @@ struct SuggestionFilters: Equatable {
         if minDaysSinceServed > 0 { n += 1 }
         if !hideDisliked { n += 1 }
         if !includeUntried { n += 1 }
-        if !requiredTags.isEmpty { n += 1 }
         return n
     }
 }
@@ -176,9 +172,6 @@ struct SuggestionEngine {
             if !query.isEmpty,
                !dish.normalizedName.contains(query),
                !dish.normalizedName.matchTokens.contains(where: { $0.hasPrefix(query) }) {
-                continue
-            }
-            if !filters.requiredTags.isEmpty, !filters.requiredTags.isSubset(of: Set(dish.tags)) {
                 continue
             }
             if metrics.likeScore == nil, !filters.includeUntried { continue }

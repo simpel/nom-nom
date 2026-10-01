@@ -4,7 +4,9 @@ interface DishRow {
   id: string;
   name: string;
   cuisine: string | null;
-  tags: string[] | null;
+  cuisine_id: string | null;
+  dish_kind_id: string | null;
+  cooking_method_id: string | null;
   ingredients: any | null;
   instructions: string[] | null;
 }
@@ -35,7 +37,9 @@ Deno.serve(async (req) => {
       if (
         dish.name === payload.old_record.name &&
         dish.cuisine === payload.old_record.cuisine &&
-        JSON.stringify(dish.tags) === JSON.stringify(payload.old_record.tags) &&
+        dish.cuisine_id === payload.old_record.cuisine_id &&
+        dish.dish_kind_id === payload.old_record.dish_kind_id &&
+        dish.cooking_method_id === payload.old_record.cooking_method_id &&
         JSON.stringify(dish.ingredients) === JSON.stringify(payload.old_record.ingredients) &&
         JSON.stringify(dish.instructions) === JSON.stringify(payload.old_record.instructions)
       ) {
@@ -56,10 +60,27 @@ Deno.serve(async (req) => {
       });
     }
 
+    logger = GenerationLogger.fromEnv();
+
     // Format a rich string for embedding
     let inputStr = `${dish.name}`;
     if (dish.cuisine) inputStr += `\nCuisine: ${dish.cuisine}`;
-    if (dish.tags && dish.tags.length > 0) inputStr += `\nTags: ${dish.tags.join(", ")}`;
+
+    if (logger.client && (dish.dish_kind_id || dish.cooking_method_id)) {
+      const ids = [dish.dish_kind_id, dish.cooking_method_id].filter(Boolean) as string[];
+      if (ids.length > 0) {
+        const { data: terms } = await logger.client
+          .from("taxonomy_terms")
+          .select("dimension, name")
+          .in("id", ids);
+        if (terms) {
+          for (const t of terms) {
+            if (t.dimension === "dish_kind") inputStr += `\nDish Kind: ${t.name}`;
+            if (t.dimension === "cooking_method") inputStr += `\nCooking Method: ${t.name}`;
+          }
+        }
+      }
+    }
     
     // Ingredients is usually jsonb
     if (dish.ingredients && Array.isArray(dish.ingredients)) {
@@ -72,7 +93,6 @@ Deno.serve(async (req) => {
     }
 
     const embedModel = "text-embedding-3-small";
-    logger = GenerationLogger.fromEnv();
     await logger.start({
       type: "dish_embed",
       entityId: dish.id,

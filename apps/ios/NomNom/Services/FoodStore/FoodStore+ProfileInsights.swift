@@ -27,10 +27,23 @@ extension FoodStore {
         let topCuisines = cuisineCounts.sorted { $0.value > $1.value }.prefix(5)
             .map { (cuisine: $0.key, count: $0.value) }
 
+        var dishKindScores: [String: [Double]] = [:]
+        for rating in raterRatings {
+            guard let meal = meal(rating.mealID),
+                  let recipe = recipe(meal.dishID),
+                  let kindID = recipe.dishKindID,
+                  let kind = taxonomyTerms[kindID] else { continue }
+            dishKindScores[kind.name, default: []].append(rating.reaction.score)
+        }
+        let topDishKinds = dishKindScores
+            .map { (kindName: $0.key, count: $0.value.count, averageScore: $0.value.reduce(0, +) / Double($0.value.count)) }
+            .sorted { $0.count > $1.count }
+
         return RaterTasteProfile(
             averageScoreGiven: average,
             ratingDistribution: distribution,
             topCuisines: Array(topCuisines),
+            topDishKinds: Array(topDishKinds),
             totalRatingsGiven: raterRatings.count
         )
     }

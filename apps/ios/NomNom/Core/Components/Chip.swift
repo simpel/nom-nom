@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// Small pill used for suggestion tags, filters, and insight badges.
+/// Small pill used for taxonomy metadata, filters, and insight badges.
 struct Chip: View {
     let text: String
     var systemImage: String? = nil

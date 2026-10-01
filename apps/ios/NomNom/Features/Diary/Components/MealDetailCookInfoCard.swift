@@ -122,13 +122,28 @@ struct MealDetailCookInfoCard: View {
                     .padding(.vertical, DS.Spacing.sm)
                 }
 
-                // Tags
-                if let tags = dish?.tags, !tags.isEmpty {
+                // Dish Kind
+                if let recipe = dish, let kind = store.dishKind(for: recipe) {
                     Divider().overlay(DS.Color.line.opacity(0.3))
-                    LabeledWrappingRow(label: "Tags", alignment: .trailing) {
-                        ForEach(tags, id: \.self) { tag in
-                            Chip(text: tag, tint: DS.Color.textSecondary)
-                        }
+                    HStack {
+                        Text("Dish Kind")
+                            .font(.subheadline)
+                            .foregroundStyle(DS.Color.textSecondary)
+                        Spacer()
+                        Chip(text: kind.name, tint: DS.Color.textSecondary)
+                    }
+                    .padding(.vertical, DS.Spacing.sm)
+                }
+
+                // Cooking Method
+                if let recipe = dish, let method = store.cookingMethod(for: recipe) {
+                    Divider().overlay(DS.Color.line.opacity(0.3))
+                    HStack {
+                        Text("Cooking Method")
+                            .font(.subheadline)
+                            .foregroundStyle(DS.Color.textSecondary)
+                        Spacer()
+                        Chip(text: method.name, tint: DS.Color.textSecondary)
                     }
                     .padding(.vertical, DS.Spacing.sm)
                 }

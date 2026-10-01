@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// Dedicated modal sheet for creating a new recipe with name, instructions, effort, and tags.
+/// Dedicated modal sheet for creating a new recipe with name, instructions, effort, and cuisine.
 struct CreateRecipeSheet: View {
     var initialName: String = ""
     var initialCuisine: String? = nil
@@ -12,7 +12,6 @@ struct CreateRecipeSheet: View {
     @State private var name: String = ""
     @State private var coverPhotosDraft = FoodStore.PhotosDraft()
     @State private var recipeDraft = FoodStore.RecipeDraft()
-    @State private var tagsText: String = ""
     @State private var navigateToDetails = false
     @State private var showingScanner = false
 
@@ -72,7 +71,6 @@ struct CreateRecipeSheet: View {
                     name: name,
                     coverPhotosDraft: coverPhotosDraft,
                     recipeDraft: $recipeDraft,
-                    tagsText: $tagsText,
                     onCreated: onCreated,
                     onDismiss: { dismiss() }
                 )
@@ -100,6 +98,15 @@ struct CreateRecipeSheet: View {
         if let cuisine = result.cuisine {
             recipeDraft.cuisine = cuisine
         }
+        if let cuisineID = result.cuisineID {
+            recipeDraft.cuisineID = cuisineID
+        }
+        if let cookingMethodID = result.cookingMethodID {
+            recipeDraft.cookingMethodID = cookingMethodID
+        }
+        if let dishKindID = result.dishKindID {
+            recipeDraft.dishKindID = dishKindID
+        }
         if let effort = result.effort, let level = EffortLevel(rawValue: effort) {
             recipeDraft.effort = level
         }
@@ -108,9 +115,6 @@ struct CreateRecipeSheet: View {
         }
         recipeDraft.ingredients = result.ingredients
         recipeDraft.instructions = result.instructions
-        if !result.tags.isEmpty {
-            tagsText = result.tags.joined(separator: ", ")
-        }
 
         // Attach scanned photos to drafts
         for photo in photos {

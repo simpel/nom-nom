@@ -65,8 +65,8 @@ enum DishRepository {
             var base: Double
 
             let normalizedCuisine = dish.cuisine?.normalizedForMatching ?? ""
-            let matchesTag = dish.tags.contains { $0.normalizedForMatching.contains(q) }
-            let matchesIngredient = dish.ingredients.contains { $0.ingredient.normalizedForMatching.contains(q) }
+            let matchesIngredient = dish.ingredients.contains { $0.ingredient.normalizedForMatching.contains(q) } ||
+                                    dish.canonicalIngredients.contains { $0.normalizedForMatching.contains(q) }
 
             if name == q {
                 base = 100
@@ -78,7 +78,7 @@ enum DishRepository {
                 base = 55
             } else if name.contains(q) {
                 base = 40
-            } else if matchesTag || matchesIngredient || (!normalizedCuisine.isEmpty && normalizedCuisine.contains(q)) {
+            } else if matchesIngredient || (!normalizedCuisine.isEmpty && normalizedCuisine.contains(q)) {
                 base = 35
             } else if Fuzzy.isProbableTypo(name, q) {
                 base = 25

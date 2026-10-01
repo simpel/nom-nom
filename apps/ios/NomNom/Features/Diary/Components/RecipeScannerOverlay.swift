@@ -1,4 +1,5 @@
 import SwiftUI
+import Combine
 
 /// Loading and progress overlay displayed while AI analyzes recipe photos.
 struct RecipeScannerOverlay: View {

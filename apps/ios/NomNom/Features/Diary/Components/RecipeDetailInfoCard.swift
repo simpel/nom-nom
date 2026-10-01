@@ -80,13 +80,27 @@ struct RecipeDetailInfoCard: View {
                     }
                 }
 
-                // Tags
-                if !recipe.tags.isEmpty {
+                // Dish Kind
+                if let kind = store.dishKind(for: recipe) {
                     Divider().overlay(DS.Color.line.opacity(0.3))
-                    LabeledWrappingRow(label: "Tags", alignment: .trailing) {
-                        ForEach(recipe.tags, id: \.self) { tag in
-                            Chip(text: tag, tint: DS.Color.textSecondary)
-                        }
+                    HStack {
+                        Text("Dish Kind")
+                            .font(.subheadline)
+                            .foregroundStyle(DS.Color.textSecondary)
+                        Spacer()
+                        Chip(text: kind.name, tint: DS.Color.textSecondary)
+                    }
+                }
+
+                // Cooking Method
+                if let method = store.cookingMethod(for: recipe) {
+                    Divider().overlay(DS.Color.line.opacity(0.3))
+                    HStack {
+                        Text("Cooking Method")
+                            .font(.subheadline)
+                            .foregroundStyle(DS.Color.textSecondary)
+                        Spacer()
+                        Chip(text: method.name, tint: DS.Color.textSecondary)
                     }
                 }
             }

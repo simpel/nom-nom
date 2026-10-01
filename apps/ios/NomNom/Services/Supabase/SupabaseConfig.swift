@@ -5,7 +5,7 @@ import Supabase
 ///
 /// Debug points at the local stack from `supabase start`, because that is the only
 /// environment where the email one-time code can actually be read: the local
-/// server captures outgoing mail in Mailpit on :54324 instead of sending it. The
+/// server captures outgoing mail in Mailpit on :54344 instead of sending it. The
 /// hosted project's built-in SMTP is rate limited to a couple of messages an hour
 /// and only to authorised addresses, which is not something to develop against.
 ///
@@ -14,7 +14,7 @@ import Supabase
 /// needs the Mac's LAN address here instead.
 enum SupabaseConfig {
     #if DEBUG
-    static let url = URL(string: "http://127.0.0.1:54321")!
+    static let url = URL(string: "http://127.0.0.1:54341")!
     /// The CLI's fixed local development key. Uses the modern `sb_publishable_…`
     /// key rather than the legacy JWT format.
     static let publishableKey = "sb_publishable_ACJWlzQHlZjBrEguHvfOxg_3BJgxAaH"

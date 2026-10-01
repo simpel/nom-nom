@@ -206,12 +206,15 @@ export default async function PartyDetailPage({ params }: { params: Promise<{ id
       trendDelta = Math.round(delta * 100);
     }
 
+    const matchInsight = (insight?.member_matches || []).find((m: any) => m.member_id === member.id || m.member_name === member.display_name);
+
     tasteStats.push({
       member: member.display_name,
       score: matchScore,
       ratedMeals: ratings.length,
       trend,
-      trendDelta
+      trendDelta,
+      explanation: matchInsight?.explanation || null
     });
   }
 

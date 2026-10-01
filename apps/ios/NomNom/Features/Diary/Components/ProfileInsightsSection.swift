@@ -53,7 +53,7 @@ struct ProfileInsightsSection: View {
         let trend: [(date: Date, averageScore: Double)] = healthInsights.healthScoreTrend.map {
             (date: $0.date, averageScore: $0.averageHealthScore)
         }
-        return InsightsTrendChart(trendData: trend, domain: 1...100, valueFormat: "%.0f")
+        return InsightsTrendChart(trendData: trend, domain: 0...100, valueFormat: "%.0f")
     }
 
     private func tasteProfileCard(_ profile: RaterTasteProfile) -> some View {

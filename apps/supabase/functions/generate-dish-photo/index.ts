@@ -3,6 +3,7 @@
 // adhering strictly to matching stoneware coupe plates and seamless oak surface specifications.
 
 import { GenerationLogger } from "../_shared/generation-logger.ts";
+import { getFeatureModel } from "../_shared/ai-config.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -37,6 +38,44 @@ interface CategoryResolutionResult {
   resolved_dishes: string;
   vessels_narrative?: string;
 }
+
+const CATEGORY_RESOLUTION_SYSTEM_PROMPT = `You are an expert culinary director and food photographer art director.
+Analyze the culinary category / kitchen provided by the user:
+
+Rules:
+1. Category Spread: Select 3 to 4 iconic, visually complementary dishes representing the authentic culinary tradition of this kitchen/category.
+2. Distinct Textures & Garnishes: Each dish should feature distinct textured components (e.g. braised, roasted, fresh, sauced) and classic culinary garnishes.
+3. Category-Specific Traditional Vessels: If this culinary category has traditional, iconic plates or serving vessels strongly associated with its heritage (for example: a shallow rustic terracotta cazuela in Mexican or Spanish cuisine, a dark textured Japanese ceramic yakimono or tenmoku plate, an Indian hammered brass/earthenware handi, a Korean stone ttukbaegi bowl, or a French enameled cast-iron gratin dish), replace 1 or 2 of the plates in the picture with these authentic traditional vessels to better portray the category. The remaining dishes should stay on round stoneware coupe plates. If no unique traditional vessel is customary, use matching stoneware coupe plates throughout.
+4. Strict Exclusion Rules: No Cutlery or Utensils (no forks, knives, spoons, chopsticks, skewers). No Table Props (no glasses, cups, napkins, ramekins, side bowls, condiment bottles, placemats). Never Render Empty Plates: every plate or vessel in the spread must be filled with food — no bare, unfilled, or empty dishware anywhere in frame.
+5. Identify:
+   - resolved_category: Canonical display name of the kitchen/category (e.g. "Mexican Kitchen").
+   - resolved_dishes: A descriptive narrative detailing the 3 to 4 dishes plated across the spread, explicitly specifying the plate or vessel each dish is served on (e.g. "a central round stoneware coupe plate of slow-braised cochinita pibil; a second dish of charred street-style elote served in an authentic shallow rustic Mexican terracotta cazuela; and a third coupe plate of fresh citrus ceviche").
+   - vessels_narrative: Concise summary of the plating vessels (e.g. "two round stoneware coupe plates and one traditional rustic Mexican terracotta cazuela").
+
+Return ONLY valid JSON matching:
+{
+  "resolved_category": "string",
+  "resolved_dishes": "string",
+  "vessels_narrative": "string"
+}`;
+
+const RECIPE_RESOLUTION_SYSTEM_PROMPT = `You are an expert culinary food stylist and photography art director.
+Analyze the following recipe details provided by the user:
+
+Rules:
+1. Input Resolution: If only dish or cuisine is provided, automatically select an iconic, visually distinct dish with 2–3 textured components and a classic garnish.
+2. Strict Exclusion Rules: No Cutlery or Utensils (no forks, knives, spoons, chopsticks, skewers). No Table Props (no glasses, cups, napkins, ramekins, side bowls, condiment bottles, placemats). Single Subject Only (exactly one centered plate containing one dish). Never Render Empty Plates: the plate must be filled with food — never a bare, unfilled, or empty plate.
+3. Identify:
+   - resolved_dish: Name of the dish (e.g. "Crispy Pan-Seared Salmon").
+   - resolved_elements: 2 to 3 textured components reflecting the ingredients and cooking method (e.g. "a golden seared salmon fillet with flaky layers, accompanied by charred tender asparagus spears and silky parsnip puree").
+   - resolved_garnish: Classic culinary garnish (e.g. "a delicate drizzle of extra virgin olive oil and micro-chives").
+
+Return ONLY valid JSON matching:
+{
+  "resolved_dish": "string",
+  "resolved_elements": "string",
+  "resolved_garnish": "string"
+}`;
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -126,12 +165,12 @@ Deno.serve(async (req) => {
     );
   }
 
-  const gatewayBaseUrl =
-    Deno.env.get("AI_GATEWAY_BASE_URL") || "https://ai-gateway.vercel.sh/v1";
-  const textModel =
-    Deno.env.get("AI_GATEWAY_TEXT_MODEL") || "google/gemini-2.5-flash";
-  const imageModel =
-    Deno.env.get("AI_IMAGE_MODEL") || "bfl/flux-2-pro";
+  const logger = GenerationLogger.fromEnv();
+  const admin = logger.client;
+
+  const gatewayBaseUrl = Deno.env.get("AI_GATEWAY_BASE_URL") || "https://ai-gateway.vercel.sh/v1";
+  const textModel = Deno.env.get("AI_GATEWAY_TEXT_MODEL") || "google/gemini-2.5-flash";
+  const imageModel = await getFeatureModel(admin, "generate-dish-photo", "bfl/flux-2-pro");
 
   let imagePrompt: string;
   let resolvedCategory: string | undefined;
@@ -148,26 +187,7 @@ Deno.serve(async (req) => {
 
     let vesselsNarrative: string | undefined;
 
-    const categoryResolutionPrompt = `You are an expert culinary director and food photographer art director.
-Analyze the culinary category / kitchen:
-Category: ${categoryName}
-
-Rules:
-1. Category Spread: Select 3 to 4 iconic, visually complementary dishes representing the authentic culinary tradition of this kitchen/category.
-2. Distinct Textures & Garnishes: Each dish should feature distinct textured components (e.g. braised, roasted, fresh, sauced) and classic culinary garnishes.
-3. Category-Specific Traditional Vessels: If this culinary category has traditional, iconic plates or serving vessels strongly associated with its heritage (for example: a shallow rustic terracotta cazuela in Mexican or Spanish cuisine, a dark textured Japanese ceramic yakimono or tenmoku plate, an Indian hammered brass/earthenware handi, a Korean stone ttukbaegi bowl, or a French enameled cast-iron gratin dish), replace 1 or 2 of the plates in the picture with these authentic traditional vessels to better portray the category. The remaining dishes should stay on round stoneware coupe plates. If no unique traditional vessel is customary, use matching stoneware coupe plates throughout.
-4. Strict Exclusion Rules: No Cutlery or Utensils (no forks, knives, spoons, chopsticks, skewers). No Table Props (no glasses, cups, napkins, ramekins, side bowls, condiment bottles, placemats). Never Render Empty Plates: every plate or vessel in the spread must be filled with food — no bare, unfilled, or empty dishware anywhere in frame.
-5. Identify:
-   - resolved_category: Canonical display name of the kitchen/category (e.g. "${categoryName} Kitchen").
-   - resolved_dishes: A descriptive narrative detailing the 3 to 4 dishes plated across the spread, explicitly specifying the plate or vessel each dish is served on (e.g. "a central round stoneware coupe plate of slow-braised cochinita pibil; a second dish of charred street-style elote served in an authentic shallow rustic Mexican terracotta cazuela; and a third coupe plate of fresh citrus ceviche").
-   - vessels_narrative: Concise summary of the plating vessels (e.g. "two round stoneware coupe plates and one traditional rustic Mexican terracotta cazuela").
-
-Return ONLY valid JSON matching:
-{
-  "resolved_category": "string",
-  "resolved_dishes": "string",
-  "vessels_narrative": "string"
-}`;
+    const userMessage = `Category: ${categoryName}`;
 
     resolvedCategory = `${categoryName} Kitchen`;
     resolvedDishes = "a central coupe plate with iconic regional main course, flanked by two complementary coupe plates of authentic side dishes and specialties";
@@ -181,7 +201,10 @@ Return ONLY valid JSON matching:
         },
         body: JSON.stringify({
           model: textModel,
-          messages: [{ role: "user", content: categoryResolutionPrompt }],
+          messages: [
+            { role: "system", content: CATEGORY_RESOLUTION_SYSTEM_PROMPT },
+            { role: "user", content: userMessage }
+          ],
           response_format: { type: "json_object" },
           temperature: 0.3,
         }),
@@ -226,27 +249,10 @@ Return ONLY valid JSON matching:
 
     const instructionsList = (payload.instructions || []).filter(Boolean).join(" ");
 
-    const resolutionPrompt = `You are an expert culinary food stylist and photography art director.
-Analyze the following recipe details:
-Recipe Name: ${payload.name || "Untitled Dish"}
+    const userMessage = `Recipe Name: ${payload.name || "Untitled Dish"}
 Cuisine: ${payload.cuisine || "Unspecified"}
 Ingredients: ${ingredientsList || "None specified"}
-Cooking Method / Instructions: ${instructionsList || "None specified"}
-
-Rules:
-1. Input Resolution: If only dish or cuisine is provided, automatically select an iconic, visually distinct dish with 2–3 textured components and a classic garnish.
-2. Strict Exclusion Rules: No Cutlery or Utensils (no forks, knives, spoons, chopsticks, skewers). No Table Props (no glasses, cups, napkins, ramekins, side bowls, condiment bottles, placemats). Single Subject Only (exactly one centered plate containing one dish). Never Render Empty Plates: the plate must be filled with food — never a bare, unfilled, or empty plate.
-3. Identify:
-   - resolved_dish: Name of the dish (e.g. "Crispy Pan-Seared Salmon").
-   - resolved_elements: 2 to 3 textured components reflecting the ingredients and cooking method (e.g. "a golden seared salmon fillet with flaky layers, accompanied by charred tender asparagus spears and silky parsnip puree").
-   - resolved_garnish: Classic culinary garnish (e.g. "a delicate drizzle of extra virgin olive oil and micro-chives").
-
-Return ONLY valid JSON matching:
-{
-  "resolved_dish": "string",
-  "resolved_elements": "string",
-  "resolved_garnish": "string"
-}`;
+Cooking Method / Instructions: ${instructionsList || "None specified"}`;
 
     resolvedDish = payload.name || "Gourmet Dish";
     resolvedElements = "succulent main dish with complementary roasted textures";
@@ -261,7 +267,10 @@ Return ONLY valid JSON matching:
         },
         body: JSON.stringify({
           model: textModel,
-          messages: [{ role: "user", content: resolutionPrompt }],
+          messages: [
+            { role: "system", content: RECIPE_RESOLUTION_SYSTEM_PROMPT },
+            { role: "user", content: userMessage }
+          ],
           response_format: { type: "json_object" },
           temperature: 0.3,
         }),
@@ -289,8 +298,6 @@ Return ONLY valid JSON matching:
   }
 
   // Step 3: Image Generation via Vercel AI Gateway
-  const logger = GenerationLogger.fromEnv();
-  const admin = logger.client;
   // Determine entity ID. Use recipe_id if available, otherwise the nil UUID for categories since entity_id is uuid.
   await logger.start({
     type: "dish_photo",

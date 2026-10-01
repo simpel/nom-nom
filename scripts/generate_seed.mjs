@@ -116,13 +116,12 @@ for (const cuisine of CUISINES) {
         const rId = randomId();
         const mainIngred = randomElement(INGREDIENTS);
         const name = `${cuisine} ${METHODS[randomInt(0, METHODS.length - 1)]} ${mainIngred} ${i}`;
-        const tags = [cuisine.toLowerCase(), mainIngred.toLowerCase(), 'dinner'];
         const recipeIngredients = randomElements(INGREDIENTS, randomInt(3, 7)).map(ing => ({ ingredient: ing, amount: "1" }));
         
         recipes.push({ id: rId, name, cuisine, ingredients: recipeIngredients });
 
         sql.push(`
-insert into public.dishes (id, name, normalized_name, owner_id, is_public, cuisine, tags, ingredients, instructions)
+insert into public.dishes (id, name, normalized_name, owner_id, is_public, cuisine, ingredients, instructions)
 values (
     '${rId}', 
     '${name.replace(/'/g, "''")}', 
@@ -130,7 +129,6 @@ values (
     '${USERS[0].id}', 
     true, 
     '${cuisine.toLowerCase()}', 
-    '{${tags.map(t => `"${t}"`).join(',')}}', 
     '${JSON.stringify(recipeIngredients)}'::jsonb,
     '{"Cook the ${mainIngred}", "Serve hot"}'
 );

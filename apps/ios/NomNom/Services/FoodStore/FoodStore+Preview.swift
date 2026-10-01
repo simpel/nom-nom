@@ -95,7 +95,6 @@ extension FoodStore {
             id: recipe1ID,
             ownerID: previewUserID,
             name: "Birria Tacos",
-            tags: ["mexican", "comfort", "dinner"],
             ingredients: [
                 RecipeIngredient(quantity: "1", measurement: "kg", ingredient: "beef chuck"),
                 RecipeIngredient(quantity: "4", measurement: "", ingredient: "guajillo chilies"),
@@ -114,7 +113,6 @@ extension FoodStore {
             id: recipe2ID,
             ownerID: previewUserID,
             name: "Crispy Salmon Bowl",
-            tags: ["quick", "fish", "healthy"],
             ingredients: [
                 RecipeIngredient(quantity: "2", measurement: "", ingredient: "salmon fillets"),
                 RecipeIngredient(quantity: "200", measurement: "g", ingredient: "sushi rice"),
@@ -132,7 +130,6 @@ extension FoodStore {
             id: recipe3ID,
             ownerID: previewUserID,
             name: "Cacio e Pepe",
-            tags: ["pasta", "italian", "classic"],
             ingredients: [
                 RecipeIngredient(quantity: "400", measurement: "g", ingredient: "spaghetti"),
                 RecipeIngredient(quantity: "100", measurement: "g", ingredient: "Pecorino Romano"),

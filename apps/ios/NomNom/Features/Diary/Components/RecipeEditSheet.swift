@@ -10,7 +10,6 @@ struct RecipeEditSheet: View {
     @State private var name: String = ""
     @State private var coverPhotosDraft = FoodStore.PhotosDraft()
     @State private var recipeDraft = FoodStore.RecipeDraft()
-    @State private var tagsText: String = ""
     @State private var navigateToDetails = false
     @State private var didLoad = false
 
@@ -75,7 +74,6 @@ struct RecipeEditSheet: View {
                     name: name,
                     coverPhotosDraft: coverPhotosDraft,
                     recipeDraft: $recipeDraft,
-                    tagsText: $tagsText,
                     onDismiss: { dismiss() }
                 )
             }
@@ -87,7 +85,6 @@ struct RecipeEditSheet: View {
         guard !didLoad, let recipe else { return }
         didLoad = true
         name = recipe.name
-        tagsText = recipe.tags.joined(separator: ", ")
         coverPhotosDraft = FoodStore.PhotosDraft(existingPaths: recipe.photoPaths)
 
         recipeDraft = FoodStore.RecipeDraft(
@@ -98,6 +95,9 @@ struct RecipeEditSheet: View {
             removedPhotoPaths: [],
             effort: recipe.effort,
             cuisine: recipe.cuisine,
+            cuisineID: recipe.cuisineID,
+            cookingMethodID: recipe.cookingMethodID,
+            dishKindID: recipe.dishKindID,
             isPublic: recipe.isPublic
         )
     }

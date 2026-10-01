@@ -60,7 +60,6 @@ enum DevSelfCheck {
             linkedDishID: nil,
             eatenOn: .now,
             notes: "written by the self check",
-            tags: ["selfcheck"],
             photos: FoodStore.PhotosDraft(addedData: [swatch()]),
             verdicts: store.activeEaters.first.map { [$0.raterRef: .amazing] } ?? [:]
         ))
@@ -100,7 +99,6 @@ enum DevSelfCheck {
                 linkedDishID: meal.dishID,
                 eatenOn: meal.eatenOn,
                 notes: meal.notes,
-                tags: [],
                 photos: FoodStore.PhotosDraft(existingPaths: meal.photoPaths),
                 verdicts: [eater.raterRef: .bad]
             ))
@@ -141,7 +139,6 @@ enum DevSelfCheck {
             linkedDishID: meal.dishID,
             eatenOn: meal.eatenOn,
             notes: meal.notes,
-            tags: [],
             photos: FoodStore.PhotosDraft(removedPaths: meal.photoPaths),
             verdicts: [:]
         ))

@@ -14,6 +14,31 @@
 import { z } from "npm:zod";
 import { createClient } from "jsr:@supabase/supabase-js@2";
 import { GenerationLogger } from "../_shared/generation-logger.ts";
+import { resolveTaxonomyTerm } from "../_shared/taxonomy-resolver.ts";
+import { getFeatureModel } from "../_shared/ai-config.ts";
+
+const SYSTEM_PROMPT = `You are a multilingual culinary ingredient analyst.
+
+Given this list of raw ingredient lines from a recipe (they may be in any language,
+and a single line may bundle several distinct ingredients together):
+
+For EVERY distinct flavor-relevant ingredient you can identify (splitting bundled
+lines apart), return one entry with:
+- "raw_text": the exact original line it came from (verbatim, keep bundled lines
+  identical across their split-out entries)
+- "canonical_name": the ingredient's core identity, translated to English,
+  lowercase, singular, stripped of quantity/prep/cut/brand detail, and merged with
+  its common variants (e.g. "kanelstång" and "cinnamon stick" both become
+  "cinnamon"; "boneless chicken thighs" becomes "chicken"; "dried guajillo chiles"
+  becomes "guajillo chile")
+- "category": the ingredient's culinary category (e.g. protein, produce, dairy, grain, herb, spice, condiment, baking, pantry, other)
+
+Skip ingredients too ubiquitous to signal taste preference: plain salt, plain
+black pepper, water, and cooking oil used generically (not a distinctive oil like
+sesame or truffle oil).
+
+Return a single JSON object: { "items": [{ "raw_text": "...", "canonical_name": "...", "category": "..." }, ...] }
+Return ONLY valid JSON, no markdown fences or commentary.`;
 
 interface DishRow {
   id: string;
@@ -27,14 +52,12 @@ interface WebhookPayload {
   old_record: DishRow | null;
 }
 
-const CATEGORIES = ["spice", "herb", "protein", "produce", "dairy", "grain", "condiment", "other"] as const;
-
 const ExtractionSchema = z.object({
   items: z.array(
     z.object({
       raw_text: z.string(),
       canonical_name: z.string(),
-      category: z.enum(CATEGORIES),
+      category: z.string(),
     })
   ),
 });
@@ -68,7 +91,6 @@ Deno.serve(async (req) => {
       Deno.env.get("AI_GATEWAY_API_KEY") ||
       Deno.env.get("VERCEL_AI_GATEWAY_TOKEN");
     const gatewayBaseUrl = Deno.env.get("AI_GATEWAY_BASE_URL") || "https://ai-gateway.vercel.sh/v1";
-    const model = Deno.env.get("AI_GATEWAY_MODEL") || "google/gemini-2.5-flash";
 
     if (!apiKey) {
       return new Response(JSON.stringify({ error: "no-api-key" }), {
@@ -86,41 +108,22 @@ Deno.serve(async (req) => {
       });
     }
     const admin = createClient(url, serviceKey);
+    const model = await getFeatureModel(admin, "canonicalize-ingredients");
 
-    const promptText = `You are a multilingual culinary ingredient analyst.
-
-Given this list of raw ingredient lines from a recipe (they may be in any language,
-and a single line may bundle several distinct ingredients together):
-
-${rawIngredients.map((r) => `- ${r}`).join("\n")}
-
-For EVERY distinct flavor-relevant ingredient you can identify (splitting bundled
-lines apart), return one entry with:
-- "raw_text": the exact original line it came from (verbatim, keep bundled lines
-  identical across their split-out entries)
-- "canonical_name": the ingredient's core identity, translated to English,
-  lowercase, singular, stripped of quantity/prep/cut/brand detail, and merged with
-  its common variants (e.g. "kanelstång" and "cinnamon stick" both become
-  "cinnamon"; "boneless chicken thighs" becomes "chicken"; "dried guajillo chiles"
-  becomes "guajillo chile")
-- "category": one of spice, herb, protein, produce, dairy, grain, condiment, other
-
-Skip ingredients too ubiquitous to signal taste preference: plain salt, plain
-black pepper, water, and cooking oil used generically (not a distinctive oil like
-sesame or truffle oil).
-
-Return a single JSON object: { "items": [{ "raw_text": "...", "canonical_name": "...", "category": "..." }, ...] }
-Return ONLY valid JSON, no markdown fences or commentary.`;
+    const userMessage = rawIngredients.map((r) => `- ${r}`).join("\n");
 
     logger = GenerationLogger.fromEnv();
-    await logger.start({ type: "ingredient_canonicalize", entityId: dish.id, prompt: promptText, model });
+    await logger.start({ type: "ingredient_canonicalize", entityId: dish.id, prompt: userMessage, model });
 
     const completionRes = await fetch(`${gatewayBaseUrl}/chat/completions`, {
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${apiKey}` },
       body: JSON.stringify({
         model,
-        messages: [{ role: "user", content: promptText }],
+        messages: [
+          { role: "system", content: SYSTEM_PROMPT },
+          { role: "user", content: userMessage }
+        ],
         response_format: { type: "json_object" },
         temperature: 0.1,
       }),
@@ -147,6 +150,26 @@ Return ONLY valid JSON, no markdown fences or commentary.`;
       });
     }
 
+    // Resolve ingredient categories dynamically using taxonomy terms
+    const categoryNameToTaxonomy = new Map<string, { id: string; slug: string }>();
+    const uniqueCategories = [...new Set(parsed.items.map((it) => it.category).filter(Boolean))];
+    for (const cat of uniqueCategories) {
+      try {
+        const resolvedCat = await resolveTaxonomyTerm({
+          client: admin,
+          dimension: "ingredient_category",
+          proposedTerm: cat,
+          apiKey,
+          gatewayBaseUrl,
+        });
+        if (resolvedCat) {
+          categoryNameToTaxonomy.set(cat, { id: resolvedCat.id, slug: resolvedCat.slug });
+        }
+      } catch (catErr) {
+        console.warn(`Failed to resolve ingredient category '${cat}':`, catErr);
+      }
+    }
+
     // Embed every unique canonical name in one batch call.
     const uniqueNames = [...new Set(parsed.items.map((i) => i.canonical_name))];
     const embedRes = await fetch(`${gatewayBaseUrl}/embeddings`, {
@@ -169,7 +192,10 @@ Return ONLY valid JSON, no markdown fences or commentary.`;
     for (let i = 0; i < uniqueNames.length; i++) {
       const name = uniqueNames[i];
       const embedding = embeddings[i];
-      const category = parsed.items.find((it) => it.canonical_name === name)!.category;
+      const rawCat = parsed.items.find((it) => it.canonical_name === name)?.category || "other";
+      const resolved = categoryNameToTaxonomy.get(rawCat);
+      const category = resolved?.slug || rawCat.toLowerCase().trim();
+      const category_id = resolved?.id || null;
 
       const { data: matches, error: matchErr } = await admin.rpc("match_ingredient_vocabulary", {
         query_embedding: embedding,
@@ -189,7 +215,7 @@ Return ONLY valid JSON, no markdown fences or commentary.`;
       } else {
         const { data: inserted, error: insertErr } = await admin
           .from("ingredient_vocabulary")
-          .insert({ canonical_name: name, category, aliases: [name], embedding })
+          .insert({ canonical_name: name, category, category_id, aliases: [name], embedding })
           .select("id")
           .single();
 

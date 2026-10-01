@@ -15,18 +15,18 @@ import UIKit
 /// present are skipped, so it tops up rather than duplicating.
 enum SampleData {
 
-    // name, tags, cuisine, days-ago each time it was served, verdict per kid
-    private static let plan: [(String, [String], String?, [Int], [[Reaction]])] = [
-        ("Tacos", ["friday", "quick"], "mexican", [5, 12, 19, 33], [[.amazing, .amazing], [.amazing, .good], [.amazing, .amazing], [.amazing, .amazing]]),
-        ("Pancakes", ["sweet", "quick"], "nordic", [9, 30, 61], [[.amazing, .amazing], [.amazing, .amazing], [.good, .amazing]]),
-        ("Fish gratin", ["oven"], "nordic", [21, 74], [[.bad, .good], [.bad, .bad]]),
-        ("Meatballs and mash", ["classic"], "nordic", [3, 17, 40, 58], [[.amazing, .good], [.good, .good], [.amazing, .good], [.amazing, .amazing]]),
-        ("Pasta bolognese", ["quick", "classic"], "italian", [7, 24, 44], [[.good, .amazing], [.amazing, .amazing], [.good, .amazing]]),
-        ("Chickpea curry", ["veggie"], "indian", [48], [[.good, .bad]]),
-        ("Pea soup", ["thursday"], "nordic", [90], [[.bad, .good]]),
-        ("Homemade pizza", ["weekend"], "italian", [14, 52], [[.amazing, .amazing], [.amazing, .amazing]]),
-        ("Salmon and potatoes", ["oven"], "nordic", [28], [[.good, .good]]),
-        ("Chicken wok", ["quick", "veggie"], "asian", [], [])
+    // name, cuisine, days-ago each time it was served, verdict per kid
+    private static let plan: [(String, String?, [Int], [[Reaction]])] = [
+        ("Tacos", "mexican", [5, 12, 19, 33], [[.amazing, .amazing], [.amazing, .good], [.amazing, .amazing], [.amazing, .amazing]]),
+        ("Pancakes", "nordic", [9, 30, 61], [[.amazing, .amazing], [.amazing, .amazing], [.good, .amazing]]),
+        ("Fish gratin", "nordic", [21, 74], [[.bad, .good], [.bad, .bad]]),
+        ("Meatballs and mash", "nordic", [3, 17, 40, 58], [[.amazing, .good], [.good, .good], [.amazing, .good], [.amazing, .amazing]]),
+        ("Pasta bolognese", "italian", [7, 24, 44], [[.good, .amazing], [.amazing, .amazing], [.good, .amazing]]),
+        ("Chickpea curry", "indian", [48], [[.good, .bad]]),
+        ("Pea soup", "nordic", [90], [[.bad, .good]]),
+        ("Homemade pizza", "italian", [14, 52], [[.amazing, .amazing], [.amazing, .amazing]]),
+        ("Salmon and potatoes", "nordic", [28], [[.good, .good]]),
+        ("Chicken wok", "asian", [], [])
     ]
 
     @MainActor
@@ -71,7 +71,7 @@ enum SampleData {
 
         let dishes: [Dish] = try await supabase
             .from("dishes")
-            .insert(todo.map { NewDish(ownerID: store.userID, name: $0.0, tags: $0.1, cuisine: $0.2) })
+            .insert(todo.map { NewDish(ownerID: store.userID, name: $0.0, cuisine: $0.1) })
             .select()
             .execute()
             .value
@@ -86,7 +86,7 @@ enum SampleData {
         /// the meals come back with their ids.
         var provenance: [(dishKey: String, day: Date, verdicts: [Reaction])] = []
 
-        for (name, _, _, daysAgoList, verdicts) in todo {
+        for (name, _, daysAgoList, verdicts) in todo {
             let key = name.normalizedForMatching
             guard let dish = byKey[key] else { continue }
             for (index, daysAgo) in daysAgoList.enumerated() {

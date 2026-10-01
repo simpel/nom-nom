@@ -179,10 +179,6 @@ export default function UserDetailClient({ user }: { user: any }) {
           <div className="bg-white p-6 rounded-lg shadow-sm border space-y-4">
             <h2 className="text-xl font-semibold">AI Generated Summary</h2>
             <p className="text-gray-800 italic text-lg">{insight.summary_sentence}</p>
-            <div className="pt-4 border-t">
-              <h3 className="font-medium text-gray-700 mb-2">Food Profile</h3>
-              <p className="text-gray-600">{insight.food_profile}</p>
-            </div>
             {insight.health_analysis && (
               <div className="pt-4 border-t">
                 <div className="flex items-center justify-between mb-2">

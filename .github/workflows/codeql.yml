@@ -59,8 +59,13 @@ jobs:
           if [ -n "$LATEST_XCODE" ]; then
             sudo xcode-select -s "$LATEST_XCODE"
           fi
+          # Swift macros require interactive "Trust & Enable" approval in Xcode,
+          # which CI can't give. Same flags the TestFlight workflow uses.
+          defaults write com.apple.dt.Xcode IDESkipMacroFingerprintValidation -bool YES
+          defaults write com.apple.dt.Xcode IDESkipPackagePluginFingerprintValidation -bool YES
           xcodebuild -project apps/ios/NomNom.xcodeproj -scheme NomNom \
             -destination 'generic/platform=iOS Simulator' \
+            -skipMacroValidation \
             -skipPackagePluginValidation \
             CODE_SIGNING_ALLOWED=NO build
 

@@ -8,6 +8,7 @@ struct PartyInsightsSection: View {
     @Environment(FoodStore.self) private var store
     @State private var insights: PartyInsights?
     @State private var flavorProfile: [FlavorProfileEntry] = []
+    @State private var selectedMember: MemberTasteMatch?
 
     private var healthInsights: PartyHealthInsights? {
         store.healthInsights(forParty: partyID)
@@ -27,6 +28,10 @@ struct PartyInsightsSection: View {
                 VStack(alignment: .leading, spacing: DS.Spacing.section) {
                     PartyTasteTrendChart(totalTrend: trendData, memberSeries: store.memberTrendlines(forParty: partyID))
 
+                    PartyTasteMatchCard(matches: store.memberTasteMatches(forParty: partyID, insights: insights)) { member in
+                        selectedMember = member
+                    }
+
                     if let health = healthInsights {
                         VStack(alignment: .leading, spacing: DS.Spacing.md) {
                             PartyHealthDistributionCard(distribution: health.healthTierDistribution)
@@ -42,18 +47,6 @@ struct PartyInsightsSection: View {
                         }
                     }
 
-                    if let profile = insights?.foodProfile {
-                        VStack(alignment: .leading, spacing: DS.Spacing.sm) {
-                            Text("Flavor Profile")
-                                .font(.headline)
-                                .foregroundStyle(DS.Color.textPrimary)
-
-                            Text(profile)
-                                .font(.body)
-                                .foregroundStyle(DS.Color.textSecondary)
-                        }
-                    }
-
                     FlavorProfileCard(entries: flavorProfile)
 
                     if let recommendations = insights?.recommendations, !recommendations.isEmpty {
@@ -65,6 +58,9 @@ struct PartyInsightsSection: View {
         .task(id: partyID) {
             insights = try? await store.fetchInsights(for: partyID)
             flavorProfile = (try? await store.fetchFlavorProfile(forParty: partyID)) ?? []
+        }
+        .sheet(item: $selectedMember) { member in
+            PartyMemberInsightSheet(member: member, partyID: partyID)
         }
     }
 }

@@ -1,16 +1,14 @@
 import SwiftUI
 
-/// Sheet to view and edit recipe and tags for a dish in meal editor.
+/// Sheet to view and edit recipe for a dish in meal editor.
 struct DishRecipeEditSheet: View {
     @Binding var dishName: String
     @Binding var recipeDraft: FoodStore.RecipeDraft
-    @Binding var tagsText: String
 
     @Environment(\.dismiss) private var dismiss
 
     @State private var initialDishName: String = ""
     @State private var initialRecipeDraft = FoodStore.RecipeDraft()
-    @State private var initialTagsText: String = ""
     @State private var didCaptureInitial = false
 
     var body: some View {
@@ -25,12 +23,6 @@ struct DishRecipeEditSheet: View {
                     RecipeEditorSection(draft: $recipeDraft)
 
                     MealEditorCookingTimeSection(effort: $recipeDraft.effort)
-
-                    SectionCard("Tags") {
-                        Input("Tags, comma separated", text: $tagsText, style: .cardRow)
-                            .textInputAutocapitalization(.never)
-                            .autocorrectionDisabled()
-                    }
                 }
                 .padding(.horizontal, 16)
                 .padding(.vertical, 14)
@@ -42,7 +34,6 @@ struct DishRecipeEditSheet: View {
                 onCancel: {
                     dishName = initialDishName
                     recipeDraft = initialRecipeDraft
-                    tagsText = initialTagsText
                     dismiss()
                 },
                 onSave: {
@@ -53,7 +44,6 @@ struct DishRecipeEditSheet: View {
                 if !didCaptureInitial {
                     initialDishName = dishName
                     initialRecipeDraft = recipeDraft
-                    initialTagsText = tagsText
                     didCaptureInitial = true
                 }
             }

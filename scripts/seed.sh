@@ -37,7 +37,7 @@ if [[ ! -f "$SEED_FILE" ]]; then
 fi
 
 # 2. Check if Docker container for Supabase Postgres is running
-CONTAINER_NAME=$(docker ps --filter "name=supabase_db" --format "{{.Names}}" | head -n 1)
+CONTAINER_NAME=$(docker ps --filter "name=supabase_db_food" --format "{{.Names}}" | head -n 1)
 
 if [[ -z "$CONTAINER_NAME" ]]; then
     echo -e "${RED}Error: Local Supabase database container is not running.${NC}"
@@ -117,4 +117,4 @@ WHERE m.eaten_on BETWEEN '2026-07-13' AND '2026-07-17'
 ORDER BY m.eaten_on ASC;
 "
 
-echo -e "${BOLD}${GREEN}Seed complete. You can sign into the app as 'cook@foodlog.test' to inspect all 3 parties and 40 recipes.${NC}\n"
+echo -e "${BOLD}${GREEN}Seed complete. You can sign into the app as 'cook@foodlog.test' (password: nomnom-dev-password) to inspect all parties and 40 recipes.${NC}\n"

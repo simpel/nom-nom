@@ -100,6 +100,11 @@ extension Font {
         AppTypography.subHeading
     }
 
+    /// Editorial summary text in 22pt Newsreader Regular.
+    static var editorialSummary: Font {
+        newsreader(size: 22, weight: .regular, relativeTo: .title2)
+    }
+
     /// Italic quote or chef reflection in Newsreader.
     static var editorialQuote: Font {
         newsreader(size: 16, weight: .regular, italic: true, relativeTo: .callout)

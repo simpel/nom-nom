@@ -29,9 +29,15 @@ private struct ProGateContentHeightKey: PreferenceKey {
 /// data read aloud.
 struct ProGate<Content: View>: View {
     @Environment(EntitlementStore.self) private var entitlements
+    var showBadge: Bool = false
     @State private var showPaywall = false
     @State private var measuredContentHeight: CGFloat?
     @ViewBuilder let content: () -> Content
+
+    init(showBadge: Bool = false, @ViewBuilder content: @escaping () -> Content) {
+        self.showBadge = showBadge
+        self.content = content
+    }
 
     // TODO: remove — temporarily disables the Pro lock so every screen is reachable while
     // they're still being built. Flip back to `false` (or delete) once done.
@@ -61,7 +67,7 @@ struct ProGate<Content: View>: View {
                 // and offset up by half its own height so its vertical center lands exactly
                 // on the 1px border line. Applied outside `LockedHeightCap` so its clip
                 // doesn't cut the half that pokes above the card.
-                if !isUnlocked {
+                if !isUnlocked && showBadge {
                     ProBadge(size: .compact)
                         .padding(.trailing, DS.Spacing.md)
                         .alignmentGuide(.top) { $0.height / 2 }
@@ -97,11 +103,13 @@ struct ProGate<Content: View>: View {
     @ViewBuilder
     private var gatedStack: some View {
         if isUnlocked {
-            // A header row, not an overlay: content is arbitrary height/shape, so pinning
-            // the badge on top of it (as before) could land it mid-paragraph. Stacking it
-            // above guarantees it never collides with whatever the content draws.
-            VStack(alignment: .trailing, spacing: DS.Spacing.xs) {
-                ProBadge(size: .compact)
+            if showBadge {
+                VStack(alignment: .trailing, spacing: DS.Spacing.xs) {
+                    ProBadge(size: .compact)
+                        .padding(.trailing, DS.Spacing.screenHorizontal)
+                    measuredContent
+                }
+            } else {
                 measuredContent
             }
         } else {

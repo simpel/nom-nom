@@ -142,7 +142,6 @@ export default async function RecipeDetailPage({ params }: { params: Promise<{ i
         <div className="bg-white p-6 rounded-lg shadow-sm border space-y-4">
           <h2 className="text-xl font-semibold">Details</h2>
           <div className="text-sm space-y-2">
-            <p><span className="font-medium">Tags:</span> {recipe.tags?.join(', ')}</p>
             <p><span className="font-medium">Effort:</span> {recipe.effort}</p>
             <p><span className="font-medium">Serves:</span> {recipe.serves}</p>
           </div>

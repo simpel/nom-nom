@@ -54,7 +54,7 @@ do after a `db reset` clears the account out from under the keychain.
 
 To see the real form instead, untick that argument in **Product ▸ Scheme ▸ Edit
 Scheme ▸ Run ▸ Arguments**. Then sign in with any address — `you@example.com` will
-do — and read the code out of Mailpit at <http://127.0.0.1:54324>.
+do — and read the code out of Mailpit at <http://127.0.0.1:54344>.
 
 Two more arguments sit alongside it, unticked: `-seed-sample-data` loads a few
 months of made-up meals and `-initial-tab 2` opens *What to eat*, which together

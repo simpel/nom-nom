@@ -22,6 +22,7 @@ final class FoodStore {
     var profiles: [UUID: Profile] = [:]
     var categories: [CategoryRecord] = []
     var categoryPhotoPaths: [String: String] = [:]
+    var taxonomyTerms: [UUID: TaxonomyTermRecord] = [:]
 
     // Dinner Parties
     var parties: [Party] = []
@@ -248,6 +249,18 @@ final class FoodStore {
         return scores.reduce(0, +) / Double(scores.count)
     }
 
+    func dishKind(for recipe: Recipe) -> TaxonomyTermRecord? {
+        recipe.dishKindID.flatMap { taxonomyTerms[$0] }
+    }
+
+    func cookingMethod(for recipe: Recipe) -> TaxonomyTermRecord? {
+        recipe.cookingMethodID.flatMap { taxonomyTerms[$0] }
+    }
+
+    func cuisineTerm(for recipe: Recipe) -> TaxonomyTermRecord? {
+        recipe.cuisineID.flatMap { taxonomyTerms[$0] }
+    }
+
     struct VerdictDetail: Identifiable {
         let ref: RaterRef
         let emoji: String
@@ -314,6 +327,21 @@ final class FoodStore {
                 return ("🧑", id == userID ? "Me" : "Someone")
             }
             return (profile.avatarEmoji, id == userID ? "Me" : profile.shownName)
+        }
+    }
+
+    func firstName(for ref: RaterRef) -> String {
+        switch ref {
+        case .eater(let id):
+            guard let eater = eaterByID[id] else { return "Someone" }
+            return eater.name.components(separatedBy: " ").first?.trimmingCharacters(in: .whitespaces) ?? eater.name
+        case .account(let id):
+            guard let profile = profiles[id] else {
+                return id == userID ? "Me" : "Someone"
+            }
+            let first = profile.firstName.trimmingCharacters(in: .whitespaces)
+            if !first.isEmpty { return first }
+            return profile.shortName.components(separatedBy: " ").first?.trimmingCharacters(in: .whitespaces) ?? profile.shortName
         }
     }
 

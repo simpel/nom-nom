@@ -1,4 +1,4 @@
-import SwiftUI
+    import SwiftUI
 
 /// A shared, reusable card container for sections across the entire app.
 /// The section title and optional caption are always rendered outside above the card,

@@ -1,6 +1,6 @@
 import json, urllib.request, urllib.error, uuid, sys
 
-API = "http://127.0.0.1:54321"
+API = "http://127.0.0.1:54341"
 ANON = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0"
 SERVICE = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImV4cCI6MTk4MzgxMjk5Nn0.EGIM96RAZx35lJzdJsyH-qQwv8Hdp7fsn3W0YpN81IU"
 
@@ -61,7 +61,7 @@ check("profile has display_name derived from first and last name",
 
 print("\n== cook creates dish + meal ==")
 st, dish = call("POST", "/rest/v1/dishes", a_tok,
-                {"owner_id": a_id, "name": "Tacos", "normalized_name": f"tacos {tag}", "tags": ["friday"]}, REP)
+                {"owner_id": a_id, "name": "Tacos", "normalized_name": f"tacos {tag}"}, REP)
 check("cook can insert own dish", st == 201, f"{st} {dish}")
 dish_id = dish[0]["id"]
 
@@ -121,7 +121,7 @@ check("guest can join party", st == 201, f"{st} {joined}")
 
 print("\n== serve a meal to the dinner party ==")
 st, dish2 = call("POST", "/rest/v1/dishes", a_tok,
-                 {"owner_id": a_id, "name": "Pasta Carbonara", "normalized_name": f"carbonara {tag}", "tags": ["pasta"]}, REP)
+                 {"owner_id": a_id, "name": "Pasta Carbonara", "normalized_name": f"carbonara {tag}"}, REP)
 dish2_id = dish2[0]["id"]
 st, meal2 = call("POST", "/rest/v1/meals", a_tok,
                  {"dish_id": dish2_id, "created_by": a_id, "notes": "party dinner"}, REP)

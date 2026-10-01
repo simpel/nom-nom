@@ -44,7 +44,7 @@ struct RecipeSearchView: View {
             }
             .background(DS.Color.bg)
             .screenTitle("Search")
-            .searchable(text: $searchText, prompt: "Search recipes, tags, or cuisines")
+            .searchable(text: $searchText, prompt: "Search recipes, ingredients, or cuisines")
             .onSubmit(of: .search) {
                 SearchHistoryStore.shared.addQuery(trimmedSearch)
             }

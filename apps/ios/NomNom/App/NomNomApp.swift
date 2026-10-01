@@ -13,6 +13,7 @@ struct NomNomApp: App {
     var body: some Scene {
         WindowGroup {
             RootView()
+                .enableHotReload()
                 .environment(auth)
                 .environment(NotificationManager.shared)
                 .environment(EntitlementStore.shared)
