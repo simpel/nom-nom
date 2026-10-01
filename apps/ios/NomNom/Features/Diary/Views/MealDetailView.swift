@@ -130,7 +130,7 @@ struct MealDetailView: View {
             set: { selectedPhotoIndex = $0?.index }
         )) { wrapper in
             if let meal {
-                MealGalleryViewerSheet(paths: meal.photoPaths, initialIndex: wrapper.index)
+                MediaViewerSheet(.paths(meal.photoPaths), startIndex: wrapper.index)
             }
         }
         .sheet(item: Binding(
@@ -141,7 +141,7 @@ struct MealDetailView: View {
                 let recipePaths = recipe.recipePhotoPaths.isEmpty ? recipe.photoPaths : recipe.recipePhotoPaths
                 let bucket = SupabaseConfig.recipeBucket
                 if !recipePaths.isEmpty {
-                    MealGalleryViewerSheet(paths: recipePaths, initialIndex: min(wrapper.index, recipePaths.count - 1), bucket: bucket, titlePrefix: "Recipe")
+                    MediaViewerSheet(.paths(recipePaths, bucket: bucket), startIndex: wrapper.index, title: "Recipe")
                 }
             }
         }

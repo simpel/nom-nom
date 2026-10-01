@@ -3,7 +3,6 @@ import SwiftUI
 /// Dropdown menu for settings with the dinner party switcher up top and a direct button to open the profile sheet.
 struct SettingsDropdownMenu: View {
     @Environment(FoodStore.self) private var store
-    @Environment(AuthController.self) private var auth
 
     var onOpenProfile: (() -> Void)? = nil
 
@@ -59,16 +58,6 @@ struct SettingsDropdownMenu: View {
         .sheet(isPresented: $showingProfileSheet) {
             ProfileSheetView()
         }
-        .alert("Sign out?", isPresented: $confirmSignOut) {
-            Button("Sign out", role: .destructive) {
-                Task {
-                    await store.unregisterCurrentDevice()
-                    await auth.signOut()
-                }
-            }
-            Button("Cancel", role: .cancel) {}
-        } message: {
-            Text("Your food log stays on the server and comes back when you sign in again.")
-        }
+        .signOutConfirmation(isPresented: $confirmSignOut)
     }
 }

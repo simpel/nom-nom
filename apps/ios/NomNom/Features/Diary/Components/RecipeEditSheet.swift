@@ -22,16 +22,12 @@ struct RecipeEditSheet: View {
                 VStack(spacing: DS.Spacing.section) {
                     if recipe != nil {
                         if isOwner {
-                            AssetPhotosPickerSection(draft: $coverPhotosDraft, title: "Cover Photo")
-
-                            SectionCard("Recipe Name") {
-                                Input("Recipe name (e.g. Carbonara)", text: $name, style: .cardRow)
-                                    .autocorrectionDisabled()
-                            }
-
-                            MealEditorCookingTimeSection(effort: $recipeDraft.effort)
-
-                            CuisinePickerSection(selection: $recipeDraft.cuisine)
+                            RecipeBasicsForm(
+                                name: $name,
+                                coverPhotos: $coverPhotosDraft,
+                                effort: $recipeDraft.effort,
+                                cuisine: $recipeDraft.cuisine
+                            )
                         } else {
                             ContentUnavailableView(
                                 "Creator Only",
@@ -49,24 +45,8 @@ struct RecipeEditSheet: View {
             }
             .background(DS.Color.bg)
             .screenTitle("Edit Recipe", displayMode: .inline)
-            .toolbar {
-                ToolbarItem(placement: .topBarLeading) {
-                    Button {
-                        dismiss()
-                    } label: {
-                        Image(systemName: "xmark")
-                            .fontWeight(.semibold)
-                    }
-                    .accessibilityLabel("Cancel")
-                }
-
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button("Next") {
-                        navigateToDetails = true
-                    }
-                    .disabled(name.trimmedName.isEmpty || !isOwner)
-                    .fontWeight(.semibold)
-                }
+            .sheetNextToolbar(canProceed: !name.trimmedName.isEmpty && isOwner) {
+                navigateToDetails = true
             }
             .navigationDestination(isPresented: $navigateToDetails) {
                 RecipeDetailsStepView(

@@ -17,17 +17,7 @@ struct RecipeDetailsStepView: View {
             VStack(spacing: DS.Spacing.section) {
                 RecipeEditorSection(draft: $recipeDraft)
 
-                SectionCard("Sharing & Visibility") {
-                    VStack(alignment: .leading, spacing: 6) {
-                        Toggle("Make recipe public", isOn: $recipeDraft.isPublic)
-                            .font(.body.weight(.medium))
-                            .nativeToggle()
-
-                        Text("When enabled, other dinner parties and users can discover and cook this recipe.")
-                            .font(.caption)
-                            .foregroundStyle(DS.Color.textSecondary)
-                    }
-                }
+                VisibilityToggleCard.recipe(isPublic: $recipeDraft.isPublic)
             }
             .padding(.horizontal, DS.Spacing.screenHorizontal)
             .padding(.top, DS.Spacing.screenTop)
@@ -35,22 +25,8 @@ struct RecipeDetailsStepView: View {
         }
         .background(DS.Color.bg)
         .screenTitle("Recipe Details", displayMode: .inline)
-        .toolbar {
-            ToolbarItem(placement: .topBarTrailing) {
-                if isSaving {
-                    ProgressView().controlSize(.small)
-                } else {
-                    Button {
-                        save()
-                    } label: {
-                        Image(systemName: "checkmark")
-                            .fontWeight(.semibold)
-                    }
-                }
-            }
-        }
+        .stepCommitToolbar(isSaving: isSaving, onSave: save)
         .presentationDragIndicator(.visible)
-        .interactiveDismissDisabled(isSaving)
         .alert("Couldn't save recipe",
                isPresented: Binding(get: { store.errorMessage != nil },
                                     set: { if !$0 { store.errorMessage = nil } })) {

@@ -184,11 +184,10 @@ struct PartyDetailView: View {
                     set: { selectedPhotoIndex = $0?.index }
                 )) { wrapper in
                     if !partyPhotos.isEmpty {
-                        MealGalleryViewerSheet(
-                            paths: partyPhotos,
-                            initialIndex: min(wrapper.index, partyPhotos.count - 1),
-                            bucket: SupabaseConfig.partyBucket,
-                            titlePrefix: "Party"
+                        MediaViewerSheet(
+                            .paths(partyPhotos, bucket: SupabaseConfig.partyBucket),
+                            startIndex: wrapper.index,
+                            title: "Party"
                         )
                     }
                 }

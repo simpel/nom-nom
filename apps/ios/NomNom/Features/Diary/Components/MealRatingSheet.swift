@@ -91,7 +91,7 @@ struct MealRatingSheet: View {
                 set: { selectedPhotoIndex = $0?.index }
             )) { wrapper in
                 if let meal, wrapper.index < meal.photoPaths.count {
-                    MealGalleryViewerSheet(paths: meal.photoPaths, initialIndex: wrapper.index)
+                    MediaViewerSheet(.paths(meal.photoPaths), startIndex: wrapper.index)
                 }
             }
             .sheet(item: Binding(
@@ -102,7 +102,7 @@ struct MealRatingSheet: View {
                     let paths = recipe.recipePhotoPaths.isEmpty ? recipe.photoPaths : recipe.recipePhotoPaths
                     let bucket = SupabaseConfig.recipeBucket
                     if !paths.isEmpty {
-                        MealGalleryViewerSheet(paths: paths, initialIndex: min(wrapper.index, paths.count - 1), bucket: bucket, titlePrefix: "Recipe")
+                        MediaViewerSheet(.paths(paths, bucket: bucket), startIndex: wrapper.index, title: "Recipe")
                     }
                 }
             }
@@ -130,27 +130,8 @@ struct MealRatingSheet: View {
                     }
                 )
 
-                // 1. Taste (Standalone)
-                VStack(alignment: .leading, spacing: 8) {
-                    SectionHeader(
-                        "How was it?",
-                        trailingText: myReaction?.name,
-                        trailingColor: myReaction?.text,
-                        horizontalPadding: 4
-                    )
-                    TasteScoreSelector(selection: $myReaction)
-                }
-
-                // 2. Repeat Goal (Standalone)
-                VStack(alignment: .leading, spacing: 8) {
-                    SectionHeader(
-                        "How often to repeat",
-                        trailingText: repeatDesire?.title,
-                        trailingColor: DS.Color.accentText,
-                        horizontalPadding: 4
-                    )
-                    RotationGoalSelector(selection: $repeatDesire)
-                }
+                // 1–2. Taste and repeat goal
+                RatingBlocks(reaction: $myReaction, repeatDesire: $repeatDesire)
 
                 // 3. Household Eaters (if present)
                 if !store.myEaters.isEmpty {

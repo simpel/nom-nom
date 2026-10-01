@@ -232,10 +232,7 @@ struct RecipeDetailView: View {
             set: { if !$0 { selectedPhotoIndex = nil } }
         )) {
             if !allPhotos.isEmpty {
-                MealGalleryViewerSheet(
-                    paths: allPhotos,
-                    initialIndex: selectedPhotoIndex ?? 0
-                )
+                MediaViewerSheet(.paths(allPhotos), startIndex: selectedPhotoIndex ?? 0)
             }
         }
         .sheet(isPresented: $showHealthRationale) {

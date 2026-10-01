@@ -36,11 +36,10 @@ struct RecipePhotosCard: View {
                 }
             }
             .sheet(isPresented: $showingFullScreenGallery) {
-                MealGalleryViewerSheet(
-                    paths: recipe.recipePhotoPaths,
-                    initialIndex: selectedPhotoIndex,
-                    bucket: SupabaseConfig.recipeBucket,
-                    titlePrefix: "Recipe Page"
+                MediaViewerSheet(
+                    .paths(recipe.recipePhotoPaths, bucket: SupabaseConfig.recipeBucket),
+                    startIndex: selectedPhotoIndex,
+                    title: "Recipe Page"
                 )
             }
         }

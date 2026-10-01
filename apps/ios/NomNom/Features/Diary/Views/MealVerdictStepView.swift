@@ -92,11 +92,7 @@ struct MealVerdictStepView: View {
                     }
                 )
 
-                // Axis 1: Taste Verdict (Standalone 6-tile selector)
-                tasteSection
-
-                // Axis 2: Rotation Goal (Standalone 3-card selector)
-                rotationSection
+                RatingBlocks(reaction: $myReaction, repeatDesire: $repeatDesire)
             }
             .padding(.horizontal, DS.Spacing.screenHorizontal)
             .padding(.top, DS.Spacing.screenTop)
@@ -104,26 +100,13 @@ struct MealVerdictStepView: View {
         }
         .background(DS.Color.bg)
         .screenTitle("Rate Meal", displayMode: .inline)
-        .toolbar {
-            ToolbarItem(placement: .topBarTrailing) {
-                if isSaving {
-                    ProgressView().controlSize(.small)
-                } else {
-                    Button {
-                        save()
-                    } label: {
-                        Image(systemName: "checkmark")
-                            .fontWeight(.semibold)
-                    }
-                }
-            }
-        }
+        .stepCommitToolbar(isSaving: isSaving, onSave: save)
         .sheet(item: Binding(
             get: { selectedPhotoIndex.map { PhotoIndexWrapper(index: $0) } },
             set: { selectedPhotoIndex = $0?.index }
         )) { wrapper in
             if wrapper.index < draft.photos.count {
-                MealPhotoViewerSheet(draft: draft.photos, initialIndex: wrapper.index)
+                MediaViewerSheet(.photosDraft(draft.photos), startIndex: wrapper.index)
             }
         }
         .sheet(item: Binding(
@@ -134,7 +117,7 @@ struct MealVerdictStepView: View {
                 let paths = matchedRecipe.recipePhotoPaths.isEmpty ? matchedRecipe.photoPaths : matchedRecipe.recipePhotoPaths
                 let bucket = SupabaseConfig.recipeBucket
                 if !paths.isEmpty {
-                    MealGalleryViewerSheet(paths: paths, initialIndex: min(wrapper.index, paths.count - 1), bucket: bucket, titlePrefix: "Recipe")
+                    MediaViewerSheet(.paths(paths, bucket: bucket), startIndex: wrapper.index, title: "Recipe")
                 }
             }
         }
@@ -145,7 +128,6 @@ struct MealVerdictStepView: View {
                 repeatDesire = draft.repeatDesire
             }
         }
-        .interactiveDismissDisabled(isSaving)
         .presentationDragIndicator(.visible)
         .simultaneousGesture(
             DragGesture(minimumDistance: 30)
@@ -161,34 +143,6 @@ struct MealVerdictStepView: View {
             Button("OK") { store.errorMessage = nil }
         } message: {
             Text(store.errorMessage ?? "")
-        }
-    }
-
-    // MARK: - Taste Section
-
-    private var tasteSection: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            SectionHeader(
-                "How was it?",
-                trailingText: myReaction?.name,
-                trailingColor: myReaction?.text,
-                horizontalPadding: 4
-            )
-            TasteScoreSelector(selection: $myReaction)
-        }
-    }
-
-    // MARK: - Rotation Section
-
-    private var rotationSection: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            SectionHeader(
-                "How often to repeat",
-                trailingText: repeatDesire?.title,
-                trailingColor: DS.Color.accentText,
-                horizontalPadding: 4
-            )
-            RotationGoalSelector(selection: $repeatDesire)
         }
     }
 

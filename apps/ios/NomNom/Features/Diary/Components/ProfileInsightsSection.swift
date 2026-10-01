@@ -50,10 +50,10 @@ struct ProfileInsightsSection: View {
     }
 
     private func healthTrendChart(_ healthInsights: PartyHealthInsights) -> some View {
-        let trend: [(date: Date, averageScore: Double)] = healthInsights.healthScoreTrend.map {
-            (date: $0.date, averageScore: $0.averageHealthScore)
-        }
-        return InsightsTrendChart(trendData: trend, domain: 0...100, valueFormat: "%.0f")
+        TrendChart(
+            total: healthInsights.healthScoreTrend.map { TrendPoint(date: $0.date, value: $0.averageHealthScore / 100) },
+            totalName: "Health"
+        )
     }
 
     private func tasteProfileCard(_ profile: RaterTasteProfile) -> some View {

@@ -24,6 +24,14 @@ This file lists UI patterns that exist in the app but not in the design system. 
 | 14 | **Form blocks** | Name fields, party form, visibility toggle card, account/danger actions | Duplicated form cards |
 | 15 | **Sheet step toolbars** | "Next" and step-commit toolbars for multi-step sheets (native; the convention needs documenting) | 8 hand-written toolbars |
 
+### Notes: charts, media and form blocks (rows 6, 7, 8, 14, 15)
+
+- **6 TrendChart**: `Interim/TrendChart` + `TrendChartTooltip` + `TrendSeries`. Values are 0–1 and read ×100. The total line is `primary`, member lines are dashed `chart-series` by stable index, gridlines are `line`. With no member series it draws a `primary` area under the total. Drag to scrub (native `chartXSelection`); the tooltip is a `sm` Card with `shadow-lg` and clears on release. `visibleDays` makes the x axis scroll. For the DS to decide: stroke widths and dash (today 3pt total, 1.5pt dashed members), what an 8th member gets (the palette repeats), and whether the tooltip should stay after release.
+- **7 MediaViewerSheet**: `Interim/MediaViewerSheet` + `MediaViewerPage` + `MediaViewerSource` (stored paths, a PhotosDraft or a RecipeDraft). Paged TabView, "Photo 2 of 5" title, `.mediaViewerStyle()`.
+- **8 PhotoStrip edit mode**: `Composites/PhotoStripEditor` (+ `Tile`, `Item`, `+Drafts`). PhotoCard `sm` tiles. Remove is an AppButton `secondary elevated sm` xmark. The first photo gets a "Cover" Badge `elevated sm`, or every photo gets "Page N" for recipe pages. "Camera" (AppButton) and "Library" (PhotosPicker with an AppButtonLabel) add photos; empty, it shows PhotoStrip's dashed add tile. Reordering uses each tile's context menu and accessibility actions (Make cover, Move left, Move right) rather than drag, because a drag fights the horizontal scroll. Recipe page photos can't be reordered: RecipeDraft keeps stored and new pages in separate lists. The DS should say whether it wants drag-to-reorder. PartyDetailHeader's cover picker moves in Phase 4.
+- **14 Form blocks**: `Interim/NameFieldsCard`, `PartyFormFields`, `VisibilityToggleCard`, `AccountActionsSection` and `View+AccountConfirmations` (the one copy of the sign-out and delete-account alerts). Two feature-level blocks are used only by Diary: `Features/Diary/Components/RatingBlocks` (taste and rotation) and `RecipeBasicsForm` (cover, name, cooking time, cuisine).
+- **15 Step toolbars**: `.sheetNextToolbar` (CreateRecipeSheet, RecipeEditSheet, CreatePartySheet) and `.stepCommitToolbar` (MealVerdictStepView, RecipeDetailsStepView, PartySetupStepView). MealDetailsStepView still writes its own toolbar, because one trailing slot switches between "Next" (new meal) and the checkmark (editing).
+
 ## Kept as-is, tokens applied only (the DS lists these as "not synced")
 
 - Selectors: BurnerMeter, CookingTimeSelector, RotationGoalSelector, TactileOptionPicker, TactileTasteSelector (household eater rows)
