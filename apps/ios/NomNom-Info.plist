@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!--
+	Keys Xcode cannot generate from INFOPLIST_KEY_* build settings. Merged with
+	the generated Info.plist (GENERATE_INFOPLIST_FILE = YES). Lives outside the
+	synchronized NomNom/ folder so it is not also copied as a bundle resource.
+	-->
+	<key>UIAppFonts</key>
+	<array>
+		<string>Newsreader-Regular.ttf</string>
+		<string>Newsreader-Italic.ttf</string>
+		<string>Newsreader-DisplayRegular.ttf</string>
+	</array>
+</dict>
+</plist>

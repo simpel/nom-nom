@@ -23,8 +23,8 @@ enum ScoreTrend: Hashable {
 
     var color: Color {
         switch self {
-        case .up: return DS.Color.Pine.pine600
-        case .down: return Color("ds/reaction/bad/text")
+        case .up: return DS.Color.primaryText
+        case .down: return DS.Color.warningText
         case .neutral: return DS.Color.textSecondary
         }
     }
@@ -202,9 +202,9 @@ struct DividedScoreCard: View {
                     .fill(
                         LinearGradient(
                             colors: [
-                                Color("ds/reaction/bad/fill"),
-                                Color("ds/reaction/meh/fill"),
-                                Color("ds/reaction/good/fill"),
+                                DS.Color.reactionBadFill,
+                                DS.Color.reactionMehFill,
+                                DS.Color.reactionGoodFill,
                                 DS.Color.Pine.pine400
                             ],
                             startPoint: .leading,

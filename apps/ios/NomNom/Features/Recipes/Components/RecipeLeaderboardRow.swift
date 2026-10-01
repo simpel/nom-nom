@@ -155,7 +155,7 @@ struct RecipeLeaderboardRow: View {
         case 2, 3:
             return Font.newsreader(.headline, weight: .semibold)
         default:
-            return Font.inter(.subheadline, weight: .medium)
+            return Font.subheadline
         }
     }
 

@@ -169,12 +169,7 @@ struct ScoreBadge: View {
     // MARK: - Helpers
 
     private static func derivedReaction(for score: Double) -> Reaction {
-        if score >= 0.85 { return .amazing }
-        if score >= 0.70 { return .great }
-        if score >= 0.50 { return .good }
-        if score >= 0.30 { return .meh }
-        if score >= 0.15 { return .bad }
-        return .inedible
+        Reaction(score: score)
     }
 }
 

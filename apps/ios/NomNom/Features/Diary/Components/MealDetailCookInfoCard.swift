@@ -10,7 +10,7 @@ struct MealDetailCookInfoCard: View {
 
     private var dish: Recipe? { store.dish(meal.dishID) }
     private var parties: [Party] { store.parties(forMeal: meal.id) }
-    private var cookLabel: (emoji: String, name: String) {
+    private var cookLabel: FoodStore.RaterLabel {
         store.label(for: .account(meal.createdBy))
     }
     private var displayEffort: EffortLevel? {

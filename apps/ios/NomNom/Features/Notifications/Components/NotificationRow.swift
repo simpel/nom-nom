@@ -62,17 +62,17 @@ struct NotificationRow: View {
                         .frame(width: 6, height: 6)
 
                     Text(notification.createdAt.formatted(.relative(presentation: .named)))
-                        .font(.inter(.caption2, weight: .semibold))
+                        .font(.caption2.weight(.semibold))
                         .foregroundStyle(DS.Color.accentText)
                 }
 
                 Text(notification.title)
-                    .font(.inter(.subheadline, weight: .bold))
+                    .font(.subheadline.weight(.semibold))
                     .foregroundStyle(DS.Color.textPrimary)
                     .lineLimit(1)
 
                 Text(notification.body)
-                    .font(.inter(.footnote))
+                    .font(.footnote)
                     .foregroundStyle(DS.Color.textPrimary.opacity(0.88))
                     .lineLimit(2)
                     .lineSpacing(2)
@@ -111,12 +111,12 @@ struct NotificationRow: View {
 
             VStack(alignment: .leading, spacing: 2) {
                 Text(notification.title)
-                    .font(.inter(.subheadline, weight: .regular))
+                    .font(.subheadline)
                     .foregroundStyle(DS.Color.textSecondary)
                     .lineLimit(1)
 
                 Text(notification.body)
-                    .font(.inter(.footnote))
+                    .font(.footnote)
                     .foregroundStyle(DS.Color.textTertiary)
                     .lineLimit(2)
                     .lineSpacing(1.5)

@@ -58,7 +58,7 @@ struct PartyDetailHeader: View {
 
             if !party.about.isEmpty {
                 Text(party.about)
-                    .font(.inter(.body))
+                    .font(.body)
                     .foregroundStyle(DS.Color.textSecondary)
                     .multilineTextAlignment(.center)
                     .lineSpacing(4)

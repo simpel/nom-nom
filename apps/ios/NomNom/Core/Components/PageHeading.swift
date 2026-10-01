@@ -11,7 +11,7 @@ struct PageHeading: View {
     var body: some View {
         HStack(alignment: .center) {
             Text(title)
-                .font(AppTypography.pageTitleFont)
+                .font(DS.TextStyle.serifLg.font)
                 .foregroundStyle(DS.Color.textPrimary)
 
             Spacer()

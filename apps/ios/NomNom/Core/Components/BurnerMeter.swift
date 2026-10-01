@@ -33,7 +33,7 @@ struct BurnerMeter: View {
 
             if showLabel {
                 Text(effort?.label ?? "—")
-                    .font(.inter(.callout))
+                    .font(.callout)
                     .monospacedDigit()
                     .foregroundStyle(effort != nil ? DS.Color.textSecondary : DS.Color.textTertiary)
             }

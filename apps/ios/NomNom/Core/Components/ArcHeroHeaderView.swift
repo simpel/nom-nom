@@ -2,8 +2,8 @@ import SwiftUI
 
 /// Harmonized hero header presenting:
 /// 1. An arced card deck of photos (or cuisine asset / placeholder)
-/// 2. Editorial title (using `AppTypography.pageTitleFont`)
-/// 3. Formatted date or subtitle (using Inter subheadline)
+/// 2. Editorial title (`serif-lg`)
+/// 3. Formatted date or subtitle (system subheadline)
 /// 4. Optional primary action button placed directly beneath the text block
 ///
 /// Designed for reuse across `MealDetailView`, `MealRatingSheet`, `MealVerdictStepView`,

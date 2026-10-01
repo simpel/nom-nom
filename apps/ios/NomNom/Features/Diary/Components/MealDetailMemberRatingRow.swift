@@ -3,7 +3,6 @@ import SwiftUI
 /// Single member rating row inside MealDetailPartyRatingsCard (strictly no icons).
 struct MealDetailMemberRatingRow: View {
     let name: String
-    var avatar: String = ""
     var photoPath: String? = nil
     var initialLetter: String? = nil
     var isMe: Bool = false
@@ -20,7 +19,6 @@ struct MealDetailMemberRatingRow: View {
 
     init(
         name: String,
-        avatar: String = "",
         photoPath: String? = nil,
         initialLetter: String? = nil,
         isMe: Bool = false,
@@ -33,7 +31,6 @@ struct MealDetailMemberRatingRow: View {
         onTapExplain: (() -> Void)? = nil
     ) {
         self.name = name
-        self.avatar = avatar
         self.photoPath = photoPath
         self.initialLetter = initialLetter
         self.isMe = isMe
@@ -48,7 +45,6 @@ struct MealDetailMemberRatingRow: View {
 
     init(
         name: String,
-        avatar: String = "",
         photoPath: String? = nil,
         initialLetter: String? = nil,
         isMe: Bool = false,
@@ -62,7 +58,6 @@ struct MealDetailMemberRatingRow: View {
     ) {
         self.init(
             name: name,
-            avatar: avatar,
             photoPath: photoPath,
             initialLetter: initialLetter,
             isMe: isMe,
@@ -192,34 +187,29 @@ struct MealDetailMemberRatingRow: View {
     VStack(spacing: 12) {
         MealDetailMemberRatingRow(
             name: "Joel Sandén",
-            avatar: "🧑‍🍳",
             isMe: true,
             reaction: .great,
             onTapRate: {}
         )
         MealDetailMemberRatingRow(
             name: "Joel Sandén",
-            avatar: "🧑‍🍳",
             isMe: true,
             reaction: nil,
             onTapRate: {}
         )
         MealDetailMemberRatingRow(
             name: "Alice Lind",
-            avatar: "👩‍🌾",
             isMe: false,
             reaction: .good
         )
         MealDetailMemberRatingRow(
             name: "Bob Berg",
-            avatar: "🧑",
             isMe: false,
             reaction: nil,
             isAsked: true
         )
         MealDetailMemberRatingRow(
             name: "Charlie Stone",
-            avatar: "👨‍🍳",
             isMe: false,
             reaction: nil,
             isAsked: false,
@@ -227,7 +217,6 @@ struct MealDetailMemberRatingRow: View {
         )
         MealDetailMemberRatingRow(
             name: "Leo",
-            avatar: "👦",
             isMe: false,
             reaction: .amazing
         )

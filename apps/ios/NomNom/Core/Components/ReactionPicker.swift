@@ -2,7 +2,6 @@ import SwiftUI
 
 /// Compact verdict selector (-1 to 5) for member rows.
 struct ReactionPicker: View {
-    let emoji: String
     let name: String
     @Binding var selection: Reaction?
 

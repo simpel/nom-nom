@@ -18,14 +18,14 @@ struct CookingTimeSelector: View {
                 } label: {
                     VStack(spacing: 5) {
                         Text(level.label)
-                            .font(.inter(size: 13, weight: isSelected ? .bold : .semibold))
+                            .font(.system(size: 13, weight: .semibold))
                             .foregroundStyle(isSelected ? DS.Color.accentText : DS.Color.textPrimary)
                             .lineLimit(1)
                             .minimumScaleFactor(0.8)
 
                         if let desc = level.description {
                             Text(desc)
-                                .font(.inter(size: 10.5, weight: .regular))
+                                .font(.system(size: 10.5, weight: .regular))
                                 .foregroundStyle(isSelected ? DS.Color.textPrimary.opacity(0.85) : DS.Color.textSecondary)
                                 .lineLimit(1)
                                 .minimumScaleFactor(0.8)

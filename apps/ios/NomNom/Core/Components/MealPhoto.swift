@@ -24,7 +24,7 @@ struct MealPhoto: View {
                             .font(.system(size: 20, weight: .regular))
                             .foregroundStyle(DS.Color.textTertiary)
                         Text("No photo yet")
-                            .font(.inter(.caption2))
+                            .font(.caption2)
                             .foregroundStyle(DS.Color.textTertiary)
                     }
                     .padding(8)

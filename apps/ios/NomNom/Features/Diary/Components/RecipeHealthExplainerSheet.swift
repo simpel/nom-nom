@@ -47,7 +47,7 @@ struct RecipeHealthExplainerSheet: View {
                     VStack(alignment: .leading, spacing: 4) {
                         HStack(alignment: .firstTextBaseline) {
                             Text(tier.displayName)
-                                .font(AppTypography.subHeading)
+                                .font(DS.TextStyle.serifXs.font)
                                 .foregroundStyle(tier.color)
 
                             Spacer()
@@ -78,7 +78,7 @@ struct RecipeHealthExplainerSheet: View {
     private var cookingImpactSection: some View {
         VStack(alignment: .leading, spacing: 6) {
             Text("Why Cooking Matters")
-                .font(AppTypography.sectionHeading)
+                .font(DS.TextStyle.serifXs.font)
                 .foregroundStyle(DS.Color.textPrimary)
                 .padding(.horizontal, 4)
 
@@ -96,7 +96,7 @@ struct RecipeHealthExplainerSheet: View {
     private var scienceSection: some View {
         VStack(alignment: .leading, spacing: 6) {
             Text("The Science Behind the Score")
-                .font(AppTypography.sectionHeading)
+                .font(DS.TextStyle.serifXs.font)
                 .foregroundStyle(DS.Color.textPrimary)
                 .padding(.horizontal, 4)
 

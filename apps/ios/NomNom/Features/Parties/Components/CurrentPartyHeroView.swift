@@ -75,7 +75,7 @@ struct CurrentPartyHeroView: View {
 
             VStack(alignment: .leading, spacing: 2) {
                 Text(party.name)
-                    .font(AppTypography.displayL)
+                    .font(DS.TextStyle.serifSm.font)
                     .foregroundStyle(DS.Color.textPrimary)
                     .lineLimit(1)
 
@@ -121,7 +121,7 @@ struct CurrentPartyHeroView: View {
 
             VStack(spacing: 4) {
                 Text("No Dinner Party Selected")
-                    .font(AppTypography.displayM)
+                    .font(DS.TextStyle.serifXs.font)
                     .foregroundStyle(DS.Color.textPrimary)
 
                 Text("Create or join a dinner party to start logging meals and ratings together.")

@@ -2,28 +2,23 @@ import SwiftUI
 
 /// Profile editing section in Settings.
 struct ProfileSettingsSection: View {
-    let emojiChoices: [String]
     @Binding var confirmSignOut: Bool
 
     @Environment(FoodStore.self) private var store
 
     @State private var firstName = ""
     @State private var lastName = ""
-    @State private var myEmoji = "🧑"
     @State private var didLoadProfile = false
 
     var body: some View {
         SectionCard("Your Profile") {
             VStack(alignment: .leading, spacing: 12) {
                 HStack(spacing: 14) {
-                    ZStack {
-                        Circle()
-                            .fill(DS.Color.accentSoft)
-                            .frame(width: 48, height: 48)
-                        Text(firstName.prefix(1).uppercased())
-                            .font(.title3.weight(.bold))
-                            .foregroundStyle(DS.Color.accentText)
-                    }
+                    UserAvatar(
+                        name: "\(firstName) \(lastName)",
+                        photoPath: store.myProfile?.photoPath,
+                        size: 48
+                    )
 
                     VStack(spacing: 0) {
                         Input(label: "First", placeholder: "First name", text: $firstName, size: .sm)
@@ -62,10 +57,9 @@ struct ProfileSettingsSection: View {
         didLoadProfile = true
         firstName = store.myProfile?.firstName ?? ""
         lastName = store.myProfile?.lastName ?? ""
-        myEmoji = store.myProfile?.avatarEmoji ?? "🧑"
     }
 
     private func saveProfile() {
-        Task { await store.updateProfile(firstName: firstName, lastName: lastName, emoji: myEmoji) }
+        Task { await store.updateProfile(firstName: firstName, lastName: lastName) }
     }
 }

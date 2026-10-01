@@ -2,7 +2,7 @@ import SwiftUI
 
 /// Compact read-only row of member verdicts on a meal.
 struct VerdictStrip: View {
-    let entries: [(emoji: String, name: String, reaction: Reaction?)]
+    let entries: [(name: String, reaction: Reaction?)]
     var showNames: Bool = false
 
     var body: some View {

@@ -93,7 +93,6 @@ struct MealDetailPartyRatingsCard: View {
 
                     MealDetailMemberRatingRow(
                         name: member.shownName,
-                        avatar: member.avatarEmoji,
                         photoPath: member.photoPath,
                         initialLetter: String(member.shownName.prefix(1)),
                         isMe: isMe,
@@ -113,7 +112,6 @@ struct MealDetailPartyRatingsCard: View {
 
                     MealDetailMemberRatingRow(
                         name: verdict.name,
-                        avatar: verdict.emoji,
                         initialLetter: String(verdict.name.prefix(1)),
                         isMe: false,
                         reaction: verdict.reaction,

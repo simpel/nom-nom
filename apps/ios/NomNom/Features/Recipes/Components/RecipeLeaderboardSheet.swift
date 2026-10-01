@@ -79,11 +79,11 @@ struct RecipeLeaderboardSheet: View {
 
             VStack(spacing: 0) {
                 Text("No Ranked Dishes")
-                    .font(AppTypography.displayL)
+                    .font(DS.TextStyle.serifSm.font)
                     .foregroundStyle(DS.Color.textPrimary)
 
                 Text("Cook and rate meals to rank your recipes on the leaderboard.")
-                    .font(AppTypography.bodyM)
+                    .font(DS.TextStyle.sansMd.font)
                     .foregroundStyle(DS.Color.textSecondary)
                     .multilineTextAlignment(.center)
                     .lineSpacing(3)

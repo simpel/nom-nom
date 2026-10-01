@@ -110,7 +110,7 @@ struct MealEditorRecipeSection: View {
                     }
 
                     Text(title)
-                        .font(AppTypography.pageTitleFont)
+                        .font(DS.TextStyle.serifLg.font)
                         .foregroundStyle(DS.Color.textPrimary)
                         .multilineTextAlignment(.center)
                         .padding(.horizontal, 20)

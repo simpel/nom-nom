@@ -59,7 +59,7 @@ struct SuggestionRow: View {
 
                     if !suggestion.verdicts.isEmpty {
                         VerdictStrip(entries: suggestion.verdicts.map {
-                            (emoji: $0.emoji, name: $0.name, reaction: $0.reaction)
+                            (name: $0.name, reaction: $0.reaction)
                         })
                     }
 

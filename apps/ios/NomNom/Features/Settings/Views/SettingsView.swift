@@ -11,15 +11,14 @@ struct SettingsView: View {
     @State private var confirmSignOut = false
     @State private var confirmDelete = false
 
-    private let emojiChoices = ["🧒", "👦", "👧", "🧑", "👩", "👨", "👶", "🐣", "🦊", "🐻", "🐼", "🦁", "🐧", "🦄"]
 
     var body: some View {
         ScrollView {
             VStack(spacing: DS.Spacing.section) {
                 partiesSection
-                HouseholdMembersSection(emojiChoices: emojiChoices)
+                HouseholdMembersSection()
                 NotificationPreferencesSection()
-                ProfileSettingsSection(emojiChoices: emojiChoices, confirmSignOut: $confirmSignOut)
+                ProfileSettingsSection(confirmSignOut: $confirmSignOut)
                 #if DEBUG
                 sampleDataSection
                 #endif

@@ -77,7 +77,7 @@ struct MealRaterExplanationSheet: View {
                     .foregroundStyle(DS.Color.textTertiary)
                 Text("\(Int((affinity.raterAverage * 100).rounded()))/100")
                     .font(Font.newsreader(.subheadline, weight: .semibold))
-                    .foregroundStyle(affinity.delta < 0 ? Color("ds/reaction/bad/text") : DS.Color.Pine.pine600)
+                    .foregroundStyle(affinity.delta < 0 ? DS.Color.warningText : DS.Color.primaryText)
             }
 
             VStack(alignment: .leading, spacing: 2) {

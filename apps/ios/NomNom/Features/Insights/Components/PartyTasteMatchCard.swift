@@ -124,7 +124,6 @@ struct PartyTasteMatchCard: View {
             MemberTasteMatch(
                 ref: .account(UUID()),
                 name: "Anna",
-                emoji: "",
                 matchScore: 88,
                 ratedMealsCount: 6,
                 trend: .down,
@@ -134,7 +133,6 @@ struct PartyTasteMatchCard: View {
             MemberTasteMatch(
                 ref: .account(UUID()),
                 name: "Joel",
-                emoji: "",
                 matchScore: 95,
                 ratedMealsCount: 8,
                 trend: .up,

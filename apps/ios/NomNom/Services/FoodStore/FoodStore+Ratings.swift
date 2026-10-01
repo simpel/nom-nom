@@ -65,13 +65,7 @@ extension FoodStore {
 
     /// Average taste reaction for a single meal based on all eaters' verdicts.
     func averageReaction(forMeal mealID: UUID) -> Reaction? {
-        guard let score = averageScore(forMeal: mealID) else { return nil }
-        if score >= 0.85 { return .amazing }
-        if score >= 0.70 { return .great }
-        if score >= 0.50 { return .good }
-        if score >= 0.30 { return .meh }
-        if score >= 0.15 { return .bad }
-        return .inedible
+        averageScore(forMeal: mealID).map(Reaction.init(score:))
     }
 
     /// Average rotation goal for a meal, falling back to dish average if not explicitly set.
@@ -102,13 +96,7 @@ extension FoodStore {
 
     /// Average taste reaction across all historical servings of a dish.
     func averageReaction(forDish dishID: UUID) -> Reaction? {
-        guard let avgScore = averageScore(forDish: dishID) else { return nil }
-        if avgScore >= 0.85 { return .amazing }
-        if avgScore >= 0.70 { return .great }
-        if avgScore >= 0.50 { return .good }
-        if avgScore >= 0.30 { return .meh }
-        if avgScore >= 0.15 { return .bad }
-        return .inedible
+        averageScore(forDish: dishID).map(Reaction.init(score:))
     }
 
     /// Saves an eater's evaluation of a meal: taste verdict, rotation goal, and eater notes.

@@ -3,9 +3,9 @@ import SwiftUI
 extension View {
     /// Applies a standardized screen or sheet title with centralized display mode behavior.
     ///
-    /// The title typography is governed by `AppTypography`:
-    /// - Expanded page title: 32pt Newsreader Regular (`AppTypography.pageTitleFontName`).
-    /// - Compact navbar title: Inter Light 300 (`AppTypography.navBarTitleFontName`).
+    /// The title typography is set globally in `AppDelegate.configureGlobalTypography()`:
+    /// - Expanded page title: Newsreader 72pt Regular at `DS.TextStyle.serifLg`.
+    /// - Compact navbar title: system semibold.
     func screenTitle(
         _ title: String,
         displayMode: NavigationBarItem.TitleDisplayMode = .large

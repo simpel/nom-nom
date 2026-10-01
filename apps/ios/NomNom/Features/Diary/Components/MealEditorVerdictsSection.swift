@@ -8,8 +8,7 @@ struct MealEditorVerdictsSection: View {
     var body: some View {
         Section {
             ForEach(store.raterRoster, id: \.ref) { person in
-                ReactionPicker(emoji: person.emoji,
-                               name: person.name,
+                ReactionPicker(name: person.name,
                                selection: binding(for: person.ref))
             }
 

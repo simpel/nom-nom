@@ -4,6 +4,9 @@ import SwiftUI
 ///
 /// Modifying `AppRadius.standard` updates cards, buttons, input fields,
 /// pickers, and media elements across the entire app.
+///
+/// Deprecated: replaced by `DS.Radius` (Tailwind scale). Removed in Phase 6.
+@available(*, deprecated, message: "Use DS.Radius")
 public enum AppRadius {
     /// Central/default radius applied across the app (12px).
     public static var standard: CGFloat = 12

@@ -16,7 +16,7 @@ struct MealsEmptyStateView: View {
 
                     if let partyName = store.currentParty?.name {
                         Text(partyName)
-                            .font(AppTypography.pageTitleFont)
+                            .font(DS.TextStyle.serifLg.font)
                             .foregroundStyle(DS.Color.textPrimary)
                             .multilineTextAlignment(.center)
                             .padding(.horizontal, 24)
@@ -27,11 +27,11 @@ struct MealsEmptyStateView: View {
 
                     VStack(spacing: 10) {
                         Text("Log your first meal")
-                            .font(AppTypography.displayL)
+                            .font(DS.TextStyle.serifSm.font)
                             .foregroundStyle(DS.Color.textPrimary)
 
                         descriptionText
-                            .font(AppTypography.bodyM)
+                            .font(DS.TextStyle.sansMd.font)
                             .foregroundStyle(DS.Color.textSecondary)
                             .multilineTextAlignment(.center)
                             .lineSpacing(3)

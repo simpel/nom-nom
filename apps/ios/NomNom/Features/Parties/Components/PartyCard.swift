@@ -100,7 +100,7 @@ struct PartyCard: View {
 
             VStack(alignment: .leading, spacing: 2) {
                 Text(party.name)
-                    .font(AppTypography.displayL)
+                    .font(DS.TextStyle.serifSm.font)
                     .foregroundStyle(DS.Color.textPrimary)
                     .lineLimit(1)
 

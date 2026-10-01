@@ -2,7 +2,6 @@ import SwiftUI
 
 /// Section managing household members, invitations by email, and local household profiles.
 struct HouseholdMembersSection: View {
-    var emojiChoices: [String] = ["🧒", "👦", "👧", "🧑", "👩", "👨", "👶", "🐣", "🦊", "🐻", "🐼", "🦁", "🐧", "🦄"]
 
     @Environment(FoodStore.self) private var store
 
@@ -131,7 +130,7 @@ struct HouseholdMembersSection: View {
             SectionCard("Other Profiles (No account)") {
                 VStack(spacing: 0) {
                     ForEach(store.myEaters) { eater in
-                        EaterRow(eater: eater, emojiChoices: emojiChoices)
+                        EaterRow(eater: eater)
                         if eater.id != store.myEaters.last?.id {
                             Divider()
                         }

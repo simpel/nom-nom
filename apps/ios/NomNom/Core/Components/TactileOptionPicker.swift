@@ -87,7 +87,7 @@ struct TactileOptionPicker<Option: TactilePickerOption>: View {
                                     .foregroundStyle(isSelected ? option.tint : DS.Color.textPrimary)
                             } else {
                                 Text(option.label)
-                                    .font(.inter(size: 13, weight: isSelected ? .bold : .semibold))
+                                    .font(.system(size: 13, weight: .semibold))
                                     .foregroundStyle(isSelected ? DS.Color.textPrimary : DS.Color.textPrimary.opacity(0.85))
                                     .lineLimit(1)
                                     .minimumScaleFactor(0.75)
@@ -96,7 +96,7 @@ struct TactileOptionPicker<Option: TactilePickerOption>: View {
 
                         if hasDescription, let description = option.description {
                             Text(description)
-                                .font(.inter(size: 10, weight: .regular))
+                                .font(.system(size: 10, weight: .regular))
                                 .foregroundStyle(isSelected ? DS.Color.textSecondary : DS.Color.textSecondary.opacity(0.8))
                                 .lineLimit(1)
                                 .minimumScaleFactor(0.75)

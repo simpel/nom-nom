@@ -15,11 +15,11 @@ struct MyRecipesSection: View {
 
                 VStack(spacing: 0) {
                     Text("Create your first recipe")
-                        .font(AppTypography.displayL)
+                        .font(DS.TextStyle.serifSm.font)
                         .foregroundStyle(DS.Color.textPrimary)
 
                     Text("Recipes you create will appear here.")
-                        .font(AppTypography.bodyM)
+                        .font(DS.TextStyle.sansMd.font)
                         .foregroundStyle(DS.Color.textSecondary)
                         .multilineTextAlignment(.center)
                         .lineSpacing(3)

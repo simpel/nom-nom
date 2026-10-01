@@ -46,7 +46,7 @@ struct InboxSheetView: View {
                                 ProgressView().controlSize(.small)
                             } else {
                                 Text("Mark All Read")
-                                    .font(.inter(.footnote, weight: .medium))
+                                    .font(.footnote)
                                     .foregroundStyle(DS.Color.accentText)
                             }
                         }

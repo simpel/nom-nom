@@ -1,7 +1,7 @@
 import SwiftUI
 
 /// Reusable composable header for on-page narrative hero titles, subtitles, and metadata.
-/// Standardized with `AppTypography.pageTitleFont` (32pt Newsreader Regular) and Inter metadata.
+/// Set in `serif-lg` with a `sans-md` secondary subtitle.
 struct PageHeader: View {
     let title: String
     var subtitle: String? = nil
@@ -10,14 +10,12 @@ struct PageHeader: View {
     var body: some View {
         VStack(alignment: alignment, spacing: 6) {
             Text(title)
-                .font(AppTypography.pageTitleFont)
+                .textStyle(.serifLg)
                 .multilineTextAlignment(textAlignment)
-                .foregroundStyle(DS.Color.textPrimary)
 
             if let subtitle, !subtitle.isEmpty {
                 Text(subtitle)
-                    .font(.inter(.subheadline))
-                    .foregroundStyle(DS.Color.textSecondary)
+                    .textStyle(.sansMd, tone: .secondary)
                     .multilineTextAlignment(textAlignment)
             }
         }

@@ -92,12 +92,12 @@ struct MealHistoricalScoresCard: View {
                     Text(delta >= 0 ? "+\(delta) vs avg" : "\(delta) vs avg")
                         .font(.caption.weight(.semibold))
                 }
-                .foregroundStyle(delta >= 0 ? DS.Color.Pine.pine600 : Color("ds/reaction/bad/text"))
+                .foregroundStyle(delta >= 0 ? DS.Color.primaryText : DS.Color.warningText)
                 .padding(.horizontal, 8)
                 .padding(.vertical, 4)
                 .background {
                     Capsule()
-                        .fill(delta >= 0 ? DS.Color.Pine.pine50 : Color("ds/reaction/bad/fill"))
+                        .fill(delta >= 0 ? DS.Color.primarySoft : DS.Color.warningSoft)
                 }
             }
         }

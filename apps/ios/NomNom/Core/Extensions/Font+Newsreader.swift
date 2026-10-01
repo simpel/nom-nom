@@ -1,112 +1,69 @@
 import SwiftUI
 
+/// Newsreader is bundled in three cuts only: 16pt Regular, 16pt Italic and
+/// 72pt (display) Regular. The design system has no serif weights, so any
+/// `weight` passed here is ignored and the face is always Regular.
+/// Prefer `.textStyle(.serif…)` / `DS.TextStyle.serif….font` in new code.
 extension Font {
-    /// Newsreader font name resolution based on weight and italic style.
-    private static func newsreaderFontName(for weight: Font.Weight, italic: Bool = false) -> String {
-        switch (weight, italic) {
-        case (.ultraLight, _), (.thin, _):
-            return "Newsreader16pt-ExtraLight"
-        case (.light, _):
-            return "Newsreader16pt-Light"
-        case (.bold, true), (.heavy, true), (.black, true):
-            return "Newsreader16pt-BoldItalic"
-        case (.bold, false), (.heavy, false), (.black, false):
-            return "Newsreader16pt-Bold"
-        case (.semibold, true):
-            return "Newsreader16pt-SemiBoldItalic"
-        case (.semibold, false):
-            return "Newsreader16pt-SemiBold"
-        case (.medium, true):
-            return "Newsreader16pt-MediumItalic"
-        case (.medium, false):
-            return "Newsreader16pt-Medium"
-        case (_, true):
-            return "Newsreader16pt-Italic"
-        default:
-            return "Newsreader16pt-Regular"
-        }
+    private static func newsreaderFontName(size: CGFloat, italic: Bool) -> String {
+        if italic { return "Newsreader16pt-Italic" }
+        return size >= DS.TextStyle.serifMd.size ? "Newsreader72pt-Regular" : "Newsreader16pt-Regular"
     }
 
     /// Creates a Newsreader serif font with Dynamic Type scaling.
+    /// `weight` is accepted for source compatibility and mapped to Regular.
     static func newsreader(
         size: CGFloat = 32,
         weight: Font.Weight = .regular,
         italic: Bool = false,
         relativeTo textStyle: Font.TextStyle = .largeTitle
     ) -> Font {
-        let name = newsreaderFontName(for: weight, italic: italic)
-        return Font.custom(name, size: size, relativeTo: textStyle)
+        Font.custom(newsreaderFontName(size: size, italic: italic), size: size, relativeTo: textStyle)
     }
 
-    /// Creates a Newsreader serif font matching a standard Apple Dynamic Type text style.
+    /// Creates a Newsreader serif font matching a standard Dynamic Type text style.
+    /// `weight` is accepted for source compatibility and mapped to Regular.
     static func newsreader(
         _ style: Font.TextStyle,
         weight: Font.Weight? = nil,
         italic: Bool = false
     ) -> Font {
-        let (defaultSize, defaultWeight) = defaultMetrics(for: style)
-        let resolvedWeight = weight ?? defaultWeight
-        let name = newsreaderFontName(for: resolvedWeight, italic: italic)
-        return Font.custom(name, size: defaultSize, relativeTo: style)
+        let size = defaultSize(for: style)
+        return Font.custom(newsreaderFontName(size: size, italic: italic), size: size, relativeTo: style)
     }
 
-    private static func defaultMetrics(for style: Font.TextStyle) -> (size: CGFloat, weight: Font.Weight) {
+    private static func defaultSize(for style: Font.TextStyle) -> CGFloat {
         switch style {
-        case .largeTitle, .title:
-            return (32, .regular)
-        case .title2:
-            return (24, .regular)
-        case .title3:
-            return (20, .regular)
-        case .headline:
-            return (17, .regular)
-        case .body:
-            return (17, .regular)
-        case .callout:
-            return (16, .regular)
-        case .subheadline:
-            return (15, .regular)
-        case .footnote:
-            return (13, .regular)
-        case .caption:
-            return (12, .regular)
-        case .caption2:
-            return (11, .regular)
-        @unknown default:
-            return (17, .regular)
+        case .largeTitle, .title: return 32
+        case .title2: return 24
+        case .title3: return 20
+        case .headline, .body: return 17
+        case .callout: return 16
+        case .subheadline: return 15
+        case .footnote: return 13
+        case .caption: return 12
+        case .caption2: return 11
+        @unknown default: return 17
         }
     }
 
-    // MARK: - Centralized Editorial Heading Tokens
+    // MARK: - Editorial shorthands (mapped onto DS.TextStyle)
 
-    /// Standardized main screen and hero heading (32pt Newsreader Regular from AppTypography).
-    /// Used consistently across screen titles and hero headers ("Add gassy had Asdf asdf").
-    static var mainHeading: Font {
-        AppTypography.pageTitleFont
-    }
+    /// Screen and hero heading.
+    static var mainHeading: Font { DS.TextStyle.serifLg.font }
 
-    /// Primary hero title for meal narrative (aligned to AppTypography.pageTitleFont).
-    static var mealHeroTitle: Font {
-        mainHeading
-    }
+    /// Hero title for the meal narrative.
+    static var mealHeroTitle: Font { mainHeading }
 
-    /// Unified editorial section heading (Newsreader Title 3 Medium).
-    static var sectionHeading: Font {
-        AppTypography.sectionHeading
-    }
+    /// Editorial section heading.
+    static var sectionHeading: Font { DS.TextStyle.serifXs.font }
 
-    /// Unified editorial sub-heading (Newsreader Headline Medium).
-    static var subHeading: Font {
-        AppTypography.subHeading
-    }
+    /// Editorial sub-heading. Nothing is set in serif below `serif-xs`.
+    static var subHeading: Font { DS.TextStyle.serifXs.font }
 
-    /// Editorial summary text in 22pt Newsreader Regular.
-    static var editorialSummary: Font {
-        newsreader(size: 22, weight: .regular, relativeTo: .title2)
-    }
+    /// Editorial summary text.
+    static var editorialSummary: Font { DS.TextStyle.serifXs.font }
 
-    /// Italic quote or chef reflection in Newsreader.
-    static var editorialQuote: Font {
-        newsreader(size: 16, weight: .regular, italic: true, relativeTo: .callout)
-    }
+    /// Italic quote or cook's note.
+    static var editorialQuote: Font { DS.TextStyle.serifXs.font(italic: true) }
 }

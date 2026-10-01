@@ -10,12 +10,12 @@ struct InboxHeaderView: View {
         VStack(alignment: .leading, spacing: 6) {
             HStack(alignment: .firstTextBaseline, spacing: 10) {
                 Text("Inbox")
-                    .font(AppTypography.pageTitleFont)
+                    .font(DS.TextStyle.serifLg.font)
                     .foregroundStyle(DS.Color.textPrimary)
 
                 if unreadCount > 0 {
                     Text("\(unreadCount) unread")
-                        .font(.inter(.caption, weight: .semibold))
+                        .font(.caption.weight(.semibold))
                         .foregroundStyle(DS.Color.accentText)
                         .padding(.horizontal, 9)
                         .padding(.vertical, 3)
@@ -27,7 +27,7 @@ struct InboxHeaderView: View {
             }
 
             Text(headerSubtitle)
-                .font(.inter(.subheadline))
+                .font(.subheadline)
                 .foregroundStyle(DS.Color.textSecondary)
         }
         .padding(.horizontal, DS.Spacing.screenHorizontal)

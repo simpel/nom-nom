@@ -39,7 +39,7 @@ struct PartyHealthStrengthsCard: View {
                     ForEach(topConsiderations, id: \.self) { consideration in
                         HStack(alignment: .top, spacing: DS.Spacing.xs) {
                             Image(systemName: "exclamationmark.triangle.fill")
-                                .foregroundStyle(Color("ds/reaction/bad/text"))
+                                .foregroundStyle(DS.Color.warningText)
                                 .font(.footnote)
                                 .padding(.top, 2)
                             Text(consideration)

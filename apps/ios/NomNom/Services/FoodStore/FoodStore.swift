@@ -263,7 +263,6 @@ final class FoodStore {
 
     struct VerdictDetail: Identifiable {
         let ref: RaterRef
-        let emoji: String
         let name: String
         let reaction: Reaction?
 
@@ -291,13 +290,12 @@ final class FoodStore {
             }
         }
         return sorted.map { rating in
-            let who = label(for: rating.source)
-            return VerdictDetail(ref: rating.source, emoji: who.emoji, name: who.name, reaction: rating.reaction)
+            VerdictDetail(ref: rating.source, name: label(for: rating.source).name, reaction: rating.reaction)
         }
     }
 
-    func verdictEntries(forMeal mealID: UUID) -> [(emoji: String, name: String, reaction: Reaction?)] {
-        verdictDetails(forMeal: mealID).map { (emoji: $0.emoji, name: $0.name, reaction: $0.reaction) }
+    func verdictEntries(forMeal mealID: UUID) -> [(name: String, reaction: Reaction?)] {
+        verdictDetails(forMeal: mealID).map { (name: $0.name, reaction: $0.reaction) }
     }
 
     var dishHistory: [UUID: DishHistory] {
@@ -317,16 +315,20 @@ final class FoodStore {
                                 roster: raterRoster)
     }
 
-    func label(for ref: RaterRef) -> (emoji: String, name: String) {
+    /// Display label for a rater. Avatars are initials (or a photo), never emoji.
+    struct RaterLabel {
+        let name: String
+    }
+
+    func label(for ref: RaterRef) -> RaterLabel {
         switch ref {
         case .eater(let id):
-            guard let eater = eaterByID[id] else { return ("🍽️", "Someone") }
-            return (eater.emoji, eater.name)
+            return RaterLabel(name: eaterByID[id]?.name ?? "Someone")
         case .account(let id):
             guard let profile = profiles[id] else {
-                return ("🧑", id == userID ? "Me" : "Someone")
+                return RaterLabel(name: id == userID ? "Me" : "Someone")
             }
-            return (profile.avatarEmoji, id == userID ? "Me" : profile.shownName)
+            return RaterLabel(name: id == userID ? "Me" : profile.shownName)
         }
     }
 
@@ -345,10 +347,9 @@ final class FoodStore {
         }
     }
 
-    var raterRoster: [(ref: RaterRef, emoji: String, name: String)] {
-        var roster = activeEaters.map { (ref: $0.raterRef, emoji: $0.emoji, name: $0.name) }
-        let me = label(for: .account(userID))
-        roster.append((ref: .account(userID), emoji: me.emoji, name: me.name))
+    var raterRoster: [(ref: RaterRef, name: String)] {
+        var roster = activeEaters.map { (ref: $0.raterRef, name: $0.name) }
+        roster.append((ref: .account(userID), name: label(for: .account(userID)).name))
         return roster
     }
 

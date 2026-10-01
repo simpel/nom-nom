@@ -5,7 +5,7 @@ import SwiftUI
 struct SuggestionFiltersView: View {
     @Binding var filters: SuggestionFilters
     /// Everyone who can hold an opinion — household members and account holders.
-    let roster: [(ref: RaterRef, emoji: String, name: String)]
+    let roster: [(ref: RaterRef, name: String)]
 
     @Environment(\.dismiss) private var dismiss
     @State private var originalFilters: SuggestionFilters?

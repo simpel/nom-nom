@@ -78,7 +78,7 @@ struct RecipeHealthDetailContent: View {
             if let impact = healthIndex.breakdown?.cookingImpact, !impact.isEmpty {
                 VStack(alignment: .leading, spacing: 6) {
                     Text("Cooking Technique")
-                        .font(AppTypography.sectionHeading)
+                        .font(DS.TextStyle.serifXs.font)
                         .foregroundStyle(DS.Color.textPrimary)
 
                     Text(impact)

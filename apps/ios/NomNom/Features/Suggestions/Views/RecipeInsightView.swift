@@ -61,7 +61,7 @@ struct RecipeInsightView: View {
                                 .frame(width: 90, height: 90)
                             VStack(alignment: .leading, spacing: 6) {
                                 Text(recipe.name)
-                                    .font(AppTypography.displayM)
+                                    .font(DS.TextStyle.serifXs.font)
                                     .foregroundStyle(DS.Color.textPrimary)
                                 Text(suggestion.timesServed == 0
                                      ? "Never cooked"

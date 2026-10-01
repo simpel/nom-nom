@@ -79,7 +79,7 @@ struct LaunchPlaceholder: View {
     var body: some View {
         VStack(spacing: DS.Spacing.md) {
             Text("NomNom")
-                .font(AppTypography.displayXL)
+                .font(DS.TextStyle.serifLg.font)
                 .foregroundStyle(DS.Color.textPrimary)
             ProgressView()
         }

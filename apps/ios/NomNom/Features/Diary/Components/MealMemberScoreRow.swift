@@ -96,7 +96,7 @@ struct MealMemberScoreRow: View {
         HStack(spacing: 6) {
             Text(affinity.shortSummary)
                 .font(.caption2.weight(.medium))
-                .foregroundStyle(affinity.delta < 0 ? Color("ds/reaction/bad/text") : DS.Color.Pine.pine600)
+                .foregroundStyle(affinity.delta < 0 ? DS.Color.warningText : DS.Color.primaryText)
 
             if affinities.count > 1 {
                 Text("+\(affinities.count - 1) more")

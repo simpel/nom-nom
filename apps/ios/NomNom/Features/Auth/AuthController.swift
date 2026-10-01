@@ -132,7 +132,7 @@ final class AuthController {
             self.step = .email
         } catch {
             #if DEBUG
-            print("❌ Sign in with Apple error: \(error)")
+            print("Sign in with Apple error: \(error)")
             #endif
             errorMessage = Self.describe(error)
         }
@@ -202,7 +202,7 @@ final class AuthController {
             self.step = .email
         } catch {
             #if DEBUG
-            print("❌ Auth verification error: \(error)")
+            print("Auth verification error: \(error)")
             #endif
             errorMessage = Self.describe(error)
         }

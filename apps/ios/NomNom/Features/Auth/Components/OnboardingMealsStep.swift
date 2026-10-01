@@ -63,7 +63,7 @@ struct OnboardingMealsStep: View {
             }
 
             Text(reason)
-                .font(.inter(.subheadline))
+                .font(.subheadline)
                 .foregroundStyle(DS.Color.textSecondary)
                 .fixedSize(horizontal: false, vertical: true)
                 .lineSpacing(2)

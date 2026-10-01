@@ -100,7 +100,6 @@ struct SuggestionFilters: Equatable {
 struct EaterVerdict: Identifiable, Hashable {
     let ref: RaterRef
     let name: String
-    let emoji: String
     /// Recency-weighted 0...1, `nil` when this person never rated the dish.
     let score: Double?
     let sampleCount: Int
@@ -108,13 +107,7 @@ struct EaterVerdict: Identifiable, Hashable {
     var id: RaterRef { ref }
 
     var reaction: Reaction? {
-        guard let score else { return nil }
-        if score >= 0.85 { return .amazing }
-        if score >= 0.70 { return .great }
-        if score >= 0.50 { return .good }
-        if score >= 0.30 { return .meh }
-        if score >= 0.15 { return .bad }
-        return .inedible
+        score.map(Reaction.init(score:))
     }
 }
 
@@ -154,7 +147,7 @@ struct SuggestionEngine {
         var mealsByDish: [UUID: [Meal]]
         var ratingsByMeal: [UUID: [MealRating]]
         /// Everyone whose opinion the UI shows a column for.
-        var roster: [(ref: RaterRef, emoji: String, name: String)]
+        var roster: [(ref: RaterRef, name: String)]
     }
 
     func rank(_ inputs: Inputs, filters: SuggestionFilters) -> [Suggestion] {
@@ -190,7 +183,6 @@ struct SuggestionEngine {
                 let entry = metrics.perEater[person.ref]
                 return EaterVerdict(ref: person.ref,
                                     name: person.name,
-                                    emoji: person.emoji,
                                     score: entry?.score,
                                     sampleCount: entry?.count ?? 0)
             }

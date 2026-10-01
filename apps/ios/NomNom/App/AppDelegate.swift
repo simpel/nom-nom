@@ -22,16 +22,19 @@ final class AppDelegate: NSObject, UIApplicationDelegate {
     }
 
     static func configureGlobalTypography() {
-        FontRegistry.registerFonts()
+        // Fonts are registered through INFOPLIST_KEY_UIAppFonts.
         let appearance = UINavigationBarAppearance()
         appearance.configureWithDefaultBackground()
-        // Compact navbar title (when scrolled or inline) -> Inter Light (300 weight)
-        if let titleFont = AppTypography.navBarTitleUIFont {
-            appearance.titleTextAttributes = [.font: titleFont]
-        }
-        // Large title on page -> Newsreader Regular (32pt)
-        if let largeTitleFont = AppTypography.largePageTitleUIFont {
-            appearance.largeTitleTextAttributes = [.font: largeTitleFont]
+        // Compact navbar title (when scrolled or inline) -> system semibold
+        appearance.titleTextAttributes = [
+            .font: UIFont.systemFont(ofSize: 17, weight: .semibold)
+        ]
+        // Large title on page -> Newsreader 72pt display cut at serif-lg
+        let largeTitle = DS.TextStyle.serifLg
+        if let largeTitleFont = UIFont(name: largeTitle.fontName(), size: largeTitle.size) {
+            appearance.largeTitleTextAttributes = [
+                .font: UIFontMetrics(forTextStyle: .largeTitle).scaledFont(for: largeTitleFont)
+            ]
         }
         UINavigationBar.appearance().standardAppearance = appearance
         UINavigationBar.appearance().compactAppearance = appearance
