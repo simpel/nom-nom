@@ -1,52 +1,70 @@
 import SwiftUI
 
-/// Section in RecipeDetailView showing cooked history filtered by dinner party, with auto-load pagination.
+/// Every time the recipe was cooked: a Timeline (photos and verdicts, oldest to
+/// newest), then a ListRow list newest first with who it was cooked for, which the
+/// Timeline can't show. The list loads 10 more rows as its last row appears.
 struct RecipeHistorySection: View {
+    /// Servings, newest first.
     let history: [Meal]
-    var selectedPartyID: UUID? = nil
     let onSelectMeal: (Meal) -> Void
 
     @Environment(FoodStore.self) private var store
-    @State private var displayLimit: Int = 10
+    @State private var displayLimit = Self.pageSize
 
-    private var filteredHistory: [Meal] {
-        guard let selectedPartyID else { return history }
-        return history.filter { store.parties(forMeal: $0.id).contains { $0.id == selectedPartyID } }
-    }
+    private static let pageSize = 10
 
-    private var visibleMeals: [Meal] {
-        Array(filteredHistory.prefix(displayLimit))
+    private var visibleMeals: [Meal] { Array(history.prefix(displayLimit)) }
+
+    private var occasions: [TimelineOccasion] {
+        history.reversed().map { meal in
+            TimelineOccasion(
+                id: AnyHashable(meal.id),
+                date: meal.eatenOn,
+                score: store.averageScore(forMeal: meal.id),
+                photo: .meal(meal)
+            )
+        }
     }
 
     var body: some View {
-        SectionCard("Cooked History", caption: "\(filteredHistory.count) occasions") {
-            VStack(spacing: 0) {
-                if filteredHistory.isEmpty {
-                    Text(selectedPartyID == nil ? "No meals logged for this recipe yet." : "No meals logged for this dinner party.")
-                        .font(.subheadline)
-                        .foregroundStyle(DS.Color.textSecondary)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .padding(.vertical, 4)
-                } else {
-                    ForEach(visibleMeals) { meal in
-                        Button {
-                            onSelectMeal(meal)
-                        } label: {
-                            RecipeHistoryRow(meal: meal)
-                        }
-                        .buttonStyle(.plain)
-                        .onAppear {
-                            if meal.id == visibleMeals.last?.id && displayLimit < filteredHistory.count {
-                                displayLimit += 10
-                            }
-                        }
+        VStack(alignment: .leading, spacing: DS.Spacing.block) {
+            Timeline(occasions: occasions) { id in
+                if let meal = history.first(where: { AnyHashable($0.id) == id }) {
+                    onSelectMeal(meal)
+                }
+            }
 
-                        if meal.id != visibleMeals.last?.id {
-                            Divider().overlay(DS.Color.line.opacity(0.25))
-                        }
+            DSSection("Cooked for", trailing: history.count == 1 ? "1 meal" : "\(history.count) meals") {
+                Card(layout: .list) {
+                    ForEach(visibleMeals) { meal in
+                        row(for: meal)
+                            .onAppear { loadMoreIfNeeded(after: meal) }
                     }
                 }
             }
+        }
+    }
+
+    private func row(for meal: Meal) -> some View {
+        ListRow(
+            meal.eatenOn.formatted(.dateTime.day().month(.abbreviated).year()),
+            meta: subtitle(for: meal),
+            leading: .photo(.meal(meal)),
+            trailing: .score(store.averageScore(forMeal: meal.id)), .chevron,
+            action: { onSelectMeal(meal) }
+        )
+    }
+
+    private func subtitle(for meal: Meal) -> String {
+        let partyNames = store.parties(forMeal: meal.id).map(\.name).joined(separator: ", ")
+        if !partyNames.isEmpty { return partyNames }
+        if meal.createdBy == store.userID { return "Cooked by you" }
+        return "Cooked by \(store.label(for: .account(meal.createdBy)).name)"
+    }
+
+    private func loadMoreIfNeeded(after meal: Meal) {
+        if meal.id == visibleMeals.last?.id && displayLimit < history.count {
+            displayLimit += Self.pageSize
         }
     }
 }

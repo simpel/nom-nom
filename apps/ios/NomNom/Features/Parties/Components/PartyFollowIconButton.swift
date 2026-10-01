@@ -1,11 +1,9 @@
 import SwiftUI
 
-/// Minimal circular icon button for following or unfollowing a dinner party.
-///
-/// Features:
-/// - Distinct visual states: `plus` (not following) vs `checkmark` (following)
-/// - Fluid symbol replacement transition and haptic feedback
-/// - 44×44pt touch target ensuring Apple HIG compliance
+/// Icon-only follow toggle for a public party the viewer isn't a member of (PartyCard):
+/// an AppButton `sm`, `plus` while not following (`secondary soft`) and `checkmark`
+/// while following (`primary soft`), with a light haptic on change. PartyDetailView
+/// uses a labelled DetailHeader action with the same rules instead.
 struct PartyFollowIconButton: View {
     let party: Party
 
@@ -22,41 +20,18 @@ struct PartyFollowIconButton: View {
 
     var body: some View {
         if !isMember && party.isPublic {
-            Button {
+            AppButton(
+                icon: isFollowing ? "checkmark" : "plus",
+                accessibilityLabel: isFollowing ? "Unfollow \(party.name)" : "Follow \(party.name)",
+                variant: isFollowing ? .primary : .secondary,
+                appearance: .soft,
+                size: .sm,
+                isLoading: isProcessing
+            ) {
                 toggleFollow()
-            } label: {
-                ZStack {
-                    // Background visual circle (32x32)
-                    Circle()
-                        .fill(isFollowing ? DS.Color.accentSoft : Color(uiColor: .tertiarySystemFill))
-                        .frame(width: 32, height: 32)
-                        .overlay(
-                            Circle()
-                                .strokeBorder(
-                                    isFollowing
-                                        ? DS.Color.accentText.opacity(0.15)
-                                        : DS.Color.line.opacity(0.3),
-                                    lineWidth: 0.5
-                                )
-                        )
-
-                    if isProcessing {
-                        ProgressView()
-                            .controlSize(.mini)
-                    } else {
-                        Image(systemName: isFollowing ? "checkmark" : "plus")
-                            .font(.system(size: 13, weight: .bold))
-                            .foregroundStyle(isFollowing ? DS.Color.accentText : DS.Color.textSecondary)
-                            .contentTransition(.symbolEffect(.replace))
-                    }
-                }
-                .frame(width: 44, height: 44)
-                .contentShape(Rectangle())
             }
-            .buttonStyle(.plain)
             .disabled(isProcessing)
             .sensoryFeedback(.impact(weight: .light), trigger: isFollowing)
-            .accessibilityLabel(isFollowing ? "Unfollow \(party.name)" : "Follow \(party.name)")
         }
     }
 
@@ -74,10 +49,8 @@ struct PartyFollowIconButton: View {
 #Preview {
     NomNomPreview { store in
         if let party = store.parties.first {
-            HStack(spacing: 20) {
-                PartyFollowIconButton(party: party)
-            }
-            .padding()
+            PartyFollowIconButton(party: party)
+                .padding(DS.Spacing.gutter)
         }
     }
 }

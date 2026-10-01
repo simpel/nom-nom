@@ -1,47 +1,47 @@
 import SwiftUI
 
-/// Horizontal preview strip and viewer sheet for recipe document and cookbook page photos.
+/// The recipe's page photos (cookbook pages, documents) as PhotoCard `sm` tiles with
+/// a "Page N" Badge, scrolling sideways in a SectionCard; tap opens the viewer.
 struct RecipePhotosCard: View {
     let recipe: Recipe
 
-    @State private var showingFullScreenGallery = false
-    @State private var selectedPhotoIndex = 0
+    @State private var selectedPhotoIndex: Int?
 
     var body: some View {
         if !recipe.recipePhotoPaths.isEmpty {
-            SectionCard("Recipe Photos", caption: "\(recipe.recipePhotoPaths.count) pages") {
+            SectionCard("Recipe pages", trailing: pageCount) {
                 ScrollView(.horizontal, showsIndicators: false) {
-                    HStack(spacing: 12) {
+                    HStack(spacing: DS.Spacing.s2_5) {
                         ForEach(Array(recipe.recipePhotoPaths.enumerated()), id: \.element) { index, path in
                             Button {
                                 selectedPhotoIndex = index
-                                showingFullScreenGallery = true
                             } label: {
-                                VStack(alignment: .leading, spacing: 4) {
-                                    RemoteMealPhoto(
-                                        path: path,
-                                        cornerRadius: AppRadius.photo,
-                                        bucket: SupabaseConfig.recipeBucket
-                                    )
-                                    .frame(width: 120, height: 160)
-                                    Text("Page \(index + 1)")
-                                        .font(.caption2.weight(.medium))
-                                        .foregroundStyle(DS.Color.textSecondary)
-                                }
+                                PhotoCard(
+                                    .remote(path: path, bucket: SupabaseConfig.recipeBucket),
+                                    size: .sm,
+                                    badge: .custom(Badge("Page \(index + 1)", variant: .secondary, appearance: .elevated, size: .sm)),
+                                    accessibilityLabel: "Recipe page \(index + 1)"
+                                )
                             }
-                            .buttonStyle(.plain)
+                            .buttonStyle(AppPressableButtonStyle())
                         }
                     }
-                    .padding(.vertical, 2)
                 }
             }
-            .sheet(isPresented: $showingFullScreenGallery) {
+            .sheet(item: Binding(
+                get: { selectedPhotoIndex.map { PhotoIndexWrapper(index: $0) } },
+                set: { selectedPhotoIndex = $0?.index }
+            )) { wrapper in
                 MediaViewerSheet(
                     .paths(recipe.recipePhotoPaths, bucket: SupabaseConfig.recipeBucket),
-                    startIndex: selectedPhotoIndex,
+                    startIndex: wrapper.index,
                     title: "Recipe Page"
                 )
             }
         }
+    }
+
+    private var pageCount: String {
+        recipe.recipePhotoPaths.count == 1 ? "1 page" : "\(recipe.recipePhotoPaths.count) pages"
     }
 }

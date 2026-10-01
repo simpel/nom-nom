@@ -1,25 +1,27 @@
 import SwiftUI
 
-/// Displays the members of a dinner party ("Who's in there") with their rate scores,
-/// and navigation to their individual profiles.
+/// The party's members as ListRows (Avatar, name, You / Creator, their average score)
+/// in a swipeable list card. Members can swipe another member's row to remove them.
 struct PartyMembersSection: View {
     let party: Party
 
     @Environment(FoodStore.self) private var store
+    @State private var memberToRemove: Profile?
 
     private var members: [Profile] {
         store.members(of: party.id)
     }
 
-    @State private var memberToRemove: Profile?
+    /// Divider inset: row padding, the `sm` avatar and the ListRow gap.
+    private static let dividerInset = DS.Spacing.s4 + AvatarSize.sm.diameter + DS.Spacing.s3
 
     var body: some View {
         SwipeableListCard(
             title: "Members",
             data: members,
-            dividerPadding: 60,
+            dividerPadding: Self.dividerInset,
             leadingIcon: { canRemove(member: $0) ? "trash.fill" : nil },
-            leadingColor: { canRemove(member: $0) ? .red : nil },
+            leadingColor: { canRemove(member: $0) ? DS.Color.destructive : nil },
             onLeadingAction: { member in
                 if canRemove(member: member) {
                     memberToRemove = member
@@ -29,10 +31,10 @@ struct PartyMembersSection: View {
             NavigationLink {
                 PersonDetailView(raterRef: .account(member.id))
             } label: {
-                memberRow(for: member)
-                    .padding(.horizontal, 16)
+                row(for: member)
+                    .padding(.horizontal, DS.Spacing.s4)
             }
-            .buttonStyle(.plain)
+            .buttonStyle(AppPressableButtonStyle())
         }
         .alert(
             "Remove Member?",
@@ -62,36 +64,19 @@ struct PartyMembersSection: View {
         store.isMember(of: party.id) && member.id != store.userID
     }
 
-    private func memberRow(for member: Profile) -> some View {
+    private func role(of member: Profile) -> String? {
+        if member.id == store.userID { return "You" }
+        if member.id == party.createdBy { return "Creator" }
+        return nil
+    }
+
+    private func row(for member: Profile) -> ListRow {
         let stats = store.partyAverageScore(partyID: party.id, for: .account(member.id), limit: 20)
-
-        return HStack(spacing: 12) {
-            UserAvatar(profile: member, size: 32)
-
-            VStack(alignment: .leading, spacing: 2) {
-                Text(member.shownName)
-                    .font(.body)
-                    .foregroundStyle(DS.Color.textPrimary)
-
-                if member.id == store.userID {
-                    Text("You")
-                        .font(.caption2)
-                        .foregroundStyle(DS.Color.textSecondary)
-                } else if member.id == party.createdBy {
-                    Text("Creator")
-                        .font(.caption2)
-                        .foregroundStyle(DS.Color.textSecondary)
-                }
-            }
-
-            Spacer()
-
-            if let stats {
-                ScoreBadge(stats: stats, format: .both, size: .sm)
-            }
+        let leading = ListRowLeading.avatar(Avatar(profile: member, size: .sm))
+        if let stats {
+            return ListRow(member.shownName, meta: role(of: member), leading: leading, trailing: .score(stats.score), .chevron)
         }
-        .padding(.vertical, DS.Spacing.sm)
-        .contentShape(Rectangle())
+        return ListRow(member.shownName, meta: role(of: member), leading: leading, trailing: .chevron)
     }
 }
 
@@ -99,7 +84,7 @@ struct PartyMembersSection: View {
     NomNomPreview { store in
         if let party = store.parties.first {
             PartyMembersSection(party: party)
-                .padding()
+                .padding(DS.Spacing.gutter)
         }
     }
 }
