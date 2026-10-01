@@ -1,23 +1,23 @@
 import SwiftUI
 
-/// Centralized single-line input component for Nom Nom.
+/// The single-line text field: one height (`s11`, `s14` with a label) and one
+/// radius (`radius-xl`) for every field; `soft`, `outline` or `plain`, with
+/// optional icons and a clear button.
 ///
-/// Implements consistent sizing, background styling, borders, focus state rings,
-/// and icon placement across all screens, matching AppButton conventions.
+/// Focus: 1.5pt `primary` at 80%, leading icon to `primary`, label to `primary-text`.
+/// Error: 1.5pt `destructive` at 80%. Disabled: 50% opacity, `text-tertiary`.
 struct Input: View {
-    var label: String? = nil
-    var placeholder: String = ""
+    var label: String?
+    var placeholder: String
     @Binding var text: String
-    var leadingIcon: AppInputIcon? = nil
-    var trailingIcon: AppInputIcon? = nil
-    var size: AppInputSize = .md
-    var style: AppInputStyle = .filled
-    var shape: AppInputShape = .rounded()
-    var clearable: Bool = false
-    var isError: Bool = false
-    var disabled: Bool = false
-    var ghostText: String? = nil
-    var externalFocus: FocusState<Bool>.Binding? = nil
+    var leadingIcon: AppInputIcon?
+    var trailingIcon: AppInputIcon?
+    var appearance: InputAppearance
+    var clearable: Bool
+    var isError: Bool
+    var disabled: Bool
+    var ghostText: String?
+    var externalFocus: FocusState<Bool>.Binding?
 
     @FocusState private var internalFocus: Bool
 
@@ -26,12 +26,8 @@ struct Input: View {
         label: String? = nil,
         text: Binding<String>,
         leadingIcon: AppInputIcon? = nil,
-        leadingSystemImage: String? = nil,
         trailingIcon: AppInputIcon? = nil,
-        trailingSystemImage: String? = nil,
-        size: AppInputSize = .md,
-        style: AppInputStyle = .filled,
-        shape: AppInputShape = .rounded(),
+        appearance: InputAppearance = .soft,
         clearable: Bool = false,
         isError: Bool = false,
         disabled: Bool = false,
@@ -41,23 +37,9 @@ struct Input: View {
         self.placeholder = placeholder
         self.label = label
         self._text = text
-        if let leadingIcon {
-            self.leadingIcon = leadingIcon
-        } else if let leadingSystemImage {
-            self.leadingIcon = .system(leadingSystemImage)
-        } else {
-            self.leadingIcon = nil
-        }
-        if let trailingIcon {
-            self.trailingIcon = trailingIcon
-        } else if let trailingSystemImage {
-            self.trailingIcon = .system(trailingSystemImage)
-        } else {
-            self.trailingIcon = nil
-        }
-        self.size = size
-        self.style = style
-        self.shape = shape
+        self.leadingIcon = leadingIcon
+        self.trailingIcon = trailingIcon
+        self.appearance = appearance
         self.clearable = clearable
         self.isError = isError
         self.disabled = disabled
@@ -65,17 +47,14 @@ struct Input: View {
         self.externalFocus = isFocused
     }
 
+    /// A labelled field; `plain` by default because labelled fields sit in form rows.
     init(
         label: String,
         placeholder: String = "",
         text: Binding<String>,
         leadingIcon: AppInputIcon? = nil,
-        leadingSystemImage: String? = nil,
         trailingIcon: AppInputIcon? = nil,
-        trailingSystemImage: String? = nil,
-        size: AppInputSize = .md,
-        style: AppInputStyle = .cardRow,
-        shape: AppInputShape = .rounded(),
+        appearance: InputAppearance = .plain,
         clearable: Bool = false,
         isError: Bool = false,
         disabled: Bool = false,
@@ -83,192 +62,127 @@ struct Input: View {
         isFocused: FocusState<Bool>.Binding? = nil
     ) {
         self.init(
-            placeholder,
-            label: label,
-            text: text,
-            leadingIcon: leadingIcon,
-            leadingSystemImage: leadingSystemImage,
-            trailingIcon: trailingIcon,
-            trailingSystemImage: trailingSystemImage,
-            size: size,
-            style: style,
-            shape: shape,
-            clearable: clearable,
-            isError: isError,
-            disabled: disabled,
-            ghostText: ghostText,
-            isFocused: isFocused
+            placeholder, label: label, text: text,
+            leadingIcon: leadingIcon, trailingIcon: trailingIcon, appearance: appearance,
+            clearable: clearable, isError: isError, disabled: disabled,
+            ghostText: ghostText, isFocused: isFocused
         )
     }
 
-    private var isFocused: Bool {
-        externalFocus?.wrappedValue ?? internalFocus
-    }
-
-    private var calculatedHeight: CGFloat {
-        if let label, !label.isEmpty {
-            return size == .sm ? 44 : (size == .xl ? 58 : 52)
-        }
-        return size.height
-    }
+    private var isFocused: Bool { externalFocus?.wrappedValue ?? internalFocus }
+    private var hasLabel: Bool { !(label ?? "").isEmpty }
+    private var textColor: Color { disabled ? DS.Color.textTertiary : DS.Color.textPrimary }
 
     var body: some View {
-        HStack(spacing: DS.Spacing.xs) {
-            if let leadingIcon {
-                iconView(for: leadingIcon)
-            }
+        HStack(spacing: DS.Spacing.s2) {
+            if let leadingIcon { iconView(leadingIcon, tinted: true) }
 
-            VStack(alignment: .leading, spacing: (label != nil && !label!.isEmpty) ? 2 : 0) {
-                if let label, !label.isEmpty {
+            VStack(alignment: .leading, spacing: 0) {
+                if let label, hasLabel {
                     Text(label)
-                        .font(.caption2.weight(.medium))
-                        .foregroundStyle(isFocused ? DS.Color.accentText : DS.Color.textSecondary)
+                        .textStyle(.sansXs, tone: nil)
+                        .foregroundStyle(isFocused ? DS.Color.primaryText : DS.Color.textSecondary)
                         .lineLimit(1)
                 }
-
                 ZStack(alignment: .leading) {
                     if text.isEmpty {
                         Text(placeholder)
-                            .font(size.font)
-                            .foregroundStyle(DS.Color.textTertiary)
-                            .allowsHitTesting(false)
+                            .textStyle(.sansMd, tone: .tertiary)
                             .lineLimit(1)
+                            .allowsHitTesting(false)
                     }
-
-                    if let ghost = ghostText, !ghost.isEmpty {
-                        HStack(spacing: 0) {
-                            Text(text).foregroundStyle(.clear)
-                            Text(ghost).foregroundStyle(DS.Color.textTertiary)
-                        }
-                        .font(size.font)
-                        .lineLimit(1)
-                        .allowsHitTesting(false)
+                    if let ghostText, !ghostText.isEmpty {
+                        (Text(text).foregroundStyle(.clear) + Text(ghostText).foregroundStyle(DS.Color.textTertiary))
+                            .textStyle(.sansMd, tone: nil)
+                            .lineLimit(1)
+                            .allowsHitTesting(false)
                     }
-
-                    textField
+                    field
                 }
             }
 
             if clearable && !text.isEmpty && !disabled {
-                Button {
-                    text = ""
-                } label: {
-                    Image(systemName: "xmark.circle.fill")
-                        .font(size.font)
-                        .foregroundStyle(DS.Color.textTertiary)
-                }
-                .buttonStyle(.plain)
-                .accessibilityLabel("Clear text")
+                AppButton(
+                    icon: "xmark",
+                    accessibilityLabel: "Clear text",
+                    variant: .secondary,
+                    appearance: .ghost,
+                    size: .sm
+                ) { text = "" }
             }
 
-            if let trailingIcon {
-                iconView(for: trailingIcon)
-            }
+            if let trailingIcon { iconView(trailingIcon, tinted: false) }
         }
         .frame(maxWidth: .infinity)
-        .frame(height: calculatedHeight)
-        .padding(.horizontal, (style == .plain || style == .cardRow) ? 0 : size.horizontalPadding)
-        .background(containerBackground)
-        .clipShape(containerShape)
+        .frame(height: hasLabel ? InputMetrics.labeledHeight : InputMetrics.height)
+        .padding(.horizontal, appearance == .plain ? 0 : InputMetrics.sidePadding)
+        .background(InputMetrics.background(appearance), in: InputMetrics.shape)
         .overlay {
-            containerBorder
-        }
-        .contentShape(containerShape)
-        .animation(.easeOut(duration: 0.15), value: isFocused)
-        .animation(.easeOut(duration: 0.15), value: isError)
-        .opacity(disabled ? 0.5 : 1.0)
-    }
-
-    // MARK: - Subviews & Controls
-
-    @ViewBuilder
-    private var textField: some View {
-        if let externalFocus {
-            TextField("", text: $text)
-                .font(size.font)
-                .foregroundStyle(disabled ? DS.Color.textTertiary : DS.Color.textPrimary)
-                .disabled(disabled)
-                .focused(externalFocus)
-        } else {
-            TextField("", text: $text)
-                .font(size.font)
-                .foregroundStyle(disabled ? DS.Color.textTertiary : DS.Color.textPrimary)
-                .disabled(disabled)
-                .focused($internalFocus)
-        }
-    }
-
-    @ViewBuilder
-    private func iconView(for icon: AppInputIcon) -> some View {
-        switch icon {
-        case .system(let name):
-            Image(systemName: name)
-                .font(size.font)
-                .foregroundStyle(isFocused ? DS.Color.accent : DS.Color.textSecondary)
-        case .asset(let name):
-            Image(name)
-                .resizable()
-                .scaledToFit()
-                .frame(width: size.iconSize, height: size.iconSize)
-        case .image(let img):
-            img
-                .resizable()
-                .scaledToFit()
-                .frame(width: size.iconSize, height: size.iconSize)
-        }
-    }
-
-    // MARK: - Shapes & Styling
-
-    private var containerShape: some Shape {
-        switch shape {
-        case .capsule:
-            return AnyShape(Capsule())
-        case .rounded(let radius):
-            return AnyShape(RoundedRectangle(cornerRadius: radius, style: .continuous))
-        }
-    }
-
-    @ViewBuilder
-    private var containerBackground: some View {
-        switch style {
-        case .filled:
-            DS.Color.sunken
-        case .outlined, .plain, .cardRow:
-            Color.clear
-        }
-    }
-
-    @ViewBuilder
-    private var containerBorder: some View {
-        if style != .plain && style != .cardRow, let borderColor {
-            let width: CGFloat = (isFocused || isError) ? 1.5 : 0.5
-            switch shape {
-            case .capsule:
-                Capsule().strokeBorder(borderColor, lineWidth: width)
-            case .rounded(let radius):
-                RoundedRectangle(cornerRadius: radius, style: .continuous)
-                    .strokeBorder(borderColor, lineWidth: width)
+            if let border = InputMetrics.border(appearance, focused: isFocused, error: isError) {
+                InputMetrics.shape.strokeBorder(
+                    border,
+                    lineWidth: InputMetrics.borderWidth(focused: isFocused, error: isError)
+                )
             }
         }
+        .contentShape(InputMetrics.shape)
+        .animation(InputMetrics.animation, value: isFocused)
+        .animation(InputMetrics.animation, value: isError)
+        .opacity(disabled ? DS.Opacity.disabled : DS.Opacity.o100)
     }
 
-    private var borderColor: Color? {
-        if isError {
-            return Color.red.opacity(0.8)
+    @ViewBuilder
+    private var field: some View {
+        let base = TextField("", text: $text)
+            .textStyle(.sansMd, tone: nil)
+            .foregroundStyle(textColor)
+            .disabled(disabled)
+            .accessibilityLabel(label ?? placeholder)
+        if let externalFocus {
+            base.focused(externalFocus)
+        } else {
+            base.focused($internalFocus)
         }
-        if isFocused {
-            return DS.Color.accent.opacity(0.8)
+    }
+
+    @ViewBuilder
+    private func iconView(_ icon: AppInputIcon, tinted: Bool) -> some View {
+        let side = DS.TextStyle.sansMd.size
+        Group {
+            switch icon {
+            case .system(let name):
+                Image(systemName: name).textStyle(.sansMd, tone: nil)
+            case .asset(let name):
+                Image(name).resizable().scaledToFit().frame(width: side, height: side)
+            case .image(let image):
+                image.resizable().scaledToFit().frame(width: side, height: side)
+            }
         }
-        switch style {
-        case .filled:
-            return DS.Color.line.opacity(0.35)
-        case .outlined:
-            return DS.Color.lineStrong
-        case .plain, .cardRow:
-            return nil
-        }
+        .foregroundStyle(tinted && isFocused ? DS.Color.primary : DS.Color.textSecondary)
+        .accessibilityHidden(true)
     }
 }
 
 typealias AppInput = Input
+
+private struct InputGallery: View {
+    @State private var name = "Carbonara"
+    @State private var empty = ""
+
+    var body: some View {
+        VStack(spacing: DS.Spacing.s4) {
+            Input("Search recipes", text: $empty, leadingIcon: "magnifyingglass")
+            Input("Recipe name", text: $name, clearable: true)
+            Input("Party name", text: $empty, appearance: .outline)
+            Input("Email", label: "Email", text: $empty, appearance: .soft)
+            Input("Quantity", text: $name, isError: true)
+            Input("Disabled", text: $name, disabled: true)
+            Card { Input(label: "First name", placeholder: "Anna", text: $empty) }
+        }
+        .padding(DS.Spacing.gutter)
+        .background(DS.Color.bg)
+    }
+}
+
+#Preview("Light") { InputGallery() }
+#Preview("Dark") { InputGallery().preferredColorScheme(.dark) }

@@ -1,58 +1,90 @@
 import SwiftUI
 
-/// Standalone, tactile taste reaction selector (-1 to 5) for rating meals.
-/// Designed to sit directly on the background surface without redundant card containers.
+/// The six-step taste scale for rating a meal yourself: a centred row of `lg`
+/// AppButtons labelled −1…5 with the chosen verdict word underneath.
+///
+/// Unselected steps are `secondary elevated`; the selected step is its reaction
+/// `soft` plus a 1.5pt fill ring. Tap the selected step again to clear it.
+/// Six 48pt steps with `s2` gaps take 328pt, so the row fits a 375pt screen
+/// inside `s4` gutters.
 struct TasteScoreSelector: View {
     @Binding var selection: Reaction?
+    var showVerdict: Bool
+
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    init(selection: Binding<Reaction?>, showVerdict: Bool = true) {
+        self._selection = selection
+        self.showVerdict = showVerdict
+    }
 
     var body: some View {
-        HStack(spacing: 6) {
-            ForEach(Reaction.allCases) { reaction in
-                let isSelected = selection == reaction
-
-                Button {
-                    UIImpactFeedbackGenerator(style: .light).impactOccurred()
-                    withAnimation(.spring(response: 0.25, dampingFraction: 0.75)) {
-                        selection = isSelected ? nil : reaction
-                    }
-                } label: {
-                    Text(reaction.numberLabel)
-                        .font(.system(size: 18, weight: isSelected ? .bold : .semibold, design: .rounded))
-                        .foregroundStyle(isSelected ? reaction.text : DS.Color.textPrimary)
-                        .frame(maxWidth: .infinity)
-                        .frame(height: 52)
-                        .background {
-                            RoundedRectangle(cornerRadius: AppRadius.card, style: .continuous)
-                                .fill(isSelected ? reaction.fill.opacity(0.20) : DS.Color.panel)
-                        }
-                        .overlay {
-                            RoundedRectangle(cornerRadius: AppRadius.card, style: .continuous)
-                                .strokeBorder(
-                                    isSelected ? reaction.fill : DS.Color.line.opacity(0.8),
-                                    lineWidth: isSelected ? 1.5 : 0.6
-                                )
-                        }
-                        .shadow(
-                            color: isSelected ? reaction.fill.opacity(0.14) : Color.black.opacity(0.04),
-                            radius: isSelected ? 4 : 3,
-                            x: 0,
-                            y: 1.5
-                        )
+        VStack(spacing: DS.Spacing.s3) {
+            HStack(spacing: DS.Spacing.s2) {
+                ForEach(Reaction.allCases) { reaction in
+                    step(reaction)
                 }
-                .buttonStyle(.plain)
-                .accessibilityLabel("\(reaction.numberLabel): \(reaction.name)")
-                .accessibilityAddTraits(isSelected ? .isSelected : [])
+            }
+            .frame(maxWidth: .infinity)
+            .accessibilityElement(children: .contain)
+            .accessibilityLabel("Taste")
+
+            if showVerdict {
+                Text(selection?.name ?? "Not rated yet")
+                    .textStyle(.sansSm, tone: selection == nil ? .tertiary : .primary)
+                    .multilineTextAlignment(.center)
+                    .frame(maxWidth: .infinity)
+                    .accessibilityHidden(true)
             }
         }
+        .sensoryFeedback(.impact(weight: .light), trigger: selection)
+    }
+
+    private func step(_ reaction: Reaction) -> some View {
+        let isSelected = selection == reaction
+        return AppButton(
+            icon: .text(Self.glyph(for: reaction)),
+            accessibilityLabel: "\(Self.glyph(for: reaction)): \(reaction.name)",
+            variant: isSelected ? .reaction(reaction) : .secondary,
+            appearance: isSelected ? .soft : .elevated,
+            size: .lg
+        ) {
+            let animation: Animation? = reduceMotion ? nil : .spring(response: 0.25, dampingFraction: 0.75)
+            withAnimation(animation) {
+                selection = isSelected ? nil : reaction
+            }
+        }
+        .overlay {
+            if isSelected {
+                Capsule()
+                    .strokeBorder(reaction.fill, lineWidth: DSAppearance.outlineWidth)
+                    .allowsHitTesting(false)
+            }
+        }
+        .accessibilityAddTraits(isSelected ? .isSelected : [])
+        .accessibilityHint(isSelected ? "Double-tap to clear" : "")
+    }
+
+    /// The step numeral with a true minus ("−1").
+    static func glyph(for reaction: Reaction) -> String {
+        reaction.numberLabel.replacingOccurrences(of: "-", with: "\u{2212}")
     }
 }
 
-#Preview {
-    @Previewable @State var reaction: Reaction? = .good
+private struct TasteScoreSelectorPreview: View {
+    @State private var unrated: Reaction?
+    @State private var rated: Reaction? = .great
 
-    VStack(spacing: 24) {
-        TasteScoreSelector(selection: $reaction)
+    var body: some View {
+        VStack(spacing: DS.Spacing.s8) {
+            TasteScoreSelector(selection: $unrated)
+            TasteScoreSelector(selection: $rated)
+        }
+        .padding(DS.Spacing.gutter)
+        .frame(width: 375)
+        .background(DS.Color.bg)
     }
-    .padding()
-    .background(DS.Color.bg)
 }
+
+#Preview("Light") { TasteScoreSelectorPreview() }
+#Preview("Dark") { TasteScoreSelectorPreview().preferredColorScheme(.dark) }

@@ -1,63 +1,79 @@
 import SwiftUI
 
-/// Standard input sizes aligned with AppButton heights and typography tokens.
+/// How a text field (Input, TextArea) is painted.
+enum InputAppearance: Equatable {
+    /// `sunken` ground + 0.5pt `line` at 30%. The default.
+    case soft
+    /// Clear ground + 0.5pt `line-strong`.
+    case outline
+    /// No ground, border or side padding: the row supplies them.
+    case plain
+}
+
+/// Shared field metrics and state colours for Input and TextArea.
+enum InputMetrics {
+    static let height = DS.Spacing.s11
+    static let labeledHeight = DS.Spacing.s14
+    static let radius = DS.Radius.xl
+    static let sidePadding = DS.Spacing.s3_5
+    static let restingWidth: CGFloat = 0.5
+    static let activeWidth = DSAppearance.outlineWidth
+    static let animation = Animation.easeOut(duration: 0.15)
+
+    static var shape: RoundedRectangle {
+        RoundedRectangle(cornerRadius: radius, style: .continuous)
+    }
+
+    static func background(_ appearance: InputAppearance) -> Color {
+        appearance == .soft ? DS.Color.sunken : .clear
+    }
+
+    /// Border colour, or nil for none. Error beats focus; `plain` has no border.
+    static func border(_ appearance: InputAppearance, focused: Bool, error: Bool) -> Color? {
+        guard appearance != .plain else { return nil }
+        if error { return DS.Color.destructive.opacity(DS.Opacity.focus) }
+        if focused { return DS.Color.primary.opacity(DS.Opacity.focus) }
+        return appearance == .soft ? DS.Color.line.opacity(DS.Opacity.hairline) : DS.Color.lineStrong
+    }
+
+    static func borderWidth(focused: Bool, error: Bool) -> CGFloat {
+        focused || error ? activeWidth : restingWidth
+    }
+}
+
+// MARK: - Legacy (pre-design-system field API)
+
+/// Pre-design-system field sizes. Every field is now one height (44, or 56 with a label).
 enum AppInputSize {
     case sm
     case md
     case xl
-
-    var height: CGFloat {
-        switch self {
-        case .sm: return 34
-        case .md: return 42
-        case .xl: return 50
-        }
-    }
-
-    var horizontalPadding: CGFloat {
-        switch self {
-        case .sm: return 10
-        case .md: return 14
-        case .xl: return 16
-        }
-    }
-
-    var font: Font {
-        switch self {
-        case .sm: return .subheadline
-        case .md: return .body
-        case .xl: return .body
-        }
-    }
-
-    var iconSize: CGFloat {
-        switch self {
-        case .sm: return 14
-        case .md: return 16
-        case .xl: return 18
-        }
-    }
 }
 
-/// Visual styles for input container backgrounds and borders.
+/// Pre-design-system field styles; see `appearance` for the mapping.
 enum AppInputStyle {
-    /// Sunken surface background with subtle resting border and accented focus ring.
     case filled
-    /// Seamless flush row styling with hairline divider support inside SectionCard containers.
     case cardRow
-    /// Transparent surface with structural border.
     case outlined
-    /// Transparent surface without borders, ideal for seamless inline table rows.
     case plain
+
+    /// `.filled` → soft, `.outlined` → outline, `.cardRow`/`.plain` → plain.
+    var appearance: InputAppearance {
+        switch self {
+        case .filled: return .soft
+        case .outlined: return .outline
+        case .cardRow, .plain: return .plain
+        }
+    }
 }
 
-/// Container geometry for input fields.
+/// Pre-design-system field shape. Ignored: every field is `radius-xl`.
 enum AppInputShape: Equatable {
-    case rounded(CGFloat = AppRadius.input)
+    case rounded(CGFloat = DS.Radius.xl)
     case capsule
 }
 
-/// Leading or trailing icon representation supporting system symbols, assets, or images.
+/// Leading or trailing icon: a system symbol, an asset or an image.
 enum AppInputIcon: ExpressibleByStringLiteral {
     case system(String)
     case asset(String)

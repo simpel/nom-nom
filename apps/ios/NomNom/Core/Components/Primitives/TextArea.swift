@@ -1,14 +1,14 @@
 import SwiftUI
 
-/// A harmonized, multi-line text input component adhering to Nom Nom design tokens.
-/// Provides consistent padding, sunken background, subtle border, and focus state across all textareas.
+/// The multi-line text field: Input's radius, side padding, text step and states,
+/// growing from 3 to 6 lines by default. Top padding `s2_5` puts the first line
+/// where an Input's text sits; never shorter than an Input.
 struct TextArea: View {
-    var placeholder: String = ""
+    var placeholder: String
+    var label: String?
     @Binding var text: String
     var lineLimit: ClosedRange<Int>
-    var font: Font
-    var cornerRadius: CGFloat
-    var style: AppInputStyle
+    var appearance: InputAppearance
     var isError: Bool
     var disabled: Bool
     var externalFocus: FocusState<Bool>.Binding?
@@ -17,115 +17,91 @@ struct TextArea: View {
 
     init(
         _ placeholder: String = "",
+        label: String? = nil,
         text: Binding<String>,
         lineLimit: ClosedRange<Int> = 3...6,
-        font: Font = .body,
-        cornerRadius: CGFloat = AppRadius.input,
-        style: AppInputStyle = .filled,
+        appearance: InputAppearance = .soft,
         isError: Bool = false,
         disabled: Bool = false,
         isFocused: FocusState<Bool>.Binding? = nil
     ) {
         self.placeholder = placeholder
+        self.label = label
         self._text = text
         self.lineLimit = lineLimit
-        self.font = font
-        self.cornerRadius = cornerRadius
-        self.style = style
+        self.appearance = appearance
         self.isError = isError
         self.disabled = disabled
         self.externalFocus = isFocused
     }
 
-    init(
-        _ placeholder: String = "",
-        text: Binding<String>,
-        lines: Int,
-        font: Font = .body,
-        cornerRadius: CGFloat = AppRadius.input,
-        style: AppInputStyle = .filled,
-        isError: Bool = false,
-        disabled: Bool = false,
-        isFocused: FocusState<Bool>.Binding? = nil
-    ) {
-        self.init(
-            placeholder,
-            text: text,
-            lineLimit: lines...lines,
-            font: font,
-            cornerRadius: cornerRadius,
-            style: style,
-            isError: isError,
-            disabled: disabled,
-            isFocused: isFocused
-        )
-    }
-
-    private var isFocused: Bool {
-        externalFocus?.wrappedValue ?? internalFocus
-    }
+    private var isFocused: Bool { externalFocus?.wrappedValue ?? internalFocus }
+    private var isPlain: Bool { appearance == .plain }
 
     var body: some View {
-        editorField
-            .font(font)
-            .lineLimit(lineLimit)
-            .foregroundStyle(disabled ? DS.Color.textTertiary : DS.Color.textPrimary)
-            .disabled(disabled)
-            .padding(.horizontal, (style == .plain || style == .cardRow) ? 0 : 14)
-            .padding(.vertical, (style == .plain || style == .cardRow) ? 0 : 10)
-            .background {
-                if style == .filled {
-                    RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-                        .fill(DS.Color.sunken)
-                }
+        VStack(alignment: .leading, spacing: 0) {
+            if let label, !label.isEmpty {
+                Text(label)
+                    .textStyle(.sansXs, tone: nil)
+                    .foregroundStyle(isFocused ? DS.Color.primaryText : DS.Color.textSecondary)
+                    .lineLimit(1)
             }
-            .overlay {
-                if style != .plain && style != .cardRow, let borderColor {
-                    let width: CGFloat = (isFocused || isError) ? 1.5 : 0.5
-                    RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-                        .strokeBorder(borderColor, lineWidth: width)
-                }
+            editor
+                .textStyle(.sansMd, tone: nil)
+                .foregroundStyle(disabled ? DS.Color.textTertiary : DS.Color.textPrimary)
+                .lineLimit(lineLimit)
+                .disabled(disabled)
+        }
+        .frame(maxWidth: .infinity, minHeight: InputMetrics.height, alignment: .topLeading)
+        .padding(.horizontal, isPlain ? 0 : InputMetrics.sidePadding)
+        .padding(.vertical, isPlain ? 0 : DS.Spacing.s2_5)
+        .background(InputMetrics.background(appearance), in: InputMetrics.shape)
+        .overlay {
+            if let border = InputMetrics.border(appearance, focused: isFocused, error: isError) {
+                InputMetrics.shape.strokeBorder(
+                    border,
+                    lineWidth: InputMetrics.borderWidth(focused: isFocused, error: isError)
+                )
             }
-            .contentShape(RoundedRectangle(cornerRadius: cornerRadius, style: .continuous))
-            .animation(.easeOut(duration: 0.15), value: isFocused)
-            .animation(.easeOut(duration: 0.15), value: isError)
-            .opacity(disabled ? 0.5 : 1.0)
+        }
+        .contentShape(InputMetrics.shape)
+        .animation(InputMetrics.animation, value: isFocused)
+        .animation(InputMetrics.animation, value: isError)
+        .opacity(disabled ? DS.Opacity.disabled : DS.Opacity.o100)
     }
 
     @ViewBuilder
-    private var editorField: some View {
+    private var editor: some View {
+        let field = TextField(
+            "",
+            text: $text,
+            prompt: Text(placeholder).foregroundStyle(DS.Color.textTertiary),
+            axis: .vertical
+        )
         if let externalFocus {
-            TextField(placeholder, text: $text, axis: .vertical)
-                .focused(externalFocus)
+            field.focused(externalFocus)
         } else {
-            TextField(placeholder, text: $text, axis: .vertical)
-                .focused($internalFocus)
-        }
-    }
-
-    private var borderColor: Color? {
-        if isError {
-            return Color.red.opacity(0.8)
-        }
-        if isFocused {
-            return DS.Color.accent.opacity(0.8)
-        }
-        switch style {
-        case .filled:
-            return DS.Color.line.opacity(0.35)
-        case .outlined:
-            return DS.Color.lineStrong
-        case .plain, .cardRow:
-            return nil
+            field.focused($internalFocus)
         }
     }
 }
 
-#Preview {
-    VStack(spacing: 20) {
-        TextArea("Describe your dinner party...", text: .constant(""))
-        TextArea("Add any adjustments...", text: .constant("Made extra crispy with homemade salsa verde!"))
+private struct TextAreaGallery: View {
+    @State private var empty = ""
+    @State private var notes = "Made extra crispy with homemade salsa verde."
+
+    var body: some View {
+        VStack(spacing: DS.Spacing.s4) {
+            TextArea("Describe your dinner party\u{2026}", text: $empty)
+            TextArea("Add any adjustments\u{2026}", label: "Notes", text: $notes)
+            TextArea("Outline", text: $empty, appearance: .outline)
+            TextArea("Error", text: $notes, isError: true)
+            TextArea("Disabled", text: $notes, disabled: true)
+        }
+        .padding(DS.Spacing.gutter)
+        .background(DS.Color.bg)
     }
-    .padding()
-    .background(DS.Color.bg)
 }
+
+#Preview("Light") { TextAreaGallery() }
+#Preview("Dark") { TextAreaGallery().preferredColorScheme(.dark) }

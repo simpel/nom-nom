@@ -51,6 +51,8 @@ enum AppButtonIcon: ExpressibleByStringLiteral {
     case system(String)
     case asset(String)
     case image(Image)
+    /// A short glyph set as text (tabular), e.g. the TasteScoreSelector numerals.
+    case text(String)
 
     init(stringLiteral value: String) {
         self = .system(value)

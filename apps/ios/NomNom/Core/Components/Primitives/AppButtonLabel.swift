@@ -94,6 +94,8 @@ struct AppButtonLabel: View {
             case .image(let image):
                 image.resizable().scaledToFit()
                     .frame(width: size.iconSize, height: size.iconSize)
+            case .text(let glyph):
+                Text(glyph).monospacedDigit()
             }
         }
     }
