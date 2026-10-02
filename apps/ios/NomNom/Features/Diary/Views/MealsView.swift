@@ -1,6 +1,7 @@
 import SwiftUI
 
-/// Tab 1 — Meals. Shows a top action to log a meal, pending ratings, and your meal history.
+/// Tab 1 — Meals ("Nom Nom iOS" canvas): the MealsHeader, meals waiting for your
+/// rating, then the history grouped This week / Last week / by month.
 struct MealsView: View {
     @Environment(FoodStore.self) private var store
 
@@ -13,7 +14,7 @@ struct MealsView: View {
     }
 
     private var historySections: [(title: String, meals: [Meal])] {
-        currentMeals.groupedByRelativeDate()
+        currentMeals.groupedByWeek()
     }
 
     var body: some View {
@@ -27,17 +28,16 @@ struct MealsView: View {
                 } else {
                     ScrollView {
                         VStack(alignment: .leading, spacing: DS.Spacing.block) {
-                            PageHeader("Meals", actions: [
-                                EmptyStateAction("Add meal", icon: "plus") { editorTarget = .new }
-                            ])
+                            MealsHeader(meals: currentMeals) { editorTarget = .new }
 
                             MealsToRateSection()
 
                             ForEach(historySections, id: \.title) { section in
                                 SwipeableListCard(
                                     title: section.title,
+                                    caption: section.meals.count == 1 ? "1 meal" : "\(section.meals.count) meals",
                                     data: section.meals,
-                                    leadingIcon: { _ in "trash.fill" },
+                                    leadingIcon: { meal in meal.createdBy == store.userID ? "trash.fill" : nil },
                                     leadingColor: { _ in DS.Color.destructive },
                                     onLeadingAction: { meal in
                                         mealToRemove = meal
@@ -46,7 +46,7 @@ struct MealsView: View {
                                     NavigationLink {
                                         MealDetailView(mealID: meal.id)
                                     } label: {
-                                        MealRow(meal: meal, isMinimal: true)
+                                        MealRow(meal: meal, metaStyle: .ratingProgress, isMinimal: true)
                                     }
                                     .buttonStyle(ListRowButtonStyle())
                                     .contextMenu {
