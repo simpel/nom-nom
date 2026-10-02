@@ -86,7 +86,7 @@ struct LabeledPhotoCard: View {
                     .lineLimit(1)
             }
         }
-        .foregroundStyle(DS.Color.onPhoto)
+        .foregroundStyle(DS.Color.Stone.stone0)
         .multilineTextAlignment(.leading)
         .padding(DS.Spacing.s3)
     }

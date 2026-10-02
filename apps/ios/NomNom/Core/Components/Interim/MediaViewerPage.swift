@@ -18,7 +18,7 @@ struct MediaViewerPage: View {
                     .scaledToFit()
                     .accessibilityLabel("Photo")
             } else if !didLoad {
-                ProgressView().tint(DS.Color.onPhoto)
+                ProgressView().tint(DS.Color.Stone.stone0)
             } else {
                 Image(systemName: "fork.knife")
                     .textStyle(.sansXl, tone: .tertiary)

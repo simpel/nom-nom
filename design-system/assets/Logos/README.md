@@ -1,0 +1,1 @@
+The app icon: a photograph of a white stoneware plate on an oak table, 1024×1024 RGB with no transparency (`nomnom-app-icon.png`, from `AppIcon.appiconset`). Use it whole; the platform rounds its corners (the web masks it at 7px on 32px and 22px on 96px). There is no vector mark or wordmark: set the name "Nom Nom" in Newsreader.

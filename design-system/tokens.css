@@ -1,0 +1,299 @@
+/* Nom Nom — GENERATED from tokens.json by build-tokens.py. Do not hand-edit. */
+:root, [data-theme="light"] {
+  --bg: var(--stone-100); /* Screen ground behind every list and scroll view. Cards sit on it with no border and no shadow — the white-on-grey step is the separation. */
+  --panel: var(--stone-0); /* Cards, rows, the floating icon button, photo score chips. Dark uses stone-900 (iOS grouped style) so a borderless card still reads against `bg` (1.23:1 in dark; the old stone-950 was 1.07:1). */
+  --sunken: var(--stone-200); /* Filled inputs, the in-sheet close button, subtle ScoreBadge, placeholders. */
+  --sheet: var(--stone-50); /* Bottom-sheet ground; its cards are `panel`. */
+  --line: var(--stone-100); /* 1px row dividers inside a card list. Decorative only. */
+  --line-strong: var(--stone-300); /* Timeline rail and other purely decorative rules. Deliberately below 3:1 — a line that carries meaning (a control's border) uses `line-control`. */
+  --line-control: var(--stone-600); /* Border of an outlined control: outline buttons, outlined inputs, the `oneAndDone` pill. At least 3:1 on `panel`, `bg`, `sunken` and `sheet` in both themes, which a control border must meet. */
+  --track: var(--stone-200); /* The unfilled part of a Bar, and a Toggle's off track. Deliberately low against the surface: a meter is read by where its fill ends, and fill-against-track is 5.2:1 light / 3.6:1 dark, which is what 1.4.11 asks of the part that carries the meaning. Raising the track would lower that. */
+  --scrim: rgba(0, 0, 0, 0.4); /* Dims the screen behind a sheet. */
+  --grabber: var(--line-control); /* The sheet's drag handle. Aliases `line-control`: it is an affordance, not decoration, so it clears 3:1 on `sheet` (WCAG 1.4.11). */
+  --text-primary: #16181a; /* Titles, names, scores' verdict words, input text: 16.0:1 on `bg` light, 17.7:1 dark. */
+  --text-secondary: #3a3f45; /* Body copy and summaries under a title: 9.6:1 on `bg` light, 11.0:1 on `panel` dark. */
+  --text-tertiary: #5b6168; /* Meta lines, section labels, captions, 'as usual', placeholders: 5.6:1 on `bg`, 6.3:1 on `panel`, 5.2:1 on `sunken` light; 7.6:1 on `panel` dark. */
+  --focus-ring: var(--pine-600); /* Keyboard focus: 2px solid outline, 2px offset. */
+  --primary: var(--pine-600); /* Primary role fill: solid primary buttons and badges, progress fill, current timeline dot, chevrons. `on-primary` on it is 6.4:1 light; 2.98:1 dark (kept from the app's dark pine). */
+  --primary-soft: #e3f1ee; /* Primary role soft ground (soft buttons and badges, avatar fallback). Carries `primary-text`. */
+  --primary-text: var(--pine-600); /* Primary role text: soft/outline/ghost primary buttons and badges, counts, positive deltas, score numerals. 6.4:1 on `panel`, 5.5:1 on `primary-soft` light; 9.0:1 on `panel` dark. */
+  --on-primary: #ffffff; /* Text and icons on a solid `primary` fill. Dark `primary` is the light pine-400 fill, so its ink is pine-900 (5.16:1); white would be 2.98:1. */
+  --primary-muted: #8fbfb4; /* Past timeline dots (the current one is `primary`). A mark, not text. */
+  --secondary: var(--text-primary); /* Secondary role fill: solid secondary buttons and badges — ink on light, light on dark. */
+  --secondary-soft: var(--sunken); /* Secondary role soft ground: soft secondary buttons (Reset Filters, sheet close) and badges. */
+  --secondary-text: var(--text-secondary); /* Secondary role text: soft/outline/ghost secondary. 8.8:1 on `secondary-soft` light, 8.2:1 dark. */
+  --on-secondary: var(--panel); /* Text on a solid `secondary` fill: 17.8:1 light, 14.5:1 dark. */
+  --destructive: #d93229; /* Destructive role fill: solid destructive buttons, irreversible actions only. iOS system red darkened 15% (same hue) so white text reaches 4.7:1 light and 4.6:1 dark; the undarkened #ff3b30 gave 3.6:1. */
+  --destructive-soft: #ffe2e0; /* Destructive role soft ground. */
+  --destructive-text: #c4001a; /* Red text on a pale ground: inline errors, destructive labels. Dark value clears 4.5:1 on `sunken` (the field ground), not just on `panel`. */
+  --on-destructive: #ffffff; /* Text and icons on a solid `destructive` fill. White both themes: 4.73:1 light, 4.55:1 dark. */
+  --pro: #2b174d; /* Pro role fill: solid Pro buttons ("Unlock with Pro"). `on-pro` on it 15.8:1 / 10.4:1. */
+  --pro-soft: #f4f0f9; /* Pro role soft ground (Pro badges, gated-card grounds). Violet means Pro and nothing else. */
+  --pro-text: #7242c2; /* Pro label text. Dark value clears 4.5:1 on `sunken`. */
+  --on-pro: #ffffff; /* Text on a solid `pro` fill. */
+  --warning: var(--warning-text); /* Warning role fill (solid warning badges). `on-warning` on it 6.5:1 / 6.8:1. */
+  --warning-soft: #fbede4; /* Warning role soft ground: a negative change badge ('−2'). */
+  --warning-text: #9a4418; /* Warning role text: negative change ('−2', '−4 usual'). 5.7:1 on `warning-soft`, 6.5:1 on `panel` light; 6.8:1 dark. */
+  --on-warning: #ffffff; /* Text on a solid `warning` fill. */
+  --reaction-inedible-fill: #bf3a37; /* Reaction −1 · Can't eat: shape fill only — 14–20% tint grounds, 1.5pt selected borders, dots, meter stops. Never behind text at full strength. */
+  --reaction-inedible-text: #a51e21; /* Can't eat, as text. Dark value clears 4.5:1 on `sunken`. */
+  --reaction-bad-fill: #d16633; /* Reaction 1 · Bad: shape fill only — 14–20% tint grounds, 1.5pt selected borders, dots, meter stops. Never behind text at full strength. */
+  --reaction-bad-text: #9b3400; /* Reaction 1 · Bad: numeral and label ink on `panel` or on its own 14–20% fill tint (≥4.9:1 in both themes). In dark one value serves fill and text. */
+  --reaction-meh-fill: #d3a032; /* Reaction 2 · Meh: shape fill only — 14–20% tint grounds, 1.5pt selected borders, dots, meter stops. Never behind text at full strength. */
+  --reaction-meh-text: #774d00; /* Reaction 2 · Meh: numeral and label ink on `panel` or on its own 14–20% fill tint (≥4.9:1 in both themes). In dark one value serves fill and text. */
+  --reaction-good-fill: #7ba853; /* Reaction 3 · Good: shape fill only — 14–20% tint grounds, 1.5pt selected borders, dots, meter stops. Never behind text at full strength. */
+  --reaction-good-text: #3c6211; /* Reaction 3 · Good: numeral and label ink on `panel` or on its own 14–20% fill tint (≥4.9:1 in both themes). In dark one value serves fill and text. */
+  --reaction-great-fill: #2e985e; /* Reaction 4 · Great: shape fill only — 14–20% tint grounds, 1.5pt selected borders, dots, meter stops. Never behind text at full strength. */
+  --reaction-great-text: #006836; /* Reaction 4 · Great: numeral and label ink on `panel` or on its own 14–20% fill tint (≥4.9:1 in both themes). In dark one value serves fill and text. */
+  --reaction-amazing-fill: #247f63; /* Reaction 5 · Amazing: shape fill only — 14–20% tint grounds, 1.5pt selected borders, dots, meter stops. Never behind text at full strength. */
+  --reaction-amazing-text: #00684c; /* Reaction 5 · Amazing: numeral and label ink on `panel` or on its own 14–20% fill tint (≥4.9:1 in both themes). In dark one value serves fill and text. */
+  --chart-series1: #2a78d6; /* Chart categorical #1 (Cerulean — default secondary comparison series). Assign by stable index per party member, never cycle. Violet deliberately absent (reserved for Pro); the party total line is `primary`. */
+  --chart-series2: #c84f1d; /* Chart categorical #2 (Orange). Assign by stable index per party member, never cycle. Violet deliberately absent (reserved for Pro); the party total line is `primary`. */
+  --chart-series3: #13845b; /* Chart categorical #3 (Green). Assign by stable index per party member, never cycle. Violet deliberately absent (reserved for Pro); the party total line is `primary`. */
+  --chart-series4: #a86f00; /* Chart categorical #4 (Amber). Assign by stable index per party member, never cycle. Violet deliberately absent (reserved for Pro); the party total line is `primary`. */
+  --chart-series5: #c2507c; /* Chart categorical #5 (Pink). Assign by stable index per party member, never cycle. Violet deliberately absent (reserved for Pro); the party total line is `primary`. */
+  --chart-series6: #008300; /* Chart categorical #6 (Deep green). Assign by stable index per party member, never cycle. Violet deliberately absent (reserved for Pro); the party total line is `primary`. */
+  --chart-series7: #e34948; /* Chart categorical #7 (Red). Assign by stable index per party member, never cycle. Violet deliberately absent (reserved for Pro); the party total line is `primary`. */
+  --stone-0: #ffffff; /* Stone ramp (OKLCH hue 258°, cool on purpose so food photography supplies the warmth). Ramp step — views consume the semantic roles, not this. */
+  --stone-25: #fafbfc; /* Stone ramp (OKLCH hue 258°, cool on purpose so food photography supplies the warmth). Ramp step — views consume the semantic roles, not this. */
+  --stone-50: #f5f7f9; /* Stone ramp (OKLCH hue 258°, cool on purpose so food photography supplies the warmth). Ramp step — views consume the semantic roles, not this. */
+  --stone-100: #eff1f4; /* Stone ramp (OKLCH hue 258°, cool on purpose so food photography supplies the warmth). Ramp step — views consume the semantic roles, not this. */
+  --stone-200: #e3e5e9; /* Stone ramp (OKLCH hue 258°, cool on purpose so food photography supplies the warmth). Ramp step — views consume the semantic roles, not this. */
+  --stone-300: #d0d4d9; /* Stone ramp (OKLCH hue 258°, cool on purpose so food photography supplies the warmth). Ramp step — views consume the semantic roles, not this. */
+  --stone-400: #adb1b8; /* Stone ramp (OKLCH hue 258°, cool on purpose so food photography supplies the warmth). Ramp step — views consume the semantic roles, not this. */
+  --stone-500: #8a8f97; /* Stone ramp (OKLCH hue 258°, cool on purpose so food photography supplies the warmth). Ramp step — views consume the semantic roles, not this. */
+  --stone-600: #6b7178; /* Stone ramp (OKLCH hue 258°, cool on purpose so food photography supplies the warmth). Ramp step — views consume the semantic roles, not this. */
+  --stone-700: #4d525a; /* Stone ramp (OKLCH hue 258°, cool on purpose so food photography supplies the warmth). Ramp step — views consume the semantic roles, not this. */
+  --stone-800: #31363c; /* Stone ramp (OKLCH hue 258°, cool on purpose so food photography supplies the warmth). Ramp step — views consume the semantic roles, not this. */
+  --stone-900: #1c2026; /* Stone ramp (OKLCH hue 258°, cool on purpose so food photography supplies the warmth). Ramp step — views consume the semantic roles, not this. */
+  --stone-950: #0f1217; /* Stone ramp (OKLCH hue 258°, cool on purpose so food photography supplies the warmth). Ramp step — views consume the semantic roles, not this. */
+  --stone-1000: #06080c; /* Stone ramp (OKLCH hue 258°, cool on purpose so food photography supplies the warmth). Ramp step — views consume the semantic roles, not this. */
+  --pine-50: #ecf9f8; /* Pine ramp (hue 193°, chroma ≤ 0.086 — 128° from the oak table in the photos). Ramp step behind `accent*` roles; DividedScoreCard uses pine-600 / pine-400 directly. */
+  --pine-100: #d7f2f0; /* Pine ramp (hue 193°, chroma ≤ 0.086 — 128° from the oak table in the photos). Ramp step behind `accent*` roles; DividedScoreCard uses pine-600 / pine-400 directly. */
+  --pine-200: #b5e4e2; /* Pine ramp (hue 193°, chroma ≤ 0.086 — 128° from the oak table in the photos). Ramp step behind `accent*` roles; DividedScoreCard uses pine-600 / pine-400 directly. */
+  --pine-300: #87ccca; /* Pine ramp (hue 193°, chroma ≤ 0.086 — 128° from the oak table in the photos). Ramp step behind `accent*` roles; DividedScoreCard uses pine-600 / pine-400 directly. */
+  --pine-400: #4aa3a0; /* Pine ramp (hue 193°, chroma ≤ 0.086 — 128° from the oak table in the photos). Ramp step behind `accent*` roles; DividedScoreCard uses pine-600 / pine-400 directly. */
+  --pine-500: #07817f; /* Pine ramp (hue 193°, chroma ≤ 0.086 — 128° from the oak table in the photos). Ramp step behind `accent*` roles; DividedScoreCard uses pine-600 / pine-400 directly. */
+  --pine-600: #0a6867; /* Pine ramp (hue 193°, chroma ≤ 0.086 — 128° from the oak table in the photos). Ramp step behind `accent*` roles; DividedScoreCard uses pine-600 / pine-400 directly. */
+  --pine-700: #055150; /* Pine ramp (hue 193°, chroma ≤ 0.086 — 128° from the oak table in the photos). Ramp step behind `accent*` roles; DividedScoreCard uses pine-600 / pine-400 directly. */
+  --pine-800: #013b3a; /* Pine ramp (hue 193°, chroma ≤ 0.086 — 128° from the oak table in the photos). Ramp step behind `accent*` roles; DividedScoreCard uses pine-600 / pine-400 directly. */
+  --pine-900: #002a29; /* Pine ramp (hue 193°, chroma ≤ 0.086 — 128° from the oak table in the photos). Ramp step behind `accent*` roles; DividedScoreCard uses pine-600 / pine-400 directly. */
+}
+[data-theme="dark"] {
+  --bg: var(--stone-1000); /* Screen ground behind every list and scroll view. Cards sit on it with no border and no shadow — the white-on-grey step is the separation. */
+  --panel: var(--stone-900); /* Cards, rows, the floating icon button, photo score chips. Dark uses stone-900 (iOS grouped style) so a borderless card still reads against `bg` (1.23:1 in dark; the old stone-950 was 1.07:1). */
+  --sunken: var(--stone-800); /* Filled inputs, the in-sheet close button, subtle ScoreBadge, placeholders. */
+  --sheet: var(--stone-950); /* Bottom-sheet ground; its cards are `panel`. */
+  --line: var(--stone-800); /* 1px row dividers inside a card list. Decorative only. */
+  --line-strong: var(--stone-700); /* Timeline rail and other purely decorative rules. Deliberately below 3:1 — a line that carries meaning (a control's border) uses `line-control`. */
+  --line-control: var(--stone-500); /* Border of an outlined control: outline buttons, outlined inputs, the `oneAndDone` pill. At least 3:1 on `panel`, `bg`, `sunken` and `sheet` in both themes, which a control border must meet. */
+  --track: var(--stone-800); /* The unfilled part of a Bar, and a Toggle's off track. Deliberately low against the surface: a meter is read by where its fill ends, and fill-against-track is 5.2:1 light / 3.6:1 dark, which is what 1.4.11 asks of the part that carries the meaning. Raising the track would lower that. */
+  --scrim: rgba(0, 0, 0, 0.6); /* Dims the screen behind a sheet. */
+  --grabber: var(--line-control); /* The sheet's drag handle. Aliases `line-control`: it is an affordance, not decoration, so it clears 3:1 on `sheet` (WCAG 1.4.11). */
+  --text-primary: var(--stone-100); /* Titles, names, scores' verdict words, input text: 16.0:1 on `bg` light, 17.7:1 dark. */
+  --text-secondary: var(--stone-300); /* Body copy and summaries under a title: 9.6:1 on `bg` light, 11.0:1 on `panel` dark. */
+  --text-tertiary: var(--stone-400); /* Meta lines, section labels, captions, 'as usual', placeholders: 5.6:1 on `bg`, 6.3:1 on `panel`, 5.2:1 on `sunken` light; 7.6:1 on `panel` dark. */
+  --focus-ring: var(--pine-300); /* Keyboard focus: 2px solid outline, 2px offset. */
+  --primary: var(--pine-400); /* Primary role fill: solid primary buttons and badges, progress fill, current timeline dot, chevrons. `on-primary` on it is 6.4:1 light; 2.98:1 dark (kept from the app's dark pine). */
+  --primary-soft: var(--pine-900); /* Primary role soft ground (soft buttons and badges, avatar fallback). Carries `primary-text`. */
+  --primary-text: var(--pine-300); /* Primary role text: soft/outline/ghost primary buttons and badges, counts, positive deltas, score numerals. 6.4:1 on `panel`, 5.5:1 on `primary-soft` light; 9.0:1 on `panel` dark. */
+  --on-primary: var(--pine-900); /* Text and icons on a solid `primary` fill. Dark `primary` is the light pine-400 fill, so its ink is pine-900 (5.16:1); white would be 2.98:1. */
+  --primary-muted: var(--pine-700); /* Past timeline dots (the current one is `primary`). A mark, not text. */
+  --destructive: #d93b31; /* Destructive role fill: solid destructive buttons, irreversible actions only. iOS system red darkened 15% (same hue) so white text reaches 4.7:1 light and 4.6:1 dark; the undarkened #ff3b30 gave 3.6:1. */
+  --destructive-soft: #3e2629; /* Destructive role soft ground. */
+  --destructive-text: #ff8178; /* Red text on a pale ground: inline errors, destructive labels. Dark value clears 4.5:1 on `sunken` (the field ground), not just on `panel`. */
+  --on-destructive: #ffffff; /* Text and icons on a solid `destructive` fill. White both themes: 4.73:1 light, 4.55:1 dark. */
+  --pro: #4a2f82; /* Pro role fill: solid Pro buttons ("Unlock with Pro"). `on-pro` on it 15.8:1 / 10.4:1. */
+  --pro-soft: #1a1130; /* Pro role soft ground (Pro badges, gated-card grounds). Violet means Pro and nothing else. */
+  --pro-text: #b398ea; /* Pro label text. Dark value clears 4.5:1 on `sunken`. */
+  --warning-soft: #2e1a10; /* Warning role soft ground: a negative change badge ('−2'). */
+  --warning-text: #ee8e64; /* Warning role text: negative change ('−2', '−4 usual'). 5.7:1 on `warning-soft`, 6.5:1 on `panel` light; 6.8:1 dark. */
+  --on-warning: var(--panel); /* Text on a solid `warning` fill. */
+  --reaction-inedible-fill: #e97970; /* Reaction −1 · Can't eat: shape fill only — 14–20% tint grounds, 1.5pt selected borders, dots, meter stops. Never behind text at full strength. */
+  --reaction-inedible-text: #f49d96; /* Can't eat, as text. Dark value clears 4.5:1 on `sunken`. */
+  --reaction-bad-fill: #ee8e64; /* Reaction 1 · Bad: shape fill only — 14–20% tint grounds, 1.5pt selected borders, dots, meter stops. Never behind text at full strength. */
+  --reaction-bad-text: #ee8e64; /* Reaction 1 · Bad: numeral and label ink on `panel` or on its own 14–20% fill tint (≥4.9:1 in both themes). In dark one value serves fill and text. */
+  --reaction-meh-fill: #e4b65c; /* Reaction 2 · Meh: shape fill only — 14–20% tint grounds, 1.5pt selected borders, dots, meter stops. Never behind text at full strength. */
+  --reaction-meh-text: #e4b65c; /* Reaction 2 · Meh: numeral and label ink on `panel` or on its own 14–20% fill tint (≥4.9:1 in both themes). In dark one value serves fill and text. */
+  --reaction-good-fill: #a0ca7f; /* Reaction 3 · Good: shape fill only — 14–20% tint grounds, 1.5pt selected borders, dots, meter stops. Never behind text at full strength. */
+  --reaction-good-text: #a0ca7f; /* Reaction 3 · Good: numeral and label ink on `panel` or on its own 14–20% fill tint (≥4.9:1 in both themes). In dark one value serves fill and text. */
+  --reaction-great-fill: #71c791; /* Reaction 4 · Great: shape fill only — 14–20% tint grounds, 1.5pt selected borders, dots, meter stops. Never behind text at full strength. */
+  --reaction-great-text: #71c791; /* Reaction 4 · Great: numeral and label ink on `panel` or on its own 14–20% fill tint (≥4.9:1 in both themes). In dark one value serves fill and text. */
+  --reaction-amazing-fill: #62bc9c; /* Reaction 5 · Amazing: shape fill only — 14–20% tint grounds, 1.5pt selected borders, dots, meter stops. Never behind text at full strength. */
+  --reaction-amazing-text: #62bc9c; /* Reaction 5 · Amazing: numeral and label ink on `panel` or on its own 14–20% fill tint (≥4.9:1 in both themes). In dark one value serves fill and text. */
+  --chart-series1: #3987e5; /* Chart categorical #1 (Cerulean — default secondary comparison series). Assign by stable index per party member, never cycle. Violet deliberately absent (reserved for Pro); the party total line is `primary`. */
+  --chart-series2: #d95926; /* Chart categorical #2 (Orange). Assign by stable index per party member, never cycle. Violet deliberately absent (reserved for Pro); the party total line is `primary`. */
+  --chart-series3: #199e70; /* Chart categorical #3 (Green). Assign by stable index per party member, never cycle. Violet deliberately absent (reserved for Pro); the party total line is `primary`. */
+  --chart-series4: #c98500; /* Chart categorical #4 (Amber). Assign by stable index per party member, never cycle. Violet deliberately absent (reserved for Pro); the party total line is `primary`. */
+  --chart-series5: #d55181; /* Chart categorical #5 (Pink). Assign by stable index per party member, never cycle. Violet deliberately absent (reserved for Pro); the party total line is `primary`. */
+  --chart-series6: #008300; /* Chart categorical #6 (Deep green). Assign by stable index per party member, never cycle. Violet deliberately absent (reserved for Pro); the party total line is `primary`. */
+  --chart-series7: #e66767; /* Chart categorical #7 (Red). Assign by stable index per party member, never cycle. Violet deliberately absent (reserved for Pro); the party total line is `primary`. */
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: var(--stone-1000); /* Screen ground behind every list and scroll view. Cards sit on it with no border and no shadow — the white-on-grey step is the separation. */
+    --panel: var(--stone-900); /* Cards, rows, the floating icon button, photo score chips. Dark uses stone-900 (iOS grouped style) so a borderless card still reads against `bg` (1.23:1 in dark; the old stone-950 was 1.07:1). */
+    --sunken: var(--stone-800); /* Filled inputs, the in-sheet close button, subtle ScoreBadge, placeholders. */
+    --sheet: var(--stone-950); /* Bottom-sheet ground; its cards are `panel`. */
+    --line: var(--stone-800); /* 1px row dividers inside a card list. Decorative only. */
+    --line-strong: var(--stone-700); /* Timeline rail and other purely decorative rules. Deliberately below 3:1 — a line that carries meaning (a control's border) uses `line-control`. */
+    --line-control: var(--stone-500); /* Border of an outlined control: outline buttons, outlined inputs, the `oneAndDone` pill. At least 3:1 on `panel`, `bg`, `sunken` and `sheet` in both themes, which a control border must meet. */
+    --track: var(--stone-800); /* The unfilled part of a Bar, and a Toggle's off track. Deliberately low against the surface: a meter is read by where its fill ends, and fill-against-track is 5.2:1 light / 3.6:1 dark, which is what 1.4.11 asks of the part that carries the meaning. Raising the track would lower that. */
+    --scrim: rgba(0, 0, 0, 0.6); /* Dims the screen behind a sheet. */
+    --grabber: var(--line-control); /* The sheet's drag handle. Aliases `line-control`: it is an affordance, not decoration, so it clears 3:1 on `sheet` (WCAG 1.4.11). */
+    --text-primary: var(--stone-100); /* Titles, names, scores' verdict words, input text: 16.0:1 on `bg` light, 17.7:1 dark. */
+    --text-secondary: var(--stone-300); /* Body copy and summaries under a title: 9.6:1 on `bg` light, 11.0:1 on `panel` dark. */
+    --text-tertiary: var(--stone-400); /* Meta lines, section labels, captions, 'as usual', placeholders: 5.6:1 on `bg`, 6.3:1 on `panel`, 5.2:1 on `sunken` light; 7.6:1 on `panel` dark. */
+    --focus-ring: var(--pine-300); /* Keyboard focus: 2px solid outline, 2px offset. */
+    --primary: var(--pine-400); /* Primary role fill: solid primary buttons and badges, progress fill, current timeline dot, chevrons. `on-primary` on it is 6.4:1 light; 2.98:1 dark (kept from the app's dark pine). */
+    --primary-soft: var(--pine-900); /* Primary role soft ground (soft buttons and badges, avatar fallback). Carries `primary-text`. */
+    --primary-text: var(--pine-300); /* Primary role text: soft/outline/ghost primary buttons and badges, counts, positive deltas, score numerals. 6.4:1 on `panel`, 5.5:1 on `primary-soft` light; 9.0:1 on `panel` dark. */
+    --on-primary: var(--pine-900); /* Text and icons on a solid `primary` fill. Dark `primary` is the light pine-400 fill, so its ink is pine-900 (5.16:1); white would be 2.98:1. */
+    --primary-muted: var(--pine-700); /* Past timeline dots (the current one is `primary`). A mark, not text. */
+    --destructive: #d93b31; /* Destructive role fill: solid destructive buttons, irreversible actions only. iOS system red darkened 15% (same hue) so white text reaches 4.7:1 light and 4.6:1 dark; the undarkened #ff3b30 gave 3.6:1. */
+    --destructive-soft: #3e2629; /* Destructive role soft ground. */
+    --destructive-text: #ff8178; /* Red text on a pale ground: inline errors, destructive labels. Dark value clears 4.5:1 on `sunken` (the field ground), not just on `panel`. */
+    --on-destructive: #ffffff; /* Text and icons on a solid `destructive` fill. White both themes: 4.73:1 light, 4.55:1 dark. */
+    --pro: #4a2f82; /* Pro role fill: solid Pro buttons ("Unlock with Pro"). `on-pro` on it 15.8:1 / 10.4:1. */
+    --pro-soft: #1a1130; /* Pro role soft ground (Pro badges, gated-card grounds). Violet means Pro and nothing else. */
+    --pro-text: #b398ea; /* Pro label text. Dark value clears 4.5:1 on `sunken`. */
+    --warning-soft: #2e1a10; /* Warning role soft ground: a negative change badge ('−2'). */
+    --warning-text: #ee8e64; /* Warning role text: negative change ('−2', '−4 usual'). 5.7:1 on `warning-soft`, 6.5:1 on `panel` light; 6.8:1 dark. */
+    --on-warning: var(--panel); /* Text on a solid `warning` fill. */
+    --reaction-inedible-fill: #e97970; /* Reaction −1 · Can't eat: shape fill only — 14–20% tint grounds, 1.5pt selected borders, dots, meter stops. Never behind text at full strength. */
+    --reaction-inedible-text: #f49d96; /* Can't eat, as text. Dark value clears 4.5:1 on `sunken`. */
+    --reaction-bad-fill: #ee8e64; /* Reaction 1 · Bad: shape fill only — 14–20% tint grounds, 1.5pt selected borders, dots, meter stops. Never behind text at full strength. */
+    --reaction-bad-text: #ee8e64; /* Reaction 1 · Bad: numeral and label ink on `panel` or on its own 14–20% fill tint (≥4.9:1 in both themes). In dark one value serves fill and text. */
+    --reaction-meh-fill: #e4b65c; /* Reaction 2 · Meh: shape fill only — 14–20% tint grounds, 1.5pt selected borders, dots, meter stops. Never behind text at full strength. */
+    --reaction-meh-text: #e4b65c; /* Reaction 2 · Meh: numeral and label ink on `panel` or on its own 14–20% fill tint (≥4.9:1 in both themes). In dark one value serves fill and text. */
+    --reaction-good-fill: #a0ca7f; /* Reaction 3 · Good: shape fill only — 14–20% tint grounds, 1.5pt selected borders, dots, meter stops. Never behind text at full strength. */
+    --reaction-good-text: #a0ca7f; /* Reaction 3 · Good: numeral and label ink on `panel` or on its own 14–20% fill tint (≥4.9:1 in both themes). In dark one value serves fill and text. */
+    --reaction-great-fill: #71c791; /* Reaction 4 · Great: shape fill only — 14–20% tint grounds, 1.5pt selected borders, dots, meter stops. Never behind text at full strength. */
+    --reaction-great-text: #71c791; /* Reaction 4 · Great: numeral and label ink on `panel` or on its own 14–20% fill tint (≥4.9:1 in both themes). In dark one value serves fill and text. */
+    --reaction-amazing-fill: #62bc9c; /* Reaction 5 · Amazing: shape fill only — 14–20% tint grounds, 1.5pt selected borders, dots, meter stops. Never behind text at full strength. */
+    --reaction-amazing-text: #62bc9c; /* Reaction 5 · Amazing: numeral and label ink on `panel` or on its own 14–20% fill tint (≥4.9:1 in both themes). In dark one value serves fill and text. */
+    --chart-series1: #3987e5; /* Chart categorical #1 (Cerulean — default secondary comparison series). Assign by stable index per party member, never cycle. Violet deliberately absent (reserved for Pro); the party total line is `primary`. */
+    --chart-series2: #d95926; /* Chart categorical #2 (Orange). Assign by stable index per party member, never cycle. Violet deliberately absent (reserved for Pro); the party total line is `primary`. */
+    --chart-series3: #199e70; /* Chart categorical #3 (Green). Assign by stable index per party member, never cycle. Violet deliberately absent (reserved for Pro); the party total line is `primary`. */
+    --chart-series4: #c98500; /* Chart categorical #4 (Amber). Assign by stable index per party member, never cycle. Violet deliberately absent (reserved for Pro); the party total line is `primary`. */
+    --chart-series5: #d55181; /* Chart categorical #5 (Pink). Assign by stable index per party member, never cycle. Violet deliberately absent (reserved for Pro); the party total line is `primary`. */
+    --chart-series6: #008300; /* Chart categorical #6 (Deep green). Assign by stable index per party member, never cycle. Violet deliberately absent (reserved for Pro); the party total line is `primary`. */
+    --chart-series7: #e66767; /* Chart categorical #7 (Red). Assign by stable index per party member, never cycle. Violet deliberately absent (reserved for Pro); the party total line is `primary`. */
+  }
+}
+:root {
+  --spacing-0\.5: 0.125rem; /* 2px.  */
+  --spacing-1: 0.25rem; /* 4px. Icon–label gap in badges. */
+  --spacing-1\.5: 0.375rem; /* 6px.  */
+  --spacing-2: 0.5rem; /* 8px. Tight gaps; section label inset; chip side padding. */
+  --spacing-2\.5: 0.625rem; /* 10px.  */
+  --spacing-3: 0.75rem; /* 12px. Control gaps, row gaps. */
+  --spacing-3\.5: 0.875rem; /* 14px.  */
+  --spacing-4: 1rem; /* 16px. Screen gutter; card padding in lists; standard gap. */
+  --spacing-5: 1.25rem; /* 20px. Content-card padding (score, note, sheet cards); xl button side padding. */
+  --spacing-6: 1.5rem; /* 24px. Section gaps inside a sheet. */
+  --spacing-7: 1.75rem; /* 28px. Gap between blocks on a detail screen. */
+  --spacing-8: 2rem; /* 32px. Gap between major sections. */
+  --spacing-9: 2.25rem; /* 36px. sm control height (AppButton, Input); row score column. */
+  --spacing-10: 2.5rem; /* 40px.  */
+  --spacing-11: 2.75rem; /* 44px. md control height; IconButton (the 44px touch minimum). */
+  --spacing-12: 3rem; /* 48px. xl control height (screen-bottom buttons). */
+  --spacing-14: 3.5rem; /* 56px. Minimum list-row height. */
+  --spacing-16: 4rem; /* 64px.  */
+  --spacing-20: 5rem; /* 80px. Recipe thumbnail; large avatar. */
+  --spacing-24: 6rem; /* 96px.  */
+  --spacing-28: 7rem; /* 112px. Add photo tile width. */
+  --spacing-36: 9rem; /* 144px. Narrow photo / timeline tile width. */
+  --spacing-48: 12rem; /* 192px. Timeline tile height. */
+  --spacing-64: 16rem; /* 256px. Wide hero photo width. */
+  --spacing-72: 18rem; /* 288px. Hero photo height. */
+  --radius-sm: 0.25rem; /* 4px: grabber, progress track ends. */
+  --radius-md: 0.375rem; /* 6px. */
+  --radius-lg: 0.5rem; /* 8px: compact score boxes, picker cells. */
+  --radius-xl: 0.75rem; /* 12px: inputs, recipe thumbnails, photo chips. */
+  --radius-2xl: 1rem; /* 16px: timeline tiles and photos inside a list. */
+  --radius-3xl: 1.5rem; /* 24px: cards, list cards, hero photos, the score card. */
+  --radius-4xl: 2rem; /* 32px: top corners of a bottom sheet. */
+  --radius-full: 9999px; /* Buttons, chips, pills, badges, avatars — every capsule. */
+  --opacity-0: 0;
+  --opacity-5: 0.05;
+  --opacity-10: 0.1; /* Tinted card start, reaction-picker initial disc (fill mixed at 10%). */
+  --opacity-15: 0.15; /* Reaction badge grounds (fill at 15%). */
+  --opacity-20: 0.2; /* Selected ReactionPicker / TasteScoreSelector cell ground. */
+  --opacity-25: 0.25;
+  --opacity-30: 0.3; /* Hairline strength of `line` on cards and fields; badge value divider. */
+  --opacity-40: 0.4;
+  --opacity-50: 0.5; /* Disabled buttons and fields. */
+  --opacity-60: 0.6;
+  --opacity-70: 0.7; /* Pressed button (with scale 0.985, 120ms ease-out). */
+  --opacity-75: 0.75;
+  --opacity-80: 0.8; /* Focus and error borders. */
+  --opacity-90: 0.9;
+  --opacity-95: 0.95;
+  --opacity-100: 1;
+  --container-sm: 24rem; /* 384px: phone-width content column. */
+  --container-3xl: 48rem; /* 768px: web prose measure. */
+  --container-5xl: 64rem; /* 1024px: web page container. */
+  --text-xs: 0.75rem; /* Tailwind text-xs (12px). */
+  --text-sm: 0.875rem; /* Tailwind text-sm (14px). */
+  --text-base: 1rem; /* Tailwind text-base (16px). */
+  --text-lg: 1.125rem; /* Tailwind text-lg (18px). */
+  --text-xl: 1.25rem; /* Tailwind text-xl (20px). */
+  --text-2xl: 1.5rem; /* Tailwind text-2xl (24px). */
+  --text-3xl: 1.875rem; /* Tailwind text-3xl (30px). */
+  --text-4xl: 2.25rem; /* Tailwind text-4xl (36px). */
+  --text-5xl: 3rem; /* Tailwind text-5xl (48px). */
+  --text-6xl: 3.75rem; /* Tailwind text-6xl (60px). */
+  --font-weight-normal: 400; /* Everything by default; all Newsreader. */
+  --font-weight-semibold: 600; /* Sans only: buttons, headlines, chips and badges. */
+  --tracking-tight: -0.025em; /* Large serif display (the cover name). */
+  --tracking-widest: 0.1em; /* Uppercase overlines: section headers, card kind labels. */
+  --leading-none: 1; /* serif-xl (numerals), chips, icon rows. */
+  --leading-tight: 1.25; /* serif-md and serif-lg (display titles). */
+  --leading-snug: 1.375; /* serif-xs and serif-sm (card titles, quotes, row scores). */
+  --leading-normal: 1.5; /* Every sans style (xs–xl). */
+  --leading-relaxed: 1.625; /* Long reading text on the web. */
+  --border-hairline: 1px; /* Dividers, card hairlines, a field at rest. Never 0.5px: a sub-pixel border renders as a blend and loses its contrast. */
+  --border-thick: 2px; /* A state worth noticing: focus ring, error border, selected ring. */
+  --duration-press: 120ms; /* Press feedback: opacity and the press scale. */
+  --duration-state: 150ms; /* A state changing in place: a field's border, an icon's colour. */
+  --duration-layout: 250ms; /* Something moving or resizing: the Add photo label collapsing, a bar's fill. */
+  --ease-standard: ease-out; /* The one easing curve. */
+  --scale-press: 0.985; /* A pressed button, card or tile. */
+  --scale-press-row: 0.995; /* A pressed row — wider than it is tall, so it needs less. */
+  --scale-knob: 0.92; /* A pressed Toggle knob, which scales instead of fading. */
+  --font-serif: "Newsreader", Georgia, serif;
+  --font-serif-display: "Newsreader Display", "Newsreader", Georgia, serif;
+  --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --text-serif-xs: var(--font-weight-normal) var(--text-xl)/var(--leading-snug) var(--font-serif); /* text-xl · leading-snug. Row scores, photo-chip scores, the cook’s note (which sets italic itself). */
+  --text-serif-sm: var(--font-weight-normal) var(--text-2xl)/var(--leading-snug) var(--font-serif); /* text-2xl · leading-snug. Card titles, recipe names, the verdict beside a numeral. */
+  --text-serif-md: var(--font-weight-normal) var(--text-3xl)/var(--leading-tight) var(--font-serif-display); /* text-3xl · leading-tight. Sheet verdicts, large openers. */
+  --text-serif-lg: var(--font-weight-normal) var(--text-4xl)/var(--leading-tight) var(--font-serif-display); /* text-4xl · leading-tight. Page and hero titles. */
+  --text-serif-xl: var(--font-weight-normal) var(--text-5xl)/var(--leading-none) var(--font-serif-display); /* text-5xl · leading-none. The score numeral, tabular, `primary-text`. */
+  --text-sans-xs: var(--font-weight-normal) var(--text-xs)/var(--leading-normal) var(--font-sans); /* text-xs · leading-normal. Card labels, provenance, chips and badges; uppercase + tracking-widest for section headers and kind labels. */
+  --text-sans-sm: var(--font-weight-normal) var(--text-sm)/var(--leading-normal) var(--font-sans); /* text-sm · leading-normal. Meta, dates, counts, row notes, reason detail, sm buttons. */
+  --text-sans-md: var(--font-weight-normal) var(--text-base)/var(--leading-normal) var(--font-sans); /* text-base · leading-normal. Body, row labels, input text, md buttons. */
+  --text-sans-lg: var(--font-weight-normal) var(--text-lg)/var(--leading-normal) var(--font-sans); /* text-lg · leading-normal. xl buttons, sheet and reason titles, change badges — all of which set semibold themselves. */
+  --text-sans-xl: var(--font-weight-normal) var(--text-xl)/var(--leading-normal) var(--font-sans); /* text-xl · leading-normal. TasteScoreSelector numerals, large sans figures. */
+}
+@font-face {
+  font-family: "Newsreader";
+  src: url("fonts/Newsreader-Regular.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Newsreader";
+  src: url("fonts/Newsreader-Italic.ttf") format("truetype");
+  font-weight: 400;
+  font-style: italic;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Newsreader Display";
+  src: url("fonts/Newsreader-DisplayRegular.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}

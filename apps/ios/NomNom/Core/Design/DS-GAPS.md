@@ -56,3 +56,15 @@ This file lists UI patterns that exist in the app but not in the design system. 
 
 - Arc photo decks (ArcHeroHeaderView, HeroPhotoDeck*, MiniPhotoArcDeck, CategoryPhotoArcView, EmptyPhotoDeckHeroView, MealPhotoDeckArcView, AuthHeroArcView). PhotoStrip and PhotoCard replace them. If empty states should have artwork, the DS needs to define it.
 - Emoji avatars for eaters. Avatar initials replace them.
+
+## v3 spec calls made in R0 (tokens generated from `design-system/tokens.json`)
+
+Where the vendored v3 snapshot contradicts itself, these are the calls taken. Revisit when the DS is updated.
+
+- **`line-placeholder`** is named by `components/PhotoStrip/README.md` ("1.5px dashed `line-placeholder`") but does not exist in `tokens.json`. The main README says "the dashed placeholder tile … use `line-control`", so the Add photo tile uses `lineControl`.
+- **Hairline width.** Avatar and PhotoCard READMEs say "0.5px `line` ring at 30%"; `tokens.json` `border-hairline` says "Never 0.5px". `.dsHairline()` draws `border-hairline` (1pt).
+- **Focus / error borders.** README "Motion and states" says 1.5px at `opacity-80`; `components/Input/README.md` says 2px full-strength. Component README wins: the `DS.Opacity.focus` alias is gone and fields use `primary` / `destructive` at full strength.
+- **Tracking.** `api/tokens.md` lists six tracking steps (incl. `tracking-wider` 0.05em for badges); `tokens.json` has only `tracking-tight` and `tracking-widest`. `api/tokens.md` is stale against `tokens.json` (it also still says `bg` #f2f3f5); `tokens.json` wins, so Badge has no tracking. Type styles carry no tracking either, so `tracking-tight` is no longer applied automatically to serif-lg/xl (opt in with `trackingTight`).
+- **Dynamic Type.** The README table maps `sans-sm` → `.footnote` (13pt default) and `sans-md` → `.body` (17pt), while the scale says 14 / 16. Sizes come from `tokens.json`; only the text style each scales relative to comes from the table.
+- **Photo overlays.** No token or README defines white-on-photo or the 45% black disc. PhotoCard's heart now uses the v3 heart (AppButton `secondary elevated`: `panel` ground, `destructive-text` filled heart); LabeledPhotoCard text and the media viewer spinner use `stone-0`, the ramp step under README "Imagery"'s `stone-1000` scrim.
+- **Featured ProgressBar track** (`primary` at 18%) is not in v3: Bar README says "Ground is `track`".

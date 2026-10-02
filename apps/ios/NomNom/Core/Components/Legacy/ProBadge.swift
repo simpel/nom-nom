@@ -45,9 +45,6 @@ struct ProBadge: View {
         .padding(.vertical, size.verticalPadding)
         .background(DS.Color.Pro.proSoft)
         .clipShape(Capsule())
-        .overlay {
-            Capsule().strokeBorder(DS.Color.Pro.proBorder, lineWidth: 1)
-        }
         .accessibilityHidden(true)
     }
 }

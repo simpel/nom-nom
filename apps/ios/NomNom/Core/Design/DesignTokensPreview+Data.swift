@@ -7,11 +7,11 @@ extension DesignTokensPreview {
     static let surfaces: [Swatch] = [
         ("bg", DS.Color.bg), ("panel", DS.Color.panel), ("sunken", DS.Color.sunken),
         ("sheet", DS.Color.sheet), ("line", DS.Color.line), ("lineStrong", DS.Color.lineStrong),
-        ("linePlaceholder", DS.Color.linePlaceholder), ("track", DS.Color.track),
+        ("lineControl", DS.Color.lineControl), ("track", DS.Color.track),
         ("scrim", DS.Color.scrim), ("grabber", DS.Color.grabber),
         ("textPrimary", DS.Color.textPrimary), ("textSecondary", DS.Color.textSecondary),
         ("textTertiary", DS.Color.textTertiary), ("focusRing", DS.Color.focusRing),
-        ("primaryHover", DS.Color.primaryHover), ("primaryMuted", DS.Color.primaryMuted),
+        ("primaryMuted", DS.Color.primaryMuted),
     ]
 
     static var roleSwatches: [Swatch] {
@@ -52,6 +52,6 @@ extension DesignTokensPreview {
     ]
 
     static let shadows: [(name: String, level: DS.Shadow)] = [
-        ("xs", .xs), ("sm", .sm), ("md", .md), ("lg", .lg), ("xl", .xl),
+        ("2xs", .xs2), ("xs", .xs), ("sm", .sm), ("md", .md), ("lg", .lg), ("xl", .xl), ("2xl", .xl2),
     ]
 }

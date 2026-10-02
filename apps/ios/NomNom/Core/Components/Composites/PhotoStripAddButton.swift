@@ -51,7 +51,7 @@ struct PhotoStripEmptyAddTile: View {
             .frame(maxWidth: .infinity, minHeight: DS.Spacing.s20)
             .overlay {
                 shape.strokeBorder(
-                    DS.Color.linePlaceholder,
+                    DS.Color.lineControl,  // README: the dashed placeholder tile uses `line-control`
                     style: StrokeStyle(lineWidth: DSAppearance.outlineWidth, dash: [DS.Spacing.s1, DS.Spacing.s1])
                 )
             }

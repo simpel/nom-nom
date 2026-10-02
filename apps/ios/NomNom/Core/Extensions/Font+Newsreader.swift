@@ -6,8 +6,10 @@ import SwiftUI
 /// Prefer `.textStyle(.serif…)` / `DS.TextStyle.serif….font` in new code.
 extension Font {
     private static func newsreaderFontName(size: CGFloat, italic: Bool) -> String {
-        if italic { return "Newsreader16pt-Italic" }
-        return size >= DS.TextStyle.serifMd.size ? "Newsreader72pt-Regular" : "Newsreader16pt-Regular"
+        let serif = DSTokens.FontFamily.serif
+        if italic { return serif.italicPostScriptName ?? "" }
+        let display = DSTokens.FontFamily.serifDisplay
+        return (size >= DS.TextStyle.serifMd.size ? display.postScriptName : serif.postScriptName) ?? ""
     }
 
     /// Creates a Newsreader serif font with Dynamic Type scaling.

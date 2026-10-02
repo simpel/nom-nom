@@ -121,9 +121,9 @@ struct PhotoCard<Overlay: View>: View {
     private var favoriteHeart: some View {
         Image(systemName: "heart.fill")
             .textStyle(.sansXs, tone: nil, weight: .semibold)
-            .foregroundStyle(DS.Color.onPhoto)
+            .foregroundStyle(DS.Color.destructiveText)
             .frame(width: DS.Spacing.s6, height: DS.Spacing.s6)
-            .background(DS.Color.photoDisc, in: Circle())
+            .background(DS.Color.panel, in: Circle())
             .padding(DS.Spacing.s2)
     }
 

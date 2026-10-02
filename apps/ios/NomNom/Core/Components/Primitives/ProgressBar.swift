@@ -21,7 +21,7 @@ struct ProgressBar: View {
     let value: Double?
     var max: Double
     var size: ProgressBarSize
-    /// On a featured card the track turns `primary` at 18%.
+    /// Kept for source compatibility; v3 Bar draws `track` on every ground.
     var featured: Bool
     /// Accessible name; defaults to "64 out of 100".
     var label: String?
@@ -53,7 +53,7 @@ struct ProgressBar: View {
     }
 
     private var trackColor: Color {
-        featured ? DS.Color.primary.opacity(DS.Opacity.featuredTrack) : DS.Color.track
+        DS.Color.track  // Bar README: "Ground is `track`"
     }
 
     var body: some View {

@@ -31,8 +31,8 @@ enum InputMetrics {
     /// Border colour, or nil for none. Error beats focus; `plain` has no border.
     static func border(_ appearance: InputAppearance, focused: Bool, error: Bool) -> Color? {
         guard appearance != .plain else { return nil }
-        if error { return DS.Color.destructive.opacity(DS.Opacity.focus) }
-        if focused { return DS.Color.primary.opacity(DS.Opacity.focus) }
+        if error { return DS.Color.destructive }
+        if focused { return DS.Color.primary }
         return appearance == .soft ? DS.Color.line.opacity(DS.Opacity.hairline) : DS.Color.lineStrong
     }
 

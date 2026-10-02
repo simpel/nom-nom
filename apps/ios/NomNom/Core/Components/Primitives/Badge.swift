@@ -76,7 +76,7 @@ struct Badge: View {
     }
 
     private var label: Text {
-        Text(text).tracking(DS.TextStyle.sansXs.trackingWider)
+        Text(text)
     }
 
     @ViewBuilder

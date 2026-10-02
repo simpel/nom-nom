@@ -3,101 +3,85 @@ import UIKit
 
 extension DS {
     /// The design system's type scale: Newsreader serif xs–xl and the system
-    /// sans xs–xl. A step is one size plus one leading; serif md and up use
-    /// Newsreader's 72pt display cut. Only regular and semibold exist.
+    /// sans xs–xl. Size, line height, family and the Dynamic Type style each step
+    /// scales with all come from `DSTokens.TypeStyles` (tokens.json `type` plus the
+    /// README "Dynamic Type" table).
+    ///
+    /// README "Typography": "Every step in the scale is regular (400), at every
+    /// size. Weight is a separate axis a component opts into" — so no case carries
+    /// a weight of its own; pass `weight: .semibold` at the call site.
     enum TextStyle: CaseIterable {
         case serifXs, serifSm, serifMd, serifLg, serifXl
         case sansXs, sansSm, sansMd, sansLg, sansXl
 
-        enum Weight { case regular, semibold }
+        /// The two weights that exist (`font-weight-normal`, `font-weight-semibold`).
+        enum Weight {
+            case regular, semibold
 
-        var size: CGFloat {
-            switch self {
-            case .serifXs: return 20
-            case .serifSm: return 24
-            case .serifMd: return 30
-            case .serifLg: return 36
-            case .serifXl: return 48
-            case .sansXs: return 12
-            case .sansSm: return 14
-            case .sansMd: return 16
-            case .sansLg: return 18
-            case .sansXl: return 20
+            var token: Int {
+                switch self {
+                case .regular: return DSTokens.FontWeight.normal
+                case .semibold: return DSTokens.FontWeight.semibold
+                }
+            }
+
+            /// The SwiftUI weight for the CSS numeric weight.
+            var fontWeight: Font.Weight {
+                token >= DSTokens.FontWeight.semibold ? .semibold : .regular
             }
         }
+
+        var token: DSTokens.TypeStyle {
+            switch self {
+            case .serifXs: return DSTokens.TypeStyles.serifXs
+            case .serifSm: return DSTokens.TypeStyles.serifSm
+            case .serifMd: return DSTokens.TypeStyles.serifMd
+            case .serifLg: return DSTokens.TypeStyles.serifLg
+            case .serifXl: return DSTokens.TypeStyles.serifXl
+            case .sansXs: return DSTokens.TypeStyles.sansXs
+            case .sansSm: return DSTokens.TypeStyles.sansSm
+            case .sansMd: return DSTokens.TypeStyles.sansMd
+            case .sansLg: return DSTokens.TypeStyles.sansLg
+            case .sansXl: return DSTokens.TypeStyles.sansXl
+            }
+        }
+
+        /// Font size at the default Dynamic Type setting.
+        var size: CGFloat { token.size }
 
         /// Line height as a multiple of size (`leading-*`).
-        var leading: CGFloat {
-            switch self {
-            case .serifXs, .serifSm: return 1.375
-            case .serifMd, .serifLg: return 1.25
-            case .serifXl: return 1.0
-            default: return 1.5
-            }
-        }
+        var leading: CGFloat { token.lineHeight }
 
-        var isSerif: Bool {
-            switch self {
-            case .serifXs, .serifSm, .serifMd, .serifLg, .serifXl: return true
-            default: return false
-            }
-        }
+        var family: DSTokens.FontFamily { token.family }
 
-        /// Serif md and up use the 72pt optical cut.
-        var usesDisplayCut: Bool {
-            switch self {
-            case .serifMd, .serifLg, .serifXl: return true
-            default: return false
-            }
-        }
-
-        var defaultWeight: Weight { self == .sansLg ? .semibold : .regular }
-
-        /// `tracking-tight` (−0.025em) on large serif.
-        var tracking: CGFloat {
-            switch self {
-            case .serifLg, .serifXl: return -0.025 * size
-            default: return 0
-            }
-        }
-
-        /// `tracking-wider` (0.05em): badges.
-        var trackingWider: CGFloat { 0.05 * size }
-
-        /// `tracking-widest` (0.1em): uppercase overlines and section headers.
-        var trackingWidest: CGFloat { 0.1 * size }
+        var isSerif: Bool { family.postScriptName != nil }
 
         /// The Dynamic Type style this step scales with.
-        var relativeTo: Font.TextStyle {
-            switch self {
-            case .serifXs, .sansXl: return .title3
-            case .serifSm: return .title2
-            case .serifMd: return .title
-            case .serifLg, .serifXl: return .largeTitle
-            case .sansXs: return .caption
-            case .sansSm: return .subheadline
-            case .sansMd: return .callout
-            case .sansLg: return .body
-            }
-        }
+        var relativeTo: Font.TextStyle { token.relativeTo }
 
-        /// The style's font at its default weight.
+        /// `tracking-tight` in points at this size. Opt-in; no step applies it itself.
+        var trackingTight: CGFloat { DSTokens.Tracking.tight * size }
+
+        /// `tracking-widest` in points: uppercase overlines and section headers.
+        var trackingWidest: CGFloat { DSTokens.Tracking.widest * size }
+
+        /// The style's font at the regular weight.
         var font: Font { font(weight: nil, italic: false) }
 
         func font(weight: Weight? = nil, italic: Bool = false, dynamicTypeSize: DynamicTypeSize? = nil) -> Font {
-            if isSerif {
-                return Font.custom(fontName(italic: italic), size: size, relativeTo: relativeTo)
+            if let name = fontName(italic: italic) {
+                return Font.custom(name, size: size, relativeTo: relativeTo)
             }
-            let resolved = (weight ?? defaultWeight) == .semibold ? Font.Weight.semibold : .regular
-            let base = Font.system(size: scaledSize(dynamicTypeSize), weight: resolved)
+            let base = Font.system(size: scaledSize(dynamicTypeSize), weight: (weight ?? .regular).fontWeight)
             return italic ? base.italic() : base
         }
 
-        /// PostScript name for the serif face. There is no 72pt italic; italic
-        /// always uses the 16pt text cut.
-        func fontName(italic: Bool = false) -> String {
-            if italic { return "Newsreader16pt-Italic" }
-            return usesDisplayCut ? "Newsreader72pt-Regular" : "Newsreader16pt-Regular"
+        /// PostScript name of the bundled serif cut, `nil` for the system sans.
+        /// Italic exists only in the `serif` family, so every serif italic uses it.
+        func fontName(italic: Bool = false) -> String? {
+            guard isSerif else { return nil }
+            if italic { return family.italicPostScriptName ?? DSTokens.FontFamily.serif.italicPostScriptName }
+            return family.postScriptName
         }
 
         func scaledSize(_ dynamicTypeSize: DynamicTypeSize? = nil) -> CGFloat {
@@ -110,9 +94,8 @@ extension DS {
         /// Extra spacing between lines so the rendered line height matches `leading`.
         func lineSpacing(_ dynamicTypeSize: DynamicTypeSize? = nil) -> CGFloat {
             let pointSize = scaledSize(dynamicTypeSize)
-            let natural = isSerif
-                ? (UIFont(name: fontName(), size: pointSize)?.lineHeight ?? pointSize * 1.2)
-                : UIFont.systemFont(ofSize: pointSize).lineHeight
+            let system = UIFont.systemFont(ofSize: pointSize)
+            let natural = fontName().flatMap { UIFont(name: $0, size: pointSize) }?.lineHeight ?? system.lineHeight
             return max(0, pointSize * leading - natural)
         }
     }
@@ -145,7 +128,6 @@ private struct DSTextStyleModifier: ViewModifier {
         let font = style.font(weight: weight, italic: italic, dynamicTypeSize: dynamicTypeSize)
         let styled = content
             .font(numeric ? font.monospacedDigit() : font)
-            .tracking(style.tracking)
             .lineSpacing(style.lineSpacing(dynamicTypeSize))
         // `tone: nil` inherits the surrounding foreground style.
         if let tone {

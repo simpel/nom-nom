@@ -31,7 +31,7 @@ final class AppDelegate: NSObject, UIApplicationDelegate {
         ]
         // Large title on page -> Newsreader 72pt display cut at serif-lg
         let largeTitle = DS.TextStyle.serifLg
-        if let largeTitleFont = UIFont(name: largeTitle.fontName(), size: largeTitle.size) {
+        if let name = largeTitle.fontName(), let largeTitleFont = UIFont(name: name, size: largeTitle.size) {
             appearance.largeTitleTextAttributes = [
                 .font: UIFontMetrics(forTextStyle: .largeTitle).scaledFont(for: largeTitleFont)
             ]

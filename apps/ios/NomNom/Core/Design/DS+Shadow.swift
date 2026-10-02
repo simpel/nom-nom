@@ -1,82 +1,67 @@
 import SwiftUI
 
 extension DS {
-    /// Tailwind shadow scale (`shadow-*` in `tokens.json`). Cards carry none;
-    /// only things that float do. In dark a black shadow can't show on a
-    /// near-black ground, so each dark level leads with a 1px white ring and a
-    /// faint top highlight.
-    enum Shadow {
-        case xs, sm, md, lg, xl
+    /// Tailwind shadow scale (`shadow-*`), drawn from the layer lists in
+    /// `DSTokens.Shadow`. Cards carry none; only things that float do. Names
+    /// follow the tokens: `shadow-2xs` → `xs2`, `shadow-2xl` → `xl2`.
+    enum Shadow: CaseIterable {
+        case xs2, xs, sm, md, lg, xl, xl2
 
-        struct Layer {
-            let opacity: Double
-            let radius: CGFloat
-            let y: CGFloat
-        }
-
-        /// Light-theme layers. SwiftUI has no spread, so blur/2 approximates radius.
-        var lightLayers: [Layer] {
+        var token: DSTokens.ShadowToken {
             switch self {
-            case .xs: return [Layer(opacity: 0.05, radius: 1, y: 1)]
-            case .sm: return [Layer(opacity: 0.10, radius: 1.5, y: 1), Layer(opacity: 0.10, radius: 1, y: 1)]
-            case .md: return [Layer(opacity: 0.10, radius: 3, y: 4), Layer(opacity: 0.10, radius: 2, y: 2)]
-            case .lg: return [Layer(opacity: 0.10, radius: 7.5, y: 10), Layer(opacity: 0.10, radius: 3, y: 4)]
-            case .xl: return [Layer(opacity: 0.10, radius: 12.5, y: 20), Layer(opacity: 0.10, radius: 5, y: 8)]
+            case .xs2: return DSTokens.Shadow.xs2
+            case .xs: return DSTokens.Shadow.xs
+            case .sm: return DSTokens.Shadow.sm
+            case .md: return DSTokens.Shadow.md
+            case .lg: return DSTokens.Shadow.lg
+            case .xl: return DSTokens.Shadow.xl
+            case .xl2: return DSTokens.Shadow.xl2
             }
         }
 
-        /// Dark-theme black drop.
-        var darkLayer: Layer {
-            switch self {
-            case .xs: return Layer(opacity: 0.6, radius: 1, y: 1)
-            case .sm: return Layer(opacity: 0.6, radius: 1.5, y: 1)
-            case .md: return Layer(opacity: 0.6, radius: 4, y: 4)
-            case .lg: return Layer(opacity: 0.7, radius: 10, y: 10)
-            case .xl: return Layer(opacity: 0.7, radius: 15, y: 20)
-            }
+        func layers(_ scheme: ColorScheme) -> [DSTokens.ShadowLayer] {
+            scheme == .dark ? token.dark : token.light
         }
-
-        /// Dark-theme 1px white ring opacity.
-        var darkRingOpacity: Double {
-            switch self {
-            case .xs: return 0.10
-            case .sm, .md: return 0.08
-            case .lg, .xl: return 0.10
-            }
-        }
-
-        /// Dark-theme top highlight opacity (`inset 0 1px 0`).
-        static let darkHighlightOpacity: Double = 0.05
     }
 }
 
+/// Renders a CSS box-shadow layer list on a shape:
+/// - an outer layer with blur or offset → `.shadow` (SwiftUI's radius is CSS blur ÷ 2;
+///   SwiftUI has no spread, so a blurred layer's spread is dropped),
+/// - an outer layer with only spread → a ring: the shape grown by `spread`, behind,
+/// - an inset layer without blur → the band the offset uncovers inside the shape.
 private struct DSShadowModifier<S: InsettableShape>: ViewModifier {
     let level: DS.Shadow
     let shape: S
     @Environment(\.colorScheme) private var colorScheme
 
     func body(content: Content) -> some View {
-        if colorScheme == .dark {
-            let drop = level.darkLayer
-            content
-                .overlay {
-                    shape.strokeBorder(Color.white.opacity(level.darkRingOpacity), lineWidth: 1)
-                }
-                .overlay {
-                    shape.strokeBorder(
-                        LinearGradient(
-                            colors: [Color.white.opacity(DS.Shadow.darkHighlightOpacity), .clear],
-                            startPoint: .top,
-                            endPoint: .center
-                        ),
-                        lineWidth: 1
-                    )
-                }
-                .shadow(color: .black.opacity(drop.opacity), radius: drop.radius, x: 0, y: drop.y)
-        } else {
-            level.lightLayers.reduce(AnyView(content)) { view, layer in
-                AnyView(view.shadow(color: .black.opacity(layer.opacity), radius: layer.radius, x: 0, y: layer.y))
+        level.layers(colorScheme).reduce(AnyView(content)) { view, layer in
+            AnyView(apply(layer, to: view))
+        }
+    }
+
+    @ViewBuilder
+    private func apply(_ layer: DSTokens.ShadowLayer, to view: AnyView) -> some View {
+        if layer.inset {
+            view.overlay {
+                shape.fill(layer.color)
+                    .mask {
+                        ZStack {
+                            Rectangle()
+                            shape.offset(x: layer.x, y: layer.y).blendMode(.destinationOut)
+                        }
+                        .compositingGroup()
+                    }
+                    .clipShape(shape)
+                    .allowsHitTesting(false)
             }
+        } else if layer.blur == 0, layer.x == 0, layer.y == 0 {
+            view.background {
+                shape.inset(by: -layer.spread).fill(layer.color)
+            }
+        } else {
+            view.shadow(color: layer.color, radius: layer.blur / 2, x: layer.x, y: layer.y)
         }
     }
 }
@@ -98,11 +83,12 @@ extension View {
         }
     }
 
-    /// The 0.5pt `line` hairline at `opacity-30` that outlines photos and fields.
+    /// The `line` hairline at `opacity-30` that rings photos, avatars and fields
+    /// (PhotoCard / Avatar READMEs: "`line` ring at 30%"), drawn at `border-hairline`.
     func dsHairline(radius: CGFloat = DS.Radius.xl3) -> some View {
         overlay {
             RoundedRectangle(cornerRadius: radius, style: .continuous)
-                .strokeBorder(DS.Color.line.opacity(DS.Opacity.hairline), lineWidth: 0.5)
+                .strokeBorder(DS.Color.line.opacity(DS.Opacity.hairline), lineWidth: DS.BorderWidth.hairline)
         }
     }
 }

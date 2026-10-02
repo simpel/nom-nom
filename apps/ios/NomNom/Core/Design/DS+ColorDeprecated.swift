@@ -1,7 +1,7 @@
 import SwiftUI
 
 // Pre-design-system colour names, kept compiling until Phase 6 removes them.
-// Each maps to the nearest spec role.
+// Each is a pure rename of a v3 token: no value lives here.
 
 extension DS.Color {
     @available(*, deprecated, renamed: "primary")
@@ -16,11 +16,6 @@ extension DS.Color {
     enum Pro {
         @available(*, deprecated, message: "Use DS.Color.proSoft")
         static var proSoft: SwiftUI.Color { DS.Color.proSoft }
-
-        /// No spec equivalent: the system draws no borders on Pro surfaces.
-        /// Approximated as `pro-text` at the hairline opacity (30%).
-        @available(*, deprecated, message: "No spec token; drop the border or use .dsHairline()")
-        static var proBorder: SwiftUI.Color { DS.Color.proText.opacity(DS.Opacity.o30) }
 
         @available(*, deprecated, message: "Use DS.Color.proText")
         static var proAccent: SwiftUI.Color { DS.Color.proText }
