@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// The BottomSheet hero: ScoreValue `lg` over a ProgressBar `md` (the same pair
+/// The BottomSheet hero: ScoreValue `lg` over a Bar `md` (the same pair
 /// as ScoreCard, `s3` apart) and a `sans-md` `text-secondary` lead whose key
 /// figure is set semibold in `primary-text`.
 ///
@@ -25,7 +25,7 @@ struct SheetHero: View {
     var body: some View {
         VStack(alignment: .leading, spacing: DS.Spacing.s3) {
             ScoreValue(score: score, verdict: verdict, size: .lg)
-            ProgressBar(value: score.map { $0 * 100 }, size: .md)
+            Bar(value: score.map { $0 * 100 }, size: .md)
                 .accessibilityHidden(true)
             if let lead, !lead.isEmpty {
                 Text(Self.emphasised(lead, fragment: emphasis))

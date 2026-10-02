@@ -2,7 +2,7 @@ import SwiftUI
 
 // Pre-design-system Input/TextArea API, kept so existing call sites compile until
 // Phase 5. `size` and `shape` are ignored (one height, `radius-xl`); `style` maps
-// `.filled` → soft, `.outlined` → outline, `.cardRow`/`.plain` → plain.
+// `.filled`/`.outlined` → soft (v3 has one style), `.cardRow`/`.plain` → plain.
 
 extension Input {
     @_disfavoredOverload

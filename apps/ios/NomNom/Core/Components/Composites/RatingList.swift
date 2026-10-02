@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// Who rated a meal: a section head with the count ("5 of 6", `primary`), a ProgressBar
+/// Who rated a meal: a section head with the count ("5 of 6", `primary`), a Bar
 /// `xs` of rated / total, then one RatingRow per person in a Card `.list`. The viewer's
 /// row is always last.
 ///
@@ -23,7 +23,7 @@ struct RatingList: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             SectionHeader(title, trailing: "\(ratedCount) of \(totalCount)", trailingTone: .primary)
-            ProgressBar(
+            Bar(
                 value: Double(ratedCount),
                 max: Double(max(totalCount, 1)),
                 size: .xs,

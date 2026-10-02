@@ -15,7 +15,7 @@ struct SegmentedBarSegment: Identifiable {
     var detail: String?
 }
 
-/// A distribution as one capsule split into coloured shares (`s0_5` gaps, ProgressBar
+/// A distribution as one Bar split into coloured shares (1pt `panel` seams, Bar
 /// `md` thick), with optional legend rows: a `s2` dot, the label (`sans-sm`) and the
 /// value (`sans-sm` tabular). Used for reaction tiers, macros and health tiers.
 ///
@@ -27,14 +27,14 @@ struct SegmentedBarSegment: Identifiable {
 /// ```
 struct SegmentedBar: View {
     let segments: [SegmentedBarSegment]
-    var size: ProgressBarSize
+    var size: BarSize
     var showsLegend: Bool
     /// Accessible name for the bar, e.g. "Rating distribution".
     var label: String?
 
     init(
         _ segments: [SegmentedBarSegment],
-        size: ProgressBarSize = .md,
+        size: BarSize = .md,
         showsLegend: Bool = true,
         label: String? = nil
     ) {
@@ -54,35 +54,17 @@ struct SegmentedBar: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: DS.Spacing.s4) {
-            bar
-                .accessibilityElement(children: .ignore)
-                .accessibilityLabel(label ?? "Distribution")
-                .accessibilityValue(visible.map { "\($0.label) \(percent($0)) percent" }.joined(separator: ", "))
+            Bar(
+                segments: visible.map { BarSegment(value: $0.value, ink: .color($0.color), label: $0.label) },
+                size: size,
+                label: label ?? "Distribution"
+            )
             if showsLegend {
                 VStack(spacing: DS.Spacing.s2) {
                     ForEach(visible) { legendRow($0) }
                 }
             }
         }
-    }
-
-    private var bar: some View {
-        GeometryReader { proxy in
-            let gaps = DS.Spacing.s0_5 * CGFloat(max(visible.count - 1, 0))
-            let available = max(proxy.size.width - gaps, 0)
-            HStack(spacing: DS.Spacing.s0_5) {
-                if visible.isEmpty {
-                    Rectangle().fill(DS.Color.track)
-                }
-                ForEach(visible) { segment in
-                    Rectangle()
-                        .fill(segment.color)
-                        .frame(width: max(DS.Spacing.s1, available * segment.value / max(total, 1)))
-                }
-            }
-        }
-        .frame(height: size.height)
-        .clipShape(Capsule())
     }
 
     private func legendRow(_ segment: SegmentedBarSegment) -> some View {

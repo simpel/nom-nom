@@ -20,6 +20,15 @@ enum ScoreValueSize: Equatable, CaseIterable {
     }
 
     var verdict: DS.TextStyle { .serifSm }
+
+    /// Numeral-to-verdict gap (bundle.css `.nn-score`): `spacing-3`, md `spacing-2.5`, sm `spacing-2`.
+    var gap: CGFloat {
+        switch self {
+        case .xs, .lg: return DS.Spacing.s3
+        case .md: return DS.Spacing.s2_5
+        case .sm: return DS.Spacing.s2
+        }
+    }
 }
 
 /// A score as type: the numeral in `primary-text` (tabular) and its verdict word,
@@ -51,7 +60,7 @@ struct ScoreValue: View {
     private var showsVerdict: Bool { showVerdict && size != .xs }
 
     var body: some View {
-        HStack(alignment: .firstTextBaseline, spacing: DS.Spacing.s2) {
+        HStack(alignment: .firstTextBaseline, spacing: size.gap) {
             Text(numeralText)
                 .textStyle(size.numeral, tone: score == nil ? .tertiary : .accent, numeric: true)
             if showsVerdict {

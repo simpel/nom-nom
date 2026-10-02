@@ -9,7 +9,7 @@ enum ScoreCardLayout: Equatable {
 }
 
 /// One score readout: title pre-header, ScoreValue (+ count and delta), a
-/// ProgressBar at the score and an optional caption, on a Card. `score` is the
+/// Bar at the score and an optional caption, on a Card. `score` is the
 /// normalised 0–1 domain scale (shown as 0–100); `delta` is in display points.
 ///
 /// `featured` (one per screen, e.g. the health score) tints the card `primary`
@@ -95,10 +95,9 @@ struct ScoreCard: View {
                 ScoreCardDeltaLine(delta: delta, text: deltaText, reference: deltaReference)
             }
 
-            ProgressBar(
+            Bar(
                 value: isLoading ? nil : score.map { $0 * 100 },
-                size: featured ? .lg : .md,
-                featured: featured
+                size: featured ? .lg : .md
             )
             // ScoreValue already speaks the score.
             .accessibilityHidden(true)
