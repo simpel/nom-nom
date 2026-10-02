@@ -1,9 +1,10 @@
 import SwiftUI
 
-/// Modal sheet displaying the in-app activity notifications inbox.
+/// Modal sheet displaying the in-app activity notifications inbox: a PageHeader, then
+/// "Unread" and "Read" DSSections over `Card(layout: .list)`s of NotificationRows, or a
+/// screen EmptyState when there is nothing.
 struct InboxSheetView: View {
     @Environment(FoodStore.self) private var store
-    @Environment(\.dismiss) private var dismiss
 
     private enum InboxSheetDestination: Identifiable {
         case rate(UUID)
@@ -22,32 +23,34 @@ struct InboxSheetView: View {
 
     var body: some View {
         NavigationStack {
-            Group {
+            SheetBody {
                 if store.notifications.isEmpty {
-                    emptyState
+                    EmptyState(
+                        "No notifications yet",
+                        message: "Invitations, meal ratings and party updates will show up here.",
+                        icon: "bell",
+                        layout: .screen
+                    )
                 } else {
-                    notificationsList
+                    PageHeader("Inbox", subtitle: headerSubtitle)
+                    if !unreadNotifications.isEmpty {
+                        notificationSection("Unread", trailing: "\(unreadNotifications.count)", items: unreadNotifications)
+                    }
+                    if !readNotifications.isEmpty {
+                        notificationSection("Read", trailing: nil, items: readNotifications)
+                    }
                 }
             }
-            .background(DS.Color.bg)
             .screenTitle("", displayMode: .inline)
             .sheetCloseToolbar()
             .toolbar {
                 if store.unreadCount > 0 {
                     ToolbarItem(placement: .topBarTrailing) {
-                        Button {
-                            isMarkingAllRead = true
-                            Task {
-                                await store.markAllRead()
-                                isMarkingAllRead = false
-                            }
-                        } label: {
+                        Button(action: markAllRead) {
                             if isMarkingAllRead {
                                 ProgressView().controlSize(.small)
                             } else {
-                                Text("Mark All Read")
-                                    .font(.inter(.footnote, weight: .medium))
-                                    .foregroundStyle(DS.Color.accentText)
+                                Text("Mark all read").textStyle(.sansSm, tone: .accent, weight: .semibold)
                             }
                         }
                     }
@@ -67,19 +70,10 @@ struct InboxSheetView: View {
                 }
             }
         }
+        .dsSheet()
     }
 
     // MARK: - Subviews
-
-    private var emptyState: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: DS.Spacing.section) {
-                InboxHeaderView(unreadCount: store.unreadCount, totalCount: store.notifications.count)
-            }
-            .padding(.top, DS.Spacing.screenTop)
-            .padding(.bottom, DS.Spacing.screenBottom)
-        }
-    }
 
     private var unreadNotifications: [AppNotification] {
         store.notifications.filter(\.isUnread)
@@ -89,42 +83,17 @@ struct InboxSheetView: View {
         store.notifications.filter { !$0.isUnread }
     }
 
-    private var notificationsList: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: DS.Spacing.md) {
-                InboxHeaderView(unreadCount: store.unreadCount, totalCount: store.notifications.count)
-
-                if !unreadNotifications.isEmpty {
-                    notificationSection(
-                        title: "Unread",
-                        badge: "\(unreadNotifications.count)",
-                        items: unreadNotifications
-                    )
-                }
-
-                if !readNotifications.isEmpty {
-                    notificationSection(
-                        title: "Read",
-                        badge: nil,
-                        items: readNotifications
-                    )
-                }
-            }
-            .padding(.top, DS.Spacing.screenTop)
-            .padding(.bottom, DS.Spacing.screenBottom)
+    private var headerSubtitle: String {
+        let unread = store.unreadCount
+        if unread > 0 {
+            return "\(unread) unread \(unread == 1 ? "notification" : "notifications")."
         }
+        return "All caught up on dinner party invites and ratings."
     }
 
-    private func notificationSection(title: String, badge: String?, items: [AppNotification]) -> some View {
-        VStack(alignment: .leading, spacing: 8) {
-            SectionHeader(
-                title,
-                trailingText: badge,
-                trailingColor: DS.Color.accentText,
-                horizontalPadding: DS.Spacing.screenHorizontal
-            )
-
-            LazyVStack(spacing: 0) {
+    private func notificationSection(_ title: String, trailing: String?, items: [AppNotification]) -> some View {
+        DSSection(title, trailing: trailing, trailingTone: .primary) {
+            Card(layout: .list) {
                 ForEach(items) { notification in
                     NotificationRow(
                         notification: notification,
@@ -132,23 +101,32 @@ struct InboxSheetView: View {
                         onDelete: {
                             Task { await store.delete(notification: notification) }
                         },
-                        onToggleRead: {
-                            Task {
-                                if notification.isUnread {
-                                    await store.markRead(notification)
-                                } else {
-                                    await store.markUnread(notification)
-                                }
-                            }
-                        }
+                        onToggleRead: { toggleRead(notification) }
                     )
                 }
             }
-            .padding(.horizontal, DS.Spacing.screenHorizontal)
         }
     }
 
     // MARK: - Actions
+
+    private func markAllRead() {
+        isMarkingAllRead = true
+        Task {
+            await store.markAllRead()
+            isMarkingAllRead = false
+        }
+    }
+
+    private func toggleRead(_ notification: AppNotification) {
+        Task {
+            if notification.isUnread {
+                await store.markRead(notification)
+            } else {
+                await store.markUnread(notification)
+            }
+        }
+    }
 
     private func handleNotificationTap(_ notification: AppNotification) {
         if notification.isUnread {

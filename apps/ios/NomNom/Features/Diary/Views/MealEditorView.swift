@@ -88,38 +88,15 @@ struct MealEditorView: View {
                         onRemoveRecipe: removeSelectedDish
                     )
 
-                    VStack(spacing: DS.Spacing.section) {
-                        MealEditorDetailsSection(
-                            date: $date,
-                            notes: $notes
-                        )
-                    }
+                    MealEditorDetailsSection(date: $date, notes: $notes)
                 }
-                .padding(.horizontal, DS.Spacing.screenHorizontal)
-                .padding(.top, DS.Spacing.screenTop)
-                .padding(.bottom, DS.Spacing.screenBottom)
+                .padding(.horizontal, DS.Spacing.gutter)
+                .padding(.top, DS.Spacing.s5)
+                .padding(.bottom, DS.Spacing.s11)
             }
-            .background(DS.Color.bg)
+            .background(DS.Color.sheet)
             .screenTitle(isEditing ? "Edit meal" : "New meal", displayMode: .inline)
-            .toolbar {
-                ToolbarItem(placement: .topBarLeading) {
-                    Button {
-                        dismiss()
-                    } label: {
-                        Image(systemName: "xmark")
-                            .fontWeight(.semibold)
-                    }
-                    .accessibilityLabel("Cancel")
-                }
-
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button("Next") {
-                        proceed()
-                    }
-                    .disabled(!canProceed)
-                    .fontWeight(.semibold)
-                }
-            }
+            .sheetNextToolbar(canProceed: canProceed, onNext: proceed)
             .navigationDestination(isPresented: $navigateToDetailsStep) {
                 MealDetailsStepView(draft: currentDraftBinding, onDismiss: { dismiss() })
             }
@@ -145,7 +122,6 @@ struct MealEditorView: View {
             .onAppear(perform: loadIfNeeded)
             .onChange(of: linkedDishID) { _, _ in syncMatchedDishRecipe() }
             .onChange(of: title) { _, _ in syncMatchedDishRecipe() }
-            .presentationDragIndicator(.visible)
             .alert("Couldn't save meal",
                    isPresented: Binding(get: { store.errorMessage != nil },
                                         set: { if !$0 { store.errorMessage = nil } })) {
@@ -154,6 +130,7 @@ struct MealEditorView: View {
                 Text(store.errorMessage ?? "")
             }
         }
+        .dsSheet()
     }
 
     private func removeSelectedDish() {

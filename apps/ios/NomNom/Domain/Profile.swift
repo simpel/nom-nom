@@ -52,7 +52,7 @@ struct Profile: Identifiable, Hashable, Decodable {
         firstName = try container.decodeIfPresent(String.self, forKey: .firstName) ?? ""
         lastName = try container.decodeIfPresent(String.self, forKey: .lastName) ?? ""
         displayName = try container.decodeIfPresent(String.self, forKey: .displayName) ?? ""
-        avatarEmoji = try container.decodeIfPresent(String.self, forKey: .avatarEmoji) ?? "🧑"
+        avatarEmoji = try container.decodeIfPresent(String.self, forKey: .avatarEmoji) ?? ""
         photoPath = try container.decodeIfPresent(String.self, forKey: .photoPath)
         notifyMealInvite = try container.decodeIfPresent(Bool.self, forKey: .notifyMealInvite) ?? true
         notifyMealRating = try container.decodeIfPresent(Bool.self, forKey: .notifyMealRating) ?? true
@@ -72,7 +72,7 @@ struct Profile: Identifiable, Hashable, Decodable {
         firstName: String = "",
         lastName: String = "",
         displayName: String = "",
-        avatarEmoji: String = "🧑",
+        avatarEmoji: String = "",
         photoPath: String? = nil,
         notifyMealInvite: Bool = true,
         notifyMealRating: Bool = true,
@@ -127,7 +127,6 @@ struct ProfilePatch: Encodable {
     let first_name: String
     let last_name: String
     let display_name: String
-    let avatar_emoji: String
     let photo_path: String?
 }
 

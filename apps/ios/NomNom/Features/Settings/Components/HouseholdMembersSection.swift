@@ -2,7 +2,6 @@ import SwiftUI
 
 /// Section managing household members, invitations by email, and local household profiles.
 struct HouseholdMembersSection: View {
-    var emojiChoices: [String] = ["🧒", "👦", "👧", "🧑", "👩", "👨", "👶", "🐣", "🦊", "🐻", "🐼", "🦁", "🐧", "🦄"]
 
     @Environment(FoodStore.self) private var store
 
@@ -25,116 +24,48 @@ struct HouseholdMembersSection: View {
         return store.invites(forParty: party.id).filter(\.isPending)
     }
 
-    private var isEmailValid: Bool {
-        email.isValidEmail
-    }
-
-    private var showInvalidFormatError: Bool {
-        !email.trimmedName.isEmpty && !email.isValidEmail
-    }
-
     var body: some View {
-        SectionCard("Add Household Member") {
-            VStack(alignment: .leading, spacing: 10) {
-                HStack(spacing: 8) {
-                    Input(
-                        "member@example.com",
-                        text: $email,
-                        size: .sm,
-                        isError: showInvalidFormatError,
-                        isFocused: $emailFocused
-                    )
-                    .textContentType(.emailAddress)
-                    .keyboardType(.emailAddress)
-                    .textInputAutocapitalization(.never)
-                    .autocorrectionDisabled()
-                    .submitLabel(.send)
-                    .onSubmit {
-                        if isEmailValid {
-                            sendInvite()
-                        }
-                    }
-
-                    AppButton(
-                        "Send",
-                        variant: .primary,
-                        style: .normal,
-                        size: .sm,
-                        isPending: isSending,
-                        disabled: !isEmailValid || isSending,
-                        action: sendInvite
-                    )
-                }
-
-                if showInvalidFormatError {
-                    Text("Please enter a valid email address (e.g. name@example.com).")
-                        .font(.caption2)
-                        .foregroundStyle(.red)
-                } else {
-                    Text("Enter an email address. This will send an email with an invite link to join your household.")
-                        .font(.caption2)
-                        .foregroundStyle(DS.Color.textSecondary)
-                }
-            }
+        EmailInviteCard(
+            title: "Add household member",
+            placeholder: "member@example.com",
+            hint: "They get an email with a link to join your household.",
+            email: $email,
+            isSending: isSending,
+            confirmation: successAlertMessage,
+            isFocused: $emailFocused,
+            onSend: sendInvite
+        )
+        .onChange(of: email) { _, newValue in
+            if !newValue.isEmpty { successAlertMessage = nil }
         }
 
         if !partyMembers.isEmpty {
-            SectionCard("Members (\(partyMembers.count))") {
-                VStack(spacing: 0) {
+            DSSection("Members", trailing: "\(partyMembers.count)") {
+                Card(layout: .list) {
                     ForEach(partyMembers) { member in
                         NavigationLink {
                             PersonDetailView(raterRef: .account(member.id))
                         } label: {
-                            HStack(spacing: 12) {
-                                ZStack {
-                                    Circle()
-                                        .fill(DS.Color.accentSoft)
-                                        .frame(width: 32, height: 32)
-                                    Text(member.shownName.prefix(1).uppercased())
-                                        .font(.subheadline.weight(.bold))
-                                        .foregroundStyle(DS.Color.accentText)
-                                }
-
-                                VStack(alignment: .leading, spacing: 2) {
-                                    Text(member.shownName)
-                                        .font(.body)
-                                        .foregroundStyle(DS.Color.textPrimary)
-                                    Text(member.id == store.userID ? "You • View taste profile" : "View taste profile")
-                                        .font(.caption2)
-                                        .foregroundStyle(DS.Color.textSecondary)
-                                }
-
-                                Spacer()
-
-                                Image(systemName: "chevron.right")
-                                    .font(.caption2)
-                                    .foregroundStyle(DS.Color.textTertiary)
-                            }
-                            .padding(.vertical, DS.Spacing.sm)
+                            ListRow(
+                                member.shownName,
+                                meta: member.id == store.userID ? "You" : nil,
+                                leading: .avatar(Avatar(profile: member, size: .sm, decorative: true)),
+                                chevron: true
+                            )
                         }
-                        .buttonStyle(.plain)
-
-                        if member.id != partyMembers.last?.id {
-                            Divider()
-                        }
+                        .buttonStyle(ListRowButtonStyle())
                     }
                 }
             }
         }
 
-        HouseholdPendingInvitesSection(
-            pendingInvites: pendingInvites,
-            successAlertMessage: $successAlertMessage
-        )
+        PartyInvitesSection(invites: pendingInvites)
 
         if !store.myEaters.isEmpty {
-            SectionCard("Other Profiles (No account)") {
-                VStack(spacing: 0) {
+            DSSection("Profiles without an account", trailing: "\(store.myEaters.count)") {
+                Card(layout: .list) {
                     ForEach(store.myEaters) { eater in
-                        EaterRow(eater: eater, emojiChoices: emojiChoices)
-                        if eater.id != store.myEaters.last?.id {
-                            Divider()
-                        }
+                        EaterRow(eater: eater)
                     }
                 }
             }
@@ -143,8 +74,9 @@ struct HouseholdMembersSection: View {
 
     private func sendInvite() {
         let address = email.trimmedName
-        guard !address.isEmpty else { return }
+        guard address.isValidEmail, !isSending else { return }
         isSending = true
+        successAlertMessage = nil
 
         Task {
             let party: Party?
@@ -165,7 +97,7 @@ struct HouseholdMembersSection: View {
                 let sentEmail = address
                 email = ""
                 emailFocused = false
-                successAlertMessage = "An email with an invite link was sent to \(sentEmail)."
+                successAlertMessage = "Invite sent to \(sentEmail)."
             }
         }
     }

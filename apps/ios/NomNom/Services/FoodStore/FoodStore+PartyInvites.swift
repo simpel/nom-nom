@@ -213,6 +213,8 @@ extension FoodStore {
                 parties.append(fetched)
             }
             reindex()
+            // Someone who joined through an invite (and has no party yet) lands in it.
+            if currentParty == nil { currentParty = party(invite.partyID) }
             errorMessage = nil
         } catch let error as PostgrestError where error.code == "23505" {
             if let idx = partyInvites.firstIndex(where: { $0.id == invite.id }) {

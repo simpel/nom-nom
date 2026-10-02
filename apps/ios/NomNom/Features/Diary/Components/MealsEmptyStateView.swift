@@ -1,9 +1,8 @@
 import SwiftUI
 
-/// Empty state for the Meals tab when no meals have been recorded yet.
-///
-/// Features a fanned-out arc of category food photos, editorial copy,
-/// and a prominent primary action button to log the first meal.
+/// The Meals tab before anything is logged: EmptyState `screen` (README case "First
+/// run — nothing logged") with "Log a meal". The current party, when there is one, is
+/// named in the message.
 struct MealsEmptyStateView: View {
     @Environment(FoodStore.self) private var store
     let onLogMeal: () -> Void
@@ -11,47 +10,14 @@ struct MealsEmptyStateView: View {
     var body: some View {
         GeometryReader { proxy in
             ScrollView {
-                VStack(spacing: DS.Spacing.section) {
-                    Spacer(minLength: 20)
-
-                    if let partyName = store.currentParty?.name {
-                        Text(partyName)
-                            .font(AppTypography.pageTitleFont)
-                            .foregroundStyle(DS.Color.textPrimary)
-                            .multilineTextAlignment(.center)
-                            .padding(.horizontal, 24)
-                    }
-
-                    CategoryPhotoArcView()
-                        .padding(.vertical, DS.Spacing.xs)
-
-                    VStack(spacing: 10) {
-                        Text("Log your first meal")
-                            .font(AppTypography.displayL)
-                            .foregroundStyle(DS.Color.textPrimary)
-
-                        descriptionText
-                            .font(AppTypography.bodyM)
-                            .foregroundStyle(DS.Color.textSecondary)
-                            .multilineTextAlignment(.center)
-                            .lineSpacing(3)
-                            .padding(.horizontal, 28)
-                    }
-
-                    AppButton(
-                        "Log a meal",
-                        variant: .primary,
-                        style: .normal,
-                        size: .xl,
-                        isFullWidth: true,
-                        action: onLogMeal
-                    )
-                    .frame(maxWidth: 320)
-                    .padding(.horizontal, 24)
-                    .padding(.top, 4)
-
-                    Spacer(minLength: 40)
-                }
+                EmptyState(
+                    "No meals yet",
+                    message: message,
+                    icon: "fork.knife",
+                    layout: .screen,
+                    action: EmptyStateAction("Log a meal", perform: onLogMeal)
+                )
+                .padding(.horizontal, DS.Spacing.gutter)
                 .frame(maxWidth: .infinity, minHeight: proxy.size.height)
             }
             .scrollBounceBehavior(.basedOnSize)
@@ -61,16 +27,11 @@ struct MealsEmptyStateView: View {
         .background(DS.Color.bg)
     }
 
-    // MARK: - Description
-
-    private var descriptionText: some View {
-        Group {
-            if let party = store.currentParty {
-                Text("No meals have been served to \(party.name) yet. Log tonight's dinner and serve it to this party!")
-            } else {
-                Text("Snap a photo of tonight's dinner, give it a name and mark how it went down.")
-            }
+    private var message: String {
+        if let party = store.currentParty {
+            return "Log tonight\u{2019}s dinner and serve it to \(party.name)."
         }
+        return "Log tonight\u{2019}s dinner and it will show up here."
     }
 }
 

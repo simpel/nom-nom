@@ -197,14 +197,13 @@ enum HealthTier: String, CaseIterable, Identifiable {
 
     var color: Color {
         switch self {
-        case .nutritious:
-            return DS.Color.Pine.pine600
-        case .balanced:
-            return Color("ds/reaction/good/text")
+        // Health tiers are not taste data, so they use roles, not the reaction ramp.
+        case .nutritious, .balanced:
+            return DS.Color.primaryText
         case .moderate:
-            return Color("ds/reaction/meh/text")
+            return DS.Color.textTertiary
         case .indulgent:
-            return Color("ds/reaction/bad/text")
+            return DS.Color.warningText
         }
     }
 }

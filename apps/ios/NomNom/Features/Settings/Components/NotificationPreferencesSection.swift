@@ -28,58 +28,31 @@ struct NotificationPreferencesSection: View {
     }
 
     var body: some View {
-        SectionCard("Notifications") {
-            VStack(alignment: .leading, spacing: DS.Spacing.md) {
-                if showsPermissionWarning {
-                    permissionWarning
-                    Divider()
+        VStack(alignment: .leading, spacing: DS.Spacing.block) {
+            if showsPermissionWarning {
+                permissionWarning
+            }
+
+            DSSection("Notifications") {
+                Card(layout: .list) {
+                    row("Meal invitations", meta: "Someone asks you to rate a meal", isOn: $mealInvite)
+                    row("Ratings on your meals", meta: "Someone rates a dish you cooked", isOn: $mealRating)
+                    row("Dinner party invitations", meta: "Someone invites you to a party", isOn: $partyInvite)
+                    row("Party activity", meta: "Someone joins or follows your party", isOn: $partyActivity)
+                    row("Recipe likes", meta: "Someone likes one of your recipes", isOn: $recipeLike)
                 }
+            }
 
-                VStack(spacing: DS.Spacing.sm) {
-                    eventRow(
-                        "Meal invitations",
-                        detail: "Someone asks you to rate a meal",
-                        isOn: $mealInvite
-                    )
-                    eventRow(
-                        "Ratings on your meals",
-                        detail: "Someone rates a dish you cooked",
-                        isOn: $mealRating
-                    )
-                    eventRow(
-                        "Dinner party invitations",
-                        detail: "Someone invites you to a party",
-                        isOn: $partyInvite
-                    )
-                    eventRow(
-                        "Party activity",
-                        detail: "Someone joins or follows your party",
-                        isOn: $partyActivity
-                    )
-                    eventRow(
-                        "Recipe likes",
-                        detail: "Someone likes one of your recipes",
-                        isOn: $recipeLike
-                    )
+            DSSection("Deliver by") {
+                Card(layout: .list) {
+                    row("Push notifications", isOn: $viaPush)
+                    row("Email", isOn: $viaEmail)
                 }
-
-                Divider()
-
-                VStack(alignment: .leading, spacing: DS.Spacing.sm) {
-                    Text("Deliver by")
-                        .font(.caption.weight(.semibold))
-                        .tracking(0.5)
-                        .textCase(.uppercase)
-                        .foregroundStyle(DS.Color.textTertiary)
-
-                    channelRow("Push notifications", systemImage: "app.badge", isOn: $viaPush)
-                    channelRow("Email", systemImage: "envelope", isOn: $viaEmail)
-
-                    if !viaPush && !viaEmail {
-                        Text("With both off, these only show in your in-app inbox.")
-                            .font(.caption)
-                            .foregroundStyle(DS.Color.textSecondary)
-                    }
+                if !viaPush && !viaEmail {
+                    Text("With both off, these only show in your in-app inbox.")
+                        .textStyle(.sansSm, tone: .secondary)
+                        .padding(.horizontal, DS.Spacing.sectionInset)
+                        .padding(.top, DS.Spacing.s2)
                 }
             }
         }
@@ -92,64 +65,25 @@ struct NotificationPreferencesSection: View {
 
     // MARK: - Rows
 
-    private func eventRow(_ title: String, detail: String, isOn: Binding<Bool>) -> some View {
-        Toggle(isOn: Binding(
+    /// ListRow Toggle shape; every switch saves the whole set.
+    private func row(_ title: String, meta: String? = nil, isOn: Binding<Bool>) -> ListRow {
+        ListRow(title, meta: meta, trailing: .toggle(Binding(
             get: { isOn.wrappedValue },
             set: { newValue in
                 isOn.wrappedValue = newValue
                 handleChange()
             }
-        )) {
-            VStack(alignment: .leading, spacing: 2) {
-                Text(title)
-                    .font(.subheadline.weight(.medium))
-                    .foregroundStyle(DS.Color.textPrimary)
-                Text(detail)
-                    .font(.caption)
-                    .foregroundStyle(DS.Color.textSecondary)
-            }
-        }
-        .nativeToggle()
-    }
-
-    private func channelRow(_ title: String, systemImage: String, isOn: Binding<Bool>) -> some View {
-        Toggle(isOn: Binding(
-            get: { isOn.wrappedValue },
-            set: { newValue in
-                isOn.wrappedValue = newValue
-                handleChange()
-            }
-        )) {
-            Label(title, systemImage: systemImage)
-                .font(.subheadline.weight(.medium))
-                .foregroundStyle(DS.Color.textPrimary)
-        }
-        .nativeToggle()
+        )))
     }
 
     private var permissionWarning: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            HStack(spacing: 6) {
-                Image(systemName: "bell.slash")
-                    .foregroundStyle(.orange)
-                Text("Notifications are off in iOS Settings")
-                    .font(.caption.weight(.semibold))
-                    .foregroundStyle(DS.Color.textPrimary)
-            }
-
+        Card(spacing: DS.Spacing.s2) {
+            Text("Notifications are off in iOS Settings").textStyle(.sansMd, weight: .semibold)
             Text("Push is on here, but iOS is blocking it. Turn it back on in Settings.")
-                .font(.caption)
-                .foregroundStyle(DS.Color.textSecondary)
-
-            AppButton(
-                "Open iOS Settings",
-                variant: .neutral,
-                style: .outlined,
-                size: .sm
-            ) {
+                .textStyle(.sansSm, tone: .secondary)
+            AppButton("Open iOS Settings", variant: .secondary, appearance: .outline, size: .sm) {
                 notifications.openSystemSettings()
             }
-            .padding(.top, 2)
         }
     }
 

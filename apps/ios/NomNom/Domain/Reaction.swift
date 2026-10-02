@@ -1,7 +1,7 @@
 import SwiftUI
 
 /// How an eater reacted to a dish on a scale of -1 to 5:
-/// - `-1`: Can't eat / Disgusting
+/// - `-1`: Can't eat
 /// - `1`: Bad
 /// - `2`: Meh
 /// - `3`: Good
@@ -17,6 +17,21 @@ enum Reaction: Int, Codable, CaseIterable, Identifiable, Hashable, Comparable, T
 
     var id: Int { rawValue }
 
+    /// The verdict for a normalised 0...1 score (averages, recency-weighted
+    /// scores). The single source of the score→verdict thresholds. The thresholds
+    /// apply to the displayed 0–100 numeral (Badge README: "≥85 Amazing, ≥70 Great,
+    /// ≥50 Good, ≥30 Meh, ≥15 Bad"), so 0.849 shows "85" and "Amazing" together.
+    init(score: Double) {
+        switch (score * 100).rounded() {
+        case 85...: self = .amazing
+        case 70..<85: self = .great
+        case 50..<70: self = .good
+        case 30..<50: self = .meh
+        case 15..<30: self = .bad
+        default: self = .inedible
+        }
+    }
+
     static func < (lhs: Reaction, rhs: Reaction) -> Bool {
         lhs.rawValue < rhs.rawValue
     }
@@ -30,17 +45,6 @@ enum Reaction: Int, Codable, CaseIterable, Identifiable, Hashable, Comparable, T
         case .good: return 0.6
         case .great: return 0.8
         case .amazing: return 1.0
-        }
-    }
-
-    var emoji: String {
-        switch self {
-        case .inedible: return "🤢"
-        case .bad: return "🙅"
-        case .meh: return "😐"
-        case .good: return "🙂"
-        case .great: return "😋"
-        case .amazing: return "🤩"
         }
     }
 
@@ -74,7 +78,7 @@ enum Reaction: Int, Codable, CaseIterable, Identifiable, Hashable, Comparable, T
 
     var name: String {
         switch self {
-        case .inedible: return "Can't eat / Disgusting"
+        case .inedible: return "Can't eat"
         case .bad: return "Bad"
         case .meh: return "Meh"
         case .good: return "Good"
@@ -94,25 +98,27 @@ enum Reaction: Int, Codable, CaseIterable, Identifiable, Hashable, Comparable, T
         }
     }
 
+    /// Paints shapes: tint grounds, selected borders, dots. Never carries text.
     var fill: Color {
         switch self {
-        case .inedible: return Color("ds/reaction/inedible/fill")
-        case .bad: return Color("ds/reaction/bad/fill")
-        case .meh: return Color("ds/reaction/meh/fill")
-        case .good: return Color("ds/reaction/good/fill")
-        case .great: return Color("ds/reaction/great/fill")
-        case .amazing: return Color("ds/reaction/amazing/fill")
+        case .inedible: return DS.Color.reactionInedibleFill
+        case .bad: return DS.Color.reactionBadFill
+        case .meh: return DS.Color.reactionMehFill
+        case .good: return DS.Color.reactionGoodFill
+        case .great: return DS.Color.reactionGreatFill
+        case .amazing: return DS.Color.reactionAmazingFill
         }
     }
 
+    /// Ink for the reaction's numeral or word.
     var text: Color {
         switch self {
-        case .inedible: return Color("ds/reaction/inedible/text")
-        case .bad: return Color("ds/reaction/bad/text")
-        case .meh: return Color("ds/reaction/meh/text")
-        case .good: return Color("ds/reaction/good/text")
-        case .great: return Color("ds/reaction/great/text")
-        case .amazing: return Color("ds/reaction/amazing/text")
+        case .inedible: return DS.Color.reactionInedibleText
+        case .bad: return DS.Color.reactionBadText
+        case .meh: return DS.Color.reactionMehText
+        case .good: return DS.Color.reactionGoodText
+        case .great: return DS.Color.reactionGreatText
+        case .amazing: return DS.Color.reactionAmazingText
         }
     }
 

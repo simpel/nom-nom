@@ -1,116 +1,96 @@
 import SwiftUI
 
-/// Preview surface rendering every Stone, Pine, and Semantic token side-by-side in Light and Dark modes.
+/// Preview surface rendering every design-system token in Light and Dark.
+/// Swatch tables live in `DesignTokensPreview+Data.swift`.
 struct DesignTokensPreview: View {
-    private let roles: [(name: String, color: Color, textColor: Color)] = [
-        ("bg", DS.Color.bg, DS.Color.textPrimary),
-        ("panel", DS.Color.panel, DS.Color.textPrimary),
-        ("sunken", DS.Color.sunken, DS.Color.textPrimary),
-        ("line", DS.Color.line, DS.Color.textPrimary),
-        ("lineStrong", DS.Color.lineStrong, DS.Color.textPrimary),
-        ("textPrimary", DS.Color.textPrimary, DS.Color.panel),
-        ("textSecondary", DS.Color.textSecondary, DS.Color.panel),
-        ("textTertiary", DS.Color.textTertiary, DS.Color.panel),
-        ("accent", DS.Color.accent, DS.Color.panel),
-        ("accentText", DS.Color.accentText, DS.Color.panel),
-        ("accentSoft", DS.Color.accentSoft, DS.Color.textPrimary)
-    ]
-
-    private let stoneRamp: [(name: String, color: Color)] = [
-        ("stone0", DS.Color.Stone.stone0),
-        ("stone25", DS.Color.Stone.stone25),
-        ("stone50", DS.Color.Stone.stone50),
-        ("stone100", DS.Color.Stone.stone100),
-        ("stone200", DS.Color.Stone.stone200),
-        ("stone300", DS.Color.Stone.stone300),
-        ("stone400", DS.Color.Stone.stone400),
-        ("stone500", DS.Color.Stone.stone500),
-        ("stone600", DS.Color.Stone.stone600),
-        ("stone700", DS.Color.Stone.stone700),
-        ("stone800", DS.Color.Stone.stone800),
-        ("stone900", DS.Color.Stone.stone900),
-        ("stone950", DS.Color.Stone.stone950),
-        ("stone1000", DS.Color.Stone.stone1000)
-    ]
-
-    private let pineRamp: [(name: String, color: Color)] = [
-        ("pine50", DS.Color.Pine.pine50),
-        ("pine100", DS.Color.Pine.pine100),
-        ("pine200", DS.Color.Pine.pine200),
-        ("pine300", DS.Color.Pine.pine300),
-        ("pine400", DS.Color.Pine.pine400),
-        ("pine500", DS.Color.Pine.pine500),
-        ("pine600", DS.Color.Pine.pine600),
-        ("pine700", DS.Color.Pine.pine700),
-        ("pine800", DS.Color.Pine.pine800),
-        ("pine900", DS.Color.Pine.pine900)
-    ]
-
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 24) {
-                Text("Design System Tokens")
-                    .font(.title2.weight(.bold))
-                    .foregroundStyle(DS.Color.textPrimary)
+            VStack(alignment: .leading, spacing: DS.Spacing.s8) {
+                Text("Design system tokens")
+                    .textStyle(.serifLg)
 
-                VStack(alignment: .leading, spacing: 12) {
-                    Text("Semantic Roles")
-                        .font(.headline)
-                        .foregroundStyle(DS.Color.textPrimary)
-
-                    LazyVGrid(columns: [GridItem(.adaptive(minimum: 95), spacing: 8)], spacing: 8) {
-                        ForEach(roles, id: \.name) { role in
-                            VStack(spacing: 4) {
-                                RoundedRectangle(cornerRadius: AppRadius.standard, style: .continuous)
-                                    .fill(role.color)
-                                    .frame(height: 38)
-                                    .overlay(
-                                        RoundedRectangle(cornerRadius: AppRadius.standard, style: .continuous)
-                                            .strokeBorder(DS.Color.lineStrong.opacity(0.3), lineWidth: 1)
-                                    )
-                                Text(role.name)
-                                    .font(.caption2.weight(.medium))
-                                    .foregroundStyle(DS.Color.textSecondary)
-                                    .lineLimit(1)
-                                    .minimumScaleFactor(0.8)
-                            }
-                        }
-                    }
-                }
-
-                VStack(alignment: .leading, spacing: 12) {
-                    Text("Stone Ramp (Hue 258°)")
-                        .font(.headline)
-                        .foregroundStyle(DS.Color.textPrimary)
-
-                    HStack(spacing: 2) {
-                        ForEach(stoneRamp, id: \.name) { step in
-                            Rectangle()
-                                .fill(step.color)
-                                .frame(height: 28)
-                        }
-                    }
-                    .clipShape(RoundedRectangle(cornerRadius: AppRadius.standard, style: .continuous))
-                }
-
-                VStack(alignment: .leading, spacing: 12) {
-                    Text("Pine Ramp (Hue 193°)")
-                        .font(.headline)
-                        .foregroundStyle(DS.Color.textPrimary)
-
-                    HStack(spacing: 2) {
-                        ForEach(pineRamp, id: \.name) { step in
-                            Rectangle()
-                                .fill(step.color)
-                                .frame(height: 28)
-                        }
-                    }
-                    .clipShape(RoundedRectangle(cornerRadius: AppRadius.standard, style: .continuous))
-                }
+                swatchGrid("Surfaces and text", Self.surfaces)
+                swatchGrid("Roles", Self.roleSwatches)
+                swatchGrid("Reaction ramp", Self.reactions)
+                ramp("Chart series", DS.Color.chartSeries.enumerated().map { ("\($0.offset + 1)", $0.element) })
+                ramp("Stone", Self.stoneRamp)
+                ramp("Pine", Self.pineRamp)
+                typeScale
+                radiusAndShadow
             }
-            .padding(16)
+            .padding(DS.Spacing.gutter)
         }
         .background(DS.Color.bg)
+    }
+
+    private func heading(_ title: String) -> some View {
+        SectionHeader(title: title)
+    }
+
+    private func swatchGrid(_ title: String, _ swatches: [(name: String, color: Color)]) -> some View {
+        VStack(alignment: .leading, spacing: DS.Spacing.s3) {
+            heading(title)
+            LazyVGrid(columns: [GridItem(.adaptive(minimum: DS.Spacing.s24), spacing: DS.Spacing.s2)], spacing: DS.Spacing.s2) {
+                ForEach(swatches, id: \.name) { swatch in
+                    VStack(alignment: .leading, spacing: DS.Spacing.s1) {
+                        RoundedRectangle(cornerRadius: DS.Radius.xl, style: .continuous)
+                            .fill(swatch.color)
+                            .frame(height: DS.Spacing.s10)
+                            .dsHairline(radius: DS.Radius.xl)
+                        Text(swatch.name)
+                            .textStyle(.sansXs, tone: .secondary, lines: 1)
+                            .truncationMode(.middle)
+                    }
+                }
+            }
+        }
+    }
+
+    private func ramp(_ title: String, _ steps: [(name: String, color: Color)]) -> some View {
+        VStack(alignment: .leading, spacing: DS.Spacing.s3) {
+            heading(title)
+            HStack(spacing: DS.Spacing.s0_5) {
+                ForEach(steps, id: \.name) { step in
+                    Rectangle().fill(step.color).frame(height: DS.Spacing.s7)
+                }
+            }
+            .clipShape(RoundedRectangle(cornerRadius: DS.Radius.lg, style: .continuous))
+        }
+    }
+
+    private var typeScale: some View {
+        VStack(alignment: .leading, spacing: DS.Spacing.s3) {
+            heading("Type")
+            ForEach(DS.TextStyle.allCases, id: \.self) { style in
+                Text("\(String(describing: style)) \(Int(style.size))")
+                    .textStyle(style, numeric: true)
+            }
+            Text("Cook's note in italic").textStyle(.serifXs, tone: .secondary, italic: true)
+            HStack(spacing: DS.Spacing.s4) {
+                Text("primary").textStyle(.sansSm, tone: .primary)
+                Text("secondary").textStyle(.sansSm, tone: .secondary)
+                Text("tertiary").textStyle(.sansSm, tone: .tertiary)
+                Text("accent").textStyle(.sansSm, tone: .accent)
+            }
+        }
+    }
+
+    private var radiusAndShadow: some View {
+        VStack(alignment: .leading, spacing: DS.Spacing.s3) {
+            heading("Radius and shadow")
+            HStack(spacing: DS.Spacing.s3) {
+                ForEach(Array(Self.shadows.enumerated()), id: \.offset) { item in
+                    RoundedRectangle(cornerRadius: DS.Radius.xl2, style: .continuous)
+                        .fill(DS.Color.panel)
+                        .frame(width: DS.Spacing.s12, height: DS.Spacing.s12)
+                        .dsShadow(item.element.level, cornerRadius: DS.Radius.xl2)
+                        .overlay { Text(item.element.name).textStyle(.sansXs, tone: .tertiary) }
+                }
+            }
+            .padding(DS.Spacing.s4)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(DS.Color.sheet, in: RoundedRectangle(cornerRadius: DS.Radius.xl3, style: .continuous))
+        }
     }
 }
 

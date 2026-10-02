@@ -1,9 +1,26 @@
 import SwiftUI
 
-/// One row in the diary log list, inspired by the clean typography of Apple Notes.
+/// What a MealRow's meta line says.
+enum MealRowMeta {
+    /// The parties it was served to (and, unless minimal, the verdict and effort).
+    case parties
+    /// The Meals list ("Nom Nom iOS" canvas): "{party} · 3 of 5 rated", or
+    /// "{party} · Waiting on 2" in `warning-text` once the viewer has rated.
+    case ratingProgress
+    /// The date it was eaten ("Fri 25 Sep").
+    case date
+}
+
+/// One meal in a list: a ListRow with the meal's PhotoCard thumbnail, the dish name,
+/// a meta line and its score. Place it in a `Card(layout: .list)`.
+///
+/// With `.ratingProgress` the trailing slot is a "Not rated" Badge until the viewer
+/// has rated, then the meal's ScoreValue.
 struct MealRow: View {
     let meal: Meal
     var raterRef: RaterRef? = nil
+    var metaStyle: MealRowMeta = .parties
+    /// Parties only in the meta line and no chevron.
     var isMinimal: Bool = false
 
     @Environment(FoodStore.self) private var store
@@ -25,156 +42,75 @@ struct MealRow: View {
         store.parties(forMeal: meal.id).map(\.name).joined(separator: ", ")
     }
 
-    var body: some View {
-        HStack(alignment: .center, spacing: 14) {
-            thumbnailView
-
-            VStack(alignment: .leading, spacing: isMinimal ? 4 : 3) {
-                Text(store.dishName(forMeal: meal))
-                    .font(.body.weight(.semibold))
-                    .foregroundStyle(DS.Color.textPrimary)
-                    .lineLimit(1)
-
-                if isMinimal {
-                    if !partyNames.isEmpty {
-                        Text(partyNames)
-                            .font(.caption.weight(.medium))
-                            .foregroundStyle(DS.Color.accentText)
-                            .lineLimit(1)
-                    }
-                } else {
-                    HStack(spacing: 6) {
-                        if !partyNames.isEmpty {
-                            Text(partyNames)
-                                .font(.caption.weight(.medium))
-                                .foregroundStyle(DS.Color.accentText)
-                                .lineLimit(1)
-                        }
-
-                        if let summary = ratingSummaryText {
-                            if !partyNames.isEmpty {
-                                Text("•")
-                                    .font(.caption2)
-                                    .foregroundStyle(DS.Color.textTertiary)
-                            }
-                            Text(summary)
-                                .font(.caption)
-                                .foregroundStyle(DS.Color.textSecondary)
-                        }
-
-                        if let effort = meal.effort ?? store.dish(meal.dishID)?.effort {
-                            Text("•")
-                                .font(.caption2)
-                                .foregroundStyle(DS.Color.textTertiary)
-                            Text(effort.label)
-                                .font(.caption)
-                                .foregroundStyle(DS.Color.textSecondary)
-                        }
-                    }
-
-                    if !meal.notes.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-                        Text(meal.notes)
-                            .font(.caption2)
-                            .foregroundStyle(DS.Color.textTertiary)
-                            .lineLimit(1)
-                    }
-                }
-            }
-            .frame(maxWidth: .infinity, alignment: .leading)
-
-            if let raterRef, let rating = store.rating(for: raterRef, on: meal.id) {
-                ScoreBadge(score: rating.reaction.score, reaction: rating.reaction, format: .scoreOnly, size: .sm)
-            } else if let score = store.averageScore(forMeal: meal.id),
-               let reaction = store.averageReaction(forMeal: meal.id) {
-                ScoreBadge(score: score, reaction: reaction, format: .scoreOnly, size: .sm)
-            }
-
-            if !isMinimal {
-                Image(systemName: "chevron.right")
-                    .font(.caption.weight(.semibold))
-                    .foregroundStyle(DS.Color.textTertiary)
-            }
+    private var score: Double? {
+        if let raterRef, let rating = store.rating(for: raterRef, on: meal.id) {
+            return rating.reaction.score
         }
-        .padding(.vertical, DS.Spacing.sm)
-        .contentShape(Rectangle())
+        return store.averageScore(forMeal: meal.id)
     }
 
-    @ViewBuilder
-    private var thumbnailView: some View {
-        if meal.photoPaths.count > 1 {
-            MiniPhotoArcDeck(
-                photoPaths: meal.photoPaths,
-                cardWidth: 42,
-                cardHeight: 54
-            )
-        } else if let primaryPhoto = meal.photoPaths.first {
-            RemoteMealPhoto(
-                path: primaryPhoto,
-                cornerRadius: AppRadius.photo,
-                bucket: SupabaseConfig.photoBucket
-            )
-            .frame(width: 46, height: 58)
-            .clipped()
-            .clipShape(RoundedRectangle(cornerRadius: AppRadius.photo, style: .continuous))
-            .overlay(
-                RoundedRectangle(cornerRadius: AppRadius.photo, style: .continuous)
-                    .strokeBorder(DS.Color.line.opacity(0.35), lineWidth: 0.5)
-            )
-        } else if let cuisine = store.dish(meal.dishID)?.cuisine,
-                  let cuisineAsset = Cuisine.assetImageName(for: cuisine) {
-            Image(cuisineAsset)
-                .resizable()
-                .scaledToFill()
-                .frame(width: 46, height: 58)
-                .clipped()
-                .clipShape(RoundedRectangle(cornerRadius: AppRadius.photo, style: .continuous))
-                .overlay(
-                    RoundedRectangle(cornerRadius: AppRadius.photo, style: .continuous)
-                        .strokeBorder(DS.Color.line.opacity(0.35), lineWidth: 0.5)
-                )
-        } else {
-            Rectangle()
-                .fill(DS.Color.sunken)
-                .frame(width: 46, height: 58)
-                .clipShape(RoundedRectangle(cornerRadius: AppRadius.photo, style: .continuous))
-                .overlay(
-                    RoundedRectangle(cornerRadius: AppRadius.photo, style: .continuous)
-                        .strokeBorder(DS.Color.line.opacity(0.35), lineWidth: 0.5)
-                )
-                .overlay {
-                    Image(systemName: "fork.knife")
-                        .font(.subheadline)
-                        .foregroundStyle(DS.Color.textTertiary)
-                }
+    private var raters: [FoodStore.MealRater] { store.raters(forMeal: meal) }
+    private var viewerHasRated: Bool { raters.contains { $0.isViewer && $0.rating != nil } }
+
+    private var meta: String {
+        switch metaStyle {
+        case .date:
+            return meal.eatenOn.formatted(.dateTime.weekday(.abbreviated).day().month(.abbreviated))
+        case .ratingProgress:
+            return partyNames
+        case .parties:
+            if isMinimal { return partyNames }
+            let effort = (meal.effort ?? store.dish(meal.dishID)?.effort)?.label
+            return [partyNames, ratingSummaryText, effort]
+                .compactMap { $0 }
+                .filter { !$0.isEmpty }
+                .joined(separator: " \u{00B7} ")
         }
+    }
+
+    /// "Waiting on N" once the viewer has rated and others haven't.
+    private var waitingOn: ListRowMetaAccent? {
+        guard metaStyle == .ratingProgress, viewerHasRated else { return nil }
+        let pending = raters.filter { $0.rating == nil }.count
+        return pending > 0 ? ListRowMetaAccent(text: "Waiting on \(pending)") : nil
+    }
+
+    private var trailing: ListRowTrailing? {
+        return .score(score)
+    }
+
+    var body: some View {
+        // ListRow has one meta line (README: title + meta), so the cook's notes are
+        // left to the meal screen.
+        ListRow(
+            store.dishName(forMeal: meal),
+            meta: meta,
+            metaAccent: waitingOn,
+            leading: .photo(.meal(meal)),
+            trailing: trailing,
+            chevron: !isMinimal
+        )
     }
 }
 
-#Preview("Minimal") {
+#Preview("Rating progress") {
     NomNomPreview { store in
-        if let meal = store.meals.first {
-            VStack(spacing: 0) {
-                MealRow(meal: meal, isMinimal: true)
-                    .padding(14)
+        Card(layout: .list) {
+            ForEach(store.meals.prefix(4)) { meal in
+                MealRow(meal: meal, metaStyle: .ratingProgress, isMinimal: true)
             }
-            .background(DS.Color.panel)
-            .clipShape(RoundedRectangle(cornerRadius: AppRadius.card))
-            .padding()
         }
+        .padding(DS.Spacing.gutter)
     }
 }
 
 #Preview("Full") {
     NomNomPreview { store in
-        if let meal = store.meals.first {
-            VStack(spacing: 0) {
-                MealRow(meal: meal, isMinimal: false)
-                    .padding(14)
+        Card(layout: .list) {
+            ForEach(store.meals.prefix(3)) { meal in
+                MealRow(meal: meal)
             }
-            .background(DS.Color.panel)
-            .clipShape(RoundedRectangle(cornerRadius: AppRadius.card))
-            .padding()
         }
+        .padding(DS.Spacing.gutter)
     }
 }
-

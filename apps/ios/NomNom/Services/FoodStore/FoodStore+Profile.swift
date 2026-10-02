@@ -7,7 +7,6 @@ extension FoodStore {
         firstName: String,
         lastName: String,
         displayName: String? = nil,
-        emoji: String = "🧑",
         newPhotoData: Data? = nil,
         removePhoto: Bool = false
     ) async {
@@ -41,7 +40,6 @@ extension FoodStore {
                     first_name: cleanFirst,
                     last_name: cleanLast,
                     display_name: cleanDisplay,
-                    avatar_emoji: emoji,
                     photo_path: uploadedPath
                 ))
                 .eq("id", value: userID.uuidString)

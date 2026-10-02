@@ -14,43 +14,18 @@ struct RecipeDetailsStepView: View {
 
     var body: some View {
         ScrollView {
-            VStack(spacing: DS.Spacing.section) {
+            VStack(spacing: DS.Spacing.block) {
                 RecipeEditorSection(draft: $recipeDraft)
 
-                SectionCard("Sharing & Visibility") {
-                    VStack(alignment: .leading, spacing: 6) {
-                        Toggle("Make recipe public", isOn: $recipeDraft.isPublic)
-                            .font(.body.weight(.medium))
-                            .nativeToggle()
-
-                        Text("When enabled, other dinner parties and users can discover and cook this recipe.")
-                            .font(.caption)
-                            .foregroundStyle(DS.Color.textSecondary)
-                    }
-                }
+                VisibilityToggleCard.recipe(isPublic: $recipeDraft.isPublic)
             }
-            .padding(.horizontal, DS.Spacing.screenHorizontal)
-            .padding(.top, DS.Spacing.screenTop)
-            .padding(.bottom, DS.Spacing.screenBottom)
+            .padding(.horizontal, DS.Spacing.gutter)
+            .padding(.top, DS.Spacing.s5)
+            .padding(.bottom, DS.Spacing.s11)
         }
-        .background(DS.Color.bg)
+        .background(DS.Color.sheet)
         .screenTitle("Recipe Details", displayMode: .inline)
-        .toolbar {
-            ToolbarItem(placement: .topBarTrailing) {
-                if isSaving {
-                    ProgressView().controlSize(.small)
-                } else {
-                    Button {
-                        save()
-                    } label: {
-                        Image(systemName: "checkmark")
-                            .fontWeight(.semibold)
-                    }
-                }
-            }
-        }
-        .presentationDragIndicator(.visible)
-        .interactiveDismissDisabled(isSaving)
+        .stepCommitToolbar(isSaving: isSaving, onSave: save)
         .alert("Couldn't save recipe",
                isPresented: Binding(get: { store.errorMessage != nil },
                                     set: { if !$0 { store.errorMessage = nil } })) {

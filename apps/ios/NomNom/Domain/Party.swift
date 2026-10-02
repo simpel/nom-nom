@@ -7,6 +7,10 @@ struct Party: Identifiable, Hashable, Decodable {
     var about: String
     var isPublic: Bool
     var photoPath: String?
+    /// Every party photo, cover first. `photoPath` mirrors the first (DB trigger).
+    var photoPaths: [String]
+    /// Short code that joins the party in onboarding ("I have an invite").
+    var inviteCode: String?
     let createdBy: UUID
     let createdAt: Date
     var updatedAt: Date
@@ -17,6 +21,8 @@ struct Party: Identifiable, Hashable, Decodable {
         case about
         case isPublic = "is_public"
         case photoPath = "photo_path"
+        case photoPaths = "photo_paths"
+        case inviteCode = "invite_code"
         case createdBy = "created_by"
         case createdAt = "created_at"
         case updatedAt = "updated_at"
@@ -29,6 +35,9 @@ struct Party: Identifiable, Hashable, Decodable {
         about = try container.decodeIfPresent(String.self, forKey: .about) ?? ""
         isPublic = try container.decodeIfPresent(Bool.self, forKey: .isPublic) ?? false
         photoPath = try container.decodeIfPresent(String.self, forKey: .photoPath)
+        photoPaths = try container.decodeIfPresent([String].self, forKey: .photoPaths)
+            ?? photoPath.map { [$0] } ?? []
+        inviteCode = try container.decodeIfPresent(String.self, forKey: .inviteCode)
         createdBy = try container.decode(UUID.self, forKey: .createdBy)
         createdAt = try container.decodeTimestamp(.createdAt)
         updatedAt = try container.decodeTimestamp(.updatedAt)
@@ -40,6 +49,8 @@ struct Party: Identifiable, Hashable, Decodable {
         about: String = "",
         isPublic: Bool = false,
         photoPath: String? = nil,
+        photoPaths: [String]? = nil,
+        inviteCode: String? = nil,
         createdBy: UUID,
         createdAt: Date = .now,
         updatedAt: Date = .now
@@ -49,6 +60,8 @@ struct Party: Identifiable, Hashable, Decodable {
         self.about = about
         self.isPublic = isPublic
         self.photoPath = photoPath
+        self.photoPaths = photoPaths ?? photoPath.map { [$0] } ?? []
+        self.inviteCode = inviteCode
         self.createdBy = createdBy
         self.createdAt = createdAt
         self.updatedAt = updatedAt
@@ -187,7 +200,7 @@ struct NewParty: Encodable {
     let name: String
     var about: String = ""
     var is_public: Bool = false
-    var photo_path: String? = nil
+    var photo_paths: [String] = []
     let created_by: UUID
 }
 
@@ -195,10 +208,8 @@ struct PartyPatch: Encodable {
     var name: String?
     var about: String?
     var is_public: Bool?
-    var photo_path: String?
+    var photo_paths: [String]?
 }
-
-typealias PartyNamePatch = PartyPatch
 
 struct NewPartyMember: Encodable {
     let party_id: UUID

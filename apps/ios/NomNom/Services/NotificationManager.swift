@@ -15,6 +15,9 @@ final class NotificationManager: NSObject, UNUserNotificationCenterDelegate {
     /// A URL (invite link, deep link) opened before `RootTabView` existed yet —
     /// e.g. while the sign-in screen was showing. Replayed once the tab view appears.
     var pendingURL: URL?
+    /// Set when onboarding finishes with a party invite waiting, so the tab view
+    /// opens on the inbox where the viewer accepts or declines it.
+    var pendingInbox = false
 
     private static let log = Logger(subsystem: "se.joelsanden.nomnom", category: "notifications")
 

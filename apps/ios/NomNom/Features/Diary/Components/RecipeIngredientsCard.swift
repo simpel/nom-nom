@@ -1,87 +1,54 @@
 import SwiftUI
 
-/// 2-column tabular card for displaying recipe measurements and ingredients.
+/// A recipe's ingredients ("Nom Nom iOS" canvas): a Section "Ingredients" with the
+/// count, over a list Card. When the recipe says how many it serves, the first row is
+/// "Servings" with a ValueStepper `sm`, and every amount scales with it
+/// (QuantityScaler; free-text amounts stay as written). Each ingredient is a ListRow
+/// `sm`: the name and the amount as its tabular value.
 struct RecipeIngredientsCard: View {
     let ingredients: [RecipeIngredient]
+    /// The recipe's own servings; nil hides the stepper and shows amounts as written.
+    var serves: Int?
 
-    @State private var completedIDs: Set<UUID> = []
+    @State private var servings: Int
+
+    init(ingredients: [RecipeIngredient], serves: Int? = nil) {
+        self.ingredients = ingredients
+        self.serves = serves
+        self._servings = State(initialValue: serves ?? 1)
+    }
 
     private var validIngredients: [RecipeIngredient] {
         ingredients.filter { !$0.isEmpty }
     }
 
-    private let amountColumnWidth: CGFloat = 84
+    private var factor: Double {
+        guard let serves, serves > 0 else { return 1 }
+        return Double(servings) / Double(serves)
+    }
 
     var body: some View {
         if !validIngredients.isEmpty {
-            SectionCard("Ingredients") {
-                VStack(spacing: 0) {
-                    // Column Headers
-                    HStack(spacing: 14) {
-                        Text("AMOUNT")
-                            .font(.system(size: 10, weight: .bold))
-                            .tracking(1.0)
-                            .foregroundStyle(DS.Color.textTertiary)
-                            .frame(width: amountColumnWidth, alignment: .trailing)
-
-                        Text("INGREDIENT")
-                            .font(.system(size: 10, weight: .bold))
-                            .tracking(1.0)
-                            .foregroundStyle(DS.Color.textTertiary)
-                            .frame(maxWidth: .infinity, alignment: .leading)
+            DSSection("Ingredients", trailing: "\(validIngredients.count)") {
+                Card(layout: .list) {
+                    if serves != nil {
+                        ListRow(
+                            "Servings",
+                            trailing: .view {
+                                ValueStepper(value: $servings, in: 1...24, size: .sm, label: "Servings")
+                            }
+                        )
                     }
-                    .padding(.bottom, 8)
-
-                    Divider().overlay(DS.Color.line.opacity(0.35))
-
-                    // 2-Column Rows
-                    ForEach(Array(validIngredients.enumerated()), id: \.element.id) { index, item in
-                        ingredientRow(for: item, index: index)
+                    ForEach(validIngredients) { item in
+                        ListRow(item.trimmedIngredient, value: amount(item), size: .sm)
                     }
                 }
             }
         }
     }
 
-    private func ingredientRow(for item: RecipeIngredient, index: Int) -> some View {
-        let isCompleted = completedIDs.contains(item.id)
-
-        return Button {
-            withAnimation(.easeInOut(duration: 0.15)) {
-                if isCompleted {
-                    completedIDs.remove(item.id)
-                } else {
-                    completedIDs.insert(item.id)
-                }
-            }
-        } label: {
-            VStack(spacing: 0) {
-                if index > 0 {
-                    Divider().overlay(DS.Color.line.opacity(0.2))
-                }
-
-                HStack(alignment: .firstTextBaseline, spacing: 14) {
-                    // Column 1: Amount (Quantity & Measurement)
-                    Text(item.formattedAmount)
-                        .font(.subheadline.weight(.semibold).monospacedDigit())
-                        .foregroundStyle(isCompleted ? DS.Color.textTertiary : DS.Color.accentText)
-                        .strikethrough(isCompleted, color: DS.Color.textTertiary)
-                        .frame(width: amountColumnWidth, alignment: .trailing)
-                        .lineLimit(1)
-                        .minimumScaleFactor(0.85)
-
-                    // Column 2: Ingredient Name
-                    Text(item.trimmedIngredient)
-                        .font(.subheadline)
-                        .foregroundStyle(isCompleted ? DS.Color.textTertiary : DS.Color.textPrimary)
-                        .strikethrough(isCompleted, color: DS.Color.textTertiary)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .multilineTextAlignment(.leading)
-                }
-                .padding(.vertical, 8)
-                .contentShape(Rectangle())
-            }
-        }
-        .buttonStyle(.plain)
+    private func amount(_ item: RecipeIngredient) -> String {
+        let quantity = QuantityScaler.scale(item.trimmedQuantity, by: factor)
+        return [quantity, item.trimmedMeasurement].filter { !$0.isEmpty }.joined(separator: " ")
     }
 }

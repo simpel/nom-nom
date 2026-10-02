@@ -33,28 +33,9 @@ struct MealRatingSheet: View {
         return store.recipe(meal.dishID)
     }
 
-    private var mealPhotos: [HeroPhotoItem] {
+    private var mealPhotos: [PhotoCardSource] {
         guard let meal else { return [] }
-        return meal.photoPaths.map { .remote(path: $0, bucket: SupabaseConfig.photoBucket) }
-    }
-
-    private var recipePhotos: [HeroPhotoItem] {
-        guard let recipe = mealRecipe else { return [] }
-        var items: [HeroPhotoItem] = []
-        for p in recipe.recipePhotoPaths {
-            if !items.contains(where: { $0.id == "\(SupabaseConfig.recipeBucket):\(p)" }) {
-                items.append(.remote(path: p, bucket: SupabaseConfig.recipeBucket))
-            }
-        }
-        for p in recipe.photoPaths {
-            if !items.contains(where: { $0.id == "\(SupabaseConfig.recipeBucket):\(p)" }) {
-                items.append(.remote(path: p, bucket: SupabaseConfig.recipeBucket))
-            }
-        }
-        if items.isEmpty {
-            items.append(.fallback(cuisine: recipe.cuisine))
-        }
-        return items
+        return meal.photoPaths.map { .remote(path: $0, cuisine: mealRecipe?.cuisine) }
     }
 
     var body: some View {
@@ -66,11 +47,8 @@ struct MealRatingSheet: View {
                     ProgressView()
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
                 } else {
-                    ContentUnavailableView(
-                        "Meal Not Found",
-                        systemImage: "questionmark.folder",
-                        description: Text("This meal may have been removed.")
-                    )
+                    EmptyState("Meal is gone", message: "It looks like this meal was deleted.", layout: .screen)
+                        .padding(.horizontal, DS.Spacing.gutter)
                 }
             }
             .screenTitle("Rate Meal", displayMode: .inline)
@@ -91,37 +69,32 @@ struct MealRatingSheet: View {
                 set: { selectedPhotoIndex = $0?.index }
             )) { wrapper in
                 if let meal, wrapper.index < meal.photoPaths.count {
-                    MealGalleryViewerSheet(paths: meal.photoPaths, initialIndex: wrapper.index)
+                    MediaViewerSheet(.paths(meal.photoPaths), startIndex: wrapper.index)
                 }
             }
             .sheet(item: Binding(
                 get: { selectedRecipePhotoIndex.map { PhotoIndexWrapper(index: $0) } },
                 set: { selectedRecipePhotoIndex = $0?.index }
             )) { wrapper in
-                if let recipe = mealRecipe {
-                    let paths = recipe.recipePhotoPaths.isEmpty ? recipe.photoPaths : recipe.recipePhotoPaths
-                    let bucket = SupabaseConfig.recipeBucket
-                    if !paths.isEmpty {
-                        MealGalleryViewerSheet(paths: paths, initialIndex: min(wrapper.index, paths.count - 1), bucket: bucket, titlePrefix: "Recipe")
-                    }
+                if let paths = mealRecipe?.ratingHeaderPhotoPaths, !paths.isEmpty {
+                    MediaViewerSheet(.paths(paths, bucket: SupabaseConfig.recipeBucket), startIndex: wrapper.index, title: "Recipe")
                 }
             }
         }
+        .dsSheet()
     }
 
     // MARK: - Form Sections
 
     private func ratingForm(for meal: Meal) -> some View {
         ScrollView {
-            VStack(spacing: DS.Spacing.section) {
-                // Top Hero Section: Harmonized Dual Arc Hero Header
-                ArcHeroHeaderView(
-                    items: mealPhotos,
-                    recipeItems: recipePhotos,
+            VStack(spacing: DS.Spacing.block) {
+                MealRatingPhotoHeader(
+                    mealPhotos: mealPhotos,
+                    recipePhotos: mealRecipe?.ratingHeaderPhotos ?? [],
                     cuisine: mealRecipe?.cuisine,
                     title: mealTitle,
                     date: meal.eatenOn,
-                    alignment: .center,
                     onSelectMealPhoto: { index in
                         selectedPhotoIndex = index
                     },
@@ -130,27 +103,8 @@ struct MealRatingSheet: View {
                     }
                 )
 
-                // 1. Taste (Standalone)
-                VStack(alignment: .leading, spacing: 8) {
-                    SectionHeader(
-                        "How was it?",
-                        trailingText: myReaction?.name,
-                        trailingColor: myReaction?.text,
-                        horizontalPadding: 4
-                    )
-                    TasteScoreSelector(selection: $myReaction)
-                }
-
-                // 2. Repeat Goal (Standalone)
-                VStack(alignment: .leading, spacing: 8) {
-                    SectionHeader(
-                        "How often to repeat",
-                        trailingText: repeatDesire?.title,
-                        trailingColor: DS.Color.accentText,
-                        horizontalPadding: 4
-                    )
-                    RotationGoalSelector(selection: $repeatDesire)
-                }
+                // 1–2. Taste and repeat goal
+                RatingBlocks(reaction: $myReaction, repeatDesire: $repeatDesire)
 
                 // 3. Household Eaters (if present)
                 if !store.myEaters.isEmpty {
@@ -158,15 +112,15 @@ struct MealRatingSheet: View {
                 }
 
                 // 4. Notes & Review
-                SectionCard(title: "Notes & Review") {
+                SectionCard("Notes & Review") {
                     TextArea("Add your thoughts, flavor notes, or adjustments…", text: $notes, lineLimit: 3...6)
                 }
             }
-            .padding(.horizontal, DS.Spacing.screenHorizontal)
-            .padding(.top, DS.Spacing.screenTop)
-            .padding(.bottom, DS.Spacing.screenBottom)
+            .padding(.horizontal, DS.Spacing.gutter)
+            .padding(.top, DS.Spacing.s5)
+            .padding(.bottom, DS.Spacing.s11)
         }
-        .background(DS.Color.bg)
+        .background(DS.Color.sheet)
     }
 
     // MARK: - Actions
@@ -221,8 +175,6 @@ struct MealRatingSheet: View {
         }
     }
 }
-
-typealias MealEaterRatingSheet = MealRatingSheet
 
 #Preview {
     NomNomPreview { store in

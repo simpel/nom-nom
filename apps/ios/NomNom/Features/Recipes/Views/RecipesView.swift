@@ -1,79 +1,40 @@
 import SwiftUI
 
-/// Main Tab — Recipes. Global discovery and category exploration hub, or personal recipes collection.
+/// Main tab — Recipes ("Nom Nom iOS" canvas): the PageHeader with the party as eyebrow
+/// and a search field, the Pro "Recommended for you" shelf, then My favourites, My
+/// recipes (See all), Safe bets for the party, Popular everywhere and the cuisine
+/// categories. Typing in the field swaps the shelves for matching recipes.
 struct RecipesView: View {
     @Environment(FoodStore.self) private var store
 
-    @State private var selectedTab: RecipeTab = .favourites
     @State private var showingCreateSheet = false
+    @State private var query = ""
 
-    enum RecipeTab: String, CaseIterable, Identifiable {
-        case favourites = "Favourites"
-        case myRecipes = "My Recipes"
-        case inspiration = "Inspiration"
-
-        var id: String { rawValue }
-    }
+    private var trimmedQuery: String { query.trimmingCharacters(in: .whitespacesAndNewlines) }
 
     var body: some View {
         NavigationStack {
             ScrollView {
-                VStack(alignment: .leading, spacing: DS.Spacing.sectionCompact) {
-                    PageHeading(title: "Recipes", actionTitle: "Add recipe") {
-                        showingCreateSheet = true
+                VStack(alignment: .leading, spacing: DS.Spacing.block) {
+                    VStack(alignment: .leading, spacing: DS.Spacing.s4) {
+                        PageHeader("Recipes", eyebrow: store.currentParty?.name)
+                        Input("Search recipes", text: $query, leadingIcon: "magnifyingglass", clearable: true)
                     }
-                    .padding(.horizontal, DS.Spacing.screenHorizontal)
+                    .padding(.horizontal, DS.Spacing.gutter)
 
-                    if store.myRecipes.isEmpty {
-                        RecipeInspirationSection()
+                    if trimmedQuery.isEmpty {
+                        RecipesBrowseSections()
                     } else {
-                        let availableTabs: [RecipeTab] = store.favoriteRecipes.isEmpty ? [.myRecipes, .inspiration] : [.favourites, .myRecipes, .inspiration]
-                        let resolvedTab: RecipeTab = availableTabs.contains(selectedTab) ? selectedTab : availableTabs.first!
-
-                        Picker("View", selection: Binding(
-                            get: { resolvedTab },
-                            set: { selectedTab = $0 }
-                        )) {
-                            ForEach(availableTabs) { tab in
-                                Text(tab.rawValue).tag(tab)
-                            }
-                        }
-                        .pickerStyle(.segmented)
-                        .padding(.horizontal, DS.Spacing.screenHorizontal)
-
-                        switch resolvedTab {
-                        case .favourites:
-                            VStack(alignment: .leading, spacing: DS.Spacing.md) {
-                                HStack {
-                                    Text("\(store.favoriteRecipes.count) recipe\(store.favoriteRecipes.count == 1 ? "" : "s")")
-                                        .font(.caption.weight(.medium))
-                                        .monospacedDigit()
-                                        .foregroundStyle(DS.Color.textSecondary)
-                                    Spacer()
-                                }
-                                .padding(.horizontal, DS.Spacing.screenHorizontal)
-                                .padding(.vertical, 4)
-                                
-                                MinimalRecipeGrid(recipes: store.favoriteRecipes.sorted { $0.createdAt > $1.createdAt })
-                            }
-                        case .inspiration:
-                            RecipeInspirationSection()
-                        case .myRecipes:
-                            MyRecipesSection(
-                                recipes: store.myRecipes.sorted { $0.createdAt > $1.createdAt },
-                                onCreateRecipe: { showingCreateSheet = true }
-                            )
-                        }
+                        RecipesSearchResults(query: trimmedQuery)
                     }
                 }
-                .padding(.top, DS.Spacing.screenTop)
-                .padding(.bottom, DS.Spacing.screenBottom)
+                .padding(.top, DS.Spacing.s5)
+                .padding(.bottom, DS.Spacing.s11)
             }
+            .scrollDismissesKeyboard(.immediately)
             .background(DS.Color.bg)
-            .refreshable {
-                await store.load()
-            }
-            .mainTabToolbar()
+            .refreshable { await store.load() }
+            .mainTabToolbar(addAccessibilityLabel: "New recipe") { showingCreateSheet = true }
             .sheet(isPresented: $showingCreateSheet) {
                 CreateRecipeSheet()
             }
@@ -82,7 +43,7 @@ struct RecipesView: View {
 }
 
 #Preview {
-    NomNomPreview {
+    NomNomPreview(inNavigationStack: false) {
         RecipesView()
     }
 }

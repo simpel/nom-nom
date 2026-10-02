@@ -19,54 +19,34 @@ struct RecipeEditSheet: View {
     var body: some View {
         NavigationStack {
             ScrollView {
-                VStack(spacing: DS.Spacing.section) {
+                VStack(spacing: DS.Spacing.block) {
                     if recipe != nil {
                         if isOwner {
-                            AssetPhotosPickerSection(draft: $coverPhotosDraft, title: "Cover Photo")
-
-                            SectionCard("Recipe Name") {
-                                Input("Recipe name (e.g. Carbonara)", text: $name, style: .cardRow)
-                                    .autocorrectionDisabled()
-                            }
-
-                            MealEditorCookingTimeSection(effort: $recipeDraft.effort)
-
-                            CuisinePickerSection(selection: $recipeDraft.cuisine)
+                            RecipeBasicsForm(
+                                name: $name,
+                                coverPhotos: $coverPhotosDraft,
+                                effort: $recipeDraft.effort,
+                                cuisine: $recipeDraft.cuisine
+                            )
                         } else {
-                            ContentUnavailableView(
-                                "Creator Only",
-                                systemImage: "lock.fill",
-                                description: Text("Only the creator of this recipe can edit its details.")
+                            EmptyState(
+                                "Only the creator can edit this",
+                                message: "Ask whoever added this recipe to change its details.",
+                                layout: .screen
                             )
                         }
                     } else {
-                        ContentUnavailableView("Recipe not found", systemImage: "questionmark.folder")
+                        EmptyState("Recipe is gone", message: "It was deleted.", layout: .screen)
                     }
                 }
-                .padding(.horizontal, DS.Spacing.screenHorizontal)
-                .padding(.top, DS.Spacing.screenTop)
-                .padding(.bottom, DS.Spacing.screenBottom)
+                .padding(.horizontal, DS.Spacing.gutter)
+                .padding(.top, DS.Spacing.s5)
+                .padding(.bottom, DS.Spacing.s11)
             }
-            .background(DS.Color.bg)
+            .background(DS.Color.sheet)
             .screenTitle("Edit Recipe", displayMode: .inline)
-            .toolbar {
-                ToolbarItem(placement: .topBarLeading) {
-                    Button {
-                        dismiss()
-                    } label: {
-                        Image(systemName: "xmark")
-                            .fontWeight(.semibold)
-                    }
-                    .accessibilityLabel("Cancel")
-                }
-
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button("Next") {
-                        navigateToDetails = true
-                    }
-                    .disabled(name.trimmedName.isEmpty || !isOwner)
-                    .fontWeight(.semibold)
-                }
+            .sheetNextToolbar(canProceed: !name.trimmedName.isEmpty && isOwner) {
+                navigateToDetails = true
             }
             .navigationDestination(isPresented: $navigateToDetails) {
                 RecipeDetailsStepView(
@@ -79,6 +59,7 @@ struct RecipeEditSheet: View {
             }
             .onAppear(perform: populate)
         }
+        .dsSheet()
     }
 
     private func populate() {

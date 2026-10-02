@@ -50,7 +50,8 @@ it is a personal catalogue, not a party's. The same dish is served to any party.
 
 ## Rating
 
-One user's verdict on one meal: **loved**, **ok**, or **not a fan**. Exactly one
+One user's verdict on one meal, on a six-step scale: **−1 Can't eat**, **1 Bad**,
+**2 Meh**, **3 Good**, **4 Great**, **5 Amazing**. Exactly one
 rating per user per meal — a person has one opinion of one plate of food. A rating
 carries no party.
 

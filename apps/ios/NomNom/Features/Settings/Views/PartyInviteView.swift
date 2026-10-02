@@ -10,7 +10,6 @@ struct PartyInviteView: View {
     @State private var email = ""
     @State private var isSending = false
     @State private var sentSuccessMessage: String?
-    @State private var resentAlertMessage: String?
     @State private var inviteError: String?
     @FocusState private var focused: Bool
 
@@ -20,34 +19,18 @@ struct PartyInviteView: View {
 
     var body: some View {
         NavigationStack {
-            ScrollView {
-                VStack(spacing: DS.Spacing.section) {
-                    PartyInviteLinkCard(party: party)
+            SheetBody {
+                PartyInviteLinkCard(party: party)
 
-                    PartyRecentCompanionsSection(party: party)
+                PartyRecentCompanionsSection(party: party)
 
-                    emailInviteSection
+                emailInviteSection
 
-                    if !pendingInvites.isEmpty {
-                        pendingInvitesSection
-                    }
-                }
-                .padding(.horizontal, DS.Spacing.screenHorizontal)
-                .padding(.top, DS.Spacing.screenTop)
-                .padding(.bottom, DS.Spacing.screenBottom)
+                PartyInvitesSection(invites: pendingInvites)
             }
-            .background(DS.Color.bg)
             .screenTitle("Invite to \(party.name)", displayMode: .inline)
             .sheetCloseToolbar()
-            .alert("Invitation Resent", isPresented: Binding(
-                get: { resentAlertMessage != nil },
-                set: { if !$0 { resentAlertMessage = nil } }
-            )) {
-                Button("OK") { resentAlertMessage = nil }
-            } message: {
-                Text(resentAlertMessage ?? "")
-            }
-            .alert("Couldn't Send Invite", isPresented: Binding(
+            .alert("Couldn't send invite", isPresented: Binding(
                 get: { inviteError != nil },
                 set: { if !$0 { inviteError = nil } }
             )) {
@@ -56,122 +39,29 @@ struct PartyInviteView: View {
                 Text(inviteError ?? "")
             }
         }
+        .dsSheet()
     }
 
     // MARK: - Sections
 
     private var emailInviteSection: some View {
-        SectionCard("Invite by Email") {
-            VStack(alignment: .leading, spacing: 10) {
-                HStack(spacing: 8) {
-                    Input(
-                        "friend@example.com",
-                        text: $email,
-                        size: .sm,
-                        isFocused: $focused
-                    )
-                    .textContentType(.emailAddress)
-                    .keyboardType(.emailAddress)
-                    .textInputAutocapitalization(.never)
-                    .autocorrectionDisabled()
-                    .submitLabel(.send)
-                    .onSubmit(sendEmailInvite)
-
-                    AppButton(
-                        "Send",
-                        variant: .primary,
-                        style: .normal,
-                        size: .sm,
-                        isPending: isSending,
-                        disabled: !email.isValidEmail || isSending,
-                        action: sendEmailInvite
-                    )
-                }
-
-                if let success = sentSuccessMessage {
-                    Text(success)
-                        .font(.caption)
-                        .foregroundStyle(DS.Color.Pine.pine600)
-                        .transition(.opacity)
-                } else if !email.trimmedName.isEmpty && !email.isValidEmail {
-                    Text("Please enter a valid email address.")
-                        .font(.caption)
-                        .foregroundStyle(.red)
-                } else {
-                    Text("We'll send them a notification and an invitation email to join.")
-                        .font(.caption)
-                        .foregroundStyle(DS.Color.textSecondary)
-                }
-            }
-        }
-    }
-
-    private var pendingInvitesSection: some View {
-        SectionCard("Pending Invitations") {
-            VStack(spacing: 8) {
-                ForEach(Array(pendingInvites.enumerated()), id: \.element.id) { index, invite in
-                    HStack(spacing: 12) {
-                        Image(systemName: "envelope")
-                            .font(.subheadline)
-                            .foregroundStyle(DS.Color.textSecondary)
-
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text(invite.inviteeEmail ?? "Invited member")
-                                .font(.subheadline)
-                                .foregroundStyle(DS.Color.textPrimary)
-
-                            Text("Pending")
-                                .font(.caption2)
-                                .foregroundStyle(DS.Color.accentText)
-                        }
-
-                        Spacer()
-
-                        HStack(spacing: 8) {
-                            AppButton("Resend", variant: .secondary, style: .outlined, size: .sm) {
-                                Task {
-                                    let ok = await store.resendPartyInvite(invite)
-                                    if ok {
-                                        resentAlertMessage = "Invitation resent to \(invite.inviteeEmail ?? "member")."
-                                    } else {
-                                        inviteError = store.errorMessage
-                                        store.errorMessage = nil
-                                    }
-                                }
-                            }
-
-                            AppButton(
-                                systemImage: "trash",
-                                variant: .destructive,
-                                style: .ghost,
-                                size: .sm
-                            ) {
-                                Task {
-                                    await store.revokePartyInvite(invite)
-                                    if let message = store.errorMessage {
-                                        inviteError = message
-                                        store.errorMessage = nil
-                                    }
-                                }
-                            }
-                            .accessibilityLabel("Revoke invite")
-                        }
-                    }
-                    .padding(.vertical, DS.Spacing.sm)
-
-                    if index < pendingInvites.count - 1 {
-                        Divider()
-                    }
-                }
-            }
-        }
+        EmailInviteCard(
+            title: "Invite by email",
+            placeholder: "friend@example.com",
+            hint: "They get a notification and an email inviting them to join.",
+            email: $email,
+            isSending: isSending,
+            confirmation: sentSuccessMessage,
+            isFocused: $focused,
+            onSend: sendEmailInvite
+        )
     }
 
     // MARK: - Actions
 
     private func sendEmailInvite() {
         let address = email.trimmedName
-        guard !address.isEmpty, address.isValidEmail else { return }
+        guard !address.isEmpty, address.isValidEmail, !isSending else { return }
         isSending = true
         Task {
             let ok = await store.inviteToParty(email: address, party: party)
@@ -179,13 +69,13 @@ struct PartyInviteView: View {
             if ok {
                 let invitedEmail = address
                 email = ""
-                withAnimation {
-                    sentSuccessMessage = "Invitation sent to \(invitedEmail)!"
+                withAnimation(DS.Motion.state) {
+                    sentSuccessMessage = "Invite sent to \(invitedEmail)."
                 }
                 UINotificationFeedbackGenerator().notificationOccurred(.success)
                 Task {
                     try? await Task.sleep(nanoseconds: 3_000_000_000)
-                    withAnimation {
+                    withAnimation(DS.Motion.state) {
                         sentSuccessMessage = nil
                     }
                 }

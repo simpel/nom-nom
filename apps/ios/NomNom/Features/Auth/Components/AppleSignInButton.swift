@@ -20,10 +20,12 @@ struct AppleSignInButton: View {
             handleCompletion(result)
         }
         .signInWithAppleButtonStyle(.black)
-        .frame(height: 50)
+        // Not synced (README): Apple's control, sized like the AppButton `lg` beside it
+        // and dimmed at `opacity-50` while disabled ("Disabled: `opacity-50` on buttons").
+        .frame(height: AppButtonSize.lg.height)
         .clipShape(Capsule())
         .disabled(auth.isWorking)
-        .opacity(auth.isWorking ? 0.6 : 1.0)
+        .opacity(auth.isWorking ? DS.Opacity.disabled : DS.Opacity.o100)
     }
 
     // MARK: - Handlers

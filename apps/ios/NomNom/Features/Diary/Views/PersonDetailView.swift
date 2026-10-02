@@ -92,12 +92,13 @@ struct PersonDetailView: View {
 
     var body: some View {
         ScrollView {
-            VStack(spacing: DS.Spacing.section) {
+            VStack(spacing: DS.Spacing.block) {
                 ProfileHeaderCard(
                     name: personName,
                     subtitle: subtitle,
                     photoPath: photoPath,
-                    isCurrentUser: isCurrentUser
+                    isCurrentUser: isCurrentUser,
+                    onEdit: { showingEditProfile = true }
                 )
 
                 ProfileInsightsSection(raterRef: raterRef)
@@ -116,48 +117,39 @@ struct PersonDetailView: View {
                     raterRef: raterRef
                 )
             }
-            .padding(.horizontal, DS.Spacing.screenHorizontal)
-            .padding(.top, DS.Spacing.screenTop)
-            .padding(.bottom, DS.Spacing.screenBottom)
+            .padding(.horizontal, DS.Spacing.gutter)
+            .padding(.top, DS.Spacing.s5)
+            .padding(.bottom, DS.Spacing.s11)
         }
         .background(DS.Color.bg)
+        .refreshable {
+            await store.load()
+        }
         .screenTitle("", displayMode: .inline)
-        .modifier(SheetToolbarConditional(isSheet: isSheet, isCurrentUser: isCurrentUser, onEdit: {
-            showingEditProfile = true
-        }))
+        .modifier(SheetToolbarConditional(isSheet: isSheet))
         .sheet(isPresented: $showingEditProfile) {
-            ProfileSheetView()
+            NavigationStack {
+                SettingsView(showsProfileLink: false)
+                    .sheetCloseToolbar()
+            }
+            .dsSheet()
         }
     }
 }
 
 private struct SheetToolbarConditional: ViewModifier {
     let isSheet: Bool
-    let isCurrentUser: Bool
-    let onEdit: () -> Void
 
+    @ViewBuilder
     func body(content: Content) -> some View {
         if isSheet {
-            content
-                .sheetCloseToolbar()
-                .toolbar {
-                    if isCurrentUser {
-                        ToolbarItem(placement: .topBarTrailing) {
-                            Button("Edit", action: onEdit)
-                                .font(.subheadline.weight(.medium))
-                        }
-                    }
-                }
+            content.sheetCloseToolbar()
         } else {
-            content
-                .toolbar {
-                    if isCurrentUser {
-                        ToolbarItem(placement: .topBarTrailing) {
-                            Button("Edit", action: onEdit)
-                                .font(.subheadline.weight(.medium))
-                        }
-                    }
+            content.toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    PageMenu()
                 }
+            }
         }
     }
 }

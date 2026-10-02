@@ -7,7 +7,8 @@ struct Eater: Identifiable, Hashable, Decodable {
     let id: UUID
     var ownerID: UUID
     var name: String
-    /// Emoji used as a tiny avatar in the UI.
+    /// Legacy `emoji` DB column. Kept so the row still decodes; the UI never
+    /// reads it (avatars are initials).
     var emoji: String
     var isActive: Bool
     var sortIndex: Int
@@ -28,7 +29,7 @@ struct Eater: Identifiable, Hashable, Decodable {
         id = try container.decode(UUID.self, forKey: .id)
         ownerID = try container.decode(UUID.self, forKey: .ownerID)
         name = try container.decode(String.self, forKey: .name)
-        emoji = try container.decodeIfPresent(String.self, forKey: .emoji) ?? "🧒"
+        emoji = try container.decodeIfPresent(String.self, forKey: .emoji) ?? ""
         isActive = try container.decodeIfPresent(Bool.self, forKey: .isActive) ?? true
         sortIndex = try container.decodeIfPresent(Int.self, forKey: .sortIndex) ?? 0
         createdAt = try container.decodeTimestamp(.createdAt)
@@ -38,7 +39,7 @@ struct Eater: Identifiable, Hashable, Decodable {
         id: UUID = UUID(),
         ownerID: UUID,
         name: String,
-        emoji: String = "🧒",
+        emoji: String = "",
         isActive: Bool = true,
         sortIndex: Int = 0,
         createdAt: Date = .now
@@ -55,16 +56,15 @@ struct Eater: Identifiable, Hashable, Decodable {
     var raterRef: RaterRef { .eater(id) }
 }
 
+/// Omits the legacy `emoji` column so the DB default applies.
 struct NewEater: Encodable {
     let owner_id: UUID
     let name: String
-    let emoji: String
     let sort_index: Int
 }
 
 struct EaterPatch: Encodable {
     let name: String
-    let emoji: String
     let is_active: Bool
     let sort_index: Int
 }

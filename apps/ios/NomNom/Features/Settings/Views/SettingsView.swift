@@ -1,136 +1,81 @@
 import SwiftUI
 
-typealias EatersView = SettingsView
-
-/// Settings tab/sheet: dinner parties, household members, profile settings, and account management.
+/// App settings: my profile link, profile fields, notifications, debug tools, and account actions.
 struct SettingsView: View {
+    var showsProfileLink: Bool = true
+
     @Environment(FoodStore.self) private var store
-    @Environment(AuthController.self) private var auth
 
     @State private var isSeeding = false
-    @State private var confirmSignOut = false
-    @State private var confirmDelete = false
 
-    private let emojiChoices = ["🧒", "👦", "👧", "🧑", "👩", "👨", "👶", "🐣", "🦊", "🐻", "🐼", "🦁", "🐧", "🦄"]
+    private var profileName: String {
+        let name = store.myProfile?.shownName.trimmingCharacters(in: .whitespaces) ?? ""
+        return name.isEmpty ? "My profile" : name
+    }
 
     var body: some View {
         ScrollView {
-            VStack(spacing: DS.Spacing.section) {
-                partiesSection
-                HouseholdMembersSection(emojiChoices: emojiChoices)
+            VStack(alignment: .leading, spacing: DS.Spacing.s8) {
+                if showsProfileLink {
+                    myProfileSection
+                }
+                ProfileSettingsSection()
                 NotificationPreferencesSection()
-                ProfileSettingsSection(emojiChoices: emojiChoices, confirmSignOut: $confirmSignOut)
                 #if DEBUG
                 sampleDataSection
                 #endif
-                DangerZoneSection(confirmDelete: $confirmDelete)
+                AccountActionsSection()
             }
-            .padding(.horizontal, DS.Spacing.screenHorizontal)
-            .padding(.top, DS.Spacing.screenTop)
-            .padding(.bottom, DS.Spacing.screenBottom)
+            .padding(.horizontal, DS.Spacing.gutter)
+            .padding(.top, DS.Spacing.s5)
+            .padding(.bottom, DS.Spacing.s11)
         }
         .background(DS.Color.bg)
-        .navigationTitle("Settings")
-        .alert("Sign out?", isPresented: $confirmSignOut) {
-            Button("Sign out", role: .destructive) {
-                Task {
-                    await store.unregisterCurrentDevice()
-                    await auth.signOut()
-                }
-            }
-            Button("Cancel", role: .cancel) {}
-        } message: {
-            Text("Your food log stays on the server and comes back when you sign in again.")
-        }
-        .alert("Delete your account?", isPresented: $confirmDelete) {
-            Button("Delete everything", role: .destructive) {
-                Task { await auth.deleteAccount() }
-            }
-            Button("Cancel", role: .cancel) {}
-        } message: {
-            Text("This removes your account, every meal and photo you've logged, and the people you track. It cannot be undone.")
-        }
-        .alert("Couldn't delete your account",
-               isPresented: Binding(get: { auth.errorMessage != nil },
-                                    set: { if !$0 { auth.errorMessage = nil } })) {
-            Button("OK") { auth.errorMessage = nil }
-        } message: {
-            Text(auth.errorMessage ?? "")
-        }
+        .screenTitle("Settings")
     }
 
-    // MARK: - Dinner Parties Section
+    // MARK: - My Profile Link
 
-    private var partiesSection: some View {
-        SectionCard("Dinner Parties") {
-            VStack(alignment: .leading, spacing: 10) {
-                NavigationLink {
-                    PartyListView()
-                } label: {
-                    HStack(spacing: 12) {
-                        Image(systemName: "person.2.fill")
-                            .font(.title3)
-                            .foregroundStyle(.tint)
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text("Dinner Parties")
-                                .font(.body.weight(.medium))
-                                .foregroundStyle(DS.Color.textPrimary)
-                            let count = store.myParties.count
-                            Text(count == 0 ? "None yet" : "\(count) \(count == 1 ? "party" : "parties")")
-                                .font(.caption)
-                                .monospacedDigit()
-                                .foregroundStyle(DS.Color.textSecondary)
-                        }
-                        Spacer()
-                        if !store.pendingPartyInvites.isEmpty {
-                            Text("\(store.pendingPartyInvites.count) invite")
-                                .font(.caption2.bold())
-                                .padding(.horizontal, 6)
-                                .padding(.vertical, DS.Spacing.sm)
-                                .background(Color.orange)
-                                .foregroundStyle(.white)
-                                .clipShape(Capsule())
-                        }
-                        Image(systemName: "chevron.right")
-                            .font(.caption2)
-                            .foregroundStyle(DS.Color.textTertiary)
-                    }
-                    .padding(.vertical, DS.Spacing.sm)
-                }
-                .buttonStyle(.plain)
-
-                Text("Share meals and collective taste preferences with friends, family, or roomies.")
-                    .font(.caption2)
-                    .foregroundStyle(DS.Color.textSecondary)
-                    .padding(.top, 4)
+    private var myProfileSection: some View {
+        Card(layout: .list) {
+            NavigationLink {
+                PersonDetailView(raterRef: .account(store.userID))
+            } label: {
+                ListRow(
+                    profileName,
+                    meta: "View taste profile and history",
+                    leading: .avatar(Avatar(
+                        name: profileName,
+                        photoPath: store.myProfile?.photoPath,
+                        size: .sm,
+                        decorative: true
+                    )),
+                    chevron: true
+                )
             }
+            .buttonStyle(ListRowButtonStyle())
         }
     }
 
     #if DEBUG
     private var sampleDataSection: some View {
-        SectionCard("Debug Tools") {
-            VStack(alignment: .leading, spacing: 10) {
-                AppButton(
-                    "Fill with sample history",
-                    variant: .neutral,
-                    style: .outlined,
-                    size: .md,
-                    isFullWidth: true,
-                    isPending: isSeeding,
-                    disabled: isSeeding
-                ) {
-                    isSeeding = true
-                    Task {
-                        await SampleData.populate(store)
-                        isSeeding = false
-                    }
+        SectionCard("Debug tools") {
+            AppButton(
+                "Fill with sample history",
+                variant: .secondary,
+                appearance: .outline,
+                fullWidth: true,
+                isLoading: isSeeding
+            ) {
+                isSeeding = true
+                Task {
+                    await SampleData.populate(store)
+                    isSeeding = false
                 }
-
-                Text("Debug builds only — adds a few months of made-up meals so the suggestions have something to work with. Writes to whichever Supabase this build points at.")
-                    .font(.caption2)
-                    .foregroundStyle(DS.Color.textTertiary)
             }
+
+            Text("Debug builds only — adds a few months of made-up meals so the suggestions have something to work with. Writes to whichever Supabase this build points at.")
+                .textStyle(.sansSm, tone: .tertiary)
         }
     }
     #endif
@@ -141,4 +86,3 @@ struct SettingsView: View {
         SettingsView()
     }
 }
-

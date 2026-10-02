@@ -45,11 +45,11 @@ enum SampleData {
         let existing = store.myEaters.sorted { $0.sortIndex < $1.sortIndex }
         if existing.count >= 2 { return existing }
 
-        let wanted = [("Elsa", "👧", 0), ("Vidar", "👦", 1)]
+        let wanted = [("Elsa", 0), ("Vidar", 1)]
             .filter { candidate in
                 !existing.contains { $0.name.caseInsensitiveCompare(candidate.0) == .orderedSame }
             }
-            .map { NewEater(owner_id: store.userID, name: $0.0, emoji: $0.1, sort_index: $0.2) }
+            .map { NewEater(owner_id: store.userID, name: $0.0, sort_index: $0.1) }
 
         guard !wanted.isEmpty else { return existing }
 
@@ -71,7 +71,7 @@ enum SampleData {
 
         let dishes: [Dish] = try await supabase
             .from("dishes")
-            .insert(todo.map { NewDish(ownerID: store.userID, name: $0.0, cuisine: $0.1) })
+            .insert(todo.map { NewRecipe(ownerID: store.userID, name: $0.0, cuisine: $0.1) })
             .select()
             .execute()
             .value

@@ -1,60 +1,81 @@
 import SwiftUI
 
-/// Contextual sheet showing an individual member's taste insights in relation to the current dinner party.
-/// Presented as a standard modal sheet matching `MealRatingSheet`.
+/// One member of a dinner party ("Nom Nom iOS" canvas, MemberSheet), as a BottomSheet:
+/// the PersonHeaderRow ("Member since Mar 2026 · 18 meals rated here"), two compact
+/// ScoreCards (their average here, their taste match), a ProCard "Cooking for Anna"
+/// with the AI tip and recipes they will love, then their highest and lowest here.
 struct PartyMemberInsightSheet: View {
-    let member: MemberTasteMatch
+    let memberRef: RaterRef
     let partyID: UUID
 
     @Environment(FoodStore.self) private var store
-    @Environment(\.dismiss) private var dismiss
+    @State private var showProfile = false
 
-    private var tipSegments: [GuestNoteSegment] {
-        store.nextDinnerTipSegments(for: member.ref, partyID: partyID)
+    init(memberRef: RaterRef, partyID: UUID) {
+        self.memberRef = memberRef
+        self.partyID = partyID
     }
 
-    private var recommendations: [PartyMemberRecipeRecommendation] {
-        store.memberPartyRecommendations(for: member.ref, partyID: partyID)
+    init(member: MemberTasteMatch, partyID: UUID) {
+        self.init(memberRef: member.ref, partyID: partyID)
+    }
+
+    private var name: String { store.firstName(for: memberRef) }
+
+    private var tasteMatch: MemberTasteMatch? {
+        store.memberTasteMatches(forParty: partyID).first { $0.ref == memberRef }
+    }
+
+    private var average: FoodStore.PartyScoreStats? {
+        store.partyAverageScore(partyID: partyID, for: memberRef, limit: .max)
     }
 
     private var history: (highest: [PartyMemberMealRecord], lowest: [PartyMemberMealRecord]) {
-        store.memberPartyDinnerHistory(for: member.ref, partyID: partyID)
+        store.memberPartyDinnerHistory(for: memberRef, partyID: partyID)
     }
 
     var body: some View {
         NavigationStack {
-            ScrollView {
-                VStack(alignment: .leading, spacing: DS.Spacing.section) {
-                    VStack(alignment: .leading, spacing: DS.Spacing.sm) {
-                        // Header: Name as heading alone
-                        Text(member.name)
-                            .font(Font.newsreader(.largeTitle, weight: .semibold))
-                            .foregroundStyle(DS.Color.textPrimary)
+            SheetBody {
+                PartyMemberHeaderRow(memberRef: memberRef, partyID: partyID, ratedCount: average?.count ?? 0) {
+                    showProfile = true
+                }
 
-                        // Editorial narrative (Newsreader serif with semantic highlights)
-                        EditorialTextView(segments: tipSegments)
-                    }
-                    .padding(.top, DS.Spacing.xs)
-
-                    // Recipes Member Will Love (Horizontal Scroll reusing MinimalRecipeCard)
-                    PartyMemberRecommendationsShelf(
-                        memberName: member.name,
-                        recommendations: recommendations
-                    )
-
-                    // Personal Rating History in this Party (reusing startpage MealRow)
-                    PartyMemberPartyRatingsSection(
-                        memberRef: member.ref,
-                        memberName: member.name,
-                        highest: history.highest,
-                        lowest: history.lowest
+                HStack(alignment: .top, spacing: DS.Spacing.s3) {
+                    ScoreCard(score: average?.score, layout: .compact, title: "Average here")
+                    ScoreCard(
+                        score: tasteMatch.map { Double($0.matchScore) / 100 },
+                        verdict: tasteMatch.map { Self.matchVerdict($0.matchScore) },
+                        layout: .compact,
+                        title: "Taste match",
+                        delta: tasteMatch?.trendDelta
                     )
                 }
-                .padding(.horizontal, DS.Spacing.screenHorizontal)
-                .padding(.bottom, DS.Spacing.screenBottom)
+
+                PartyMemberCookingForSection(memberRef: memberRef, name: name, partyID: partyID)
+
+                PartyMemberPartyRatingsSection(
+                    memberRef: memberRef,
+                    memberName: name,
+                    highest: history.highest,
+                    lowest: history.lowest
+                )
             }
-            .background(DS.Color.bg)
+            .screenTitle(name, displayMode: .inline)
             .sheetCloseToolbar()
+            .navigationDestination(isPresented: $showProfile) {
+                PersonDetailView(raterRef: memberRef)
+            }
+        }
+        .dsSheet()
+    }
+
+    /// How close their taste runs to the party's (DS-GAPS.md, "Taste match verdicts").
+    static func matchVerdict(_ score: Int) -> String {
+        switch score {
+        case 85...: return "Close"
+        case 65..<85: return "Near"
+        default: return "Apart"
         }
     }
 }

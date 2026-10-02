@@ -1,6 +1,7 @@
 import SwiftUI
 
-/// Tab 1 — Meals. Shows a top action to log a meal, pending ratings, and your meal history.
+/// Tab 1 — Meals ("Nom Nom iOS" canvas): the MealsHeader, meals waiting for your
+/// rating, then the history grouped This week / Last week / by month.
 struct MealsView: View {
     @Environment(FoodStore.self) private var store
 
@@ -13,7 +14,7 @@ struct MealsView: View {
     }
 
     private var historySections: [(title: String, meals: [Meal])] {
-        currentMeals.groupedByRelativeDate()
+        currentMeals.groupedByWeek()
     }
 
     var body: some View {
@@ -26,20 +27,18 @@ struct MealsView: View {
                     .refreshable { await store.load() }
                 } else {
                     ScrollView {
-                        VStack(alignment: .leading, spacing: DS.Spacing.section) {
-                            PageHeading(title: "Meals", actionTitle: "Add meal") {
-                                editorTarget = .new
-                            }
+                        VStack(alignment: .leading, spacing: DS.Spacing.block) {
+                            MealsHeader { editorTarget = .new }
 
                             MealsToRateSection()
 
                             ForEach(historySections, id: \.title) { section in
                                 SwipeableListCard(
                                     title: section.title,
+                                    caption: section.meals.count == 1 ? "1 meal" : "\(section.meals.count) meals",
                                     data: section.meals,
-                                    dividerPadding: 74,
-                                    leadingIcon: { _ in "trash.fill" },
-                                    leadingColor: { _ in .red },
+                                    leadingIcon: { meal in meal.createdBy == store.userID ? "trash.fill" : nil },
+                                    leadingColor: { _ in DS.Color.destructive },
                                     onLeadingAction: { meal in
                                         mealToRemove = meal
                                     }
@@ -47,11 +46,9 @@ struct MealsView: View {
                                     NavigationLink {
                                         MealDetailView(mealID: meal.id)
                                     } label: {
-                                        MealRow(meal: meal, isMinimal: true)
-                                            .padding(.horizontal, 14)
-                                            .padding(.vertical, 8)
+                                        MealRow(meal: meal, metaStyle: .ratingProgress, isMinimal: true)
                                     }
-                                    .buttonStyle(.plain)
+                                    .buttonStyle(ListRowButtonStyle())
                                     .contextMenu {
                                         if meal.createdBy == store.userID {
                                             Button {
@@ -69,9 +66,9 @@ struct MealsView: View {
                                 }
                             }
                         }
-                        .padding(.horizontal, DS.Spacing.screenHorizontal)
-                        .padding(.top, DS.Spacing.screenTop)
-                        .padding(.bottom, DS.Spacing.screenBottom)
+                        .padding(.horizontal, DS.Spacing.gutter)
+                        .padding(.top, DS.Spacing.s5)
+                        .padding(.bottom, DS.Spacing.s11)
                     }
                     .background(DS.Color.bg)
                     .refreshable { await store.load() }
@@ -104,8 +101,6 @@ struct MealsView: View {
         }
     }
 }
-
-typealias LogListView = MealsView
 
 #Preview("With Meals") {
     NomNomPreview(inNavigationStack: false) {

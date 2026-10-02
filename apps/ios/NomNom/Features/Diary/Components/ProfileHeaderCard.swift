@@ -1,25 +1,32 @@
 import SwiftUI
 
-/// Elevated header view showing user avatar (or serif monogram initial), name, and membership subtitle directly on the background.
+/// The top of a person's profile. A screen about someone, so it is a DetailHeader
+/// (PageHeader README: "A screen about something … uses DetailHeader"): centred
+/// avatar, name and membership line.
 struct ProfileHeaderCard: View {
     let name: String
     let subtitle: String
     var photoPath: String? = nil
     let isCurrentUser: Bool
+    var onEdit: (() -> Void)? = nil
 
     var body: some View {
-        VStack(spacing: 14) {
-            UserAvatar(name: name, photoPath: photoPath, size: 80)
-
-            PageHeader(
-                title: name,
-                subtitle: subtitle.isEmpty ? nil : subtitle,
-                alignment: .center
-            )
-        }
+        DetailHeader(
+            title: name,
+            align: .center,
+            meta: subtitle.isEmpty ? nil : subtitle,
+            avatar: Avatar(name: name, photoPath: photoPath, decorative: true),
+            actions: (isCurrentUser && onEdit != nil) ? [
+                DetailHeaderAction(
+                    title: "Edit profile",
+                    variant: .secondary,
+                    appearance: .soft
+                ) {
+                    onEdit?()
+                }
+            ] : []
+        )
         .frame(maxWidth: .infinity)
-        .padding(.top, 8)
-        .padding(.bottom, 6)
     }
 }
 
@@ -30,6 +37,6 @@ struct ProfileHeaderCard: View {
             subtitle: "Member of 2 dinner parties",
             isCurrentUser: true
         )
-        .padding()
+        .padding(DS.Spacing.gutter)
     }
 }

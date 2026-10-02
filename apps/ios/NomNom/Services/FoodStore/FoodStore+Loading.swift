@@ -111,17 +111,17 @@ extension FoodStore {
         favoriteRecipeIDs = Set(recipeFavorites.filter { $0.userID == userID }.map(\.recipeID))
 
         let myPartyIDs = self.myPartyIDs
+        let saved = UserDefaults.standard.string(forKey: "selectedParty_\(userID.uuidString)")
         if let current = currentParty, !myPartyIDs.contains(current.id) {
             currentParty = nil
         } else if currentParty == nil,
-                  let savedIDString = UserDefaults.standard.string(forKey: "selectedParty_\(userID.uuidString)"),
-                  let savedID = UUID(uuidString: savedIDString),
+                  let saved,
+                  let savedID = UUID(uuidString: saved),
                   myPartyIDs.contains(savedID),
                   let savedParty = partyByID[savedID] {
             currentParty = savedParty
         }
-        
-        // No solo state: default to a party if one is available
+
         if currentParty == nil {
             currentParty = myParties.first
         }

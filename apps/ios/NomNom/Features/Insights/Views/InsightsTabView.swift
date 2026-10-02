@@ -21,14 +21,14 @@ struct InsightsTabView: View {
         NavigationStack {
             Group {
                 if selectedParty == nil {
-                    VStack {
-                        Text("No Party Selected")
-                            .font(.title2.weight(.bold))
-                        Text("Please select a dinner party from the Parties tab to view insights.")
-                            .foregroundStyle(.secondary)
-                            .multilineTextAlignment(.center)
-                            .padding()
-                    }
+                    EmptyState(
+                        "No party picked",
+                        message: "Pick a dinner party from the Parties tab to see its insights.",
+                        layout: .screen
+                    )
+                    .padding(.horizontal, DS.Spacing.gutter)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .background(DS.Color.bg)
                 } else if isLoading {
                     ProgressView("Loading Insights...")
                         .controlSize(.large)
@@ -37,10 +37,8 @@ struct InsightsTabView: View {
                         partyID: selectedPartyID,
                         insights: insights,
                         healthInsights: store.healthInsights(forParty: selectedPartyID),
-                        trendData: store.trendline(forParty: selectedPartyID),
-                        memberTrendSeries: store.memberTrendlines(forParty: selectedPartyID),
                         partyTasteMatches: store.memberTasteMatches(forParty: selectedPartyID, insights: insights),
-                        mealsLoggedCount: store.meals(forParty: selectedPartyID).count
+                        partyAverage: store.recentAverageScore(forParty: selectedPartyID, limit: PartyTasteMatchCard.recentMeals)
                     )
                 }
             }

@@ -22,17 +22,19 @@ final class AppDelegate: NSObject, UIApplicationDelegate {
     }
 
     static func configureGlobalTypography() {
-        FontRegistry.registerFonts()
+        // Fonts are registered through INFOPLIST_KEY_UIAppFonts.
         let appearance = UINavigationBarAppearance()
         appearance.configureWithDefaultBackground()
-        // Compact navbar title (when scrolled or inline) -> Inter Light (300 weight)
-        if let titleFont = AppTypography.navBarTitleUIFont {
-            appearance.titleTextAttributes = [.font: titleFont]
-        }
-        // Large title on page -> Newsreader Regular (32pt)
-        if let largeTitleFont = AppTypography.largePageTitleUIFont {
-            appearance.largeTitleTextAttributes = [.font: largeTitleFont]
-        }
+        // The DS names no navigation-bar style (logged in DS-GAPS.md); these are the
+        // closest documented steps. Inline title: `sans-lg` semibold — README
+        // "Typography": "sans-lg … sheet and reason titles … (each sets semibold itself)".
+        appearance.titleTextAttributes = [
+            .font: DS.TextStyle.sansLg.uiFont(weight: .semibold)
+        ]
+        // Large title: `serif-lg` — README "Typography": "serif-lg … page and hero titles".
+        appearance.largeTitleTextAttributes = [
+            .font: DS.TextStyle.serifLg.uiFont()
+        ]
         UINavigationBar.appearance().standardAppearance = appearance
         UINavigationBar.appearance().compactAppearance = appearance
         UINavigationBar.appearance().scrollEdgeAppearance = appearance

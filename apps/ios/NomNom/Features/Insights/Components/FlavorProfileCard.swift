@@ -2,38 +2,37 @@ import SwiftUI
 
 /// Ingredient taste profile grouped by category, sourced from the server-aggregated
 /// `get_flavor_profile` RPC — scope-agnostic, used for both a party's shared profile and
-/// one person's own.
+/// one person's own. One DSSection per category over ListRow key–value rows: the
+/// ingredient, its sentiment as meta, and the share of ratings that loved it as the
+/// tabular value. (The old chips put a word and a number in one pill, which Badge
+/// forbids: "never a number and a word together".)
 struct FlavorProfileCard: View {
     let entries: [FlavorProfileEntry]
 
     var body: some View {
         if !entries.isEmpty {
-            VStack(alignment: .leading, spacing: DS.Spacing.md) {
-                Text("Ingredient Profile")
-                    .font(.headline)
-                    .foregroundStyle(DS.Color.textPrimary)
-
+            VStack(alignment: .leading, spacing: DS.Spacing.block) {
                 ForEach(entries.groupedByCategory(), id: \.category) { group in
-                    VStack(alignment: .leading, spacing: DS.Spacing.xs) {
-                        Text(group.category.label)
-                            .font(.caption.weight(.semibold))
-                            .foregroundStyle(DS.Color.textSecondary)
-
-                        WrappingHStack {
+                    DSSection(group.category.label) {
+                        Card(layout: .list) {
                             ForEach(group.entries) { entry in
-                                Chip(
-                                    text: "\(entry.canonicalName) \(entry.lovedPct)%",
-                                    systemImage: entry.sentiment.systemImage,
-                                    tint: entry.sentiment.tint
-                                )
+                                ListRow(entry.canonicalName, meta: entry.sentiment.label, value: "\(entry.lovedPct)% loved")
                             }
                         }
                     }
                 }
             }
-            .padding(DS.Spacing.md)
-            .background(DS.Color.sunken)
-            .clipShape(RoundedRectangle(cornerRadius: AppRadius.card, style: .continuous))
+        }
+    }
+}
+
+private extension FlavorSentiment {
+    var label: String? {
+        switch self {
+        case .loved, .insufficient: return nil
+        case .mixed: return "Mixed"
+        case .polarizing: return "Splits the table"
+        case .disliked: return "Disliked"
         }
     }
 }

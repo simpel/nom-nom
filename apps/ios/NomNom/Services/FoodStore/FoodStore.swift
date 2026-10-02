@@ -37,12 +37,8 @@ final class FoodStore {
     }
     var currentParty: Party? {
         didSet {
-            let key = "selectedParty_\(userID.uuidString)"
-            if let id = currentParty?.id {
-                UserDefaults.standard.set(id.uuidString, forKey: key)
-            } else {
-                UserDefaults.standard.removeObject(forKey: key)
-            }
+            guard let id = currentParty?.id else { return }
+            UserDefaults.standard.set(id.uuidString, forKey: "selectedParty_\(userID.uuidString)")
         }
     }
 
@@ -85,8 +81,9 @@ final class FoodStore {
 
     var myMeals: [Meal] { meals.filter { $0.createdBy == userID } }
 
-    /// Context-filtered meals: if a party is selected, returns all meals served to that party;
-    /// otherwise returns your personal diary meals ("Just me").
+    /// Context-filtered meals: every meal served to the selected party. Every account
+    /// belongs to a party; until one is joined (say, an invite still waiting in the
+    /// inbox) this falls back to the viewer's own meals.
     var activeMeals: [Meal] {
         if let party = currentParty {
             let mealIDs = Set((mealPartiesByParty[party.id] ?? []).map(\.mealID))
@@ -263,7 +260,6 @@ final class FoodStore {
 
     struct VerdictDetail: Identifiable {
         let ref: RaterRef
-        let emoji: String
         let name: String
         let reaction: Reaction?
 
@@ -291,13 +287,12 @@ final class FoodStore {
             }
         }
         return sorted.map { rating in
-            let who = label(for: rating.source)
-            return VerdictDetail(ref: rating.source, emoji: who.emoji, name: who.name, reaction: rating.reaction)
+            VerdictDetail(ref: rating.source, name: label(for: rating.source).name, reaction: rating.reaction)
         }
     }
 
-    func verdictEntries(forMeal mealID: UUID) -> [(emoji: String, name: String, reaction: Reaction?)] {
-        verdictDetails(forMeal: mealID).map { (emoji: $0.emoji, name: $0.name, reaction: $0.reaction) }
+    func verdictEntries(forMeal mealID: UUID) -> [(name: String, reaction: Reaction?)] {
+        verdictDetails(forMeal: mealID).map { (name: $0.name, reaction: $0.reaction) }
     }
 
     var dishHistory: [UUID: DishHistory] {
@@ -317,16 +312,20 @@ final class FoodStore {
                                 roster: raterRoster)
     }
 
-    func label(for ref: RaterRef) -> (emoji: String, name: String) {
+    /// Display label for a rater. Avatars are initials (or a photo), never emoji.
+    struct RaterLabel {
+        let name: String
+    }
+
+    func label(for ref: RaterRef) -> RaterLabel {
         switch ref {
         case .eater(let id):
-            guard let eater = eaterByID[id] else { return ("🍽️", "Someone") }
-            return (eater.emoji, eater.name)
+            return RaterLabel(name: eaterByID[id]?.name ?? "Someone")
         case .account(let id):
             guard let profile = profiles[id] else {
-                return ("🧑", id == userID ? "Me" : "Someone")
+                return RaterLabel(name: id == userID ? "Me" : "Someone")
             }
-            return (profile.avatarEmoji, id == userID ? "Me" : profile.shownName)
+            return RaterLabel(name: id == userID ? "Me" : profile.shownName)
         }
     }
 
@@ -345,10 +344,9 @@ final class FoodStore {
         }
     }
 
-    var raterRoster: [(ref: RaterRef, emoji: String, name: String)] {
-        var roster = activeEaters.map { (ref: $0.raterRef, emoji: $0.emoji, name: $0.name) }
-        let me = label(for: .account(userID))
-        roster.append((ref: .account(userID), emoji: me.emoji, name: me.name))
+    var raterRoster: [(ref: RaterRef, name: String)] {
+        var roster = activeEaters.map { (ref: $0.raterRef, name: $0.name) }
+        roster.append((ref: .account(userID), name: label(for: .account(userID)).name))
         return roster
     }
 

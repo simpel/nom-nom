@@ -16,6 +16,8 @@ struct Recipe: Identifiable, Hashable, Decodable {
     var ingredients: [RecipeIngredient]
     /// Step-by-step preparation instructions.
     var instructions: [String]
+    /// Cook mode's per-step timers and ingredients, aligned with `instructions`.
+    var instructionDetails: [RecipeStepDetail]?
     /// Paths to dish cover photos in `recipe-photos` storage bucket.
     var photoPaths: [String]
     /// Primary cover photo path.
@@ -69,6 +71,7 @@ struct Recipe: Identifiable, Hashable, Decodable {
         case normalizedName = "normalized_name"
         case ingredients
         case instructions
+        case instructionDetails = "instruction_details"
         case photoPaths = "photo_paths"
         case recipePhotoPaths = "recipe_photo_paths"
         case effort
@@ -94,6 +97,7 @@ struct Recipe: Identifiable, Hashable, Decodable {
         normalizedName = try container.decode(String.self, forKey: .normalizedName)
         ingredients = try container.decodeIfPresent([RecipeIngredient].self, forKey: .ingredients) ?? []
         instructions = try container.decodeIfPresent([String].self, forKey: .instructions) ?? []
+        instructionDetails = try? container.decodeIfPresent([RecipeStepDetail].self, forKey: .instructionDetails)
         photoPaths = try container.decodeIfPresent([String].self, forKey: .photoPaths) ?? []
         recipePhotoPaths = try container.decodeIfPresent([String].self, forKey: .recipePhotoPaths) ?? []
         if let rawEffort = try container.decodeIfPresent(Int.self, forKey: .effort) {

@@ -1,0 +1,162 @@
+{
+  "assetGroups": {
+    "Logos": {
+      "files": {
+        "nomnom-app-icon.png": {
+          "blob": "3d60c155456f097b1a08e9f111462917",
+          "name": "nomnom-app-icon.png",
+          "size": 901471,
+          "type": "image/png"
+        }
+      },
+      "name": "Logos",
+      "order": [
+        "nomnom-app-icon.png"
+      ]
+    },
+    "Photography": {
+      "files": {
+        "american.jpeg": {
+          "blob": "6a498fb4f0446fa74cfa05b8d1434417",
+          "name": "american.jpeg",
+          "size": 796659,
+          "type": "image/jpeg"
+        },
+        "asian.jpeg": {
+          "blob": "b1960aa8e9a96dadd703ad7a9818838b",
+          "name": "asian.jpeg",
+          "size": 777524,
+          "type": "image/jpeg"
+        },
+        "french.jpeg": {
+          "blob": "46f65f80edaeeb69826747ef60119a13",
+          "name": "french.jpeg",
+          "size": 786746,
+          "type": "image/jpeg"
+        },
+        "greek.jpeg": {
+          "blob": "26e63f7b23995a95ab16b5b2b94a2845",
+          "name": "greek.jpeg",
+          "size": 817713,
+          "type": "image/jpeg"
+        },
+        "indian.jpeg": {
+          "blob": "a612c3194bcecfd125a11ceb9fa9d123",
+          "name": "indian.jpeg",
+          "size": 791360,
+          "type": "image/jpeg"
+        },
+        "italian.jpeg": {
+          "blob": "98320b659c7f6f86a10d2d96f906beba",
+          "name": "italian.jpeg",
+          "size": 772892,
+          "type": "image/jpeg"
+        },
+        "japanese.jpeg": {
+          "blob": "65054a7a0d367da2d194ebd357fd2ee5",
+          "name": "japanese.jpeg",
+          "size": 767854,
+          "type": "image/jpeg"
+        },
+        "korean.jpeg": {
+          "blob": "bfac2a7cfc7ded329808e40ca7961f4f",
+          "name": "korean.jpeg",
+          "size": 797398,
+          "type": "image/jpeg"
+        },
+        "mediterranean.jpeg": {
+          "blob": "393205be15731242fd638e99227872cf",
+          "name": "mediterranean.jpeg",
+          "size": 787299,
+          "type": "image/jpeg"
+        },
+        "mexican.jpeg": {
+          "blob": "f88da1e7e87cbf0fa87f44d61d984fe5",
+          "name": "mexican.jpeg",
+          "size": 772736,
+          "type": "image/jpeg"
+        },
+        "middle-eastern.jpeg": {
+          "blob": "d163452013f2d6c66d425ae28a33c7c1",
+          "name": "middle-eastern.jpeg",
+          "size": 801484,
+          "type": "image/jpeg"
+        },
+        "spanish.jpeg": {
+          "blob": "9d6543edf3ffb28e417e8da834860c09",
+          "name": "spanish.jpeg",
+          "size": 820392,
+          "type": "image/jpeg"
+        },
+        "swedish.jpeg": {
+          "blob": "542d2c4bd83ada33c38a0ea12f4d5095",
+          "name": "swedish.jpeg",
+          "size": 779499,
+          "type": "image/jpeg"
+        },
+        "thai.jpeg": {
+          "blob": "195a9211f29b58b8fa2833d23ec129dd",
+          "name": "thai.jpeg",
+          "size": 777524,
+          "type": "image/jpeg"
+        }
+      },
+      "name": "Photography",
+      "order": [
+        "american.jpeg",
+        "asian.jpeg",
+        "french.jpeg",
+        "greek.jpeg",
+        "indian.jpeg",
+        "italian.jpeg",
+        "japanese.jpeg",
+        "korean.jpeg",
+        "mediterranean.jpeg",
+        "mexican.jpeg",
+        "middle-eastern.jpeg",
+        "spanish.jpeg",
+        "swedish.jpeg",
+        "thai.jpeg"
+      ],
+      "tile": "s"
+    }
+  },
+  "blobs": {},
+  "createdOnFiles": {
+    "at": "2026-09-30T19:39:48Z",
+    "v": 1
+  },
+  "docs": {
+    "readme": "project/README.md",
+    "sections": []
+  },
+  "groups": [
+    "Logos",
+    "Photography"
+  ],
+  "lastChange": {
+    "at": "2026-10-02T11:05:00Z",
+    "by": "Joel Sandén",
+    "via": "Claude (Cowork, iOS canvas)",
+    "note": "Pro design language: new ProMark, ProCard (locked/unlocked), ProView (immersive pro-soft ground) and ProGate (locked view) with README and preview (components/Pro); README Colour section documents the three levels. bundle.css now defines the shadow-* variables (tokens.css was missing them, so every shadow rendered as none)."
+  },
+  "layout": "files",
+  "libraries": [
+    {
+      "file": "components/lib/react.production.min.js",
+      "global": "React",
+      "name": "react",
+      "version": "18.3.1"
+    },
+    {
+      "file": "components/lib/react-dom.production.min.js",
+      "global": "ReactDOM",
+      "name": "react-dom",
+      "version": "18.3.1"
+    }
+  ],
+  "namespace": "NomNom",
+  "sections": {},
+  "title": "Nom Nom",
+  "v": 3
+}

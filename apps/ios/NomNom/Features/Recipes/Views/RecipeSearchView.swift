@@ -50,14 +50,9 @@ struct RecipeSearchView: View {
             }
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
-                    Button {
+                    RecipeFilterToolbarButton(isFiltered: !filterCriteria.isDefault) {
                         showingFilterSheet = true
-                    } label: {
-                        Image(systemName: filterCriteria.isDefault
-                              ? "line.3.horizontal.decrease.circle"
-                              : "line.3.horizontal.decrease.circle.fill")
                     }
-                    .accessibilityLabel("Sort and Filter")
                 }
             }
             .sheet(isPresented: $showingFilterSheet) {
@@ -70,20 +65,14 @@ struct RecipeSearchView: View {
 
     private var idleHistoryView: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: DS.Spacing.sectionLarge) {
-                RecommendedForYouShelf()
-
-                if !store.recentRecipes.isEmpty {
-                    RecipeHorizontalShelf(title: "Last Used Recipes", recipes: store.recentRecipes)
+            VStack(alignment: .leading, spacing: DS.Spacing.s10) {
+                VStack(alignment: .leading, spacing: DS.Spacing.block) {
+                    RecommendedForYouShelf()
+                    RecipeShelf("Last used recipes", recipes: store.recentRecipes) { RecipeDetailView(recipe: $0) }
+                    RecipeShelf("Favourites", recipes: store.favoriteRecipes) { RecipeDetailView(recipe: $0) }
+                    RecipeShelf("Popular recipes", recipes: store.popularRecipes) { RecipeDetailView(recipe: $0) }
                 }
-
-                if !store.favoriteRecipes.isEmpty {
-                    RecipeHorizontalShelf(title: "Favourites", recipes: store.favoriteRecipes)
-                }
-
-                if !store.popularRecipes.isEmpty {
-                    PopularRecipesShelf(recipes: store.popularRecipes)
-                }
+                .padding(.horizontal, DS.Spacing.gutter)
 
                 SearchHistorySection(
                     showsEmptyState: store.recentRecipes.isEmpty && store.favoriteRecipes.isEmpty && store.popularRecipes.isEmpty
@@ -92,8 +81,8 @@ struct RecipeSearchView: View {
                     SearchHistoryStore.shared.addQuery(query)
                 }
             }
-            .padding(.top, DS.Spacing.screenTop)
-            .padding(.bottom, DS.Spacing.screenBottom)
+            .padding(.top, DS.Spacing.s5)
+            .padding(.bottom, DS.Spacing.s11)
         }
     }
 
@@ -102,50 +91,35 @@ struct RecipeSearchView: View {
     @ViewBuilder
     private var searchResultsView: some View {
         if rawSearchResults.isEmpty {
-            ContentUnavailableView {
-                Label("No matching recipes", systemImage: "magnifyingglass")
-            } description: {
-                Text("Try searching with a different term, ingredient, or cuisine.")
-            } actions: {
-                AppButton("Clear Search", variant: .neutral, style: .outlined, size: .md) {
-                    searchText = ""
-                }
-            }
+            // README cases "Search found nothing" and "Filters found nothing": the whole
+            // results view is empty, so `screen`.
+            EmptyState(
+                "No recipes match \u{2018}\(trimmedSearch)\u{2019}",
+                message: "Try a shorter search, an ingredient or a cuisine.",
+                icon: "magnifyingglass",
+                layout: .screen,
+                action: EmptyStateAction("Clear search", variant: .secondary) { searchText = "" }
+            )
+            .padding(.horizontal, DS.Spacing.gutter)
         } else if displayedSearchResults.isEmpty {
-            ContentUnavailableView {
-                Label("No filtered results", systemImage: "line.3.horizontal.decrease")
-            } description: {
-                Text("No recipes match your current sort and filter criteria.")
-            } actions: {
-                AppButton("Reset Filters", variant: .neutral, style: .outlined, size: .md) {
+            EmptyState(
+                "Nothing with these filters",
+                message: "Effort and rating narrow the list the most.",
+                layout: .screen,
+                action: EmptyStateAction("Clear filters", variant: .secondary) {
                     filterCriteria = RecipeFilterCriteria()
                 }
-            }
+            )
+            .padding(.horizontal, DS.Spacing.gutter)
         } else {
             ScrollView {
-                VStack(alignment: .leading, spacing: DS.Spacing.md) {
-                    searchSubHeader
-                    MinimalRecipeGrid(recipes: displayedSearchResults, onNavigate: { _ in
-                        SearchHistoryStore.shared.addQuery(trimmedSearch)
-                    })
-                }
-                .padding(.top, DS.Spacing.sm)
-                .padding(.bottom, DS.Spacing.screenBottom)
+                MinimalRecipeGrid(recipes: displayedSearchResults, title: "Results", onNavigate: { _ in
+                    SearchHistoryStore.shared.addQuery(trimmedSearch)
+                })
+                .padding(.top, DS.Spacing.s3)
+                .padding(.bottom, DS.Spacing.s11)
             }
         }
-    }
-
-    private var searchSubHeader: some View {
-        HStack {
-            Text("\(displayedSearchResults.count) result\(displayedSearchResults.count == 1 ? "" : "s")")
-                .font(.caption.weight(.medium))
-                .monospacedDigit()
-                .foregroundStyle(DS.Color.textSecondary)
-
-            Spacer()
-        }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 4)
     }
 }
 

@@ -74,8 +74,7 @@ extension FoodStore {
             if b.id == userID { return false }
             return label(for: a).name.localizedStandardCompare(label(for: b).name) == .orderedAscending
         }.map { ref in
-            let who = label(for: ref)
-            return MemberTrendSeries(ref: ref, name: who.name, emoji: who.emoji, points: pointsByRater[ref] ?? [])
+            MemberTrendSeries(ref: ref, name: label(for: ref).name, points: pointsByRater[ref] ?? [])
         }
     }
 
@@ -244,7 +243,6 @@ extension FoodStore {
             return MemberTasteMatch(
                 ref: ref,
                 name: who.name,
-                emoji: who.emoji,
                 matchScore: matchScore,
                 ratedMealsCount: records.count,
                 trend: trend,

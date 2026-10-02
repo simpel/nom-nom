@@ -18,53 +18,32 @@ struct CreateRecipeSheet: View {
     var body: some View {
         NavigationStack {
             ScrollView {
-                VStack(spacing: DS.Spacing.section) {
+                VStack(spacing: DS.Spacing.block) {
                     AppButton(
                         "Scan Photos or Cookbook",
-                        systemImage: "camera.viewfinder",
-                        variant: .secondary,
-                        style: .outlined,
-                        size: .md,
-                        isFullWidth: true
+                        icon: "camera.viewfinder",
+                        variant: .primary,
+                        appearance: .outline,
+                        fullWidth: true
                     ) {
                         showingScanner = true
                     }
 
-                    AssetPhotosPickerSection(draft: $coverPhotosDraft, title: "Cover Photo")
-
-                    SectionCard("Recipe Name") {
-                        Input("Recipe name (e.g. Carbonara)", text: $name, style: .cardRow)
-                            .autocorrectionDisabled()
-                    }
-
-                    MealEditorCookingTimeSection(effort: $recipeDraft.effort)
-
-                    CuisinePickerSection(selection: $recipeDraft.cuisine)
+                    RecipeBasicsForm(
+                        name: $name,
+                        coverPhotos: $coverPhotosDraft,
+                        effort: $recipeDraft.effort,
+                        cuisine: $recipeDraft.cuisine
+                    )
                 }
-                .padding(.horizontal, DS.Spacing.screenHorizontal)
-                .padding(.top, DS.Spacing.screenTop)
-                .padding(.bottom, DS.Spacing.screenBottom)
+                .padding(.horizontal, DS.Spacing.gutter)
+                .padding(.top, DS.Spacing.s5)
+                .padding(.bottom, DS.Spacing.s11)
             }
-            .background(DS.Color.bg)
+            .background(DS.Color.sheet)
             .screenTitle("New Recipe", displayMode: .inline)
-            .toolbar {
-                ToolbarItem(placement: .topBarLeading) {
-                    Button {
-                        dismiss()
-                    } label: {
-                        Image(systemName: "xmark")
-                            .fontWeight(.semibold)
-                    }
-                    .accessibilityLabel("Cancel")
-                }
-
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button("Next") {
-                        navigateToDetails = true
-                    }
-                    .disabled(name.trimmedName.isEmpty)
-                    .fontWeight(.semibold)
-                }
+            .sheetNextToolbar(canProceed: !name.trimmedName.isEmpty) {
+                navigateToDetails = true
             }
             .navigationDestination(isPresented: $navigateToDetails) {
                 RecipeDetailsStepView(
@@ -89,6 +68,7 @@ struct CreateRecipeSheet: View {
                 }
             }
         }
+        .dsSheet()
     }
 
     private func applyParsedRecipe(_ result: ParsedRecipeResult, photos: [Data]) {

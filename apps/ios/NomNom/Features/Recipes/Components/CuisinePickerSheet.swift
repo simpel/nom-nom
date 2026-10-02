@@ -13,8 +13,8 @@ struct CuisinePickerSheet: View {
     @State private var customText: String
 
     private let categoryColumns = [
-        GridItem(.flexible(), spacing: 12),
-        GridItem(.flexible(), spacing: 12)
+        GridItem(.flexible(), spacing: DS.Spacing.s3),
+        GridItem(.flexible(), spacing: DS.Spacing.s3)
     ]
 
     init(selection: Binding<String?>) {
@@ -32,37 +32,28 @@ struct CuisinePickerSheet: View {
 
     var body: some View {
         NavigationStack {
-            ScrollView {
-                VStack(alignment: .leading, spacing: 16) {
-                    LazyVGrid(columns: categoryColumns, spacing: 12) {
-                        ForEach(store.allCategories) { category in
-                            let isSelected = draftSelection.contains(category.name.lowercased())
-                            let count = store.recipeCount(forCategory: category.name)
-
-                            Button {
-                                toggleSelection(for: category.name)
-                            } label: {
-                                CategoryGridCard(
-                                    category: category,
-                                    count: count,
-                                    isSelected: isSelected
-                                )
-                            }
-                            .buttonStyle(.plain)
+            SheetBody {
+                LazyVGrid(columns: categoryColumns, spacing: DS.Spacing.s3) {
+                    ForEach(store.allCategories) { category in
+                        LabeledPhotoCard(
+                            .category(category),
+                            label: category.displayName,
+                            meta: CategoryItem.recipeCountText(store.recipeCount(forCategory: category.name)),
+                            fillsWidth: true,
+                            selected: draftSelection.contains(category.name.lowercased())
+                        ) {
+                            toggleSelection(for: category.name)
                         }
                     }
-
-                    SectionCard("Other / Custom Kitchen") {
-                        Input("e.g. Ethiopian, Lebanese, Jamaican", text: $customText, style: .cardRow)
-                            .autocorrectionDisabled()
-                            .textInputAutocapitalization(.words)
-                    }
                 }
-                .padding(.horizontal, 16)
-                .padding(.vertical, 14)
+
+                SectionCard("Other cuisine") {
+                    Input("e.g. Ethiopian, Lebanese, Jamaican", text: $customText)
+                        .autocorrectionDisabled()
+                        .textInputAutocapitalization(.words)
+                }
             }
-            .background(DS.Color.bg)
-            .screenTitle("Kitchen / Cuisine", displayMode: .inline)
+            .screenTitle("Cuisine", displayMode: .inline)
             .sheetCommitToolbar(
                 isSaving: false,
                 canSave: true,
@@ -75,6 +66,7 @@ struct CuisinePickerSheet: View {
                 }
             )
         }
+        .dsSheet()
     }
 
     private func toggleSelection(for name: String) {

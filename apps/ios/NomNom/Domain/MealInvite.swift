@@ -21,6 +21,9 @@ struct MealInvite: Identifiable, Hashable, Decodable {
     var status: InviteStatus
     var createdAt: Date
     var respondedAt: Date?
+    /// The last "Remind {name}" (one a day, `remind_meal_invite`).
+    var remindedAt: Date?
+    var remindCount: Int = 0
 
     enum CodingKeys: String, CodingKey {
         case id
@@ -31,6 +34,8 @@ struct MealInvite: Identifiable, Hashable, Decodable {
         case status
         case createdAt = "created_at"
         case respondedAt = "responded_at"
+        case remindedAt = "reminded_at"
+        case remindCount = "remind_count"
     }
 
     init(from decoder: Decoder) throws {
@@ -43,7 +48,22 @@ struct MealInvite: Identifiable, Hashable, Decodable {
         status = try container.decodeIfPresent(InviteStatus.self, forKey: .status) ?? .pending
         createdAt = try container.decodeTimestamp(.createdAt)
         respondedAt = try container.decodeTimestampIfPresent(.respondedAt)
+        remindedAt = try container.decodeTimestampIfPresent(.remindedAt)
+        remindCount = try container.decodeIfPresent(Int.self, forKey: .remindCount) ?? 0
     }
+
+    /// When the invitee was last nudged: the last reminder, or the ask itself.
+    var lastNudgedAt: Date { remindedAt ?? createdAt }
+
+    /// When the next reminder is allowed (one a day).
+    var nextReminderAt: Date { lastNudgedAt.addingTimeInterval(MealInvite.reminderInterval) }
+
+    func canRemind(at now: Date = .now) -> Bool {
+        status == .pending && !isUnclaimed && now >= nextReminderAt
+    }
+
+    /// `remind_meal_invite` allows one reminder per 24 hours.
+    static let reminderInterval: TimeInterval = 24 * 60 * 60
 
     /// Nobody has an account for this address yet, so it is waiting on a signup.
     var isUnclaimed: Bool { inviteeID == nil }

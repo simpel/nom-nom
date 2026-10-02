@@ -1,30 +1,25 @@
 import SwiftUI
 
-/// Editable row for a local eater (no account).
+/// Editable row for a local eater (no account): a ListRow with the eater's initials as
+/// Avatar `sm` and the name as a `plain` Input (Input README: `plain` only inside a
+/// Card list row). Saves on return. Place it in `Card(layout: .list)`.
 struct EaterRow: View {
     let eater: Eater
-    let emojiChoices: [String]
 
     @Environment(FoodStore.self) private var store
     @State private var name: String
 
-    init(eater: Eater, emojiChoices: [String]) {
+    init(eater: Eater) {
         self.eater = eater
-        self.emojiChoices = emojiChoices
         self._name = State(initialValue: eater.name)
     }
 
     var body: some View {
-        HStack(spacing: 12) {
-            Menu {
-                ForEach(emojiChoices, id: \.self) { emoji in
-                    Button(emoji) { commit { $0.emoji = emoji } }
-                }
-            } label: {
-                Text(eater.emoji).font(.title2)
-            }
-
-            Input("Name", text: $name, size: .sm, style: .plain)
+        ListRow(
+            accessibilityTitle: eater.name,
+            leading: .avatar(Avatar(name: name.trimmedName.isEmpty ? eater.name : name, size: .sm, decorative: true))
+        ) {
+            Input("Name", text: $name, appearance: .plain)
                 .onSubmit { commit { $0.name = name } }
         }
         .onChange(of: eater.name) { _, updated in

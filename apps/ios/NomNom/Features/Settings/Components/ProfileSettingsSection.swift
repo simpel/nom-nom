@@ -1,60 +1,37 @@
 import SwiftUI
 
-/// Profile editing section in Settings.
+/// Profile editing section in Settings: photo and name fields.
 struct ProfileSettingsSection: View {
-    let emojiChoices: [String]
-    @Binding var confirmSignOut: Bool
-
     @Environment(FoodStore.self) private var store
 
     @State private var firstName = ""
     @State private var lastName = ""
-    @State private var myEmoji = "🧑"
+    @State private var photoDraft = FoodStore.PhotosDraft()
     @State private var didLoadProfile = false
 
     var body: some View {
-        SectionCard("Your Profile") {
-            VStack(alignment: .leading, spacing: 12) {
-                HStack(spacing: 14) {
-                    ZStack {
-                        Circle()
-                            .fill(DS.Color.accentSoft)
-                            .frame(width: 48, height: 48)
-                        Text(firstName.prefix(1).uppercased())
-                            .font(.title3.weight(.bold))
-                            .foregroundStyle(DS.Color.accentText)
-                    }
+        VStack(alignment: .leading, spacing: DS.Spacing.block) {
+            AssetPhotosPickerSection(
+                draft: $photoDraft,
+                title: "Profile photo",
+                bucket: SupabaseConfig.profileBucket,
+                maxCount: 1
+            )
 
-                    VStack(spacing: 0) {
-                        Input(label: "First", placeholder: "First name", text: $firstName, size: .sm)
-                            .textContentType(.givenName)
-                            .onSubmit(saveProfile)
-                        Divider()
-                            .padding(.vertical, DS.Spacing.sm)
-                        Input(label: "Last", placeholder: "Last name", text: $lastName, size: .sm)
-                            .textContentType(.familyName)
-                            .onSubmit(saveProfile)
-                    }
-                }
-
-                Text("This is the name other dinner party members see when you share meals and rate dishes.")
-                    .font(.caption2)
-                    .foregroundStyle(DS.Color.textSecondary)
-
-                Divider()
-
-                AppButton(
-                    "Sign out",
-                    variant: .destructive,
-                    style: .ghost,
-                    size: .md,
-                    isFullWidth: true
-                ) {
-                    confirmSignOut = true
-                }
-            }
+            NameFieldsCard(
+                "Profile details",
+                firstName: $firstName,
+                lastName: $lastName,
+                placeholder: "Required",
+                footnote: "This is the name other dinner party members see when you share meals and rate dishes.",
+                onSubmit: saveProfile
+            )
         }
         .onAppear(perform: loadProfileIfNeeded)
+        .onChange(of: photoDraft) { _, _ in
+            saveProfile()
+        }
+        .onDisappear(perform: saveProfile)
     }
 
     private func loadProfileIfNeeded() {
@@ -62,10 +39,22 @@ struct ProfileSettingsSection: View {
         didLoadProfile = true
         firstName = store.myProfile?.firstName ?? ""
         lastName = store.myProfile?.lastName ?? ""
-        myEmoji = store.myProfile?.avatarEmoji ?? "🧑"
+        if let photoPath = store.myProfile?.photoPath, !photoPath.isEmpty {
+            photoDraft = FoodStore.PhotosDraft(existingPaths: [photoPath])
+        }
     }
 
     private func saveProfile() {
-        Task { await store.updateProfile(firstName: firstName, lastName: lastName, emoji: myEmoji) }
+        guard didLoadProfile else { return }
+        let photoData = photoDraft.addedData.first
+        let removePhoto = photoDraft.isEmpty && store.myProfile?.photoPath != nil
+        Task {
+            await store.updateProfile(
+                firstName: firstName,
+                lastName: lastName,
+                newPhotoData: photoData,
+                removePhoto: removePhoto
+            )
+        }
     }
 }

@@ -16,46 +16,14 @@ struct PartyRecentCompanionsSection: View {
     var body: some View {
         Group {
             if !candidateProfiles.isEmpty {
-                SectionCard("Recent Companions") {
-                    VStack(spacing: 0) {
-                        ForEach(Array(candidateProfiles.prefix(5).enumerated()), id: \.element.id) { index, profile in
-                            HStack(spacing: 12) {
-                                UserAvatar(profile: profile, size: 34)
-
-                                VStack(alignment: .leading, spacing: 2) {
-                                    Text(profile.shownName)
-                                        .font(.body.weight(.medium))
-                                        .foregroundStyle(DS.Color.textPrimary)
-                                }
-
-                                Spacer()
-
-                                if invitedIDs.contains(profile.id) {
-                                    Text("Invited")
-                                        .font(.caption.weight(.semibold))
-                                        .foregroundStyle(DS.Color.accentText)
-                                        .padding(.horizontal, 10)
-                                        .padding(.vertical, 5)
-                                        .background(DS.Color.accentSoft)
-                                        .clipShape(Capsule())
-                                } else {
-                                    AppButton(
-                                        "Invite",
-                                        variant: .primary,
-                                        style: .normal,
-                                        size: .sm,
-                                        isPending: invitingID == profile.id,
-                                        disabled: invitingID != nil
-                                    ) {
-                                        invite(profile)
-                                    }
-                                }
-                            }
-                            .padding(.vertical, 2)
-
-                            if index < min(candidateProfiles.count, 5) - 1 {
-                                Divider()
-                            }
+                DSSection("Recent companions") {
+                    Card(layout: .list) {
+                        ForEach(candidateProfiles.prefix(5)) { profile in
+                            ListRow(
+                                profile.shownName,
+                                leading: .avatar(Avatar(profile: profile, size: .sm, decorative: true)),
+                                trailing: trailing(for: profile)
+                            )
                         }
                     }
                 }
@@ -68,6 +36,20 @@ struct PartyRecentCompanionsSection: View {
             Button("OK") { inviteError = nil }
         } message: {
             Text(inviteError ?? "")
+        }
+    }
+
+    /// "Invited" is a status the row now carries (Badge `primary sm`); otherwise
+    /// Invite (`primary solid sm`), one request at a time.
+    private func trailing(for profile: Profile) -> ListRowTrailing {
+        if invitedIDs.contains(profile.id) {
+            return .badge(Badge("Invited", size: .sm))
+        }
+        return .view {
+            AppButton("Invite", size: .sm, isLoading: invitingID == profile.id) {
+                invite(profile)
+            }
+            .disabled(invitingID != nil)
         }
     }
 
@@ -93,7 +75,7 @@ struct PartyRecentCompanionsSection: View {
     NomNomPreview { store in
         if let party = store.parties.first {
             PartyRecentCompanionsSection(party: party)
-                .padding()
+                .padding(DS.Spacing.gutter)
         }
     }
 }

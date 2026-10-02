@@ -1,16 +1,17 @@
 import SwiftUI
 
-/// Reusable 2-column grid section displaying all cuisine categories.
-/// Seamlessly forwards optional recipe selection handler to category drill-down screens.
+/// Every cuisine category as a two-column grid of LabeledPhotoCards, each a link to the
+/// category's drill-down. Forwards an optional recipe selection handler (picker mode).
+/// Place it inside the screen's gutter padding.
 struct RecipeCategoryGridSection: View {
     @Environment(FoodStore.self) private var store
 
     var title: String = "Categories"
     var onSelectRecipe: ((Recipe) -> Void)? = nil
 
-    private let categoryColumns = [
-        GridItem(.flexible(), spacing: 12),
-        GridItem(.flexible(), spacing: 12)
+    private let columns = [
+        GridItem(.flexible(), spacing: DS.Spacing.s3),
+        GridItem(.flexible(), spacing: DS.Spacing.s3)
     ]
 
     init(title: String = "Categories", onSelectRecipe: ((Recipe) -> Void)? = nil) {
@@ -19,21 +20,22 @@ struct RecipeCategoryGridSection: View {
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            SectionHeader(title)
-
-            LazyVGrid(columns: categoryColumns, spacing: 12) {
+        DSSection(title) {
+            LazyVGrid(columns: columns, spacing: DS.Spacing.s3) {
                 ForEach(store.allCategories) { category in
-                    let count = store.recipeCount(forCategory: category.name)
                     NavigationLink {
                         CategoryRecipesView(category: category, onSelectRecipe: onSelectRecipe)
                     } label: {
-                        CategoryGridCard(category: category, count: count)
+                        LabeledPhotoCard(
+                            .category(category),
+                            label: category.displayName,
+                            meta: CategoryItem.recipeCountText(store.recipeCount(forCategory: category.name)),
+                            fillsWidth: true
+                        )
                     }
-                    .buttonStyle(.plain)
+                    .buttonStyle(AppPressableButtonStyle())
                 }
             }
-            .padding(.horizontal, 16)
         }
     }
 }
