@@ -10,28 +10,22 @@ struct MyVerdictCard: View {
     private var mine: Reaction? { store.myRating(forMeal: mealID) }
 
     var body: some View {
-        SectionCard(
-            title: mine == nil ? "How was it?" : "Your verdict",
-            caption: mine?.name
-        ) {
-            VStack(alignment: .leading, spacing: 10) {
-                TasteScoreSelector(selection: Binding(
-                    get: { mine },
-                    set: { newReaction in
-                        guard let newReaction else { return }
-                        submit(newReaction)
-                    }
-                ))
-
-                HStack {
-                    Text(mine == nil
-                         ? "Whoever cooked it gets told what you thought."
-                         : "Tap another to change your mind.")
-                        .font(.caption2)
-                        .foregroundStyle(.secondary)
-                    Spacer()
-                    if isSaving { ProgressView().controlSize(.small) }
+        SectionCard(mine == nil ? "How was it?" : "Your verdict") {
+            TasteScoreSelector(selection: Binding(
+                get: { mine },
+                set: { newReaction in
+                    guard let newReaction else { return }
+                    submit(newReaction)
                 }
+            ))
+
+            HStack(spacing: DS.Spacing.s2) {
+                Text(mine == nil
+                     ? "Whoever cooked it gets told what you thought."
+                     : "Tap another to change your mind.")
+                    .textStyle(.sansSm, tone: .secondary)
+                Spacer(minLength: 0)
+                if isSaving { ProgressView().controlSize(.small) }
             }
         }
     }

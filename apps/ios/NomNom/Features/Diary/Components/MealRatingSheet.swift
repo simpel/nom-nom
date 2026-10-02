@@ -114,7 +114,7 @@ struct MealRatingSheet: View {
                 }
 
                 // 4. Notes & Review
-                SectionCard(title: "Notes & Review") {
+                SectionCard("Notes & Review") {
                     TextArea("Add your thoughts, flavor notes, or adjustments…", text: $notes, lineLimit: 3...6)
                 }
             }

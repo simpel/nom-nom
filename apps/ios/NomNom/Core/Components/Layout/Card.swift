@@ -1,25 +1,36 @@
 import SwiftUI
 
-/// Card padding steps.
+/// Card padding steps (`size`).
 enum CardSize: Equatable {
-    /// Padding `s4`.
+    /// Padding `spacing-4`.
     case sm
-    /// Padding `s5`.
+    /// Padding `spacing-5`.
     case md
 
     var padding: CGFloat { self == .sm ? DS.Spacing.s4 : DS.Spacing.s5 }
 }
 
-/// How a Card arranges its children.
+/// Card's colour role (`variant`).
+enum CardVariant: Equatable {
+    /// The featured card: `primary` at `opacity-10` over `panel`. One per screen.
+    case primary
+}
+
+/// How a Card arranges its children (`layout`).
 enum CardLayout: Equatable {
-    /// Children stack in a column with `spacing` between them.
+    /// Children stack in a column, `spacing` apart.
     case block
-    /// Rows: `s1` vertical / `s4` horizontal padding and a 1pt `line` between rows.
+    /// Rows: padding `spacing-1` `spacing-4` and a `border-hairline` `line` between rows.
     case list
 }
 
-/// The one surface: a `panel` card at `radius-3xl` with no border or shadow.
-/// Never nest a Card in a Card; rows go in `layout: .list`, not in their own cards.
+/// The one surface: a `panel` card at `radius-3xl` with no border or shadow. Every
+/// card in the system (SectionCard, ScoreCard, RatingList, RecipeLinkCard, SheetCard)
+/// is this component. Never nest a Card in a Card; rows go in `layout: .list`.
+///
+/// `spacing` is the gap between children (bundle.css `--nn-gap`, 0 by default): the
+/// component that owns the card sets it. `action` makes the card a button with a
+/// trailing `text-tertiary` chevron, `opacity-70` on press.
 ///
 /// ```swift
 /// Card(layout: .list) {
@@ -28,8 +39,7 @@ enum CardLayout: Equatable {
 /// ```
 struct Card<Content: View>: View {
     var size: CardSize
-    /// `primary` at 10% over `panel`; one per screen.
-    var featured: Bool
+    var variant: CardVariant?
     var layout: CardLayout
     var spacing: CGFloat
     var action: (() -> Void)?
@@ -37,14 +47,14 @@ struct Card<Content: View>: View {
 
     init(
         size: CardSize = .md,
-        featured: Bool = false,
+        variant: CardVariant? = nil,
         layout: CardLayout = .block,
-        spacing: CGFloat = DS.Spacing.s3,
+        spacing: CGFloat = 0,
         action: (() -> Void)? = nil,
         @ViewBuilder content: () -> Content
     ) {
         self.size = size
-        self.featured = featured
+        self.variant = variant
         self.layout = layout
         self.spacing = spacing
         self.action = action
@@ -67,12 +77,14 @@ struct Card<Content: View>: View {
     }
 
     private func surface(chevron: Bool) -> some View {
+        // bundle.css `.nn-card[data-pressable]`: body and chevron in a row, `spacing-3` apart.
         HStack(spacing: DS.Spacing.s3) {
             arranged
                 .frame(maxWidth: .infinity, alignment: .leading)
             if chevron {
+                // bundle.css `.nn-card__chevron`: `text-base`, `text-tertiary`.
                 Image(systemName: "chevron.right")
-                    .textStyle(.sansSm, tone: .tertiary, weight: .semibold)
+                    .textStyle(.sansMd, tone: .tertiary)
                     .accessibilityHidden(true)
             }
         }
@@ -82,7 +94,7 @@ struct Card<Content: View>: View {
             shape
                 .fill(DS.Color.panel)
                 .overlay {
-                    if featured {
+                    if variant == .primary {
                         shape.fill(DS.Color.primary.opacity(DS.Opacity.tint))
                     }
                 }
@@ -103,7 +115,7 @@ struct Card<Content: View>: View {
     }
 }
 
-/// Lays list rows out in a column with a 1pt `line` divider between rows.
+/// Lays list rows out in a column with a `border-hairline` `line` divider between rows.
 private struct CardListRoot: _VariadicView_UnaryViewRoot {
     @ViewBuilder
     func body(children: _VariadicView.Children) -> some View {
@@ -114,7 +126,7 @@ private struct CardListRoot: _VariadicView_UnaryViewRoot {
                 if child.id != lastID {
                     Rectangle()
                         .fill(DS.Color.line)
-                        .frame(height: 1)
+                        .frame(height: DS.BorderWidth.hairline)
                         .accessibilityHidden(true)
                 }
             }
@@ -126,21 +138,17 @@ private struct CardGallery: View {
     var body: some View {
         ScrollView {
             VStack(spacing: DS.Spacing.s4) {
-                Card {
-                    SectionHeader("Recipe", inset: false)
+                Card(spacing: DS.Spacing.s1_5) {
+                    SectionHeader(title: "Recipe")
                     Text("Spaghetti carbonara").textStyle(.serifSm)
                 }
-                Card(size: .sm, featured: true) {
+                Card(size: .sm, variant: .primary, spacing: DS.Spacing.s3) {
                     Text("Featured card").textStyle(.sansMd, weight: .semibold)
                     Bar(value: 72)
                 }
                 Card(layout: .list) {
                     ForEach(["Anna", "Joel", "Sam"], id: \.self) { name in
-                        HStack(spacing: DS.Spacing.s3) {
-                            Avatar(name: name, size: .sm)
-                            Text(name).textStyle(.sansMd)
-                        }
-                        .frame(minHeight: DS.Spacing.rowMin)
+                        ListRow(name, leading: .avatar(Avatar(name: name, size: .sm)))
                     }
                 }
                 Card(action: {}) {

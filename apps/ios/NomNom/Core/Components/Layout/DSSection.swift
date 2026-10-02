@@ -1,9 +1,17 @@
 import SwiftUI
 
-/// A screen section: an inset SectionHeader (`s2` above the content, lined up
-/// with the card corners below) above any content. Named `DSSection` because
-/// `Section` would shadow `SwiftUI.Section`. Sections stack `s7` apart on a
-/// detail screen (`DS.Spacing.block`).
+/// A screen section: a SectionHeader above any content — the rail of a Timeline,
+/// the card of a RatingList, a Card. The header is inset `spacing-2` (so it lines up
+/// with the card corners below) and sits `spacing-2` above the content. Sections
+/// stack `spacing-7` apart on a detail screen (`DS.Spacing.block`).
+///
+/// Named `DSSection` because `Section` would shadow `SwiftUI.Section`.
+///
+/// ```swift
+/// DSSection("Ingredients", trailing: "6 items") {
+///     Card(layout: .list) { … }
+/// }
+/// ```
 struct DSSection<Content: View>: View {
     let title: String
     var trailing: String?
@@ -29,17 +37,18 @@ struct DSSection<Content: View>: View {
     }
 
     var body: some View {
-        // The inset SectionHeader carries the `s2` gap below itself.
-        VStack(alignment: .leading, spacing: 0) {
+        // bundle.css `.nn-section__head`: padding 0 `spacing-2`, margin-bottom `spacing-2`.
+        VStack(alignment: .leading, spacing: DS.Spacing.s2) {
             SectionHeader(
-                title,
+                title: title,
                 trailing: trailing,
                 trailingTone: trailingTone,
                 systemImage: systemImage,
-                uppercase: uppercase,
-                inset: true
+                uppercase: uppercase
             )
-            content
+            .padding(.horizontal, DS.Spacing.sectionInset)
+            // `.nn-section` is a column with no gap of its own.
+            VStack(alignment: .leading, spacing: 0) { content }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
     }
@@ -48,13 +57,13 @@ struct DSSection<Content: View>: View {
 private struct DSSectionGallery: View {
     var body: some View {
         VStack(spacing: DS.Spacing.block) {
-            DSSection("Who rated", trailing: "5 of 6") {
+            DSSection("Who rated", trailing: "5 of 6", trailingTone: .primary) {
                 Card(layout: .list) {
-                    Text("Anna").textStyle(.sansMd).frame(minHeight: DS.Spacing.rowMin)
-                    Text("Joel").textStyle(.sansMd).frame(minHeight: DS.Spacing.rowMin)
+                    ListRow("Anna")
+                    ListRow("Joel")
                 }
             }
-            DSSection("This recipe over time", trailing: "3 times", trailingTone: .primary) {
+            DSSection("This recipe over time", trailing: "3 times") {
                 Card { Text("Timeline").textStyle(.sansMd) }
             }
         }

@@ -11,7 +11,7 @@ struct MealEditorDetailsSection: View {
                 .font(.body.weight(.medium))
         }
 
-        SectionCard("Notes", caption: "Optional") {
+        SectionCard("Notes", trailing: "Optional") {
             TextArea("Add any adjustments, substitutions, or memories...", text: $notes, lineLimit: 3...6)
         }
     }

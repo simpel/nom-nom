@@ -8,25 +8,19 @@ struct RecipeHealthRationaleSheet: View {
 
     var body: some View {
         NavigationStack {
-            ScrollView {
-                VStack(alignment: .leading, spacing: DS.Spacing.block) {
-                    SheetHero(
-                        score: Double(healthIndex.score) / 100,
-                        verdict: healthIndex.verdict,
-                        lead: healthIndex.tier.explanation
-                    )
+            SheetBody {
+                SheetHero(
+                    score: Double(healthIndex.score) / 100,
+                    verdict: healthIndex.verdict,
+                    lead: healthIndex.tier.explanation
+                )
 
-                    ProGate {
-                        RecipeHealthDetailContent(healthIndex: healthIndex)
-                    }
+                ProGate {
+                    RecipeHealthDetailContent(healthIndex: healthIndex)
                 }
-                .padding(.horizontal, DS.Spacing.s5)
-                .padding(.top, DS.Spacing.s4)
-                .padding(.bottom, DS.Spacing.s12)
             }
-            .background(DS.Color.sheet)
             .screenTitle("Health score", displayMode: .inline)
-            .sheetCancelToolbar()
+            .sheetCloseToolbar()
         }
         .dsSheet(detents: [.fraction(0.85), .large])
     }
@@ -40,15 +34,16 @@ struct RecipeHealthDetailContent: View {
     @State private var showingExplainer = false
 
     var body: some View {
-        VStack(alignment: .leading, spacing: DS.Spacing.block) {
+        VStack(alignment: .leading, spacing: DS.Spacing.s6) {
             Text(healthIndex.rationale)
                 .textStyle(.sansMd)
                 .fixedSize(horizontal: false, vertical: true)
 
             if let impact = healthIndex.breakdown?.cookingImpact, !impact.isEmpty {
-                SectionCard("Cooking technique", layout: .inset) {
+                SectionCard("Cooking technique") {
+                    // SectionCard README: "`sans-md` `text-secondary` for prose".
                     Text(impact)
-                        .textStyle(.sansMd)
+                        .textStyle(.sansMd, tone: .secondary)
                         .fixedSize(horizontal: false, vertical: true)
                 }
             }

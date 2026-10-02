@@ -52,7 +52,7 @@ struct MealDetailContent: View {
                 MealDetailRatingsSection(meal: meal, onRate: actions.onRate)
 
                 if let note = note {
-                    SectionCard(note.title, layout: .inset, uppercase: false, quote: note.text)
+                    SectionCard(note.title, uppercase: false, quote: note.text)
                 }
 
                 MealDetailPeopleCard(meal: meal, onOpenParty: actions.onOpenParty)

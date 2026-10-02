@@ -22,7 +22,7 @@ struct SwipeableListCard<Data: RandomAccessCollection, Content: View>: View wher
     @State private var openRowID: Data.Element.ID? = nil
 
     var body: some View {
-        SectionCard(title: title, caption: caption, innerPadding: 0) {
+        SectionCard(title, trailing: caption) {
             AppList(data: data, dividerPadding: dividerPadding) { item in
                 
                 // We resolve the closures here so the row knows if it can swipe

@@ -8,7 +8,7 @@ struct MealRaterExplanationSheet: View {
 
     var body: some View {
         NavigationStack {
-            ScrollView {
+            SheetBody {
                 ProGate {
                     VStack(alignment: .leading, spacing: DS.Spacing.s6) {
                         SheetHero(score: target.score, lead: lead.text, emphasis: lead.emphasis)
@@ -25,9 +25,6 @@ struct MealRaterExplanationSheet: View {
                         )
                     }
                 }
-                .padding(.horizontal, DS.Spacing.s5)
-                .padding(.top, DS.Spacing.s2)
-                .padding(.bottom, DS.Spacing.s10)
             }
             .screenTitle("\(target.raterName)\u{2019}s score", displayMode: .inline)
             .sheetCloseToolbar()

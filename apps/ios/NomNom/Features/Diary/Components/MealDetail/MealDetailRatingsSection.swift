@@ -15,7 +15,7 @@ struct MealDetailRatingsSection: View {
     var body: some View {
         let entries = store.raters(forMeal: meal).map(entry(for:))
 
-        RatingList(entries: entries, total: entries.count, showsAvatars: true)
+        RatingList(entries: entries, total: entries.count)
             .sheet(item: $explanation) { target in
                 MealRaterExplanationSheet(target: target)
             }
@@ -42,7 +42,6 @@ struct MealDetailRatingsSection: View {
             delta: store.changeVsUsual(for: rater.ref, on: meal.id),
             isNew: score != nil && usual == nil,
             isViewer: rater.isViewer,
-            photoPath: rater.photoPath,
             action: score == nil ? action(for: rater) : nil,
             onTap: tapAction(for: rater, target: target)
         )

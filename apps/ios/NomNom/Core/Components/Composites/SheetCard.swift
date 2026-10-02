@@ -14,7 +14,7 @@ struct SheetReason: Identifiable, Hashable {
     }
 }
 
-/// A BottomSheet content card: a Card with a `serif-sm` title, an optional
+/// A BottomSheet content card: a Card (gap 0) with a `serif-sm` title, an optional
 /// `sans-xs` provenance line ("AI summary of Joel’s 54 past ratings") and
 /// SheetReason rows divided by `line`.
 struct SheetCard: View {
@@ -29,31 +29,26 @@ struct SheetCard: View {
     }
 
     var body: some View {
-        Card(spacing: DS.Spacing.s1) {
+        Card {
             Text(title)
                 .textStyle(.serifSm)
                 .accessibilityAddTraits(.isHeader)
             if let provenance {
+                // The README names no ink for provenance; it is metadata, so `text-tertiary`.
                 Text(provenance).textStyle(.sansXs, tone: .tertiary)
             }
-            VStack(alignment: .leading, spacing: 0) {
-                ForEach(reasons) { reason in
-                    if reason.id != reasons.first?.id {
-                        Rectangle()
-                            .fill(DS.Color.line)
-                            .frame(height: 1)
-                            .accessibilityHidden(true)
-                    }
-                    SheetReasonRow(reason: reason)
-                }
+            ForEach(reasons) { reason in
+                SheetReasonRow(reason: reason, isLast: reason.id == reasons.last?.id)
             }
-            .padding(.top, DS.Spacing.s1)
         }
     }
 }
 
+/// bundle.css `.nn-reason`: gap `spacing-1`, padding `spacing-3.5` 0, a `line` rule
+/// below; the last reason has no rule and no bottom padding.
 private struct SheetReasonRow: View {
     let reason: SheetReason
+    let isLast: Bool
 
     var body: some View {
         VStack(alignment: .leading, spacing: DS.Spacing.s1) {
@@ -63,7 +58,16 @@ private struct SheetReasonRow: View {
                 .fixedSize(horizontal: false, vertical: true)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(.vertical, DS.Spacing.s3)
+        .padding(.top, DS.Spacing.s3_5)
+        .padding(.bottom, isLast ? 0 : DS.Spacing.s3_5)
+        .overlay(alignment: .bottom) {
+            if !isLast {
+                Rectangle()
+                    .fill(DS.Color.line)
+                    .frame(height: DS.BorderWidth.hairline)
+                    .accessibilityHidden(true)
+            }
+        }
         .accessibilityElement(children: .combine)
     }
 }

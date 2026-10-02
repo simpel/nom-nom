@@ -60,7 +60,8 @@ struct AppButton: View {
     }
 
     /// Pre-v3 icon-only API with a size. Every size draws the 44pt circle except `lg`,
-    /// which keeps its 48pt circle until its callers (TasteScoreSelector) migrate.
+    /// which keeps its 48pt circle. (TasteScoreSelector no longer uses it: it draws its
+    /// `spacing-12` steps with `AppButtonLabel` directly.)
     @_disfavoredOverload
     @available(*, deprecated, message: "Icon-only buttons have one size: drop `size:`")
     init(

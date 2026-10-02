@@ -5,12 +5,16 @@ import SwiftUI
 // `.topBarTrailing`. Implementations live in `View+SheetToolbarModifiers.swift`.
 
 extension View {
-    /// The BottomSheet presentation: `sheet` ground, `radius-4xl` corners and a
-    /// visible grabber. Apply inside the sheet's content.
+    /// The BottomSheet presentation: `sheet` ground, `radius-4xl` top corners and the
+    /// DS grabber (`spacing-10` × `spacing-1.5`, `radius-sm`, `grabber`, `spacing-2`
+    /// from the top) in place of the system drag indicator. Apply to the sheet's root
+    /// view; lay its content out with `SheetBody`. The scrim is the system dimming
+    /// (DS-GAPS.md).
     func dsSheet(detents: Set<PresentationDetent> = [.large]) -> some View {
         self
+            .overlay(alignment: .top) { SheetGrabber() }
             .presentationDetents(detents)
-            .presentationDragIndicator(.visible)
+            .presentationDragIndicator(.hidden)
             .presentationBackground(DS.Color.sheet)
             .presentationCornerRadius(DS.Radius.xl4)
     }
@@ -110,18 +114,16 @@ private struct DSSheetPreview: View {
         Color.clear
             .sheet(isPresented: $isPresented) {
                 NavigationStack {
-                    VStack(spacing: DS.Spacing.s6) {
+                    SheetBody {
                         SheetHero(score: 1, lead: "16 above Joel\u{2019}s usual of 84", emphasis: "16 above")
                         SheetCard(
                             "Why Joel loved it",
                             provenance: "AI summary of Joel\u{2019}s 54 past ratings",
                             reasons: [SheetReason(title: "Crispy crust", text: "Wood-fired pizza is his favourite.")]
                         )
-                        Spacer()
                     }
-                    .padding(.horizontal, DS.Spacing.s5)
                     .screenTitle("Joel\u{2019}s score", displayMode: .inline)
-                    .sheetNextToolbar(canProceed: true) {}
+                    .sheetCloseToolbar()
                 }
                 .dsSheet(detents: [.medium, .large])
             }

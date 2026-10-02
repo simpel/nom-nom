@@ -1,25 +1,29 @@
 import SwiftUI
 
 /// The six-step taste scale for rating a meal yourself: a centred row of `lg`
-/// AppButtons labelled −1…5 with the chosen verdict word underneath.
+/// AppButtons labelled −1…5 (`spacing-12` circles, `sans-lg` semibold tabular
+/// numerals, `spacing-2` apart) with the chosen verdict word underneath, `spacing-2`
+/// below (bundle.css `.nn-taste`).
 ///
 /// Unselected steps are `secondary elevated`; the selected step is its reaction
-/// `soft` plus a 1.5pt fill ring. Tap the selected step again to clear it.
-/// Six 48pt steps with `s2` gaps take 328pt, so the row fits a 375pt screen
-/// inside `s4` gutters.
+/// `soft` plus a fill ring. The steps are toggle buttons, not radios: tapping the
+/// chosen step clears the rating. Disable with `.disabled(_:)`.
 struct TasteScoreSelector: View {
     @Binding var selection: Reaction?
+    /// The group's accessible name.
+    var label: String
     var showVerdict: Bool
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
-    init(selection: Binding<Reaction?>, showVerdict: Bool = true) {
+    init(selection: Binding<Reaction?>, label: String = "Taste", showVerdict: Bool = true) {
         self._selection = selection
+        self.label = label
         self.showVerdict = showVerdict
     }
 
     var body: some View {
-        VStack(spacing: DS.Spacing.s3) {
+        VStack(spacing: DS.Spacing.s2) {
             HStack(spacing: DS.Spacing.s2) {
                 ForEach(Reaction.allCases) { reaction in
                     step(reaction)
@@ -27,12 +31,12 @@ struct TasteScoreSelector: View {
             }
             .frame(maxWidth: .infinity)
             .accessibilityElement(children: .contain)
-            .accessibilityLabel("Taste")
+            .accessibilityLabel(label)
 
             if showVerdict {
+                // README: "one Text `sans-sm`, centred, the same size and weight in both states".
                 Text(selection?.name ?? "Not rated yet")
-                    .textStyle(.sansSm, tone: selection == nil ? .tertiary : .primary)
-                    .multilineTextAlignment(.center)
+                    .textStyle(.sansSm, tone: selection == nil ? .tertiary : .primary, align: .center)
                     .frame(maxWidth: .infinity)
                     .accessibilityHidden(true)
             }
@@ -42,25 +46,40 @@ struct TasteScoreSelector: View {
 
     private func step(_ reaction: Reaction) -> some View {
         let isSelected = selection == reaction
-        return AppButton(
-            icon: .text(Self.glyph(for: reaction)),
-            accessibilityLabel: "\(Self.glyph(for: reaction)): \(reaction.name)",
-            variant: isSelected ? .reaction(reaction) : .secondary,
-            appearance: isSelected ? .soft : .elevated,
-            size: .lg
-        ) {
+        let glyph = Self.glyph(for: reaction)
+        return Button {
+            // README: "Spring 0.25 / 0.75." No motion token is a spring (DS-GAPS.md).
             let animation: Animation? = reduceMotion ? nil : .spring(response: 0.25, dampingFraction: 0.75)
             withAnimation(animation) {
                 selection = isSelected ? nil : reaction
             }
-        }
-        .overlay {
-            if isSelected {
-                Capsule()
-                    .strokeBorder(reaction.fill, lineWidth: DSAppearance.outlineWidth)
-                    .allowsHitTesting(false)
+        } label: {
+            // bundle.css `.nn-taste__row > .nn-button`: width `spacing-12`, padding 0, the
+            // `lg` height, so each step is a `spacing-12` circle.
+            AppButtonLabel(
+                title: nil,
+                icon: .text(glyph),
+                iconPosition: .start,
+                variant: isSelected ? .reaction(reaction) : .secondary,
+                appearance: isSelected ? .soft : .elevated,
+                size: .lg,
+                fullWidth: false,
+                isLoading: false,
+                accessibilityLabel: "\(glyph): \(reaction.name)",
+                iconOnlyDiameter: DS.Spacing.s12
+            )
+            .overlay {
+                if isSelected {
+                    // README: "a 1.5px fill ring". No 1.5px width exists; `border-thick`
+                    // is the token for a "selected ring" (DS-GAPS.md).
+                    Circle()
+                        .strokeBorder(reaction.fill, lineWidth: DS.BorderWidth.thick)
+                        .allowsHitTesting(false)
+                }
             }
         }
+        .buttonStyle(AppPressableButtonStyle())
+        // Toggle buttons (README "Toggle buttons, not radios"): aria-pressed ≈ isSelected.
         .accessibilityAddTraits(isSelected ? .isSelected : [])
         .accessibilityHint(isSelected ? "Double-tap to clear" : "")
     }
@@ -81,7 +100,6 @@ private struct TasteScoreSelectorPreview: View {
             TasteScoreSelector(selection: $rated)
         }
         .padding(DS.Spacing.gutter)
-        .frame(width: 375)
         .background(DS.Color.bg)
     }
 }

@@ -16,16 +16,11 @@ struct MealScoreBreakdownSheet: View {
         let lead = leadText
 
         NavigationStack {
-            ScrollView {
-                VStack(alignment: .leading, spacing: DS.Spacing.s6) {
-                    SheetHero(score: store.averageScore(forMeal: meal.id), lead: lead.text, emphasis: lead.emphasis)
-                    MealRatingDistributionCard(ratings: ratings)
-                    memberScores
-                    MealHistoricalScoresCard(currentMeal: meal, history: history)
-                }
-                .padding(.horizontal, DS.Spacing.s5)
-                .padding(.top, DS.Spacing.s2)
-                .padding(.bottom, DS.Spacing.s10)
+            SheetBody {
+                SheetHero(score: store.averageScore(forMeal: meal.id), lead: lead.text, emphasis: lead.emphasis)
+                MealRatingDistributionCard(ratings: ratings)
+                memberScores
+                MealHistoricalScoresCard(currentMeal: meal, history: history)
             }
             .screenTitle(store.dishName(forMeal: meal), displayMode: .inline)
             .sheetCloseToolbar()

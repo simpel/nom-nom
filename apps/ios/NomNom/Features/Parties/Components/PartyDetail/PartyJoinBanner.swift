@@ -11,7 +11,7 @@ struct PartyJoinBanner: View {
     @State private var isJoining = false
 
     var body: some View {
-        SectionCard("Invitation", layout: .inset, featured: true) {
+        SectionCard("Invitation", variant: .primary) {
             Text("You\u{2019}ve been invited to join \(party.name).")
                 .textStyle(.sansMd)
                 .fixedSize(horizontal: false, vertical: true)

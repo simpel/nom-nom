@@ -6,19 +6,18 @@ import SwiftUI
 struct RecipeHealthExplainerSheet: View {
     var body: some View {
         NavigationStack {
-            ScrollView {
-                VStack(alignment: .leading, spacing: DS.Spacing.block) {
+            SheetBody {
                     Text("The Health Index is a 1–100 score evaluating both the nutrient density of raw ingredients and the chemical transformations from cooking methods.")
                         .textStyle(.sansMd)
                         .fixedSize(horizontal: false, vertical: true)
 
                     tiers
 
-                    SectionCard("Why cooking matters", layout: .inset) {
+                    SectionCard("Why cooking matters") {
                         paragraph("Identical ingredients yield drastically different nutritional profiles depending on preparation. Gentle methods (steaming, poaching, baking) preserve micronutrients and avoid oxidized fats, while deep-frying or high-heat charring significantly reduces the overall score.")
                     }
 
-                    SectionCard("The science behind the score", layout: .inset) {
+                    SectionCard("The science behind the score") {
                         paragraph("Calculations are grounded in validated nutritional profiling research, specifically the Tufts Food Compass and the Healthy Cooking Index. The index evaluates dishes across two pillars: ingredient nutrient density (favoring whole vegetables, fiber, and unsaturated fats over refined sugars and saturated fats) and thermal transformation (how heat and preparation alter micronutrient retention and fat oxidation).")
                     }
 
@@ -30,14 +29,9 @@ struct RecipeHealthExplainerSheet: View {
                             .fixedSize(horizontal: false, vertical: true)
                     }
                     .padding(.horizontal, DS.Spacing.sectionInset)
-                }
-                .padding(.horizontal, DS.Spacing.s5)
-                .padding(.top, DS.Spacing.s4)
-                .padding(.bottom, DS.Spacing.s12)
             }
-            .background(DS.Color.sheet)
             .screenTitle("Health methodology", displayMode: .inline)
-            .sheetCancelToolbar()
+            .sheetCloseToolbar()
         }
         .dsSheet(detents: [.fraction(0.88), .large])
     }
@@ -65,9 +59,10 @@ struct RecipeHealthExplainerSheet: View {
         }
     }
 
+    /// SectionCard README: "`sans-md` `text-secondary` for prose".
     private func paragraph(_ text: String) -> some View {
         Text(text)
-            .textStyle(.sansMd)
+            .textStyle(.sansMd, tone: .secondary)
             .fixedSize(horizontal: false, vertical: true)
     }
 }

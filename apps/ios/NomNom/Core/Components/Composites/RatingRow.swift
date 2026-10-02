@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// The trailing action on a RatingList row, an AppButton `sm`.
+/// The trailing action on an unrated RatingList row, an AppButton `sm`.
 enum RatingListAction {
     /// The viewer hasn't rated: `primary soft` "Rate".
     case rate(() -> Void)
@@ -24,19 +24,20 @@ struct RatingListEntry: Identifiable {
     var isNew: Bool = false
     /// The viewer's own row ("You"); sorted last by RatingList.
     var isViewer: Bool = false
-    /// Avatar photo, shown only when the list has `showsAvatars`.
-    var photoPath: String?
     /// Shown instead of the score (unrated rows: Rate / Ask / Asked).
     var action: RatingListAction?
     /// Tapping the row (e.g. "why this score", or re-rate your own).
     var onTap: (() -> Void)?
 }
 
-/// A RatingList row: min `s14`; name `sans-md` + role `sans-sm` tertiary, then the change
-/// vs usual, then ScoreValue `xs` right-aligned in `s9` (or the trailing AppButton `sm`).
+/// A RatingList row on ListRow's rhythm (`spacing-14` minimum, `spacing-3` padding).
+/// Title: name `sans-md` + role `sans-sm` `text-tertiary`. Trailing: the change vs
+/// their usual (delta Badge `sm`, a `secondary` "New" Badge, or "As usual" / "Not rated
+/// yet" in `text-tertiary`) and ScoreValue `xs` right-aligned in `spacing-9`. No avatar.
+///
+/// ListRow (Interim) takes a plain-string title, so the two-style title is drawn here.
 struct RatingRow: View {
     let entry: RatingListEntry
-    var showsAvatar: Bool = false
 
     var body: some View {
         if let onTap = entry.onTap {
@@ -49,9 +50,6 @@ struct RatingRow: View {
 
     private var content: some View {
         HStack(spacing: DS.Spacing.s3) {
-            if showsAvatar {
-                Avatar(name: entry.name, photoPath: entry.photoPath, size: .xs)
-            }
             HStack(alignment: .firstTextBaseline, spacing: DS.Spacing.s1_5) {
                 Text(entry.isViewer ? "You" : entry.name).textStyle(.sansMd)
                 if let role = entry.role {
@@ -60,13 +58,16 @@ struct RatingRow: View {
             }
             .lineLimit(1)
 
-            Spacer(minLength: DS.Spacing.s2)
+            Spacer(minLength: 0)
 
-            change
-            trailing
+            // bundle.css `.nn-row__trail`: the note and the score share the trailing slot.
+            HStack(spacing: DS.Spacing.s2) {
+                change
+                trailing
+            }
+            .layoutPriority(1)
         }
-        .frame(minHeight: DS.Spacing.rowMin)
-        .contentShape(Rectangle())
+        .ratingListRowMetrics()
     }
 
     @ViewBuilder
@@ -90,7 +91,7 @@ struct RatingRow: View {
     private var trailing: some View {
         if let score = entry.score {
             ScoreValue(score: score, size: .xs)
-                .frame(width: DS.Spacing.s9, alignment: .trailing)
+                .frame(minWidth: DS.Spacing.s9, alignment: .trailing)
         } else if let action = entry.action {
             switch action {
             case .rate(let perform):

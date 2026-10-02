@@ -1,6 +1,7 @@
 import SwiftUI
 
-/// Clean interactive row section for selecting cuisines/categories via a dedicated sheet.
+/// The meal or recipe's kitchens: a pressable SectionCard that opens the cuisine
+/// picker. Chosen cuisines are `sm` Badges.
 struct CuisinePickerSection: View {
     @Binding var selection: String?
 
@@ -13,60 +14,25 @@ struct CuisinePickerSection: View {
     var body: some View {
         SectionCard(
             "Kitchen / Cuisine",
-            caption: selectedItems.isEmpty ? nil : "\(selectedItems.count) selected"
+            trailing: selectedItems.isEmpty ? nil : "\(selectedItems.count) selected",
+            action: { showingSheet = true }
         ) {
-            Button {
-                showingSheet = true
-            } label: {
-                HStack(alignment: .center, spacing: 12) {
-                    if selectedItems.isEmpty {
-                        Text("Choose kitchen / cuisines…")
-                            .font(.subheadline)
-                            .foregroundStyle(DS.Color.textSecondary)
-                    } else {
-                        WrappingHStack(spacing: 8, lineSpacing: 8) {
-                            ForEach(selectedItems, id: \.self) { item in
-                                HStack(spacing: 6) {
-                                    if let preset = Cuisine.matching(from: item) {
-                                        Image(preset.assetImageName)
-                                            .resizable()
-                                            .scaledToFill()
-                                            .frame(width: 18, height: 18)
-                                            .clipShape(Circle())
-                                    }
-
-                                    Text(Cuisine.matching(from: item)?.displayName ?? item.capitalized)
-                                        .font(.subheadline.weight(.medium))
-                                }
-                                .padding(.horizontal, 10)
-                                .padding(.vertical, 5)
-                                .background(DS.Color.accent.opacity(0.12))
-                                .foregroundStyle(DS.Color.accentText)
-                                .clipShape(Capsule())
-                                .overlay(
-                                    Capsule()
-                                        .strokeBorder(DS.Color.accent.opacity(0.35), lineWidth: 1)
-                                )
-                            }
-                        }
+            if selectedItems.isEmpty {
+                Text("Choose kitchen / cuisines\u{2026}").textStyle(.sansMd, tone: .secondary)
+            } else {
+                // bundle.css `.nn-detail-header__badges`: a run of Badges `spacing-1.5` apart.
+                WrappingHStack(spacing: DS.Spacing.s1_5, lineSpacing: DS.Spacing.s1_5) {
+                    ForEach(selectedItems, id: \.self) { item in
+                        Badge(Cuisine.matching(from: item)?.displayName ?? item.capitalized, size: .sm)
                     }
-
-                    Spacer(minLength: 4)
-
-                    Image(systemName: "chevron.right")
-                        .font(.footnote.weight(.semibold))
-                        .foregroundStyle(DS.Color.textTertiary)
                 }
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .contentShape(Rectangle())
             }
-            .buttonStyle(.plain)
-            .accessibilityLabel(
-                selectedItems.isEmpty
-                    ? "Select kitchen or cuisine"
-                    : "Cuisines: \(selectedItems.joined(separator: ", ")). Tap to edit."
-            )
         }
+        .accessibilityLabel(
+            selectedItems.isEmpty
+                ? "Select kitchen or cuisine"
+                : "Cuisines: \(selectedItems.joined(separator: ", ")). Tap to edit."
+        )
         .sheet(isPresented: $showingSheet) {
             CuisinePickerSheet(selection: $selection)
         }
@@ -75,10 +41,10 @@ struct CuisinePickerSection: View {
 
 #Preview {
     NomNomPreview {
-        VStack(spacing: 16) {
+        VStack(spacing: DS.Spacing.s4) {
             CuisinePickerSection(selection: .constant(nil))
             CuisinePickerSection(selection: .constant("italian, mexican"))
         }
-        .padding()
+        .padding(DS.Spacing.gutter)
     }
 }

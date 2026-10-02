@@ -1,108 +1,82 @@
 import SwiftUI
 
-/// Where SectionCard puts its label.
-enum SectionCardLayout: Equatable {
-    /// A screen section: inset SectionHeader above the card (DSSection + Card).
-    case stacked
-    /// A note or callout: SectionHeader pre-header inside the card, `s1_5` above the content.
-    case inset
-}
-
-/// The one content card: a `panel` Card with a SectionHeader above it (`stacked`)
-/// or inside it (`inset`). `featured` tints it `primary` at 10% and turns an inset
-/// label `primary-text`. `quote` sets the cook's note in italic `serif-xs`.
+/// A Card whose label sits inside it: a SectionHeader, an optional quote, then the
+/// content, `spacing-1.5` apart (bundle.css `.nn-section-card`). One shape: a label
+/// *above* a card is `DSSection(_:) { Card { … } }`, not this.
+///
+/// The surface is Card (`panel`, `radius-3xl`, `spacing-5` padding); SectionCard draws
+/// nothing of its own. `variant: .primary` tints the card `primary` at `opacity-10`
+/// and turns the label `primary-text` semibold. `quote` is the cook's note: italic
+/// `serif-xs` in `text-primary`, no quotation marks. `action` makes the card a button
+/// with Card's chevron.
 ///
 /// ```swift
-/// SectionCard("Household verdict", trailing: "4 of 4 rated", trailingTone: .primary) { … }
-/// SectionCard("Joel\u{2019}s note", layout: .inset, uppercase: false, quote: meal.notes)
+/// SectionCard("Household verdict", trailing: "4 of 4 rated", trailingTone: .primary) {
+///     Text("Everyone finished their plate.").textStyle(.serifSm)
+/// }
+/// SectionCard("Joel\u{2019}s note", uppercase: false, quote: meal.notes)
 /// ```
 struct SectionCard<Content: View>: View {
     var title: String?
-    var layout: SectionCardLayout
-    var featured: Bool
+    var variant: CardVariant?
     var trailing: String?
     var trailingTone: SectionHeaderTrailingTone
     var uppercase: Bool
     var systemImage: String?
     var quote: String?
+    var action: (() -> Void)?
     @ViewBuilder var content: Content
 
     init(
         _ title: String? = nil,
-        layout: SectionCardLayout = .stacked,
-        featured: Bool = false,
+        variant: CardVariant? = nil,
         trailing: String? = nil,
         trailingTone: SectionHeaderTrailingTone = .secondary,
         uppercase: Bool = true,
         systemImage: String? = nil,
         quote: String? = nil,
+        action: (() -> Void)? = nil,
         @ViewBuilder content: () -> Content
     ) {
         self.title = title
-        self.layout = layout
-        self.featured = featured
+        self.variant = variant
         self.trailing = trailing
         self.trailingTone = trailingTone
         self.uppercase = uppercase
         self.systemImage = systemImage
         self.quote = quote
+        self.action = action
         self.content = content()
     }
 
     var body: some View {
-        switch layout {
-        case .stacked:
+        Card(variant: variant, spacing: DS.Spacing.s1_5, action: action) {
             if let title {
-                DSSection(
-                    title,
+                SectionHeader(
+                    title: title,
                     trailing: trailing,
                     trailingTone: trailingTone,
                     systemImage: systemImage,
-                    uppercase: uppercase
-                ) {
-                    card(spacing: DS.Spacing.s3) { cardContent(withHeader: false) }
-                }
-            } else {
-                card(spacing: DS.Spacing.s3) { cardContent(withHeader: false) }
+                    uppercase: uppercase,
+                    variant: variant == .primary ? .primary : nil
+                )
             }
-        case .inset:
-            card(spacing: DS.Spacing.s1_5) { cardContent(withHeader: true) }
+            if let quote, !quote.isEmpty {
+                Text(quote)
+                    .textStyle(.serifXs, italic: true)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            content
         }
-    }
-
-    private func card<C: View>(spacing: CGFloat, @ViewBuilder _ inner: () -> C) -> some View {
-        Card(featured: featured, spacing: spacing, content: inner)
-            .frame(maxWidth: .infinity, alignment: .leading)
-    }
-
-    @ViewBuilder
-    private func cardContent(withHeader: Bool) -> some View {
-        if withHeader, let title {
-            SectionHeader(
-                title,
-                trailing: trailing,
-                trailingTone: trailingTone,
-                systemImage: systemImage,
-                uppercase: uppercase,
-                inset: false,
-                variant: featured ? .primary : nil
-            )
-        }
-        if let quote, !quote.isEmpty {
-            Text(quote)
-                .textStyle(.serifXs, italic: true)
-                .fixedSize(horizontal: false, vertical: true)
-        }
-        content
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 }
 
 extension SectionCard where Content == EmptyView {
-    /// A text-only card, e.g. the cook's note: `SectionCard("Joel’s note", layout: .inset, quote: …)`.
+    /// A text-only card, e.g. the cook's note: `SectionCard("Joel’s note", uppercase: false, quote: …)`.
     init(
         _ title: String? = nil,
-        layout: SectionCardLayout = .inset,
-        featured: Bool = false,
+        variant: CardVariant? = nil,
         trailing: String? = nil,
         trailingTone: SectionHeaderTrailingTone = .secondary,
         uppercase: Bool = true,
@@ -110,9 +84,8 @@ extension SectionCard where Content == EmptyView {
         quote: String
     ) {
         self.init(
-            title, layout: layout, featured: featured, trailing: trailing,
-            trailingTone: trailingTone, uppercase: uppercase, systemImage: systemImage,
-            quote: quote
+            title, variant: variant, trailing: trailing, trailingTone: trailingTone,
+            uppercase: uppercase, systemImage: systemImage, quote: quote
         ) { EmptyView() }
     }
 }
@@ -122,15 +95,15 @@ private struct SectionCardGallery: View {
         ScrollView {
             VStack(spacing: DS.Spacing.block) {
                 SectionCard("Household verdict", trailing: "4 of 4 rated", trailingTone: .primary) {
-                    Text("Everyone loved it.").textStyle(.serifSm)
+                    Text("Everyone finished their plate.").textStyle(.serifSm)
                     Text("Two people asked for seconds.").textStyle(.sansMd, tone: .secondary)
                 }
                 SectionCard("Joel\u{2019}s note", uppercase: false, quote: "End of summer pizza night on the deck.")
-                SectionCard("Tip from last time", layout: .inset, featured: true) {
+                SectionCard("Tip from last time", variant: .primary) {
                     Text("Salt the water more than you think.").textStyle(.sansMd, tone: .secondary)
                 }
-                SectionCard {
-                    Text("A card without a header").textStyle(.sansMd)
+                DSSection("Ingredients", trailing: "6 items") {
+                    Card { Text("A label above the card").textStyle(.sansMd) }
                 }
             }
             .padding(DS.Spacing.gutter)

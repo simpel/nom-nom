@@ -2,6 +2,20 @@ import SwiftUI
 
 // Implementations behind the sheet toolbar modifiers in `View+SheetToolbars.swift`.
 
+/// The BottomSheet grabber (bundle.css `.nn-sheet__grabber`): `spacing-10` ×
+/// `spacing-1.5`, `radius-sm`, `grabber`, `spacing-2` below the sheet's top edge.
+/// Decorative (README: "The sheet grabber is decorative"), so hidden from VoiceOver.
+struct SheetGrabber: View {
+    var body: some View {
+        RoundedRectangle(cornerRadius: DS.Radius.sm, style: .continuous)
+            .fill(DS.Color.grabber)
+            .frame(width: DS.Spacing.s10, height: DS.Spacing.s1_5)
+            .padding(.top, DS.Spacing.s2)
+            .allowsHitTesting(false)
+            .accessibilityHidden(true)
+    }
+}
+
 /// The in-sheet close: AppButton `secondary soft` icon-only xmark (44pt circle).
 struct SheetCloseButton: View {
     var accessibilityLabel: String = "Close"
