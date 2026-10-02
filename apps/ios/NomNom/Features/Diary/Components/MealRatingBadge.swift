@@ -1,53 +1,27 @@
 import SwiftUI
 
-/// Centered badge displaying the overall rating verdict or summary score for a meal.
+/// A meal's rating at a glance: the rotation goal Badge, then a verdict Badge for a
+/// single rating, the average ScoreValue for several, or an "Unrated" Badge (README
+/// "Unrated is a real state": `sunken` ground, `text-tertiary`, dashed circle).
 struct MealRatingBadge: View {
     let meal: Meal
 
     @Environment(FoodStore.self) private var store
 
     var body: some View {
-        HStack(spacing: 6) {
+        HStack(spacing: DS.Spacing.s1_5) {
             if let rotation = store.averageRotation(forMeal: meal.id) {
-                rotationBadge(rotation)
+                Badge.rotation(rotation)
             }
 
             let ratings = store.ratings(forMeal: meal.id)
             if ratings.isEmpty {
-                unratedBadge
-            } else {
-                ratedBadge(ratings: ratings)
+                Badge("Unrated", icon: "circle.dashed", variant: .secondary, size: .sm)
+            } else if ratings.count == 1, let single = ratings.first?.reaction {
+                Badge.verdict(single, size: .sm)
+            } else if let score = store.averageScore(forMeal: meal.id) {
+                ScoreValue(score: score, size: .xs, showVerdict: false)
             }
-        }
-    }
-
-    @ViewBuilder
-    private func rotationBadge(_ rotation: RotationGoal) -> some View {
-        RotationPill(goal: rotation)
-    }
-
-    @ViewBuilder
-    private var unratedBadge: some View {
-        HStack(spacing: 4) {
-            Image(systemName: "star.dashed")
-                .font(.system(size: 10, weight: .medium))
-            Text("Unrated")
-                .font(.system(size: 11, weight: .medium))
-        }
-        .foregroundStyle(.secondary.opacity(0.7))
-        .padding(.horizontal, 8)
-        .padding(.vertical, 4)
-        .background {
-            Capsule().fill(Color(uiColor: .tertiarySystemFill))
-        }
-    }
-
-    @ViewBuilder
-    private func ratedBadge(ratings: [MealRating]) -> some View {
-        if ratings.count == 1, let single = ratings.first?.reaction {
-            ScoreBadge(reaction: single, format: .verdictOnly, size: .sm)
-        } else if let score = store.averageScore(forMeal: meal.id) {
-            ScoreBadge(score: score, format: .scoreOnly, size: .sm)
         }
     }
 }

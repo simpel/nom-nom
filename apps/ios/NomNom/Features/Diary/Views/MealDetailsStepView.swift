@@ -14,7 +14,7 @@ struct MealDetailsStepView: View {
 
     var body: some View {
         ScrollView {
-            VStack(spacing: DS.Spacing.section) {
+            VStack(spacing: DS.Spacing.block) {
                 MealPhotosPickerSection(
                     draft: Binding(
                         get: { draft.photos },
@@ -36,11 +36,11 @@ struct MealDetailsStepView: View {
                     )
                 )
             }
-            .padding(.horizontal, DS.Spacing.screenHorizontal)
-            .padding(.top, DS.Spacing.screenTop)
-            .padding(.bottom, DS.Spacing.screenBottom)
+            .padding(.horizontal, DS.Spacing.gutter)
+            .padding(.top, DS.Spacing.s5)
+            .padding(.bottom, DS.Spacing.s11)
         }
-        .background(DS.Color.bg)
+        .background(DS.Color.sheet)
         .screenTitle("Details", displayMode: .inline)
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
@@ -65,7 +65,6 @@ struct MealDetailsStepView: View {
             MealVerdictStepView(draft: draft, onDismiss: onDismiss)
         }
         .interactiveDismissDisabled(isSaving)
-        .presentationDragIndicator(.visible)
         .simultaneousGesture(
             DragGesture(minimumDistance: 30)
                 .onEnded { value in

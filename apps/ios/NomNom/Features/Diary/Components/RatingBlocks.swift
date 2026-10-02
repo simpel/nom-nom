@@ -11,13 +11,11 @@ struct RatingBlocks: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: DS.Spacing.s8) {
-            VStack(alignment: .leading, spacing: 0) {
-                SectionHeader("How was it?", trailing: reaction?.name, trailingTone: .primary)
+            DSSection("How was it?", trailing: reaction?.name, trailingTone: .primary) {
                 TasteScoreSelector(selection: $reaction)
             }
 
-            VStack(alignment: .leading, spacing: 0) {
-                SectionHeader("How often to repeat", trailing: repeatDesire?.title, trailingTone: .primary)
+            DSSection("How often to repeat", trailing: repeatDesire?.title, trailingTone: .primary) {
                 RotationGoalSelector(selection: $repeatDesire)
             }
         }

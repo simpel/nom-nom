@@ -6,54 +6,47 @@ struct RecipeIngredientsEditorSection: View {
 
     var body: some View {
         SectionCard("Ingredients") {
-            VStack(spacing: 10) {
+            VStack(spacing: DS.Spacing.s2_5) {
                 ForEach($ingredients) { $item in
                     ingredientRow(item: $item)
                 }
 
-                AppButton(
-                    "Add Ingredient",
-                    systemImage: "plus",
-                    variant: .secondary,
-                    style: .ghost,
-                    size: .sm
-                ) {
-                    withAnimation(.easeInOut(duration: 0.2)) {
+                AppButton("Add Ingredient", icon: "plus", appearance: .ghost, size: .sm) {
+                    withAnimation(DS.Motion.layout) {
                         $ingredients.wrappedValue.append(RecipeIngredient())
                     }
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(.top, ingredients.isEmpty ? 2 : 4)
+                .padding(.top, ingredients.isEmpty ? DS.Spacing.s0_5 : DS.Spacing.s1)
             }
         }
     }
 
     private func ingredientRow(item: Binding<RecipeIngredient>) -> some View {
-        HStack(spacing: 8) {
-            Input("Qty", text: item.quantity, size: .sm)
+        HStack(spacing: DS.Spacing.s2) {
+            Input("Qty", text: item.quantity)
                 .keyboardType(.numbersAndPunctuation)
                 .autocorrectionDisabled()
-                .frame(width: 58)
+                .frame(width: DS.Spacing.s14)
 
-            Input("Unit", text: item.measurement, size: .sm)
+            Input("Unit", text: item.measurement)
                 .textInputAutocapitalization(.never)
                 .autocorrectionDisabled()
-                .frame(width: 68)
+                .frame(width: DS.Spacing.s16)
 
-            Input("Ingredient", text: item.ingredient, size: .sm)
+            Input("Ingredient", text: item.ingredient)
 
             AppButton(
-                systemImage: "minus.circle",
+                icon: "minus.circle",
+                accessibilityLabel: "Remove ingredient",
                 variant: .destructive,
-                style: .ghost,
-                size: .sm
+                appearance: .ghost
             ) {
-                withAnimation(.easeInOut(duration: 0.2)) {
+                withAnimation(DS.Motion.layout) {
                     let targetID = item.wrappedValue.id
                     $ingredients.wrappedValue.removeAll { $0.id == targetID }
                 }
             }
-            .accessibilityLabel("Remove ingredient")
         }
     }
 }

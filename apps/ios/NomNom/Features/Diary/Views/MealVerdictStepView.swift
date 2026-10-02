@@ -48,7 +48,7 @@ struct MealVerdictStepView: View {
 
     var body: some View {
         ScrollView {
-            VStack(spacing: DS.Spacing.section) {
+            VStack(spacing: DS.Spacing.block) {
                 MealRatingPhotoHeader(
                     mealPhotos: mealPhotos,
                     recipePhotos: recipePhotos,
@@ -65,11 +65,11 @@ struct MealVerdictStepView: View {
 
                 RatingBlocks(reaction: $myReaction, repeatDesire: $repeatDesire)
             }
-            .padding(.horizontal, DS.Spacing.screenHorizontal)
-            .padding(.top, DS.Spacing.screenTop)
-            .padding(.bottom, DS.Spacing.screenBottom)
+            .padding(.horizontal, DS.Spacing.gutter)
+            .padding(.top, DS.Spacing.s5)
+            .padding(.bottom, DS.Spacing.s11)
         }
-        .background(DS.Color.bg)
+        .background(DS.Color.sheet)
         .screenTitle("Rate Meal", displayMode: .inline)
         .stepCommitToolbar(isSaving: isSaving, onSave: save)
         .sheet(item: Binding(
@@ -95,7 +95,6 @@ struct MealVerdictStepView: View {
                 repeatDesire = draft.repeatDesire
             }
         }
-        .presentationDragIndicator(.visible)
         .simultaneousGesture(
             DragGesture(minimumDistance: 30)
                 .onEnded { value in

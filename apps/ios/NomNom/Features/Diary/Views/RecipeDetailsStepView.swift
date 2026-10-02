@@ -14,19 +14,18 @@ struct RecipeDetailsStepView: View {
 
     var body: some View {
         ScrollView {
-            VStack(spacing: DS.Spacing.section) {
+            VStack(spacing: DS.Spacing.block) {
                 RecipeEditorSection(draft: $recipeDraft)
 
                 VisibilityToggleCard.recipe(isPublic: $recipeDraft.isPublic)
             }
-            .padding(.horizontal, DS.Spacing.screenHorizontal)
-            .padding(.top, DS.Spacing.screenTop)
-            .padding(.bottom, DS.Spacing.screenBottom)
+            .padding(.horizontal, DS.Spacing.gutter)
+            .padding(.top, DS.Spacing.s5)
+            .padding(.bottom, DS.Spacing.s11)
         }
-        .background(DS.Color.bg)
+        .background(DS.Color.sheet)
         .screenTitle("Recipe Details", displayMode: .inline)
         .stepCommitToolbar(isSaving: isSaving, onSave: save)
-        .presentationDragIndicator(.visible)
         .alert("Couldn't save recipe",
                isPresented: Binding(get: { store.errorMessage != nil },
                                     set: { if !$0 { store.errorMessage = nil } })) {

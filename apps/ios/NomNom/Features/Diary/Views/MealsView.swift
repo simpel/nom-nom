@@ -26,7 +26,7 @@ struct MealsView: View {
                     .refreshable { await store.load() }
                 } else {
                     ScrollView {
-                        VStack(alignment: .leading, spacing: DS.Spacing.section) {
+                        VStack(alignment: .leading, spacing: DS.Spacing.block) {
                             PageHeader("Meals", actions: [
                                 EmptyStateAction("Add meal", icon: "plus") { editorTarget = .new }
                             ])
@@ -49,7 +49,7 @@ struct MealsView: View {
                                     } label: {
                                         MealRow(meal: meal, isMinimal: true)
                                     }
-                                    .buttonStyle(.plain)
+                                    .buttonStyle(ListRowButtonStyle())
                                     .contextMenu {
                                         if meal.createdBy == store.userID {
                                             Button {
@@ -67,9 +67,9 @@ struct MealsView: View {
                                 }
                             }
                         }
-                        .padding(.horizontal, DS.Spacing.screenHorizontal)
-                        .padding(.top, DS.Spacing.screenTop)
-                        .padding(.bottom, DS.Spacing.screenBottom)
+                        .padding(.horizontal, DS.Spacing.gutter)
+                        .padding(.top, DS.Spacing.s5)
+                        .padding(.bottom, DS.Spacing.s11)
                     }
                     .background(DS.Color.bg)
                     .refreshable { await store.load() }

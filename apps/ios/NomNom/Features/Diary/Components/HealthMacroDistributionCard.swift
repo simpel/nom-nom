@@ -38,7 +38,7 @@ struct HealthMacroDistributionCard: View {
                 if !segments.isEmpty {
                     Rectangle()
                         .fill(DS.Color.line)
-                        .frame(height: 1)
+                        .frame(height: DS.BorderWidth.hairline)
                         .accessibilityHidden(true)
                 }
                 highlights(positives)

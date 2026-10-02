@@ -48,8 +48,8 @@ struct DishNameField: View {
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            HStack(spacing: 6) {
+        VStack(alignment: .leading, spacing: DS.Spacing.s2) {
+            HStack(spacing: DS.Spacing.s1_5) {
                 Input(
                     "What did you cook?",
                     text: $text,
@@ -67,19 +67,18 @@ struct DishNameField: View {
                 }
 
                 if ghostCompletion != nil {
-                    Button {
-                        acceptGhost()
-                    } label: {
-                        Image(systemName: "arrow.right.to.line.compact")
-                    }
-                    .buttonStyle(.borderless)
-                    .accessibilityLabel("Accept suggested name")
+                    AppButton(
+                        icon: "arrow.right.to.line.compact",
+                        accessibilityLabel: "Accept suggested name",
+                        variant: .secondary,
+                        appearance: .ghost,
+                        action: acceptGhost
+                    )
                 }
 
                 if linkedDishID != nil {
                     Image(systemName: "link")
-                        .font(.footnote)
-                        .foregroundStyle(.green)
+                        .textStyle(.sansSm, tone: .accent)
                         .accessibilityLabel("Linked to an existing dish")
                 }
             }
@@ -87,70 +86,34 @@ struct DishNameField: View {
             if let linkedDish {
                 let served = history[linkedDish.id]?.timesServed ?? 0
                 Text("Same dish as \(served) earlier \(served == 1 ? "entry" : "entries").")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+                    .textStyle(.sansSm, tone: .tertiary)
             }
 
             if let typoCandidate {
-                Button {
-                    apply(name: typoCandidate.name, dishID: typoCandidate.id)
-                } label: {
-                    HStack(spacing: 6) {
-                        Image(systemName: "wand.and.stars")
-                        Text("Did you mean **\(typoCandidate.name)**?")
-                        Spacer()
-                        Text("Use it").fontWeight(.semibold)
+                HStack(spacing: DS.Spacing.s2) {
+                    Text("Did you mean **\(typoCandidate.name)**?")
+                        .textStyle(.sansSm, tone: .secondary)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                    AppButton("Use it", variant: .secondary, appearance: .soft, size: .xs) {
+                        apply(name: typoCandidate.name, dishID: typoCandidate.id)
                     }
-                    .font(.caption)
-                }
-                .buttonStyle(.plain)
-                .foregroundStyle(.orange)
-                .padding(.vertical, 6)
-                .padding(.horizontal, 10)
-                .background {
-                    RoundedRectangle(cornerRadius: AppRadius.button, style: .continuous)
-                        .fill(Color.orange.opacity(0.12))
                 }
             }
 
             if !suggestions.isEmpty {
-                VStack(spacing: 0) {
+                Card(layout: .list) {
                     ForEach(suggestions) { suggestion in
-                        Button {
+                        ListRow(suggestion.name, value: subtitle(for: suggestion), chevron: false, size: .sm) {
                             if let dish = dishes.first(where: { $0.id == suggestion.dishID }) {
                                 apply(name: dish.name, dishID: dish.id)
                             }
-                        } label: {
-                            HStack(spacing: 8) {
-                                Image(systemName: "clock.arrow.circlepath")
-                                    .font(.caption)
-                                    .foregroundStyle(.secondary)
-                                Text(suggestion.name)
-                                    .lineLimit(1)
-                                Spacer(minLength: 8)
-                                Text(subtitle(for: suggestion))
-                                    .font(.caption2)
-                                    .foregroundStyle(.secondary)
-                            }
-                            .padding(.vertical, 8)
-                            .contentShape(Rectangle())
-                        }
-                        .buttonStyle(.plain)
-
-                        if suggestion.id != suggestions.last?.id {
-                            Divider()
                         }
                     }
-                }
-                .padding(.horizontal, 10)
-                .background {
-                    RoundedRectangle(cornerRadius: AppRadius.input, style: .continuous)
-                        .fill(Color.secondary.opacity(0.08))
                 }
                 .transition(.opacity)
             }
         }
-        .animation(.snappy(duration: 0.2), value: suggestions.map(\.id))
+        .animation(DS.Motion.layout, value: suggestions.map(\.id))
     }
 
     private func subtitle(for suggestion: DishRepository.NameSuggestion) -> String {

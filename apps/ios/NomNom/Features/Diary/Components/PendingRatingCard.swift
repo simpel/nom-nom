@@ -1,110 +1,60 @@
 import SwiftUI
 
-/// A meal somebody else cooked, with rating buttons right there.
+/// A meal somebody else cooked, with rating buttons right there: a navigating ListRow
+/// (PhotoCard `xs`, dish name, cook · date, a `secondary ghost` decline ✕) over a
+/// TasteScoreSelector that rates on tap. Place it in a `Card(layout: .list)`.
 struct PendingRatingCard: View {
     let meal: Meal
 
     @Environment(FoodStore.self) private var store
     @State private var isSaving = false
+    @State private var showDetail = false
+
+    private var meta: String {
+        let cook = store.label(for: .account(meal.createdBy)).name
+        let date = meal.eatenOn.formatted(.dateTime.day().month(.abbreviated))
+        return [cook, date].filter { !$0.isEmpty }.joined(separator: " \u{00B7} ")
+    }
+
+    private var selection: Binding<Reaction?> {
+        Binding(get: { nil }, set: { reaction in
+            if let reaction { rate(reaction) }
+        })
+    }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            NavigationLink {
-                MealDetailView(mealID: meal.id)
-            } label: {
-                HStack(spacing: 12) {
-                    if let photoPath = meal.photoPath {
-                        RemoteMealPhoto(path: photoPath, cornerRadius: AppRadius.photo)
-                            .frame(width: 46, height: 58)
-                            .clipped()
-                            .clipShape(RoundedRectangle(cornerRadius: AppRadius.photo, style: .continuous))
-                            .overlay(
-                                RoundedRectangle(cornerRadius: AppRadius.photo, style: .continuous)
-                                    .strokeBorder(DS.Color.line.opacity(0.35), lineWidth: 0.5)
-                            )
-                    } else {
-                        Rectangle()
-                            .fill(DS.Color.sunken)
-                            .frame(width: 46, height: 58)
-                            .clipShape(RoundedRectangle(cornerRadius: AppRadius.photo, style: .continuous))
-                            .overlay(
-                                RoundedRectangle(cornerRadius: AppRadius.photo, style: .continuous)
-                                    .strokeBorder(DS.Color.line.opacity(0.35), lineWidth: 0.5)
-                            )
-                            .overlay {
-                                Image(systemName: "fork.knife")
-                                    .font(.subheadline)
-                                    .foregroundStyle(DS.Color.textTertiary)
-                            }
-                    }
+        VStack(alignment: .leading, spacing: 0) {
+            ListRow(
+                store.dishName(forMeal: meal),
+                meta: meta,
+                leading: .photo(.meal(meal)),
+                trailingAction: ListRowIconAction(
+                    icon: "xmark",
+                    accessibilityLabel: "Decline",
+                    variant: .secondary,
+                    isLoading: isSaving,
+                    perform: decline
+                ),
+                chevron: true,
+                action: { showDetail = true }
+            )
 
-                    VStack(alignment: .leading, spacing: 3) {
-                        Text(store.dishName(forMeal: meal))
-                            .font(.body.weight(.semibold))
-                            .foregroundStyle(DS.Color.textPrimary)
-                            .lineLimit(1)
-
-                        HStack(spacing: 6) {
-                            let cook = store.label(for: .account(meal.createdBy))
-                            Text(cook.name)
-                                .font(.caption.weight(.medium))
-                                .foregroundStyle(DS.Color.accentText)
-                                .lineLimit(1)
-
-                            Text("•")
-                                .font(.caption2)
-                                .foregroundStyle(DS.Color.textTertiary)
-
-                            Text(meal.eatenOn, format: .dateTime.day().month(.abbreviated))
-                                .font(.caption)
-                                .foregroundStyle(DS.Color.textSecondary)
-                        }
-                    }
-                    Spacer()
-                }
+            // Six `spacing-12` steps need 328pt; on narrower cards the row scrolls.
+            ViewThatFits(in: .horizontal) {
+                selector
+                ScrollView(.horizontal, showsIndicators: false) { selector }
             }
-            .buttonStyle(.plain)
-
-            HStack(spacing: 6) {
-                ForEach(Reaction.allCases) { reaction in
-                    Button {
-                        rate(reaction)
-                    } label: {
-                        Text(reaction.numberLabel)
-                            .font(.subheadline.weight(.semibold))
-                            .foregroundStyle(reaction.text)
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 8)
-                            .background {
-                                RoundedRectangle(cornerRadius: AppRadius.button, style: .continuous)
-                                    .fill(reaction.fill.opacity(0.12))
-                            }
-                            .overlay {
-                                RoundedRectangle(cornerRadius: AppRadius.button, style: .continuous)
-                                    .strokeBorder(reaction.fill.opacity(0.25), lineWidth: 0.5)
-                            }
-                    }
-                    .buttonStyle(.plain)
-                    .accessibilityLabel(reaction.name)
-                    .disabled(isSaving)
-                }
-
-                AppButton(
-                    systemImage: "xmark",
-                    variant: .neutral,
-                    style: .outlined,
-                    size: .sm,
-                    disabled: isSaving
-                ) {
-                    decline()
-                }
-                .accessibilityLabel("Decline")
-            }
-            .opacity(isSaving ? 0.4 : 1)
-            .overlay {
-                if isSaving { ProgressView().controlSize(.small) }
-            }
+            .padding(.bottom, DS.Spacing.s3)
+            .disabled(isSaving)
+            .opacity(isSaving ? DS.Opacity.disabled : DS.Opacity.o100)
         }
+        .navigationDestination(isPresented: $showDetail) {
+            MealDetailView(mealID: meal.id)
+        }
+    }
+
+    private var selector: some View {
+        TasteScoreSelector(selection: selection, label: "Rate \(store.dishName(forMeal: meal))", showVerdict: false)
     }
 
     private func rate(_ reaction: Reaction) {

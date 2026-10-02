@@ -1,7 +1,9 @@
 import SwiftUI
 import Combine
 
-/// Loading and progress overlay displayed while AI analyzes recipe photos.
+/// Loading and progress overlay displayed while AI analyzes recipe photos: a `scrim`
+/// over the sheet and a floating Card (`shadow-lg`, README: "`shadow-lg` for popovers")
+/// with a spinner, the current phase and a Cancel button.
 struct RecipeScannerOverlay: View {
     var onCancel: () -> Void
 
@@ -17,42 +19,32 @@ struct RecipeScannerOverlay: View {
 
     var body: some View {
         ZStack {
-            Color.black.opacity(0.4)
+            DS.Color.scrim
                 .ignoresSafeArea()
 
-            VStack(spacing: 20) {
-                ProgressView()
-                    .controlSize(.large)
-                    .tint(DS.Color.accent)
+            Card(spacing: DS.Spacing.s4) {
+                VStack(spacing: DS.Spacing.s4) {
+                    ProgressView()
+                        .controlSize(.large)
+                        .tint(DS.Color.primary)
 
-                VStack(spacing: 8) {
-                    Text("Analyzing Recipe")
-                        .font(.headline.weight(.semibold))
-                        .foregroundStyle(DS.Color.textPrimary)
+                    VStack(spacing: DS.Spacing.s2) {
+                        Text("Analyzing Recipe")
+                            .textStyle(.sansLg, weight: .semibold, align: .center)
 
-                    Text(currentStatus)
-                        .font(.subheadline)
-                        .foregroundStyle(DS.Color.textSecondary)
-                        .multilineTextAlignment(.center)
-                        .animation(.easeInOut(duration: 0.3), value: phaseIndex)
+                        Text(currentStatus)
+                            .textStyle(.sansMd, tone: .secondary, align: .center)
+                            .animation(DS.Motion.layout, value: phaseIndex)
+                    }
+
+                    AppButton("Cancel", variant: .secondary, appearance: .ghost, size: .sm) {
+                        onCancel()
+                    }
                 }
-
-                AppButton(
-                    "Cancel",
-                    variant: .neutral,
-                    style: .ghost,
-                    size: .sm
-                ) {
-                    onCancel()
-                }
-                .padding(.top, 4)
+                .frame(maxWidth: .infinity)
             }
-            .padding(.horizontal, 28)
-            .padding(.vertical, 24)
-            .frame(maxWidth: 280)
-            .background(DS.Color.panel)
-            .clipShape(RoundedRectangle(cornerRadius: AppRadius.card, style: .continuous))
-            .shadow(color: Color.black.opacity(0.15), radius: 24, y: 8)
+            .frame(maxWidth: DS.Spacing.s72)
+            .dsShadow(.lg, cornerRadius: DS.Radius.xl3)
             .onReceive(timer) { _ in
                 if phaseIndex < statusPhases.count - 1 {
                     phaseIndex += 1

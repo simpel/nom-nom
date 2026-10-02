@@ -11,28 +11,23 @@ struct MealRecipeStepView: View {
 
     var body: some View {
         ScrollView {
-            VStack(spacing: DS.Spacing.section) {
+            VStack(spacing: DS.Spacing.block) {
                 SectionCard {
-                    VStack(alignment: .leading, spacing: 6) {
-                        Text(draft.dishName)
-                            .font(.title3.bold())
-                        Text("New dish — add a recipe to remember how you made it.")
-                            .font(.subheadline)
-                            .foregroundStyle(.secondary)
-                    }
+                    Text(draft.dishName).textStyle(.serifSm)
+                    Text("New dish — add a recipe to remember how you made it.")
+                        .textStyle(.sansMd, tone: .secondary)
                 }
 
                 RecipeEditorSection(draft: $recipeDraft)
 
                 MealEditorCookingTimeSection(effort: $recipeDraft.effort)
             }
-            .padding(.horizontal, DS.Spacing.screenHorizontal)
-            .padding(.top, DS.Spacing.screenTop)
-            .padding(.bottom, DS.Spacing.screenBottom)
+            .padding(.horizontal, DS.Spacing.gutter)
+            .padding(.top, DS.Spacing.s5)
+            .padding(.bottom, DS.Spacing.s11)
         }
-        .background(DS.Color.bg)
-        .navigationTitle("Recipe & Details")
-        .navigationBarTitleDisplayMode(.inline)
+        .background(DS.Color.sheet)
+        .screenTitle("Recipe & Details", displayMode: .inline)
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
                 Button("Next") {

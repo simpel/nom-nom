@@ -119,7 +119,7 @@ struct MealEditorRecipeSection: View {
                         size: .sm
                     )
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(AppPressableButtonStyle())
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)

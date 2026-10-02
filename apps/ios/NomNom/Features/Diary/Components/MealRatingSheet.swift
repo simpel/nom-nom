@@ -81,13 +81,14 @@ struct MealRatingSheet: View {
                 }
             }
         }
+        .dsSheet()
     }
 
     // MARK: - Form Sections
 
     private func ratingForm(for meal: Meal) -> some View {
         ScrollView {
-            VStack(spacing: DS.Spacing.section) {
+            VStack(spacing: DS.Spacing.block) {
                 MealRatingPhotoHeader(
                     mealPhotos: mealPhotos,
                     recipePhotos: mealRecipe?.ratingHeaderPhotos ?? [],
@@ -115,11 +116,11 @@ struct MealRatingSheet: View {
                     TextArea("Add your thoughts, flavor notes, or adjustments…", text: $notes, lineLimit: 3...6)
                 }
             }
-            .padding(.horizontal, DS.Spacing.screenHorizontal)
-            .padding(.top, DS.Spacing.screenTop)
-            .padding(.bottom, DS.Spacing.screenBottom)
+            .padding(.horizontal, DS.Spacing.gutter)
+            .padding(.top, DS.Spacing.s5)
+            .padding(.bottom, DS.Spacing.s11)
         }
-        .background(DS.Color.bg)
+        .background(DS.Color.sheet)
     }
 
     // MARK: - Actions

@@ -37,7 +37,7 @@ struct RecipeIngredientsCard: View {
     private var hairline: some View {
         Rectangle()
             .fill(DS.Color.line)
-            .frame(height: 1)
+            .frame(height: DS.BorderWidth.hairline)
             .accessibilityHidden(true)
     }
 
@@ -45,7 +45,7 @@ struct RecipeIngredientsCard: View {
         let isCompleted = completedIDs.contains(item.id)
 
         return Button {
-            withAnimation(.easeInOut(duration: 0.15)) {
+            withAnimation(DS.Motion.state) {
                 if isCompleted {
                     completedIDs.remove(item.id)
                 } else {
@@ -59,7 +59,6 @@ struct RecipeIngredientsCard: View {
                     .textStyle(.sansSm, tone: isCompleted ? .tertiary : .accent, weight: .semibold, numeric: true)
                     .frame(width: amountColumnWidth, alignment: .trailing)
                     .lineLimit(1)
-                    .minimumScaleFactor(0.85)
 
                 Text(item.trimmedIngredient)
                     .strikethrough(isCompleted, color: DS.Color.textTertiary)
