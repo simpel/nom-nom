@@ -35,11 +35,13 @@ public enum AppRadius {
 
 extension CGFloat {
     /// App-wide central corner radius.
+    @available(*, deprecated, message: "Use DS.Radius")
     static var appCornerRadius: CGFloat { AppRadius.standard }
 }
 
 extension RoundedRectangle {
     /// Standard continuous RoundedRectangle configured with the app's central radius.
+    @available(*, deprecated, message: "Use RoundedRectangle(cornerRadius: DS.Radius.…, style: .continuous)")
     static func appDefault(radius: CGFloat = AppRadius.standard) -> RoundedRectangle {
         RoundedRectangle(cornerRadius: radius, style: .continuous)
     }

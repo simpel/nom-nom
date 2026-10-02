@@ -1,13 +1,15 @@
 import SwiftUI
 
-/// A 4-segment ascending meter representing cooking effort/duration.
-/// Rising heights (7, 12, 17, 22pt) ensure legibility in 1-bit / greyscale.
+/// A 4-segment ascending meter for cooking effort. README "Colour": "effort is a
+/// four-bar monochrome meter in `primary` / `line-strong`". Bars are `spacing-2` wide,
+/// `spacing-1` apart, rising `spacing-2` → `spacing-5` so the order reads without colour,
+/// with `radius-sm` ends. The optional label is `sans-sm` tabular, `text-secondary`
+/// (`text-tertiary` when unset), `spacing-1.5` after the bars.
 struct BurnerMeter: View {
     let effort: EffortLevel?
     var showLabel: Bool = false
 
-    private let segmentHeights: [CGFloat] = [7, 12, 17, 22]
-    private let segmentWidth: CGFloat = 9
+    private static let segmentHeights: [CGFloat] = [DS.Spacing.s2, DS.Spacing.s3, DS.Spacing.s4, DS.Spacing.s5]
 
     private var filledCount: Int {
         guard let effort else { return 0 }
@@ -20,37 +22,34 @@ struct BurnerMeter: View {
     }
 
     var body: some View {
-        HStack(spacing: 6) {
-            HStack(alignment: .bottom, spacing: 3) {
-                ForEach(0..<4, id: \.self) { index in
-                    let isFilled = index < filledCount
-                    RoundedRectangle(cornerRadius: AppRadius.standard, style: .continuous)
-                        .fill(isFilled ? DS.Color.accent : DS.Color.lineStrong)
-                        .frame(width: segmentWidth, height: segmentHeights[index])
+        HStack(spacing: DS.Spacing.s1_5) {
+            HStack(alignment: .bottom, spacing: DS.Spacing.s1) {
+                ForEach(Self.segmentHeights.indices, id: \.self) { index in
+                    RoundedRectangle(cornerRadius: DS.Radius.sm, style: .continuous)
+                        .fill(index < filledCount ? DS.Color.primary : DS.Color.lineStrong)
+                        .frame(width: DS.Spacing.s2, height: Self.segmentHeights[index])
                 }
             }
-            .frame(height: 22, alignment: .bottom)
+            .frame(height: DS.Spacing.s5, alignment: .bottom)
 
             if showLabel {
                 Text(effort?.label ?? "—")
-                    .font(.callout)
-                    .monospacedDigit()
-                    .foregroundStyle(effort != nil ? DS.Color.textSecondary : DS.Color.textTertiary)
+                    .textStyle(.sansSm, tone: effort != nil ? .secondary : .tertiary, numeric: true)
             }
         }
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel(effort != nil ? "Cooking effort: \(effort!.label)" : "Cooking effort: Unspecified")
+        .accessibilityLabel("Cooking effort: \(effort?.label ?? "Unspecified")")
     }
 }
 
 #Preview {
-    VStack(alignment: .leading, spacing: 16) {
+    VStack(alignment: .leading, spacing: DS.Spacing.s4) {
         BurnerMeter(effort: nil, showLabel: true)
         BurnerMeter(effort: .zeroTo15, showLabel: true)
         BurnerMeter(effort: .fifteenTo30, showLabel: true)
         BurnerMeter(effort: .thirtyTo60, showLabel: true)
         BurnerMeter(effort: .over60, showLabel: true)
     }
-    .padding()
+    .padding(DS.Spacing.gutter)
     .background(DS.Color.bg)
 }

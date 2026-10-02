@@ -24,15 +24,13 @@ struct DesignTokensPreview: View {
     }
 
     private func heading(_ title: String) -> some View {
-        Text(title.uppercased())
-            .textStyle(.sansXs, tone: .tertiary, weight: .semibold)
-            .tracking(1.2)
+        SectionHeader(title: title)
     }
 
     private func swatchGrid(_ title: String, _ swatches: [(name: String, color: Color)]) -> some View {
         VStack(alignment: .leading, spacing: DS.Spacing.s3) {
             heading(title)
-            LazyVGrid(columns: [GridItem(.adaptive(minimum: 96), spacing: DS.Spacing.s2)], spacing: DS.Spacing.s2) {
+            LazyVGrid(columns: [GridItem(.adaptive(minimum: DS.Spacing.s24), spacing: DS.Spacing.s2)], spacing: DS.Spacing.s2) {
                 ForEach(swatches, id: \.name) { swatch in
                     VStack(alignment: .leading, spacing: DS.Spacing.s1) {
                         RoundedRectangle(cornerRadius: DS.Radius.xl, style: .continuous)
@@ -40,9 +38,8 @@ struct DesignTokensPreview: View {
                             .frame(height: DS.Spacing.s10)
                             .dsHairline(radius: DS.Radius.xl)
                         Text(swatch.name)
-                            .textStyle(.sansXs, tone: .secondary)
-                            .lineLimit(1)
-                            .minimumScaleFactor(0.7)
+                            .textStyle(.sansXs, tone: .secondary, lines: 1)
+                            .truncationMode(.middle)
                     }
                 }
             }

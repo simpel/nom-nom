@@ -11,11 +11,13 @@ public protocol TactilePickerOption: Identifiable, Equatable {
 public extension TactilePickerOption {
     var icon: String? { nil }
     var description: String? { nil }
-    var tint: Color { .accentColor }
+    var tint: Color { DS.Color.primary }
 }
 
-/// A unified, tactile multi-card selector with props for label, icon, and description.
-/// Reusable across Cooking Time, Rotation Goal, Taste Verdicts, etc.
+/// A row of OptionCells, one per option, `spacing-1.5` apart. Effort options draw the
+/// BurnerMeter, rotation goals their Badge (README "Colour": "rotation goal is a Badge
+/// going `secondary soft` → `primary soft` → `primary solid`"), anything else its icon
+/// and/or label and description. Tapping the chosen cell clears it.
 struct TactileOptionPicker<Option: TactilePickerOption>: View {
     let options: [Option]
     @Binding var selection: Option?
@@ -44,87 +46,48 @@ struct TactileOptionPicker<Option: TactilePickerOption>: View {
         showIcon: Bool = true,
         showDescription: Bool = true
     ) where Option: CaseIterable {
-        self.options = Array(Option.allCases)
-        self._selection = selection
-        self.showLabel = showLabel
-        self.showIcon = showIcon
-        self.showDescription = showDescription
+        self.init(
+            options: Array(Option.allCases), selection: selection,
+            showLabel: showLabel, showIcon: showIcon, showDescription: showDescription
+        )
     }
 
     var body: some View {
-        HStack(spacing: 6) {
+        HStack(spacing: DS.Spacing.s1_5) {
             ForEach(options) { option in
                 let isSelected = selection == option
-                let hasIcon = showIcon && option.icon != nil
-                let hasDescription = showDescription && option.description != nil
-
-                let isRotation = option is RotationGoal
-
-                Button {
-                    UIImpactFeedbackGenerator(style: .light).impactOccurred()
-                    withAnimation(.spring(response: 0.25, dampingFraction: 0.75)) {
-                        selection = isSelected ? nil : option
-                    }
+                let isCompact = !(showIcon && option.icon != nil) && !(showDescription && option.description != nil)
+                OptionCell(isSelected: isSelected, tint: option.tint, minHeight: isCompact ? DS.Spacing.s12 : DS.Spacing.s16) {
+                    selection = isSelected ? nil : option
                 } label: {
-                    VStack(spacing: isRotation ? 6 : 4) {
-                        if let effort = option as? EffortLevel {
-                            BurnerMeter(effort: effort)
-                                .frame(height: 22)
-                        } else if let rotation = option as? RotationGoal {
-                            RotationPill(goal: rotation, showIcon: false)
-                                .frame(height: 22)
-                        } else if hasIcon, let icon = option.icon {
-                            Image(systemName: icon)
-                                .font(.system(size: 18, weight: .semibold))
-                                .foregroundStyle(isSelected ? option.tint : DS.Color.textSecondary)
-                                .frame(height: 20)
-                        }
-
-                        if showLabel && !isRotation {
-                            if !hasIcon && !hasDescription {
-                                Text(option.label)
-                                    .font(.system(size: 20, weight: isSelected ? .bold : .semibold, design: .rounded))
-                                    .foregroundStyle(isSelected ? option.tint : DS.Color.textPrimary)
-                            } else {
-                                Text(option.label)
-                                    .font(.system(size: 13, weight: .semibold))
-                                    .foregroundStyle(isSelected ? DS.Color.textPrimary : DS.Color.textPrimary.opacity(0.85))
-                                    .lineLimit(1)
-                                    .minimumScaleFactor(0.75)
-                            }
-                        }
-
-                        if hasDescription, let description = option.description {
-                            Text(description)
-                                .font(.system(size: 10, weight: .regular))
-                                .foregroundStyle(isSelected ? DS.Color.textSecondary : DS.Color.textSecondary.opacity(0.8))
-                                .lineLimit(1)
-                                .minimumScaleFactor(0.75)
-                        }
-                    }
-                    .frame(maxWidth: .infinity)
-                    .frame(minHeight: (!hasIcon && !hasDescription) ? 48 : 64)
-                    .padding(.vertical, (!hasIcon && !hasDescription) ? 0 : 8)
-                    .padding(.horizontal, 4)
-                    .background {
-                        RoundedRectangle(cornerRadius: AppRadius.picker, style: .continuous)
-                            .fill(
-                                isSelected
-                                ? option.tint.opacity(0.20)
-                                : DS.Color.panel
-                            )
-                    }
-                    .overlay {
-                        RoundedRectangle(cornerRadius: AppRadius.picker, style: .continuous)
-                            .strokeBorder(
-                                isSelected ? option.tint : DS.Color.line,
-                                lineWidth: isSelected ? 1.5 : 0.7
-                            )
-                    }
+                    cellContent(option, isSelected: isSelected, isCompact: isCompact)
                 }
-                .buttonStyle(.plain)
                 .accessibilityLabel(accessibilityText(for: option))
-                .accessibilityAddTraits(isSelected ? .isSelected : [])
+            }
+        }
+        .sensoryFeedback(.impact(weight: .light), trigger: selection?.id)
+    }
+
+    @ViewBuilder
+    private func cellContent(_ option: Option, isSelected: Bool, isCompact: Bool) -> some View {
+        let description = showDescription ? option.description : nil
+        VStack(spacing: DS.Spacing.s1) {
+            if let effort = option as? EffortLevel {
+                BurnerMeter(effort: effort)
+            } else if let rotation = option as? RotationGoal {
+                Badge.rotation(rotation)
+            } else if showIcon, let icon = option.icon {
+                Image(systemName: icon)
+                    .textStyle(.sansLg, tone: nil, weight: .semibold)
+                    .foregroundStyle(isSelected ? option.tint : DS.Color.textSecondary)
+            }
+
+            if option is RotationGoal {
+                EmptyView()
+            } else if isCompact, showLabel {
+                Text(option.label).textStyle(.sansXl, weight: .semibold, numeric: true)
+            } else {
+                OptionCellText(label: showLabel ? option.label : "", description: description, isSelected: isSelected)
             }
         }
     }

@@ -3,7 +3,7 @@ import SwiftUI
 /// A meal photo stored in private cloud storage, downloaded and cached via PhotoCache.
 struct RemoteMealPhoto: View {
     let path: String?
-    var cornerRadius: CGFloat = AppRadius.photo
+    var cornerRadius: CGFloat = DS.Radius.xl2
     var bucket: String = SupabaseConfig.photoBucket
 
     @State private var data: Data?

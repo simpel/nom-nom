@@ -133,8 +133,7 @@ struct Input: View {
                     icon: "xmark",
                     accessibilityLabel: "Clear text",
                     variant: .secondary,
-                    appearance: .ghost,
-                    size: .sm
+                    appearance: .ghost
                 ) { text = "" }
             }
 

@@ -1,35 +1,36 @@
 import SwiftUI
 
-/// A clean, tactile taste reaction selector (-1 to 5) for household eaters rows.
+/// A compact taste reaction selector (−1…5) for household eater rows: six OptionCells in
+/// the reaction's colours, `spacing-1` apart, each a `spacing-7` square minimum with a
+/// `sans-xs` semibold tabular numeral (`text-secondary` at rest, the reaction's `text`
+/// when chosen). Tapping the chosen cell clears it.
 struct TactileTasteSelector: View {
     @Binding var selection: Reaction?
 
     var body: some View {
-        HStack(spacing: 5) {
+        HStack(spacing: DS.Spacing.s1) {
             ForEach(Reaction.allCases) { reaction in
                 let isSelected = selection == reaction
-                Button {
-                    UIImpactFeedbackGenerator(style: .light).impactOccurred()
-                    withAnimation(.spring(response: 0.25, dampingFraction: 0.75)) {
-                        selection = isSelected ? nil : reaction
-                    }
+                OptionCell(isSelected: isSelected, tint: reaction.fill, minHeight: DS.Spacing.s7) {
+                    selection = isSelected ? nil : reaction
                 } label: {
-                    Text(reaction.numberLabel)
-                        .font(.system(size: 11, weight: isSelected ? .bold : .semibold, design: .rounded))
-                        .foregroundStyle(isSelected ? reaction.text : .secondary)
-                        .frame(minWidth: 26, minHeight: 26)
-                        .background {
-                            RoundedRectangle(cornerRadius: AppRadius.picker, style: .continuous)
-                                .fill(isSelected ? reaction.fill.opacity(0.18) : Color(uiColor: .tertiarySystemFill))
-                        }
-                        .overlay {
-                            RoundedRectangle(cornerRadius: AppRadius.picker, style: .continuous)
-                                .strokeBorder(isSelected ? reaction.fill : Color.clear, lineWidth: 1.5)
-                        }
+                    Text(TasteScoreSelector.glyph(for: reaction))
+                        .textStyle(.sansXs, tone: nil, weight: .semibold, numeric: true)
+                        .foregroundStyle(isSelected ? reaction.text : DS.Color.textSecondary)
+                        .frame(minWidth: DS.Spacing.s5)
                 }
-                .buttonStyle(.plain)
+                .fixedSize()
                 .accessibilityLabel("\(reaction.numberLabel): \(reaction.name)")
             }
         }
+        .sensoryFeedback(.impact(weight: .light), trigger: selection)
     }
+}
+
+#Preview {
+    @Previewable @State var reaction: Reaction? = .great
+
+    TactileTasteSelector(selection: $reaction)
+        .padding(DS.Spacing.gutter)
+        .background(DS.Color.bg)
 }

@@ -43,8 +43,11 @@ struct TrendChart: View {
     private static let yDomain: ClosedRange<Double> = 0...1.05
     private static let gridValues: [Double] = [0.25, 0.5, 0.75, 1.0]
     private static let day: TimeInterval = 24 * 60 * 60
-    private static let totalStroke = StrokeStyle(lineWidth: DSAppearance.outlineWidth * 2, lineCap: .round)
-    private static let memberStroke = StrokeStyle(lineWidth: DSAppearance.outlineWidth, dash: [DS.Spacing.s1, DS.Spacing.s1])
+    // README "Scales": `border-hairline` and `border-thick` are "the only two widths the
+    // system draws". The total is a solid `border-thick` line; members are dashed at
+    // `border-hairline` so the total leads (DS-GAPS.md, "core").
+    private static let totalStroke = StrokeStyle(lineWidth: DS.BorderWidth.thick, lineCap: .round)
+    private static let memberStroke = StrokeStyle(lineWidth: DS.BorderWidth.hairline, dash: [DS.Spacing.s1, DS.Spacing.s1])
 
     private var isAreaMode: Bool { series.isEmpty }
     private var allDates: [Date] { total.map(\.date) + series.flatMap { $0.points.map(\.date) } }

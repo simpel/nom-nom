@@ -34,7 +34,7 @@ struct CreateDropdownMenu: View {
             }
         } label: {
             Image(systemName: "plus")
-                .fontWeight(.semibold)
+                .fontWeight(DS.TextStyle.Weight.semibold.fontWeight)
         }
         .accessibilityLabel("Create")
         .sheet(item: $activeSheet) { target in

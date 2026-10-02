@@ -1,10 +1,11 @@
 import SwiftUI
 
 /// Chips and items laid out horizontally, wrapping onto new lines dynamically.
+/// Items and lines default to `spacing-1.5` apart.
 struct WrappingHStack<Content: View>: View {
     var alignment: HorizontalAlignment = .leading
-    var spacing: CGFloat = 6
-    var lineSpacing: CGFloat = 6
+    var spacing: CGFloat = DS.Spacing.s1_5
+    var lineSpacing: CGFloat = DS.Spacing.s1_5
     @ViewBuilder var content: Content
 
     var body: some View {
@@ -15,8 +16,8 @@ struct WrappingHStack<Content: View>: View {
 
 struct WrapLayout: Layout {
     var alignment: HorizontalAlignment = .leading
-    var spacing: CGFloat = 6
-    var lineSpacing: CGFloat = 6
+    var spacing: CGFloat = DS.Spacing.s1_5
+    var lineSpacing: CGFloat = DS.Spacing.s1_5
 
     private struct Line {
         var subviews: [LayoutSubview] = []

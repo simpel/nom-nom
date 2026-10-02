@@ -1,12 +1,13 @@
 import SwiftUI
 
-/// A key-value row pairing a leading label with trailing (or leading) wrapping chips/items.
+/// A key-value row pairing a leading `sans-sm` `text-secondary` label with trailing (or
+/// leading) wrapping items, `spacing-1.5` apart and `spacing-3` after the label.
 /// Resolves SwiftUI's unconstrained width measurement bug when wrapping layouts are placed inside `HStack`.
 struct LabeledWrappingRow<Content: View>: View {
     let label: String
     var alignment: HorizontalAlignment = .trailing
-    var spacing: CGFloat = 6
-    var lineSpacing: CGFloat = 6
+    var spacing: CGFloat = DS.Spacing.s1_5
+    var lineSpacing: CGFloat = DS.Spacing.s1_5
     @ViewBuilder var content: Content
 
     var body: some View {
@@ -16,9 +17,7 @@ struct LabeledWrappingRow<Content: View>: View {
             lineSpacing: lineSpacing
         ) {
             Text(label)
-                .font(.subheadline)
-                .foregroundStyle(DS.Color.textSecondary)
-                .padding(.top, 2)
+                .textStyle(.sansSm, tone: .secondary)
             content
         }
     }
@@ -26,9 +25,11 @@ struct LabeledWrappingRow<Content: View>: View {
 
 struct LabeledWrapLayout: Layout {
     var alignment: HorizontalAlignment = .trailing
-    var spacing: CGFloat = 6
-    var lineSpacing: CGFloat = 6
-    var labelGap: CGFloat = 12
+    var spacing: CGFloat = DS.Spacing.s1_5
+    var lineSpacing: CGFloat = DS.Spacing.s1_5
+    var labelGap: CGFloat = DS.Spacing.s3
+    /// Drops the label onto the first line's text (`spacing-0.5`).
+    private let labelInset = DS.Spacing.s0_5
 
     private struct Line {
         var subviews: [LayoutSubview] = []
@@ -71,7 +72,7 @@ struct LabeledWrapLayout: Layout {
         let labelSize = label.sizeThatFits(.unspecified)
 
         label.place(
-            at: CGPoint(x: bounds.minX, y: bounds.minY + 2),
+            at: CGPoint(x: bounds.minX, y: bounds.minY + labelInset),
             anchor: .topLeading,
             proposal: ProposedViewSize(labelSize)
         )

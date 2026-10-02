@@ -45,7 +45,7 @@ extension View {
 
                     Button(action: onAction) {
                         Image(systemName: "plus")
-                            .fontWeight(.semibold)
+                            .fontWeight(DS.TextStyle.Weight.semibold.fontWeight)
                     }
                     .accessibilityLabel(actionAccessibilityLabel)
                 }

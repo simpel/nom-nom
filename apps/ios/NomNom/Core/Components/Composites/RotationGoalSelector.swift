@@ -1,72 +1,30 @@
 import SwiftUI
 
-/// Standalone, tactile rotation goal selector for rating meals.
-/// Designed to sit directly on the background surface with clear 2-tier typography
-/// and unambiguous active selection state.
+/// Standalone rotation goal selector for rating meals: one OptionCell per RotationGoal,
+/// label over description, `spacing-2` apart. Tapping the chosen cell clears it.
 struct RotationGoalSelector: View {
     @Binding var selection: RotationGoal?
 
     var body: some View {
-        HStack(spacing: 8) {
+        HStack(spacing: DS.Spacing.s2) {
             ForEach(RotationGoal.allCases) { goal in
                 let isSelected = selection == goal
-
-                Button {
-                    UIImpactFeedbackGenerator(style: .light).impactOccurred()
-                    withAnimation(.spring(response: 0.25, dampingFraction: 0.75)) {
-                        selection = isSelected ? nil : goal
-                    }
+                OptionCell(isSelected: isSelected, minHeight: DS.Spacing.s16) {
+                    selection = isSelected ? nil : goal
                 } label: {
-                    VStack(spacing: 5) {
-                        Text(goal.label)
-                            .font(.system(size: 13, weight: .semibold))
-                            .foregroundStyle(isSelected ? DS.Color.accentText : DS.Color.textPrimary)
-                            .lineLimit(1)
-                            .minimumScaleFactor(0.85)
-
-                        if let desc = goal.description {
-                            Text(desc)
-                                .font(.system(size: 10.5, weight: .regular))
-                                .foregroundStyle(isSelected ? DS.Color.textPrimary.opacity(0.85) : DS.Color.textSecondary)
-                                .lineLimit(1)
-                                .minimumScaleFactor(0.8)
-                        }
-                    }
-                    .frame(maxWidth: .infinity)
-                    .frame(height: 70)
-                    .padding(.horizontal, 6)
-                    .background {
-                        RoundedRectangle(cornerRadius: AppRadius.card, style: .continuous)
-                            .fill(isSelected ? DS.Color.accentSoft.opacity(0.40) : DS.Color.panel)
-                    }
-                    .overlay {
-                        RoundedRectangle(cornerRadius: AppRadius.card, style: .continuous)
-                            .strokeBorder(
-                                isSelected ? DS.Color.accent : DS.Color.line.opacity(0.8),
-                                lineWidth: isSelected ? 1.5 : 0.6
-                            )
-                    }
-                    .shadow(
-                        color: isSelected ? DS.Color.accent.opacity(0.10) : Color.black.opacity(0.04),
-                        radius: isSelected ? 4 : 3,
-                        x: 0,
-                        y: 1.5
-                    )
+                    OptionCellText(label: goal.label, description: goal.description, isSelected: isSelected)
                 }
-                .buttonStyle(.plain)
-                .accessibilityLabel("\(goal.label), \(goal.description ?? "")")
-                .accessibilityAddTraits(isSelected ? .isSelected : [])
+                .accessibilityLabel([goal.label, goal.description].compactMap { $0 }.joined(separator: ", "))
             }
         }
+        .sensoryFeedback(.impact(weight: .light), trigger: selection)
     }
 }
 
 #Preview {
     @Previewable @State var goal: RotationGoal? = .staple
 
-    VStack(spacing: 24) {
-        RotationGoalSelector(selection: $goal)
-    }
-    .padding()
-    .background(DS.Color.bg)
+    RotationGoalSelector(selection: $goal)
+        .padding(DS.Spacing.gutter)
+        .background(DS.Color.bg)
 }

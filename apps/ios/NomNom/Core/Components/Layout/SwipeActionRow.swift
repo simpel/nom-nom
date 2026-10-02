@@ -20,8 +20,13 @@ struct SwipeActionRow<ID: Hashable, Content: View>: View {
     @State private var isSwipedLeading = false
     @State private var isSwipedTrailing = false
     
-    private let buttonWidth: CGFloat = 74
-    private let fullSwipeThreshold: CGFloat = 160
+    /// The revealed action is `spacing-20` wide; a drag past two widths fires it.
+    private let buttonWidth = DS.Spacing.s20
+    private var fullSwipeThreshold: CGFloat { buttonWidth * 2 }
+    /// Drag distance before the row starts to follow the finger (`spacing-4`).
+    private let dragThreshold = DS.Spacing.s4
+    /// The snap: `duration-layout` (README "Motion and states": the layout duration).
+    private var snap: Animation { .spring(duration: DS.Motion.durationLayout) }
 
     init(
         id: ID,
@@ -54,10 +59,7 @@ struct SwipeActionRow<ID: Hashable, Content: View>: View {
                     ZStack(alignment: .trailing) {
                         leadingColor
                         if let leadingIcon {
-                            Image(systemName: leadingIcon)
-                                .font(.title3.weight(.medium))
-                                .foregroundStyle(.white)
-                                .frame(width: buttonWidth)
+                            actionIcon(leadingIcon, on: leadingColor)
                         }
                     }
                     .frame(width: offset, height: geo.size.height)
@@ -72,10 +74,7 @@ struct SwipeActionRow<ID: Hashable, Content: View>: View {
                     ZStack(alignment: .leading) {
                         trailingColor
                         if let trailingIcon {
-                            Image(systemName: trailingIcon)
-                                .font(.title3.weight(.medium))
-                                .foregroundStyle(.white)
-                                .frame(width: buttonWidth)
+                            actionIcon(trailingIcon, on: trailingColor)
                         }
                     }
                     .frame(width: -offset, height: geo.size.height)
@@ -115,7 +114,7 @@ struct SwipeActionRow<ID: Hashable, Content: View>: View {
                 }
                 .offset(x: offset)
                 .highPriorityGesture(
-                    DragGesture(minimumDistance: 15)
+                    DragGesture(minimumDistance: dragThreshold)
                         .onChanged { value in
                             if openRowID != id {
                                 openRowID = id
@@ -140,8 +139,8 @@ struct SwipeActionRow<ID: Hashable, Content: View>: View {
                             
                             offset = newOffset
                         }
-                        .onEnded { value in
-                            withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
+                        .onEnded { _ in
+                            withAnimation(snap) {
                                 if offset >= fullSwipeThreshold {
                                     // Full leading swipe
                                     closeAndTrigger(action: onLeadingAction)
@@ -173,7 +172,7 @@ struct SwipeActionRow<ID: Hashable, Content: View>: View {
         }
         .onChange(of: openRowID) { _, newValue in
             if newValue != id && (isSwipedLeading || isSwipedTrailing || offset != 0) {
-                withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
+                withAnimation(snap) {
                     offset = 0
                     isSwipedLeading = false
                     isSwipedTrailing = false
@@ -182,8 +181,21 @@ struct SwipeActionRow<ID: Hashable, Content: View>: View {
         }
     }
     
+    /// The action glyph in `sans-xl`, inked in the ground's `on-{role}` colour.
+    private func actionIcon(_ systemName: String, on ground: Color?) -> some View {
+        Image(systemName: systemName)
+            .textStyle(.sansXl, tone: nil)
+            .foregroundStyle(Self.ink(on: ground))
+            .frame(width: buttonWidth)
+    }
+
+    private static func ink(on ground: Color?) -> Color {
+        let roles: [DS.Role] = [.primary, .secondary, .destructive, .pro, .warning]
+        return roles.first { $0.fill == ground }?.on ?? DS.Color.onDestructive
+    }
+
     private func closeAndTrigger(action: (() -> Void)?) {
-        withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
+        withAnimation(snap) {
             offset = 0
             isSwipedLeading = false
             isSwipedTrailing = false
@@ -192,8 +204,9 @@ struct SwipeActionRow<ID: Hashable, Content: View>: View {
             }
         }
         if let action {
-            // Slight delay so the UI snaps back before the destructive action potentially removes the row
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+            // Wait out `duration-state` so the row snaps back before the action
+            // potentially removes it.
+            DispatchQueue.main.asyncAfter(deadline: .now() + DS.Motion.durationState) {
                 action()
             }
         }
