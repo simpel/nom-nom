@@ -1,10 +1,9 @@
 import SwiftUI
 
-/// The photos at the top of a detail screen (components/PhotoStrip/README.md): equal
-/// PhotoCard `lg` tiles in one `format`, `s2_5` apart, scrolling sideways and bleeding
-/// past the gutter (the first tile lines up with it). With `onAddPhoto`, an "Add photo"
-/// button sits `s3` from the strip's bottom-left and collapses to its icon once the
-/// strip scrolls more than 8pt.
+/// The photos on a detail screen (components/PhotoStrip/README.md): equal PhotoCard `lg`
+/// tiles in one `format`, `s2_5` apart, scrolling sideways and bleeding past the gutter
+/// (the first tile lines up with it). With `onAddPhoto`, the strip always ends with an
+/// Add photo tile the same size as a photo.
 ///
 /// Format is a property of the strip, not of a photo: every tile gets the same one
 /// (`portrait` 216×288 by default, `square` 288×288, `landscape` 288×216).
@@ -12,7 +11,7 @@ import SwiftUI
 /// Place it inside the screen's gutter padding; `bleed` (default the gutter) is how far
 /// it reaches past that padding on each side. Omit `onAddPhoto` for read-only.
 ///
-/// - Empty, can add: a dashed "Add a photo" tile (`s20`, `s24` when landscape).
+/// - Empty, can add: the add tile alone, labelled `emptyTitle`.
 /// - Empty, read-only: a PhotoCard `lg` no-photo tile.
 struct PhotoStrip: View {
     let photos: [PhotoCardSource]
@@ -21,17 +20,8 @@ struct PhotoStrip: View {
     var format: PhotoCardFormat
     var emptyTitle: String
     var bleed: CGFloat
-    /// Force the add button's icon-only state (e.g. the screen itself scrolled);
-    /// nil follows the strip's own scroll.
-    var collapsed: Bool?
     var onAddPhoto: (() -> Void)?
     var onSelect: (Int) -> Void
-
-    @State private var hasScrolled = false
-
-    private static let space = "PhotoStrip"
-    /// README: "As soon as the strip scrolls (more than 8px)" = `spacing-2`.
-    private static let scrollThreshold = DS.Spacing.s2
 
     init(
         photos: [PhotoCardSource],
@@ -39,7 +29,6 @@ struct PhotoStrip: View {
         format: PhotoCardFormat = .portrait,
         emptyTitle: String = "Add a photo",
         bleed: CGFloat = DS.Spacing.gutter,
-        collapsed: Bool? = nil,
         onAddPhoto: (() -> Void)? = nil,
         onSelect: @escaping (Int) -> Void
     ) {
@@ -48,18 +37,13 @@ struct PhotoStrip: View {
         self.format = format
         self.emptyTitle = emptyTitle
         self.bleed = bleed
-        self.collapsed = collapsed
         self.onAddPhoto = onAddPhoto
         self.onSelect = onSelect
     }
 
     var body: some View {
-        if photos.isEmpty {
-            if let onAddPhoto {
-                PhotoStripEmptyAddTile(title: emptyTitle, isLandscape: format == .landscape, action: onAddPhoto)
-            } else {
-                PhotoCard(.none(), size: .lg, format: format)
-            }
+        if photos.isEmpty && onAddPhoto == nil {
+            PhotoCard(.none(), size: .lg, format: format)
         } else {
             strip
         }
@@ -82,25 +66,19 @@ struct PhotoStrip: View {
                     }
                     .buttonStyle(AppPressableButtonStyle())
                 }
+                if let onAddPhoto {
+                    PhotoStripAddTile(
+                        title: photos.isEmpty ? emptyTitle : "Add photo",
+                        format: format,
+                        action: onAddPhoto
+                    )
+                }
             }
             .scrollTargetLayout()
-            .onGeometryChange(for: Bool.self) { proxy in
-                proxy.frame(in: .named(Self.space)).minX < bleed - Self.scrollThreshold
-            } action: { scrolled in
-                hasScrolled = scrolled
-            }
         }
         // README "Use": the track is the system's one scroller — snap to each tile.
         .scrollTargetBehavior(.viewAligned)
-        .coordinateSpace(.named(Self.space))
         .contentMargins(.horizontal, bleed, for: .scrollContent)
-        .overlay(alignment: .bottomLeading) {
-            if let onAddPhoto {
-                PhotoStripAddButton(isCollapsed: collapsed ?? hasScrolled, action: onAddPhoto)
-                    .padding(.leading, bleed + DS.Spacing.s3)
-                    .padding(.bottom, DS.Spacing.s3)
-            }
-        }
         .padding(.horizontal, -bleed)
     }
 

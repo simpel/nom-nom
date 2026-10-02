@@ -135,10 +135,10 @@
     "Photography"
   ],
   "lastChange": {
-    "at": "2026-10-02T00:20:00Z",
+    "at": "2026-10-02T10:56:00Z",
     "by": "Joel Sandén",
-    "note": "Renames with deprecation aliases (label→aria-label, tone/variant, trailingTone, leading/trailing, RecipeLinkCard.title); BaseProps and the six missing interfaces; manifest reconciled; LabeledPhotoCard, RecipeShelf and PartyCard documented; Dynamic Type mapping.",
-    "via": "Claude (chat, second audit — batches 5 and 6)"
+    "via": "Claude (Cowork, iOS canvas)",
+    "note": "Buttons no longer scale on press (opacity only): AppButton and the PhotoStrip add tile; README and AppButton guidelines updated. Earlier today: ListRow two-button rule, PhotoStrip add tile, Timeline mini, PartyCard recent meals."
   },
   "layout": "files",
   "libraries": [

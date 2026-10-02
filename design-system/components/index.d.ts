@@ -299,11 +299,11 @@ export interface PhotoStripProps extends BaseProps {
   format?: 'square' | 'portrait' | 'landscape';
   /** Rendered as PhotoCard lg. */
   photos: { src: string; alt?: string; score?: number | null }[];
-  /** Omit when the viewer can't add photos. Shown over the first photo, or as the empty tile. */
+  /** Omit when the viewer can't add photos. Renders an Add photo tile as the strip's last tile, the same size and format as a photo (the only tile when there are no photos). */
   onAddPhoto?: () => void;
-  /** @default 'Add a photo' */
+  /** Label of the add tile when there are no photos. @default 'Add a photo' */
   emptyTitle?: string;
-  /** Icon-only Add photo. Defaults to true once the strip has scrolled; pass it to follow the page's scroll instead. */
+  /** @deprecated No effect: the floating Add photo button was replaced by the trailing add tile. */
   collapsed?: boolean;
 }
 
@@ -392,9 +392,12 @@ export interface RatingListProps extends BaseProps {
 }
 
 export interface TimelineProps extends BaseProps {
-  /** @default 'This recipe over time' */
+  /** 'md' (default): PhotoCard sm tiles with the verdict Badge under a "N times" header. 'mini': PhotoCard xs squares with the date only, no badge and no header unless `title` is given — for cards (PartyCard's recent meals). */
+  size?: 'md' | 'mini';
+  /** @default 'This recipe over time' (md); none (mini) */
   title?: string;
-  occasions: { date?: string; score: number; verdict?: string; photo?: string; current?: boolean; href?: string }[];
+  /** `score` drives the verdict Badge (md only; mini ignores it). */
+  occasions: { date?: string; score?: number; verdict?: string; photo?: string; alt?: string; current?: boolean; href?: string }[];
 }
 
 export interface BottomSheetProps extends BaseProps {
@@ -583,7 +586,8 @@ export interface PartyCardProps extends BaseProps {
   memberCount?: number;
   meta?: string;
   summary?: string;
-  recentMeals?: PhotoCardProps[];
+  /** Rendered as a Timeline size 'mini': a square thumbnail and its date per meal, newest first. */
+  recentMeals?: { src?: string; alt?: string; date?: string; current?: boolean; href?: string }[];
   onClick?: () => void;
   href?: string;
   /** 'discover' only: renders "Ask to join" as a sibling of the card's pressable region. */

@@ -56,7 +56,7 @@ struct PhotoStripEditor: View {
         VStack(alignment: .leading, spacing: DS.Spacing.s3) {
             if items.isEmpty {
                 if canAdd {
-                    PhotoStripEmptyAddTile {
+                    PhotoStripAddTile(title: "Add a photo") {
                         if CameraPicker.isAvailable { showSourceChoice = true } else { showLibrary = true }
                     }
                 }

@@ -9,12 +9,13 @@ enum PartyCardMode: Equatable {
     case discover
 }
 
-/// One recent meal on a PartyCard: a photo only, no verdict.
+/// One recent meal on a PartyCard: a photo and its date, no verdict.
 struct PartyCardMeal: Identifiable {
     let id: UUID
     let source: PhotoCardSource
     /// What the photo shows, for VoiceOver.
     var title: String
+    var date: Date
 }
 
 /// A dinner party at a glance (components/PartyCard/README.md), on one Card
@@ -23,7 +24,7 @@ struct PartyCardMeal: Identifiable {
 /// - The head and summary are one link into the party (`spacing-2` apart): Avatar `lg`
 ///   (decorative, the name is beside it), the name and the "N members · meta" line,
 ///   and in `mine` mode a ScoreValue `xs`. The summary is `sans-sm` secondary, two lines.
-/// - Recent meals scroll as PhotoCard `xs` squares, `spacing-2` apart.
+/// - Recent meals, newest first, are a Timeline `mini`: square thumbnail and date.
 /// - `discover`: the `join` control sits under the card's link, never inside it.
 ///
 /// ```swift
@@ -107,19 +108,13 @@ struct PartyCard<Destination: View, Join: View>: View {
         .contentShape(Rectangle())
     }
 
-    /// bundle.css `.nn-party-card__meals`: a scroller, gap `spacing-2`.
+    /// README: "rendered as a Timeline `mini`"; the rail bleeds off the card's right edge.
     private var mealsRow: some View {
-        // `.nn-scroller`: on touch "the platform draws its own" scroll bar (root README);
-        // "Never hide the scrollbar outright" (PhotoStrip README).
-        ScrollView(.horizontal) {
-            LazyHStack(spacing: DS.Spacing.s2) {
-                ForEach(recentMeals) { meal in
-                    PhotoCard(meal.source, size: .xs, format: .square, accessibilityLabel: meal.title)
-                }
-            }
-            .scrollTargetLayout()
-        }
-        .scrollTargetBehavior(.viewAligned)
+        Timeline(
+            occasions: recentMeals.map { TimelineOccasion(id: AnyHashable($0.id), date: $0.date, photo: $0.source) },
+            size: .mini,
+            bleed: CardSize.md.padding
+        )
     }
 }
 
@@ -147,7 +142,7 @@ private struct PartyCardGallery: View {
                 VStack(spacing: DS.Spacing.s4) {
                     if let party = store.parties.first {
                         let meals = store.meals(forParty: party.id).prefix(4).map { meal in
-                            PartyCardMeal(id: meal.id, source: .meal(meal), title: store.dishName(forMeal: meal))
+                            PartyCardMeal(id: meal.id, source: .meal(meal), title: store.dishName(forMeal: meal), date: meal.eatenOn)
                         }
                         PartyCard(party: party, score: 0.82, memberCount: 4, meta: "12 meals", recentMeals: Array(meals)) {
                             Text(party.name)

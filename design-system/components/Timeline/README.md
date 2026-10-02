@@ -15,5 +15,18 @@ New from the Meal Detail Redesign canvas (not yet in the SwiftUI code); tiles ar
 - Under each tile: the date `sans-sm` (current reads "This meal", semibold). No score numeral: the verdict badge carries the result; `score` drives the badge and its tooltip.
 - Past items link to that meal. The rail bleeds off the right edge.
 
+## Mini variant (`size="mini"`)
+For a card that needs to show recent meals without becoming a second detail screen: PartyCard's recent meals, and anywhere a short history sits inside a Card.
+
+- Tiles: PhotoCard `xs` square (`spacing-20`), no verdict Badge.
+- Label: the date only, `sans-xs` `tertiary`, tabular; the current one semibold `text-primary` (it keeps its date, never "This meal").
+- Rail: the same 2px `line-strong`; dots `spacing-3` with a 2px ring in `--nn-timeline-ring` (default `panel`, since mini lives on cards).
+- No header unless `title` is passed; no "N times" count.
+- Gap `spacing-2`; the rail still bleeds off the right edge of the card.
+
+```js
+h(N.Timeline, { size: 'mini', occasions: [{ date: '1 Oct', photo: a }, { date: '29 Sep', photo: b }, { date: '25 Sep', photo: c }] })
+```
+
 ## Use
 `NomNom.Timeline` — props are `TimelineProps` in `components/index.d.ts`. Markup: `.nn-section` > `.nn-section-header`, `.nn-timeline` > `__track` > `__item` (`.is-current`; `a` for past) > `__dot`, `.nn-photo-card[data-size=sm]`, `__date`.

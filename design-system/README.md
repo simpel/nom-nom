@@ -108,7 +108,7 @@ The px values in the scale above are the sizes at the default setting. Fixed com
 
 ## Motion and states
 
-- Press: `opacity-70` and scale 0.985 over 120ms ease-out. Focus and error borders animate over 150ms ease-out. Selection springs (≈0.25s) with a light haptic.
+- Press: `opacity-70` over 120ms ease-out. Buttons never scale; pressable cards and rows may add `scale-press` (0.985) / `scale-press-row` (0.995). Focus and error borders animate over 150ms ease-out. Selection springs (≈0.25s) with a light haptic.
 - Disabled: `opacity-50` on buttons and fields. Pending: a spinner replaces the button icon.
 - Focused field: 1.5px `primary` at `opacity-80`; error: 1.5px `destructive` at `opacity-80`.
 - Web keyboard focus: 2px solid `focus-ring`, 2px offset (≥6:1 on `bg`).

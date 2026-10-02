@@ -75,24 +75,13 @@ enum AppButtonIcon: ExpressibleByStringLiteral {
     }
 }
 
-/// README "Motion and states": "Press: `opacity-70` and scale 0.985 over 120ms
-/// ease-out" (`scale-press`, `duration-press`, `ease-standard`). Reduce Motion keeps
-/// the fade and drops the scale ("it also removes press transforms").
+/// README "Motion and states": "Press: `opacity-70` over 120ms ease-out. Buttons never
+/// scale" (`duration-press`, `ease-standard`). AppButton README: "a button never changes
+/// size on press."
 struct AppPressableButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
-        AppPressEffect(label: configuration.label, isPressed: configuration.isPressed)
-    }
-}
-
-private struct AppPressEffect<Label: View>: View {
-    let label: Label
-    let isPressed: Bool
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
-
-    var body: some View {
-        label
-            .opacity(isPressed ? DS.Opacity.pressed : DS.Opacity.o100)
-            .scaleEffect(isPressed && !reduceMotion ? DS.Motion.scalePress : 1)
-            .animation(DS.Motion.press, value: isPressed)
+        configuration.label
+            .opacity(configuration.isPressed ? DS.Opacity.pressed : DS.Opacity.o100)
+            .animation(DS.Motion.press, value: configuration.isPressed)
     }
 }

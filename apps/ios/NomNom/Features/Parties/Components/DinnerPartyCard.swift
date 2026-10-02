@@ -17,7 +17,7 @@ struct DinnerPartyCard: View {
     }
 
     private var recentMeals: [PartyCardMeal] {
-        meals.map { PartyCardMeal(id: $0.id, source: .meal($0), title: store.dishName(forMeal: $0)) }
+        meals.map { PartyCardMeal(id: $0.id, source: .meal($0), title: store.dishName(forMeal: $0), date: $0.eatenOn) }
     }
 
     var body: some View {

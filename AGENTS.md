@@ -4,6 +4,46 @@ These instructions define how the Nom Nom codebase is structured and the rules t
 
 ---
 
+## 0. Design System First (read before any UI work)
+
+Nom Nom has its own design system. It is the spec for every pixel in the iOS app.
+
+- **Source of truth**: the artifact at https://claude.ai/artifact/4jeEJ91V5eRxpDn8NtqNgK, vendored read-only at `design-system/` (version in `design-system/VERSION`).
+- **What to read, in order**:
+  1. `design-system/README.md`: voice, colour roles, scales, typography, imagery, composition rules.
+  2. `design-system/components/<Name>/README.md` for every component you touch or compose. Read it before writing the Swift.
+  3. `apps/ios/NomNom/Core/Design/README.md` (how tokens reach Swift) and `Core/Design/DS-GAPS.md` (known gaps and the calls already taken).
+- **Precedence when the spec disagrees with itself**: component README > root README > `bundle.css` > `index.d.ts` / `api/`. Log every such call in `DS-GAPS.md` section B.
+- **The Swift side**: each DS component has one Swift counterpart in `Core/Components/` with the same name (`ListRow` ↔ `ListRow.swift`, `BottomSheet` ↔ `SheetBody` / `SheetCard` / `SheetHero` / `.dsSheet()`, `Section` ↔ `DSSection`, `Toggle` ↔ `AppToggle`, `Text` ↔ `.textStyle(...)`). Use it; never build a second version.
+
+### Building UI: the lookup
+
+Before writing any view, card, row, sheet or control:
+
+1. **Find the DS component.** `ls design-system/components/`. If one fits, use its Swift counterpart with the axes its README defines. Do not add props, variants or sizes the README doesn't name.
+2. **Compose before inventing.** If no single component fits, build the view from DS components (Card + ListRow + Badge, …). A feature view built only from DS components and tokens needs no gap entry.
+3. **No equivalent? Flag it.** If the UI needs a pattern the DS does not define (a new visual shape, control, state or layout rule):
+   - Shared across features → `Core/Components/Interim/<Name>.swift`, first line `// DS-GAP: pending design system — see Core/Design/DS-GAPS.md`. One feature → that feature's `Components/`.
+   - Build it only from DS primitives and tokens.
+   - Add it to `DS-GAPS.md` section A with what it covers and **what the DS needs to decide**.
+   - **Tell the user in your reply**: name the component, why no DS component fits, and the DS-GAPS entry you added. Never add an unflagged gap.
+4. **A value the DS doesn't give** → `DS-GAPS.md` section C, plus `// ds-lint:allow <reason>` on the line.
+
+### Checks (run after any UI change)
+
+```bash
+scripts/ds-lint.sh        # invented values (sizes, colours, radii, opacities…)
+scripts/ds-coverage.sh    # components with no DS equivalent and no DS-GAPS entry
+```
+
+Both must be clean. `ds-coverage.sh` errors on any `Core/Components` file that maps to no `design-system/components/<Name>` and has no `DS-GAP` header or `DS-GAPS.md` entry (`Foundations/` and `*Gallery.swift` are exempt). It warns on any feature view that calls no DS component. Fix the cause or add the gap entry; do not just silence it.
+
+### When the design system is updated
+
+Follow `Core/Design/README.md` → "Updating the design system": re-vendor, bump `VERSION`, regenerate tokens, run both checks, re-read changed component READMEs against `Core/Components`, then move closed gaps in `DS-GAPS.md` from A to D.
+
+---
+
 ## 1. Directory & Folder Architecture
 
 This is a pnpm/Turborepo monorepo. Three apps under `apps/`, shared configs under `packages/`.
@@ -15,7 +55,8 @@ design-system/          # Vendored snapshot of the design system artifact (see V
 ├── components/         # One README per component + bundle.css / index.d.ts (reference implementation)
 scripts/
 ├── ds-tokens-swift.py  # tokens.json -> apps/ios/NomNom/Core/Design/Generated/DSTokens.generated.swift
-└── ds-lint.sh          # Fails on invented values in Core/ and Features/. Must be clean.
+├── ds-lint.sh          # Fails on invented values in Core/ and Features/. Must be clean.
+└── ds-coverage.sh      # Fails on Core components with no DS equivalent and no DS-GAPS entry. Must be clean.
 apps/
 ├── ios/NomNom/         # SwiftUI app
 │   ├── App/            # App lifecycle, root navigation (RootTabView, RootView, NomNomApp)
@@ -209,7 +250,7 @@ AppButton(icon: "chevron.left", accessibilityLabel: "Back", variant: .secondary,
 3. **`size`** (default `.md`): `xs`, `sm` and `md` are all 44pt tall and differ in type step (`sans-xs` / `sans-sm` / `sans-md`) and side padding; `lg` is 48pt (`sans-lg`) for full-width screen-bottom actions. **No button is smaller than 44 × 44.**
 4. **Icon-only**: `AppButton(icon:accessibilityLabel:…)` takes no size. Every icon-only button is the same 44pt circle.
 5. **Options**: `icon` (SF Symbol string, `.asset`, `.image`) + `iconPosition` `.start` / `.end`; `fullWidth`; `isLoading` (a spinner replaces the icon and the tap is dropped; the button is not disabled). Disable with `.disabled(_:)` (`opacity-50`).
-6. **Fixed**: label always semibold, sentence case; shape always a capsule; press is `opacity-70` + `scale-press`. Icons only where they remove ambiguity (camera, trash, plus, back, close, forward arrow).
+6. **Fixed**: label always semibold, sentence case; shape always a capsule; press is `opacity-70` only (a button never scales). Icons only where they remove ambiguity (camera, trash, plus, back, close, forward arrow).
 
 ### B. Platform Exceptions (Native Constraints)
 
@@ -258,7 +299,9 @@ Only these specific system-level APIs are exempt from `AppButton`:
 - [ ] Is `NomNom/Domain/` kept clean of UI code and SwiftUI imports (unless raw type conformances require it)?
 - [ ] Are store methods placed in the corresponding `FoodStore+<Domain>.swift` extension?
 - [ ] Do screens use `.screenTitle(...)` and `PageHeader` / `DetailHeader` rather than ad-hoc navigation/header modifiers?
+- [ ] Did you read `design-system/components/<Name>/README.md` for every component you touched or composed?
 - [ ] Does every value come from a `DS.*` token or `.textStyle(...)`, and is `scripts/ds-lint.sh` clean?
+- [ ] Is `scripts/ds-coverage.sh` clean? Is every new pattern with no DS equivalent in `DS-GAPS.md`, and did you name it to the user?
 - [ ] Is the view composed from `Core/Components` (Card, ListRow, EmptyState, …)? Is a pattern the DS lacks in `Interim/` with a `DS-GAPS.md` entry, not hand-rolled?
 - [ ] Is `Core/Design/Generated/` untouched (regenerated with `scripts/ds-tokens-swift.py` only)?
 - [ ] Do modal sheets use `.dsSheet()`, `SheetBody` and one of the sheet toolbar modifiers (close on `.topBarLeading`, primary action on `.topBarTrailing`)?

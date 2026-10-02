@@ -35,12 +35,12 @@ Each variant supplies four role tokens — `{role}`, `{role}-soft`, `{role}-text
 - `secondary` — alternatives and utilities ("Use a different address", "Reset filters", "Skip step"); `secondary soft iconOnly` is the in-sheet close.
 - `destructive` — irreversible actions only ("Delete meal", "Leave party", "Sign out"); prefer `outline` or `ghost` and confirm.
 - `pro` — Nom Nom Pro CTAs only ("Unlock with Pro").
-- `elevated iconOnly` — floating controls over content (the back button over photos); `secondary elevated sm` with camera — Add photo over a PhotoStrip.
+- `elevated iconOnly` — floating controls over content (the back button over photos); the PhotoStrip's Add photo is now its trailing tile, not a button.
 - `variant="reaction"` (+ `reaction` step) — only inside rating controls (TasteScoreSelector's selected step), never as an action.
 
 ## Rules
 - Label always semibold, sentence case; shape always `radius-full`.
-- Pressed `opacity-70` + scale 0.985 (120ms ease-out); focus 2px `focus-ring`, 2px offset. States are never appearances.
+- Pressed `opacity-70` (120ms ease-out), no scale: a button never changes size on press. Focus 2px `focus-ring`, 2px offset. States are never appearances.
 - Icons only where they remove ambiguity (camera, trash, plus, back, close, forward arrow). Never emoji.
 - Native alerts, confirmation dialogs, swipe actions, context menus and sheet toolbars use system buttons.
 - Contrast: `on-primary` on dark-theme `primary` is 2.98:1 and `on-destructive` on `destructive` ~3.5:1 — known misses kept from the source; `destructive-text` (outline/ghost/soft) passes.

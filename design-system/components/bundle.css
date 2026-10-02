@@ -141,7 +141,7 @@
 /* Nothing is smaller than 44px: every button draws at least the touch minimum, whatever its size step. */
 .nn-button { position: relative; min-width: var(--spacing-11); min-height: var(--spacing-11); }
 .nn-button[data-full-width] { display: flex; width: 100%; }
-.nn-button:active { opacity: var(--opacity-70); transform: scale(var(--scale-press)); }
+.nn-button:active { opacity: var(--opacity-70); }
 .nn-button:disabled { opacity: var(--opacity-50); cursor: default; }
 .nn-button[aria-busy="true"] { cursor: default; }
 .nn-button:focus-visible { outline: var(--border-thick) solid var(--focus-ring); outline-offset: var(--spacing-0\.5); }
@@ -268,6 +268,15 @@
 /* The button is placed from the TOP, against the tile's own height, so a scroll bar that takes layout space
    on some platforms can never push it down. --nn-tile-h mirrors PhotoCard lg for the strip's format. */
 .nn-photo-strip { --nn-tile-h: var(--spacing-72); position: relative; margin-right: calc(-1 * var(--spacing-4)); }
+.nn-photo-strip__add-tile { flex: none; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: var(--spacing-1); padding: var(--spacing-4); box-sizing: border-box;
+  width: calc(var(--spacing-72) * 3 / 4); height: var(--spacing-72); border: var(--border-thick) dashed var(--line-control); border-radius: var(--radius-3xl);
+  background: transparent; color: var(--text-primary); font: inherit; text-align: center; cursor: pointer; scroll-snap-align: start;
+  transition: opacity var(--duration-press) var(--ease-standard); }
+.nn-photo-strip__add-tile[data-format="square"] { width: var(--spacing-72); }
+.nn-photo-strip__add-tile[data-format="landscape"] { width: var(--spacing-72); height: calc(var(--spacing-72) * 3 / 4); }
+.nn-photo-strip__add-tile .nn-icon { font-size: var(--spacing-6); color: var(--primary-text); margin-bottom: var(--spacing-1); }
+.nn-photo-strip__add-tile:active { opacity: var(--opacity-70); }
+.nn-photo-strip__add-tile:focus-visible { outline: var(--border-thick) solid var(--focus-ring); outline-offset: var(--spacing-0\.5); }
 .nn-photo-strip[data-format="landscape"] { --nn-tile-h: calc(var(--spacing-72) * 3 / 4); }
 .nn-photo-strip__track { display: flex; gap: var(--spacing-2\.5); padding-right: var(--spacing-4); }
 .nn-photo-strip__track::-webkit-scrollbar { height: var(--spacing-1\.5); margin-top: calc(-1 * var(--spacing-1\.5)); }
@@ -347,6 +356,11 @@
 .nn-timeline__item { flex: none; width: var(--spacing-36); display: flex; flex-direction: column; gap: var(--spacing-2\.5); color: var(--text-primary); text-decoration: none; }
 .nn-timeline__dot { position: relative; width: var(--spacing-5); height: var(--spacing-5); box-sizing: border-box; border-radius: 50%; border: var(--spacing-1) solid var(--bg); background: var(--primary-muted); }
 .nn-timeline__item[data-current] .nn-timeline__dot { background: var(--primary); }
+.nn-timeline[data-size="mini"]::before { left: 0; top: calc(var(--spacing-1\.5) - var(--border-hairline)); }
+.nn-timeline[data-size="mini"] .nn-timeline__track { gap: var(--spacing-2); padding-left: 0; padding-bottom: var(--spacing-1); }
+.nn-timeline[data-size="mini"] .nn-timeline__item { width: var(--spacing-20); gap: var(--spacing-1\.5); }
+.nn-timeline[data-size="mini"] .nn-timeline__dot { width: var(--spacing-3); height: var(--spacing-3); border-width: var(--spacing-0\.5); border-color: var(--nn-timeline-ring, var(--panel)); }
+.nn-party-card .nn-timeline { margin-right: calc(-1 * var(--spacing-5)); }
 
 /* ---------- BottomSheet: scrim, grabber, close, title; reasons list */
 .nn-sheet-scrim { display: flex; flex-direction: column; justify-content: flex-end; background: var(--scrim); }

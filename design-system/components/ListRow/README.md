@@ -26,7 +26,7 @@ Replaces MealRow, the profile / recipe / meal-history rows, the leaderboard row,
 | Key–value | `title` + `value`, not pressable, no chevron |
 | Toggle | `title` + `meta`, `trailing` = Toggle, not pressable; the Toggle carries the action |
 | Subject | `leading` = Avatar or PhotoCard `xs`, `title` = the name, `meta` = date or count, `trailing` = ScoreValue `xs` or a Badge |
-| Invite | `leading` = Avatar `sm` from the address, `title` = the email, `meta` = "Invited {when}", `trailing` = Resend (`secondary ghost sm`) + the revoke ✕ (`destructive ghost sm iconOnly`) |
+| Invite | `leading` = Avatar `sm` from the address, `title` = the email, `meta` = "Invited {when}", `trailing` = Resend (`primary solid sm`) + Revoke (`secondary soft sm`) — both labelled, like an Accept / Decline pair |
 
 ## A pressable row never wraps its controls
 
@@ -42,7 +42,7 @@ Press, hover and the focus ring move to `.nn-row__main` in a split row, so only 
 
 ## Rules
 - A row never draws its own surface: it sits in `Card layout="list"`, which supplies the panel, the padding and the hairline between rows.
-- One trailing element, or two where the second is a `ghost` icon button. More than that is a card, not a row.
+- One trailing element, or two labelled buttons (an accept/decline or resend/revoke pair): the positive action `primary solid`, the other `secondary soft`. Never an unlabelled ✕ in a row: say what it does ("Decline", "Revoke", "Remove"). More than two is a card, not a row.
 - A row does not repeat what its section header already says: an invite row under an "Invited" header needs no Pending badge, and a row in a "Favourites" list needs no heart.
 - `value` and `trailing` are alternatives: a number goes in `value` (tabular), a control goes in `trailing`.
 - `unread` is the only row state with colour, and it is a dot — never a tinted ground.
@@ -62,7 +62,7 @@ h(N.Section, { title: 'Invited' },
   h(N.Card, { layout: 'list' },
     h(N.ListRow, { leading: h(N.Avatar, { name: email, size: 'sm' }), title: email, meta: 'Invited 2 days ago', chevron: false,
       trailing: [
-        h(N.AppButton, { key: 'r', variant: 'secondary', appearance: 'ghost', size: 'sm', onClick: resend }, 'Resend'),
-        h(N.AppButton, { key: 'x', variant: 'destructive', appearance: 'ghost', size: 'sm', iconOnly: true, icon: 'x', label: 'Revoke invite', onClick: revoke })] })))
+        h(N.AppButton, { key: 'r', size: 'sm', onClick: resend }, 'Resend'),
+        h(N.AppButton, { key: 'x', variant: 'secondary', appearance: 'soft', size: 'sm', 'aria-label': 'Revoke invite to ' + email, onClick: revoke }, 'Revoke')] })))
 ```
 Markup: `div|a|button.nn-row[data-size][data-tone][data-unread][data-pressable][data-split]` with `.nn-row__main` (split rows only), `.nn-row__lead`, `.nn-row__body`, `.nn-row__value`, `.nn-row__trail`, `.nn-row__chevron`.
