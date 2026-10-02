@@ -1,10 +1,11 @@
 import SwiftUI
 import PhotosUI
 
-/// The party's cover photo as a PhotoStrip above its DetailHeader. Tap opens the
-/// viewer. With no cover, members get PhotoStrip's "Add a photo" tile, which asks
-/// camera or library and uploads the pick as the cover; non-members see nothing.
-/// Replacing an existing cover stays in PartySettingsSheet.
+/// The party's photos as a PhotoStrip above its DetailHeader, cover first. Tap
+/// opens the viewer. Members get PhotoStrip's Add photo tile while the party has
+/// fewer than `PhotosDraft.maxCount` photos; it asks camera or library (several
+/// picks at once) and appends them. Non-members with no photos see nothing.
+/// Reordering and removing photos stays in PartySettingsSheet.
 struct PartyCoverStrip: View {
     let party: Party
     let onSelect: (Int) -> Void
@@ -16,17 +17,14 @@ struct PartyCoverStrip: View {
     @State private var showCamera = false
     @State private var isUploading = false
 
-    private var coverPath: String? {
-        guard let path = party.photoPath, !path.isEmpty else { return nil }
-        return path
-    }
+    private var remaining: Int { FoodStore.PhotosDraft.maxCount - party.photoPaths.count }
 
-    private var canAdd: Bool { coverPath == nil && store.isMember(of: party.id) }
+    private var canAdd: Bool { remaining > 0 && store.isMember(of: party.id) }
 
     var body: some View {
-        if coverPath != nil || canAdd {
+        if !party.photoPaths.isEmpty || canAdd {
             PhotoStrip(
-                photos: coverPath.map { [.remote(path: $0, bucket: SupabaseConfig.partyBucket)] } ?? [],
+                photos: party.photoPaths.map { .remote(path: $0, bucket: SupabaseConfig.partyBucket) },
                 format: .landscape,
                 onAddPhoto: canAdd ? addPhoto : nil,
                 onSelect: onSelect
@@ -37,20 +35,27 @@ struct PartyCoverStrip: View {
                 }
             }
             .disabled(isUploading)
-            .confirmationDialog("Add a cover photo", isPresented: $showSourceChoice) {
+            .confirmationDialog("Add photos", isPresented: $showSourceChoice) {
                 Button("Take photo") { showCamera = true }
                 Button("Choose from library") { showLibrary = true }
             }
-            .photosPicker(isPresented: $showLibrary, selection: $pickerItems, maxSelectionCount: 1, matching: .images, photoLibrary: .shared())
+            .photosPicker(
+                isPresented: $showLibrary,
+                selection: $pickerItems,
+                maxSelectionCount: max(remaining, 1),
+                selectionBehavior: .ordered,
+                matching: .images,
+                photoLibrary: .shared()
+            )
             .sheet(isPresented: $showCamera) {
                 CameraPicker { image in
                     if let prepared = PhotoTools.prepare(image) {
-                        Task { await upload(prepared) }
+                        Task { await upload([prepared]) }
                     }
                 }
                 .ignoresSafeArea()
             }
-            .task(id: pickerItems) { await handlePickedPhoto() }
+            .task(id: pickerItems) { await handlePickedPhotos() }
         }
     }
 
@@ -62,18 +67,24 @@ struct PartyCoverStrip: View {
         }
     }
 
-    private func handlePickedPhoto() async {
-        guard let item = pickerItems.first else { return }
-        defer { pickerItems = [] }
-        if let data = try? await item.loadTransferable(type: Data.self),
-           let prepared = PhotoTools.prepare(data) {
-            await upload(prepared)
+    private func handlePickedPhotos() async {
+        guard !pickerItems.isEmpty else { return }
+        let items = pickerItems
+        pickerItems = []
+        var photos: [Data] = []
+        for item in items {
+            if let data = try? await item.loadTransferable(type: Data.self),
+               let prepared = PhotoTools.prepare(data) {
+                photos.append(prepared)
+            }
         }
+        await upload(photos)
     }
 
-    private func upload(_ data: Data) async {
+    private func upload(_ photos: [Data]) async {
+        guard !photos.isEmpty else { return }
         isUploading = true
-        await store.updateParty(party, newPhotoData: data)
+        await store.addPartyPhotos(photos, to: party)
         isUploading = false
     }
 }

@@ -1,7 +1,7 @@
 // DS-GAP: pending design system — see Core/Design/DS-GAPS.md
 import SwiftUI
 
-/// The dinner party basics shared by create and edit: a single cover photo, the
+/// The dinner party basics shared by create and edit: up to five photos (the first is the cover), the
 /// party name (a `plain` Input in a SectionCard) and an optional "About" TextArea.
 /// Return in the name field runs `onSubmitName`.
 struct PartyFormFields: View {
@@ -25,9 +25,9 @@ struct PartyFormFields: View {
     var body: some View {
         AssetPhotosPickerSection(
             draft: $photoDraft,
-            title: "Cover Photo",
+            title: "Photos",
             bucket: SupabaseConfig.partyBucket,
-            maxCount: 1
+            maxCount: FoodStore.PhotosDraft.maxCount
         )
 
         SectionCard("Party Name") {

@@ -99,33 +99,24 @@ extension FoodStore {
         name: String? = nil,
         about: String? = nil,
         isPublic: Bool? = nil,
-        newPhotoData: Data? = nil,
-        removePhoto: Bool = false
+        photos: PhotosDraft? = nil
     ) async {
         let trimmedName = name?.trimmedName
         let finalName = (trimmedName?.isEmpty == false) ? trimmedName : party.name
         let finalAbout = about?.trimmingCharacters(in: .whitespacesAndNewlines) ?? party.about
         let finalPublic = isPublic ?? party.isPublic
 
-        var newPhotoPath = party.photoPath
-        var didChangePhoto = false
-
-        if removePhoto {
-            if let oldPath = party.photoPath {
-                _ = try? await supabase.storage.from(SupabaseConfig.partyBucket).remove(paths: [oldPath])
-                PhotoCache.shared.forget(oldPath)
+        var newPhotoPaths: [String]? = nil
+        if let photos {
+            do {
+                let resolved = try await resolvePartyPhotos(photos, for: party)
+                if resolved != party.photoPaths { newPhotoPaths = resolved }
+            } catch {
+                errorMessage = Self.describe(error)
+                return
             }
-            newPhotoPath = nil
-            didChangePhoto = true
-        } else if let newPhotoData, let prepared = PhotoTools.prepare(newPhotoData) {
-            let path = "\(party.id.uuidString.lowercased())/avatar.jpg"
-            PhotoCache.shared.put(prepared, for: path)
-            _ = try? await supabase.storage
-                .from(SupabaseConfig.partyBucket)
-                .upload(path, data: prepared, options: FileOptions(contentType: "image/jpeg", upsert: true))
-            newPhotoPath = path
-            didChangePhoto = true
         }
+        let didChangePhoto = newPhotoPaths != nil
 
         guard finalName != party.name || finalAbout != party.about || finalPublic != party.isPublic || didChangePhoto else {
             return
@@ -136,7 +127,7 @@ extension FoodStore {
                 name: finalName,
                 about: finalAbout,
                 is_public: finalPublic,
-                photo_path: newPhotoPath
+                photo_paths: newPhotoPaths
             )
 
             let updated: Party = try await supabase
@@ -148,13 +139,7 @@ extension FoodStore {
                 .execute()
                 .value
 
-            if let idx = parties.firstIndex(where: { $0.id == updated.id }) {
-                parties[idx] = updated
-            }
-            if currentParty?.id == updated.id {
-                currentParty = updated
-            }
-            reindex()
+            replaceLocal(party: updated)
             errorMessage = nil
         } catch {
             errorMessage = Self.describe(error)

@@ -57,10 +57,7 @@ struct MealRow: View {
         case .date:
             return meal.eatenOn.formatted(.dateTime.weekday(.abbreviated).day().month(.abbreviated))
         case .ratingProgress:
-            let rated = raters.filter { $0.rating != nil }.count
-            let progress = "\(rated) of \(raters.count) rated"
-            if waitingOn != nil { return partyNames }
-            return [partyNames, progress].filter { !$0.isEmpty }.joined(separator: " \u{00B7} ")
+            return partyNames
         case .parties:
             if isMinimal { return partyNames }
             let effort = (meal.effort ?? store.dish(meal.dishID)?.effort)?.label
@@ -79,10 +76,7 @@ struct MealRow: View {
     }
 
     private var trailing: ListRowTrailing? {
-        if metaStyle == .ratingProgress && !viewerHasRated {
-            return .badge(Badge("Not rated", variant: .secondary, size: .sm))
-        }
-        return score.map { .score($0) }
+        return .score(score)
     }
 
     var body: some View {

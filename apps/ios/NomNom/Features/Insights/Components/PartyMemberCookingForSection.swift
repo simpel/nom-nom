@@ -15,7 +15,7 @@ struct PartyMemberCookingForSection: View {
         let recipes = store.memberPartyRecommendations(for: memberRef, partyID: partyID).map(\.recipe)
 
         if !tip.isEmpty || !recipes.isEmpty {
-            ProSection(
+            ProCard(
                 "Cooking for \(name)",
                 teaser: "See what \(name) rates highest, a tip for your next dinner, and recipes they will love.",
                 contentBleed: DS.Spacing.s5

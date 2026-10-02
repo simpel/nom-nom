@@ -135,10 +135,10 @@
     "Photography"
   ],
   "lastChange": {
-    "at": "2026-10-02T10:56:00Z",
+    "at": "2026-10-02T11:05:00Z",
     "by": "Joel Sandén",
     "via": "Claude (Cowork, iOS canvas)",
-    "note": "Buttons no longer scale on press (opacity only): AppButton and the PhotoStrip add tile; README and AppButton guidelines updated. Earlier today: ListRow two-button rule, PhotoStrip add tile, Timeline mini, PartyCard recent meals."
+    "note": "Pro design language: new ProMark, ProCard (locked/unlocked), ProView (immersive pro-soft ground) and ProGate (locked view) with README and preview (components/Pro); README Colour section documents the three levels. bundle.css now defines the shadow-* variables (tokens.css was missing them, so every shadow rendered as none)."
   },
   "layout": "files",
   "libraries": [

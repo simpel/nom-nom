@@ -65,6 +65,15 @@ extension RatingList where Meter == RatingListMeter {
 }
 
 extension RatingList {
+    /// People with your own header figure and meter (index.d.ts: `trailing` and `bar`
+    /// replace the "{rated} of {total}" defaults), e.g. a party average above the members.
+    init(entries: [RatingListEntry], title: String, trailing: String? = nil, @ViewBuilder meter: () -> Meter) {
+        self.shape = .raters(entries.filter { !$0.isViewer } + entries.filter(\.isViewer))
+        self.title = title
+        self.trailing = trailing
+        self.meter = meter()
+    }
+
     /// Any other distribution: `meter` (e.g. a segmented Bar) above the card, `rows` inside it.
     init(_ title: String, trailing: String? = nil, rows: [RatingListRow], @ViewBuilder meter: () -> Meter) {
         self.shape = .rows(rows)

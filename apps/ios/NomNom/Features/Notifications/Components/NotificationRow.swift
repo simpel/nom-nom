@@ -2,8 +2,11 @@ import SwiftUI
 
 /// One inbox item: a ListRow (Subject shape) inside the inbox's `Card(layout: .list)`.
 /// The leading slot is the meal or recipe photo, the party's Avatar, or the kind's
-/// symbol. Unread rows carry ListRow's `unread` dot and semibold title, never a tinted
-/// ground (ListRow README). The chevron shows only when the row opens a meal.
+/// symbol. Rows carry no `unread` dot: the inbox's "Unread" section already says it,
+/// and the dot crowded the invite buttons. The chevron shows only when the row opens a meal.
+/// A party invite still pending carries Accept (`primary solid sm`) and Decline
+/// (`secondary soft sm`), as in PendingPartyInvitesSection (ListRow README: "two
+/// labelled buttons").
 struct NotificationRow: View {
     let notification: AppNotification
     var onTap: () -> Void
@@ -12,15 +15,13 @@ struct NotificationRow: View {
 
     @Environment(FoodStore.self) private var store
 
+    private var pendingInvite: PartyInvite? {
+        guard notification.kind == .partyInvite, let partyID = notification.partyID else { return nil }
+        return store.pendingInvite(toParty: partyID)
+    }
+
     var body: some View {
-        ListRow(
-            notification.title,
-            meta: notification.body,
-            leading: notification.listRowLeading(in: store),
-            chevron: notification.mealID != nil,
-            unread: notification.isUnread,
-            action: onTap
-        )
+        row
         .swipeActions(edge: .trailing, allowsFullSwipe: true) {
             Button(role: .destructive, action: onDelete) {
                 Label("Delete", systemImage: "trash")
@@ -37,6 +38,44 @@ struct NotificationRow: View {
             Button(role: .destructive, action: onDelete) {
                 Label("Delete", systemImage: "trash")
             }
+        }
+    }
+
+    @ViewBuilder
+    private var row: some View {
+        if let invite = pendingInvite {
+            ListRow(
+                notification.title,
+                meta: notification.body,
+                leading: notification.listRowLeading(in: store),
+                trailing: .view {
+                    HStack(spacing: DS.Spacing.s2) {
+                        AppButton("Accept", size: .sm) { respond(to: invite, accept: true) }
+                        AppButton("Decline", variant: .secondary, appearance: .soft, size: .sm) {
+                            respond(to: invite, accept: false)
+                        }
+                    }
+                }
+            )
+        } else {
+            ListRow(
+                notification.title,
+                meta: notification.body,
+                leading: notification.listRowLeading(in: store),
+                chevron: notification.mealID != nil,
+                action: onTap
+            )
+        }
+    }
+
+    private func respond(to invite: PartyInvite, accept: Bool) {
+        Task {
+            if accept {
+                await store.acceptPartyInvite(invite)
+            } else {
+                await store.declinePartyInvite(invite)
+            }
+            if notification.isUnread { await store.markRead(notification) }
         }
     }
 

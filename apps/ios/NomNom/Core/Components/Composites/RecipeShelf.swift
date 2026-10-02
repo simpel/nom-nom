@@ -51,7 +51,7 @@ struct RecipeShelf<Item: Identifiable, Cell: View>: View {
         }
     }
 
-    /// An empty `title` drops the header (a shelf inside a titled ProSection).
+    /// An empty `title` drops the header (a shelf inside a titled ProCard).
     private var track: some View {
         // README: "touch gets the platform's own" bar, so the system indicator stays on.
         ScrollView(.horizontal) {

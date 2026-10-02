@@ -28,7 +28,7 @@ struct MealsView: View {
                 } else {
                     ScrollView {
                         VStack(alignment: .leading, spacing: DS.Spacing.block) {
-                            MealsHeader(meals: currentMeals) { editorTarget = .new }
+                            MealsHeader { editorTarget = .new }
 
                             MealsToRateSection()
 

@@ -18,34 +18,32 @@ struct ProfileInsightsSection: View {
 
     var body: some View {
         if tasteProfile != nil || healthInsights != nil {
-            VStack(alignment: .leading, spacing: DS.Spacing.block) {
-                Text("Insights")
-                    .textStyle(.sansLg, weight: .semibold)
-
-                ProGate {
-                    VStack(alignment: .leading, spacing: DS.Spacing.block) {
-                        if let tasteProfile {
-                            tasteProfileCard(tasteProfile)
-                            if !tasteProfile.ratingDistribution.isEmpty {
-                                SegmentedBar(
-                                    .reactions(tasteProfile.ratingDistribution),
-                                    legend: .rows,
-                                    title: "Ratings given",
-                                    trailing: "\(tasteProfile.totalRatingsGiven)"
-                                )
-                            }
+            ProCard(
+                "Insights",
+                teaser: "See this taste profile, the health trend and the flavours behind it."
+            ) {
+                VStack(alignment: .leading, spacing: DS.Spacing.block) {
+                    if let tasteProfile {
+                        tasteProfileCard(tasteProfile)
+                        if !tasteProfile.ratingDistribution.isEmpty {
+                            SegmentedBar(
+                                .reactions(tasteProfile.ratingDistribution),
+                                legend: .rows,
+                                title: "Ratings given",
+                                trailing: "\(tasteProfile.totalRatingsGiven)"
+                            )
                         }
-
-                        if let healthInsights {
-                            healthTrendChart(healthInsights)
-
-                            if let macros = healthInsights.averageMacros {
-                                AverageMacrosCard(macros: macros)
-                            }
-                        }
-
-                        FlavorProfileCard(entries: flavorProfile)
                     }
+
+                    if let healthInsights {
+                        healthTrendChart(healthInsights)
+
+                        if let macros = healthInsights.averageMacros {
+                            AverageMacrosCard(macros: macros)
+                        }
+                    }
+
+                    FlavorProfileCard(entries: flavorProfile)
                 }
             }
             .task(id: raterRef) {

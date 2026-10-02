@@ -8,6 +8,7 @@ struct RootTabView: View {
     @State private var activeRateMealID: UUID?
     @State private var activeViewMealID: UUID?
     @State private var activePartyID: UUID?
+    @State private var showingInbox = false
 
     var body: some View {
         Group {
@@ -41,6 +42,9 @@ struct RootTabView: View {
                 PartyDetailView(partyID: target.id, showCloseButton: true)
             }
         }
+        .sheet(isPresented: $showingInbox) {
+            InboxSheetView()
+        }
         .onChange(of: notifications.pendingURL) { _, newURL in
             if let newURL {
                 handleIncomingURL(newURL)
@@ -60,6 +64,11 @@ struct RootTabView: View {
             }
         }
         .onAppear {
+            // Onboarding ends in the inbox when the viewer joined through an invite.
+            if notifications.pendingInbox {
+                showingInbox = true
+                notifications.pendingInbox = false
+            }
             if let pending = notifications.pendingURL {
                 handleIncomingURL(pending)
                 notifications.pendingURL = nil
@@ -162,8 +171,22 @@ struct RootTabView: View {
         navigator.tab = AppTab(rawValue: link.tab) ?? .meals
         switch link {
         case .party(let id): activePartyID = id
+        case .partyInvite(let id): openInvite(toParty: id)
         case .rateMeal(let id): activeRateMealID = id
         case .viewMeal(let id): activeViewMealID = id
+        }
+    }
+
+    /// A member goes straight to the party; anyone else gets the invite in their inbox
+    /// to accept or decline.
+    private func openInvite(toParty partyID: UUID) {
+        if store.isMember(of: partyID) {
+            activePartyID = partyID
+            return
+        }
+        Task {
+            guard await store.requestPartyInvite(partyID: partyID) != nil else { return }
+            showingInbox = true
         }
     }
 

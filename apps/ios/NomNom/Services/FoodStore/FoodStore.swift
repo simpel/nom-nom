@@ -37,9 +37,8 @@ final class FoodStore {
     }
     var currentParty: Party? {
         didSet {
-            let key = "selectedParty_\(userID.uuidString)"
-            // nil is "Just me" (the page menu's first choice), remembered as such.
-            UserDefaults.standard.set(currentParty?.id.uuidString ?? Self.soloPartySelection, forKey: key)
+            guard let id = currentParty?.id else { return }
+            UserDefaults.standard.set(id.uuidString, forKey: "selectedParty_\(userID.uuidString)")
         }
     }
 
@@ -62,8 +61,6 @@ final class FoodStore {
     var partyByID: [UUID: Party] = [:]
 
     static let log = Logger(subsystem: "NomNom", category: "store")
-    /// The saved party selection meaning "Just me".
-    static let soloPartySelection = "solo"
 
     init(userID: UUID) {
         self.userID = userID
@@ -84,8 +81,9 @@ final class FoodStore {
 
     var myMeals: [Meal] { meals.filter { $0.createdBy == userID } }
 
-    /// Context-filtered meals: if a party is selected, returns all meals served to that party;
-    /// otherwise returns your personal diary meals ("Just me").
+    /// Context-filtered meals: every meal served to the selected party. Every account
+    /// belongs to a party; until one is joined (say, an invite still waiting in the
+    /// inbox) this falls back to the viewer's own meals.
     var activeMeals: [Meal] {
         if let party = currentParty {
             let mealIDs = Set((mealPartiesByParty[party.id] ?? []).map(\.mealID))

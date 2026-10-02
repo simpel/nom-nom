@@ -73,15 +73,12 @@ struct PartySetupStepView: View {
         UIImpactFeedbackGenerator(style: .medium).impactOccurred()
         Task {
             if let party {
-                let photoData = photoDraft.addedData.first
-                let removePhoto = photoDraft.isEmpty && party.photoPath != nil
                 await store.updateParty(
                     party,
                     name: partyName,
                     about: about,
                     isPublic: isPublic,
-                    newPhotoData: photoData,
-                    removePhoto: removePhoto
+                    photos: photoDraft
                 )
                 isSaving = false
                 if store.errorMessage == nil {
@@ -92,12 +89,11 @@ struct PartySetupStepView: View {
                     store.errorMessage = nil
                 }
             } else {
-                let photoData = photoDraft.addedData.first
                 if let newParty = await store.createParty(
                     name: partyName,
                     about: about,
                     isPublic: isPublic,
-                    photoData: photoData
+                    photos: photoDraft.addedData
                 ) {
                     store.currentParty = newParty
                     onCreated?(newParty)

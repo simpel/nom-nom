@@ -6,7 +6,7 @@ import SwiftUI
 /// menus … use system buttons"). The artboard fixes the groups and their order:
 ///
 /// 1. `context` — the screen's own actions (Edit / Share / Delete meal), when given.
-/// 2. Dinner party — Just me or one of the viewer's parties, then "Manage parties".
+/// 2. Dinner party — the viewer's parties (every account belongs to one), then "Manage parties".
 /// 3. You — Inbox (unread count as the subtitle), My profile, Settings.
 /// 4. Pro — Get Nom Nom Pro (hidden once subscribed), Help & feedback.
 ///
@@ -28,13 +28,14 @@ struct PageMenu<Context: View>: View {
         Menu {
             context()
             Section("Dinner party") {
-                Picker("Dinner party", selection: partySelection) {
-                    Text("Just me").tag(UUID?.none)
-                    ForEach(store.myParties) { party in
-                        Text(party.name).tag(Optional(party.id))
+                if !store.myParties.isEmpty {
+                    Picker("Dinner party", selection: partySelection) {
+                        ForEach(store.myParties) { party in
+                            Text(party.name).tag(Optional(party.id))
+                        }
                     }
+                    .pickerStyle(.inline)
                 }
-                .pickerStyle(.inline)
                 Button("Manage parties") { navigator.tab = .parties }
             }
             Section {
@@ -76,7 +77,9 @@ struct PageMenu<Context: View>: View {
     private var partySelection: Binding<UUID?> {
         Binding(
             get: { store.currentParty?.id },
-            set: { id in store.currentParty = id.flatMap { store.party($0) } }
+            set: { id in
+                if let party = id.flatMap({ store.party($0) }) { store.currentParty = party }
+            }
         )
     }
 }

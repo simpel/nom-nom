@@ -3,13 +3,15 @@ import Foundation
 /// Where an incoming URL (universal link, custom scheme or notification) points.
 enum DeepLink: Equatable {
     case party(UUID)
+    /// A party's invite link: the viewer is asked to accept or decline it in the inbox.
+    case partyInvite(UUID)
     case rateMeal(UUID)
     case viewMeal(UUID)
 
     /// The tab that owns the destination.
     var tab: Int {
         switch self {
-        case .party: return 1
+        case .party, .partyInvite: return 1
         case .rateMeal, .viewMeal: return 0
         }
     }
@@ -27,7 +29,7 @@ enum DeepLink: Equatable {
         let partyQuery = queryItems.first(where: { $0.name == "party_id" })?.value
             ?? (hostOrPath == "party" ? queryItems.first(where: { $0.name == "id" })?.value : nil)
         if let partyQuery, let uuid = UUID(uuidString: partyQuery) {
-            self = .party(uuid)
+            self = hostOrPath == "invite" ? .partyInvite(uuid) : .party(uuid)
             return
         }
         if hostOrPath == "party", let uuid = pathParts.lazy.compactMap(UUID.init(uuidString:)).first {

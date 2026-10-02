@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// Dedicated modal sheet for editing an existing dinner party's details, cover photo, and visibility.
+/// Dedicated modal sheet for editing an existing dinner party's details, photos, and visibility.
 struct PartySettingsSheet: View {
     let party: Party
     var onPartyLeft: (() -> Void)? = nil
@@ -53,9 +53,7 @@ struct PartySettingsSheet: View {
         name = party.name
         about = party.about
         isPublic = party.isPublic
-        if let photoPath = party.photoPath, !photoPath.isEmpty {
-            photoDraft = FoodStore.PhotosDraft(existingPaths: [photoPath])
-        }
+        photoDraft = FoodStore.PhotosDraft(existingPaths: party.photoPaths)
     }
 
     private func save() {
@@ -64,15 +62,12 @@ struct PartySettingsSheet: View {
         isSaving = true
         UIImpactFeedbackGenerator(style: .medium).impactOccurred()
         Task {
-            let photoData = photoDraft.addedData.first
-            let removePhoto = photoDraft.isEmpty && party.photoPath != nil
             await store.updateParty(
                 party,
                 name: partyName,
                 about: about,
                 isPublic: isPublic,
-                newPhotoData: photoData,
-                removePhoto: removePhoto
+                photos: photoDraft
             )
             isSaving = false
             if store.errorMessage == nil {

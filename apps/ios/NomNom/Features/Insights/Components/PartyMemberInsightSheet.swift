@@ -2,7 +2,7 @@ import SwiftUI
 
 /// One member of a dinner party ("Nom Nom iOS" canvas, MemberSheet), as a BottomSheet:
 /// the PersonHeaderRow ("Member since Mar 2026 · 18 meals rated here"), two compact
-/// ScoreCards (their average here, their taste match), a ProSection "Cooking for Anna"
+/// ScoreCards (their average here, their taste match), a ProCard "Cooking for Anna"
 /// with the AI tip and recipes they will love, then their highest and lowest here.
 struct PartyMemberInsightSheet: View {
     let memberRef: RaterRef

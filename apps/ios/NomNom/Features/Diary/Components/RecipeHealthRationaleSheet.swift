@@ -1,7 +1,7 @@
 import SwiftUI
 
 /// The health score's BottomSheet ("Nom Nom iOS" canvas, HealthSheet): SheetHero
-/// (score, verdict, the tier's meaning), then a ProSection "Why it scores 72" with the
+/// (score, verdict, the tier's meaning), then a ProCard "Why it scores 72" with the
 /// rationale, cooking technique, macronutrients and the highlights / watch-outs, and a
 /// ghost "How this score is calculated" outside the gate.
 struct RecipeHealthRationaleSheet: View {
@@ -19,7 +19,7 @@ struct RecipeHealthRationaleSheet: View {
                     lead: healthIndex.tier.explanation
                 )
 
-                ProSection(
+                ProCard(
                     "Why it scores \(healthIndex.score)",
                     teaser: "See the full reasoning, the cooking technique, macros per serving and what to watch out for."
                 ) {

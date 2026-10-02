@@ -19,6 +19,9 @@ struct SwipeActionRow<ID: Hashable, Content: View>: View {
     @State private var offset: CGFloat = 0
     @State private var isSwipedLeading = false
     @State private var isSwipedTrailing = false
+    /// The axis a drag committed to on its first movement. A vertical drag is left
+    /// to the enclosing ScrollView for the rest of the gesture.
+    @State private var dragAxis: Axis?
     
     /// The revealed action is `spacing-20` wide; a drag past two widths fires it.
     private let buttonWidth = DS.Spacing.s20
@@ -113,9 +116,17 @@ struct SwipeActionRow<ID: Hashable, Content: View>: View {
                     }
                 }
                 .offset(x: offset)
-                .highPriorityGesture(
+                // Simultaneous, not high-priority: a high-priority drag steals the touch
+                // from the ScrollView, so a vertical drag that starts on a row never scrolls.
+                .simultaneousGesture(
                     DragGesture(minimumDistance: dragThreshold)
                         .onChanged { value in
+                            if dragAxis == nil {
+                                let t = value.translation
+                                dragAxis = abs(t.width) > abs(t.height) ? .horizontal : .vertical
+                            }
+                            guard dragAxis == .horizontal else { return }
+
                             if openRowID != id {
                                 openRowID = id
                             }
@@ -140,6 +151,8 @@ struct SwipeActionRow<ID: Hashable, Content: View>: View {
                             offset = newOffset
                         }
                         .onEnded { _ in
+                            defer { dragAxis = nil }
+                            guard dragAxis == .horizontal else { return }
                             withAnimation(snap) {
                                 if offset >= fullSwipeThreshold {
                                     // Full leading swipe
@@ -167,7 +180,8 @@ struct SwipeActionRow<ID: Hashable, Content: View>: View {
                                     }
                                 }
                             }
-                        }
+                        },
+                    including: hasActions ? .all : .subviews
                 )
         }
         .onChange(of: openRowID) { _, newValue in
@@ -193,6 +207,8 @@ struct SwipeActionRow<ID: Hashable, Content: View>: View {
         let roles: [DS.Role] = [.primary, .secondary, .destructive, .pro, .warning]
         return roles.first { $0.fill == ground }?.on ?? DS.Color.onDestructive
     }
+
+    private var hasActions: Bool { onLeadingAction != nil || onTrailingAction != nil }
 
     private func closeAndTrigger(action: (() -> Void)?) {
         withAnimation(snap) {

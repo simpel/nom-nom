@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// Pro-gated RecipeShelf of `SuggestionEngine`-ranked recipes, shown at the top of
+/// ProCard holding a RecipeShelf of `SuggestionEngine`-ranked recipes, shown at the top of
 /// pre-search / idle recipe-browsing surfaces (the recipe picker, the search tab's
 /// empty state). With `onSelect` the cards pick; without, they open the recipe.
 struct RecommendedForYouShelf: View {
@@ -9,11 +9,15 @@ struct RecommendedForYouShelf: View {
 
     var body: some View {
         if !store.recommendedRecipes.isEmpty {
-            ProGate {
+            ProCard(
+                "Recommended for you",
+                teaser: "Recipes picked from what your party rates highest and what you haven\u{2019}t had for a while.",
+                contentBleed: DS.Spacing.s5
+            ) {
                 if let onSelect {
-                    RecipeShelf("Recommended for you", recipes: store.recommendedRecipes, onSelect: onSelect)
+                    RecipeShelf("", recipes: store.recommendedRecipes, bleed: DS.Spacing.s5, onSelect: onSelect)
                 } else {
-                    RecipeShelf("Recommended for you", recipes: store.recommendedRecipes) {
+                    RecipeShelf("", recipes: store.recommendedRecipes, bleed: DS.Spacing.s5) {
                         RecipeDetailView(recipe: $0)
                     }
                 }

@@ -8,22 +8,13 @@ extension FoodStore {
         name: String,
         about: String = "",
         isPublic: Bool = false,
-        photoData: Data? = nil
+        photos: [Data] = []
     ) async -> Party? {
         let trimmed = name.trimmedName
         guard !trimmed.isEmpty else { return nil }
         do {
             let partyID = UUID()
-            var uploadedPath: String? = nil
-
-            if let photoData, let prepared = PhotoTools.prepare(photoData) {
-                let path = "\(partyID.uuidString.lowercased())/avatar.jpg"
-                PhotoCache.shared.put(prepared, for: path)
-                _ = try? await supabase.storage
-                    .from(SupabaseConfig.partyBucket)
-                    .upload(path, data: prepared, options: FileOptions(contentType: "image/jpeg", upsert: true))
-                uploadedPath = path
-            }
+            let uploadedPaths = (try? await uploadPartyPhotos(photos, partyID: partyID)) ?? []
 
             let created: Party = try await supabase
                 .from("parties")
@@ -32,7 +23,7 @@ extension FoodStore {
                     name: trimmed,
                     about: about.trimmingCharacters(in: .whitespacesAndNewlines),
                     is_public: isPublic,
-                    photo_path: uploadedPath,
+                    photo_paths: uploadedPaths,
                     created_by: userID
                 ))
                 .select()

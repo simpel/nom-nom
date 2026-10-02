@@ -10,6 +10,7 @@ enum PageMenuSheet: String, Identifiable {
 struct PageMenuSheetContent: View {
     let sheet: PageMenuSheet
 
+    @Environment(FoodStore.self) private var store
     @Environment(EntitlementStore.self) private var entitlements
     @Environment(\.dismiss) private var dismiss
 
@@ -18,7 +19,10 @@ struct PageMenuSheetContent: View {
         case .inbox:
             InboxSheetView()
         case .profile:
-            ProfileSheetView()
+            NavigationStack {
+                PersonDetailView(raterRef: .account(store.userID), isSheet: true)
+            }
+            .dsSheet()
         case .settings:
             NavigationStack {
                 SettingsView()

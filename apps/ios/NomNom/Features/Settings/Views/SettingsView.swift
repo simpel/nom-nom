@@ -1,18 +1,26 @@
 import SwiftUI
 
-/// Settings tab/sheet: dinner parties, household members, profile settings, and account management.
+/// App settings: my profile link, profile fields, notifications, debug tools, and account actions.
 struct SettingsView: View {
+    var showsProfileLink: Bool = true
+
     @Environment(FoodStore.self) private var store
 
     @State private var isSeeding = false
 
+    private var profileName: String {
+        let name = store.myProfile?.shownName.trimmingCharacters(in: .whitespaces) ?? ""
+        return name.isEmpty ? "My profile" : name
+    }
+
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: DS.Spacing.s8) {
-                partiesSection
-                HouseholdMembersSection()
-                NotificationPreferencesSection()
+                if showsProfileLink {
+                    myProfileSection
+                }
                 ProfileSettingsSection()
+                NotificationPreferencesSection()
                 #if DEBUG
                 sampleDataSection
                 #endif
@@ -26,33 +34,26 @@ struct SettingsView: View {
         .screenTitle("Settings")
     }
 
-    // MARK: - Dinner Parties Section
+    // MARK: - My Profile Link
 
-    /// A navigation ListRow to the party list; pending invites ride along as a count
-    /// Badge (Badge README: "a number or words, never both").
-    private var partiesSection: some View {
-        let count = store.myParties.count
-        let invites = store.pendingPartyInvites.count
-        return DSSection("Sharing") {
-            Card(layout: .list) {
-                NavigationLink {
-                    DinnerPartiesView()
-                } label: {
-                    ListRow(
-                        "Dinner parties",
-                        meta: count == 0 ? "None yet" : "\(count) \(count == 1 ? "party" : "parties")",
-                        trailing: invites > 0
-                            ? .badge(Badge("\(invites)", appearance: .solid,
-                                           accessibilityLabel: "\(invites) \(invites == 1 ? "invite" : "invites")"))
-                            : nil,
-                        chevron: true
-                    )
-                }
-                .buttonStyle(ListRowButtonStyle())
+    private var myProfileSection: some View {
+        Card(layout: .list) {
+            NavigationLink {
+                PersonDetailView(raterRef: .account(store.userID))
+            } label: {
+                ListRow(
+                    profileName,
+                    meta: "View taste profile and history",
+                    leading: .avatar(Avatar(
+                        name: profileName,
+                        photoPath: store.myProfile?.photoPath,
+                        size: .sm,
+                        decorative: true
+                    )),
+                    chevron: true
+                )
             }
-            Text("Share meals and taste with friends, family or housemates.")
-                .textStyle(.sansSm, tone: .tertiary)
-                .padding(.horizontal, DS.Spacing.sectionInset)
+            .buttonStyle(ListRowButtonStyle())
         }
     }
 

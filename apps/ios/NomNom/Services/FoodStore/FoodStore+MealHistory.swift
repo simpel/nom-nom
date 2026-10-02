@@ -57,6 +57,17 @@ extension FoodStore {
         return scores.reduce(0, +) / Double(scores.count)
     }
 
+    /// The party's average score over its `limit` most recent rated meals, 0–1.
+    func recentAverageScore(forParty partyID: UUID, limit: Int = 20) -> Double? {
+        let scores = meals(forParty: partyID)
+            .sorted { ($0.eatenOn, $0.createdAt) > ($1.eatenOn, $1.createdAt) }
+            .lazy
+            .compactMap { self.averageScore(forMeal: $0.id) }
+            .prefix(limit)
+        guard !scores.isEmpty else { return nil }
+        return scores.reduce(0, +) / Double(scores.count)
+    }
+
     /// A rater's usual score (mean of all their ratings, 0–1), leaving out one meal so
     /// a rating can be compared with it. Nil when they have no other ratings.
     func usualScore(for rater: RaterRef, excluding mealID: UUID) -> Double? {

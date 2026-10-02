@@ -10,12 +10,12 @@ extension View {
     /// from the top) in place of the system drag indicator. Apply to the sheet's root
     /// view; lay its content out with `SheetBody`. The scrim is the system dimming
     /// (DS-GAPS.md).
-    func dsSheet(detents: Set<PresentationDetent> = [.large]) -> some View {
+    func dsSheet(detents: Set<PresentationDetent> = [.large], pro: Bool = false) -> some View {
         self
             .overlay(alignment: .top) { SheetGrabber() }
             .presentationDetents(detents)
             .presentationDragIndicator(.hidden)
-            .presentationBackground(DS.Color.sheet)
+            .presentationBackground(pro ? DS.Color.proSoft : DS.Color.sheet)
             .presentationCornerRadius(DS.Radius.xl4)
     }
 

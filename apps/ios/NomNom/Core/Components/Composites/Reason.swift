@@ -1,7 +1,7 @@
 import SwiftUI
 
 /// One reason (`ReasonProps`, BottomSheet README): a title and its detail, inside a
-/// SheetCard or a ProSection. Drawn by ReasonRow: a `sans-lg` semibold title and a `sans-sm`
+/// SheetCard or a ProCard. Drawn by ReasonRow: a `sans-lg` semibold title and a `sans-sm`
 /// `text-secondary` sentence.
 struct SheetReason: Identifiable, Hashable {
     let id: String
@@ -44,7 +44,7 @@ struct ReasonRow: View {
 }
 
 
-/// Reasons stacked with `line` rules between them, outside a SheetCard (a ProSection).
+/// Reasons stacked with `line` rules between them, outside a SheetCard (a ProCard).
 struct ReasonList: View {
     let reasons: [SheetReason]
 

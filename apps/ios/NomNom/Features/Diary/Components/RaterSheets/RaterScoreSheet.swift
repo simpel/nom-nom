@@ -3,7 +3,7 @@ import SwiftUI
 /// One person's score for a meal ("Nom Nom iOS" canvas, RaterRated): a BottomSheet
 /// titled "{name}’s score" with the PersonHeaderRow, their ScoreValue `lg` over a Bar
 /// `md` and "8 above Anna’s usual of 84", the cook's note when they cooked it, and a
-/// ProSection explaining the score from their history.
+/// ProCard explaining the score from their history.
 struct RaterScoreSheet: View {
     let meal: Meal
     let rater: RaterRef
@@ -24,9 +24,9 @@ struct RaterScoreSheet: View {
                     SectionCard("\(target.possessive) note on this meal", uppercase: false, quote: note)
                 }
                 if !target.affinities.isEmpty {
-                    ProSection(
+                    ProCard(
                         "Why \(isViewer ? "you" : name) scored it this way",
-                        provenance: target.provenance,
+                        sub: target.provenance,
                         teaser: "See what in \(isViewer ? "your" : target.possessive) history explains this score: dish kinds, ingredients, cuisines and who cooked."
                     ) {
                         ReasonList(reasons: target.reasons())

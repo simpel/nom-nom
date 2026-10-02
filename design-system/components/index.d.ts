@@ -593,3 +593,51 @@ export interface PartyCardProps extends BaseProps {
   /** 'discover' only: renders "Ask to join" as a sibling of the card's pressable region. */
   onJoin?: () => void;
 }
+
+/** The Pro mark: sparkles + "PRO" in pro-text. Put it above a Pro view's title and at the top of every ProCard. */
+export interface ProMarkProps extends BaseProps {
+  /** @default 'Pro' */
+  label?: string;
+}
+
+/** A Pro block inside a free view (rater reasons, health detail, Recommended for you). pro-soft ground, radius-3xl, shadow-lg. */
+export interface ProCardProps extends BaseProps {
+  title?: string;
+  titleAs?: string;
+  /** Provenance under the title, e.g. "Based on Anna's 34 ratings". */
+  sub?: string;
+  /** Viewer has no Pro: shows `teaser`, a blurred preview of `children`, and Unlock with Pro. */
+  locked?: boolean;
+  /** One sentence on what Pro shows here. Locked only. */
+  teaser?: string;
+  onUnlock?: () => void;
+  /** @default 'Unlock with Pro' */
+  unlockLabel?: string;
+  /** false hides the ProMark (only inside a ProView, where the view is already marked). */
+  mark?: boolean;
+  children?: unknown;
+}
+
+/** A whole Pro-only view (Insights, a Pro-only sheet): the pro-soft ground, cards on it stay panel. */
+export interface ProViewProps extends BaseProps {
+  /** @default 'div' */
+  as?: string;
+  style?: Record<string, string | number>;
+  children?: unknown;
+}
+
+/** A Pro-only view for someone without Pro: the real layout (children) blurred behind a panel. */
+export interface ProGateProps extends BaseProps {
+  /** e.g. "Insights are part of Nom Nom Pro" */
+  title: string;
+  titleAs?: string;
+  message?: string;
+  /** Up to four concrete things they get, each a short sentence. */
+  benefits?: string[];
+  onUnlock?: () => void;
+  unlockLabel?: string;
+  onDismiss?: () => void;
+  /** @default 'Not now' */
+  dismissLabel?: string;
+  children?: unknown;
+}

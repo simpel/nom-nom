@@ -1,7 +1,7 @@
 // DS-GAP: pending design system — see Core/Design/DS-GAPS.md
 import SwiftUI
 
-/// Account actions at the foot of Settings and the profile sheet, in one Card:
+/// Account actions at the foot of Settings, outside of any Card:
 /// "Sign out" (destructive ghost) and "Delete account" (destructive outline) with
 /// a footnote. Owns the confirmation alerts (`View+AccountConfirmations.swift`).
 struct AccountActionsSection: View {
@@ -12,7 +12,7 @@ struct AccountActionsSection: View {
     @State private var confirmDelete = false
 
     var body: some View {
-        Card(spacing: DS.Spacing.s2) {
+        VStack(spacing: DS.Spacing.s3) {
             if includesSignOut {
                 AppButton("Sign out", variant: .destructive, appearance: .ghost, fullWidth: true) {
                     confirmSignOut = true
@@ -28,8 +28,9 @@ struct AccountActionsSection: View {
                 confirmDelete = true
             }
             Text("Permanently removes your account, your meals and their photos. Other dinner party members keep their own food logs.")
-                .textStyle(.sansXs, tone: .secondary)
+                .textStyle(.sansXs, tone: .secondary, align: .center)
                 .fixedSize(horizontal: false, vertical: true)
+                .padding(.horizontal, DS.Spacing.s4)
         }
         .signOutConfirmation(isPresented: $confirmSignOut)
         .deleteAccountConfirmation(isPresented: $confirmDelete)

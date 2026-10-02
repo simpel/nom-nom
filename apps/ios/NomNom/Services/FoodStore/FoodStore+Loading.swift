@@ -122,8 +122,7 @@ extension FoodStore {
             currentParty = savedParty
         }
 
-        // Default to a party unless the viewer chose "Just me" in the page menu.
-        if currentParty == nil, saved != Self.soloPartySelection {
+        if currentParty == nil {
             currentParty = myParties.first
         }
     }

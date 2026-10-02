@@ -8,13 +8,23 @@ struct ProfileHeaderCard: View {
     let subtitle: String
     var photoPath: String? = nil
     let isCurrentUser: Bool
+    var onEdit: (() -> Void)? = nil
 
     var body: some View {
         DetailHeader(
             title: name,
             align: .center,
             meta: subtitle.isEmpty ? nil : subtitle,
-            avatar: Avatar(name: name, photoPath: photoPath, decorative: true)
+            avatar: Avatar(name: name, photoPath: photoPath, decorative: true),
+            actions: (isCurrentUser && onEdit != nil) ? [
+                DetailHeaderAction(
+                    title: "Edit profile",
+                    variant: .secondary,
+                    appearance: .soft
+                ) {
+                    onEdit?()
+                }
+            ] : []
         )
         .frame(maxWidth: .infinity)
     }

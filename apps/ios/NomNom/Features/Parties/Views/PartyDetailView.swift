@@ -24,10 +24,7 @@ struct PartyDetailView: View {
 
     var party: Party? { store.party(partyID) }
 
-    private var partyPhotos: [String] {
-        guard let path = party?.photoPath, !path.isEmpty else { return [] }
-        return [path]
-    }
+    private var partyPhotos: [String] { party?.photoPaths ?? [] }
 
     var body: some View {
         Group {

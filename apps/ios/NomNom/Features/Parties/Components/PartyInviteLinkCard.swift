@@ -1,6 +1,7 @@
 import SwiftUI
 
-/// The party's invite link in a SectionCard: one sentence, then Share (`primary soft`,
+/// The party's invite link in a SectionCard: one sentence, the invite code (typed in
+/// onboarding's "I have an invite") as a ListRow value, then Share (`primary soft`,
 /// the system share sheet) and Copy (`secondary outline`) side by side.
 struct PartyInviteLinkCard: View {
     let party: Party
@@ -15,6 +16,10 @@ struct PartyInviteLinkCard: View {
             Text("Anyone with this link can view and join \(party.name).")
                 .textStyle(.sansSm, tone: .secondary)
                 .fixedSize(horizontal: false, vertical: true)
+
+            if let code = party.inviteCode {
+                ListRow("Invite code", value: code)
+            }
 
             // PageHeader / EmptyState action rows sit `spacing-2` apart.
             HStack(spacing: DS.Spacing.s2) {

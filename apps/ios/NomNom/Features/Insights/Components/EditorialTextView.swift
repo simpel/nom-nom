@@ -22,3 +22,14 @@ struct EditorialTextView: View {
         .fixedSize(horizontal: false, vertical: true)
     }
 }
+
+extension EditorialTextView {
+    /// A party's AI summary sentence (markdown-inked), or the "check back later" line
+    /// when there is none yet.
+    init(insightSummary: String?) {
+        let text = insightSummary ?? ""
+        self.init(segments: text.isEmpty
+            ? [GuestNoteSegment(text: "Check back later when enough meals have been rated by the party.", tone: .neutral)]
+            : MarkdownSegmentParser.parse(text))
+    }
+}

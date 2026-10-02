@@ -10,6 +10,7 @@ import Charts
 /// - Drag across the chart to scrub; the nearest date gets a rule and a tooltip
 ///   (Card + `shadow-lg`) listing every series' value on that day.
 /// - `visibleDays` makes the x axis scroll, starting at the latest data.
+/// - `framed: false` drops the Card so the chart can run edge to edge on a screen.
 ///
 /// ```swift
 /// TrendChart(total: points)
@@ -21,6 +22,7 @@ struct TrendChart: View {
     var series: [TrendSeries]
     var visibleDays: Int?
     var emptyMessage: String
+    var framed: Bool
 
     @State private var rawSelection: Date?
     @State private var scrollPosition: Date = .now
@@ -30,13 +32,15 @@ struct TrendChart: View {
         totalName: String = "Average",
         series: [TrendSeries] = [],
         visibleDays: Int? = nil,
-        emptyMessage: String = "Not enough data to show a trend yet"
+        emptyMessage: String = "Not enough data to show a trend yet",
+        framed: Bool = true
     ) {
         self.total = total.sorted { $0.date < $1.date }
         self.totalName = totalName
         self.series = series
         self.visibleDays = visibleDays
         self.emptyMessage = emptyMessage
+        self.framed = framed
     }
 
     private static let height = DS.Spacing.s48
@@ -59,17 +63,24 @@ struct TrendChart: View {
     }
 
     var body: some View {
-        Card(size: .sm) {
-            if isEmpty {
-                Text(emptyMessage)
-                    .textStyle(.sansMd, tone: .secondary)
-                    .multilineTextAlignment(.center)
-                    .frame(maxWidth: .infinity, minHeight: Self.height)
-            } else {
-                scrollable(chart)
-                    .frame(height: Self.height)
-                    .sensoryFeedback(.selection, trigger: selectedDate)
-            }
+        if framed {
+            Card(size: .sm) { content }
+        } else {
+            content
+        }
+    }
+
+    @ViewBuilder
+    private var content: some View {
+        if isEmpty {
+            Text(emptyMessage)
+                .textStyle(.sansMd, tone: .secondary)
+                .multilineTextAlignment(.center)
+                .frame(maxWidth: .infinity, minHeight: Self.height)
+        } else {
+            scrollable(chart)
+                .frame(height: Self.height)
+                .sensoryFeedback(.selection, trigger: selectedDate)
         }
     }
 

@@ -74,7 +74,8 @@ apps/
 │   │   │   ├── Composites/  # ListRow, EmptyState, DetailHeader, ScoreCard, PhotoCard, PhotoStrip,
 │   │   │   │                  RatingList, Timeline, RecipeCard, RecipeLinkCard, RecipeShelf,
 │   │   │   │                  PartyCard, SegmentedBar, ValueStepper, LabeledPhotoCard,
-│   │   │   │                  TasteScoreSelector, SheetBody/SheetCard/SheetHero (BottomSheet)
+│   │   │   │                  TasteScoreSelector, ProMark/ProCard/ProGate/ProView (Pro),
+│   │   │   │                  SheetBody/SheetCard/SheetHero (BottomSheet)
 │   │   │   └── Interim/     # Patterns the DS does not cover yet (TrendChart, MediaViewerSheet,
 │   │   │                      form blocks). Each is listed in Core/Design/DS-GAPS.md
 │   │   ├── Design/     # DS+*.swift token aliases, Generated/ (never hand-edit), README.md, DS-GAPS.md
@@ -213,13 +214,13 @@ To prevent duplication and ensure high consistency:
    - **Foundations**: `DSAxes` (`DSVariant` primary/secondary/destructive/pro/warning/reaction, `DSAppearance` solid/soft/outline/ghost/elevated, `DSPaint`), `NomNomPreview`, photo plumbing.
    - **Primitives**: `AppButton` / `AppButtonLabel`, `Badge` (`.verdict`, `.delta`, `.rotation`, `.pro`, `.dishSummary`, `.rank`), `Avatar`, `Bar`, `ScoreValue`, `SectionHeader`, `AppToggle`, `Input`, `TextArea`.
    - **Layout**: `Card` (`layout: .block/.list`, `size`, `variant: .primary`, optional `action`), `DSSection` (label above content), `SectionCard` (label inside a card), `PageHeader`, `SwipeableListCard`.
-   - **Composites**: `ListRow` (the one row: leading Avatar / PhotoCard `xs` / icon / rank, meta, value, trailing Badge / ScoreValue / AppButton / Toggle, chevron, unread), `EmptyState` (`screen` / `card` / `plain` / `row`), `DetailHeader`, `ScoreCard`, `PhotoCard` (owns the photo → cuisine → no-photo fallback), `PhotoStrip`, `RatingList`, `Timeline`, `RecipeCard`, `RecipeLinkCard`, `RecipeShelf`, `PartyCard`, `SegmentedBar`, `ValueStepper`, `LabeledPhotoCard`, `TasteScoreSelector`, and the BottomSheet parts `SheetBody` / `SheetCard` / `SheetHero`.
+   - **Composites**: `ListRow` (the one row: leading Avatar / PhotoCard `xs` / icon / rank, meta, value, trailing Badge / ScoreValue / AppButton / Toggle, chevron, unread), `EmptyState` (`screen` / `card` / `plain` / `row`), `DetailHeader`, `ScoreCard`, `PhotoCard` (owns the photo → cuisine → no-photo fallback), `PhotoStrip`, `RatingList`, `Timeline`, `RecipeCard`, `RecipeLinkCard`, `RecipeShelf`, `PartyCard`, `SegmentedBar`, `ValueStepper`, `LabeledPhotoCard`, `TasteScoreSelector`, the Pro language (`ProMark`, `ProCard`, `ProGate`, `.proView()`: a locked Pro block in a free view is a ProCard, a Pro-only screen is a ProView behind a ProGate), and the BottomSheet parts `SheetBody` / `SheetCard` / `SheetHero`.
    - Every list is `Card(layout: .list)` of `ListRow`s; never hand-draw dividers, capsules, avatars or thumbnails.
    - Each component follows its README in `design-system/components/<Name>/README.md`. Read it before changing the component.
 
 4. **A pattern the DS lacks goes in `Core/Components/Interim/` + `DS-GAPS.md`; never hand-roll it**:
    - Build the interim component only from DS primitives and tokens, start the file with a `// DS-GAP: pending design system` header, and add an entry to `Core/Design/DS-GAPS.md` (section "Open gaps").
-   - Today: `TrendChart`, `MediaViewerSheet`, `NameFieldsCard`, `PartyFormFields`, `VisibilityToggleCard`, `AccountActionsSection`, `PageMenu`, `ProSection` / `ProLinkCard`, `PersonHeaderRow`.
+   - Today: `TrendChart`, `MediaViewerSheet`, `NameFieldsCard`, `PartyFormFields`, `VisibilityToggleCard`, `AccountActionsSection`, `PageMenu`, `ProLinkCard`, `PersonHeaderRow`.
 
 ---
 

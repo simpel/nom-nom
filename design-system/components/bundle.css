@@ -7,6 +7,8 @@
    strength the source uses (see the opacity-* tokens). */
 
 .nn, .nn * { box-sizing: border-box; }
+:root, .nn { --shadow-2xs: 0 1px rgba(0, 0, 0, 0.05); --shadow-xs: 0 1px 2px 0 rgba(0, 0, 0, 0.05); --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1); --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1); --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1); --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1); --shadow-2xl: 0 25px 50px -12px rgba(0, 0, 0, 0.25); }
+[data-theme="dark"], [data-theme="dark"] .nn, .nn[data-theme="dark"] { --shadow-2xs: 0 0 0 1px rgba(255, 255, 255, 0.06); --shadow-xs: 0 0 0 1px rgba(255, 255, 255, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.05), 0 1px 2px rgba(0, 0, 0, 0.6); --shadow-sm: 0 0 0 1px rgba(255, 255, 255, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.05), 0 1px 3px rgba(0, 0, 0, 0.6); --shadow-md: 0 0 0 1px rgba(255, 255, 255, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.05), 0 4px 8px rgba(0, 0, 0, 0.6); --shadow-lg: 0 0 0 1px rgba(255, 255, 255, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.05), 0 10px 20px rgba(0, 0, 0, 0.7); --shadow-xl: 0 0 0 1px rgba(255, 255, 255, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.05), 0 20px 30px rgba(0, 0, 0, 0.7); --shadow-2xl: 0 0 0 1px rgba(255, 255, 255, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.05), 0 25px 50px rgba(0, 0, 0, 0.8); }
 .nn { font-family: var(--font-sans); color: var(--text-primary); -webkit-font-smoothing: antialiased; }
 
 /* ---------- Glyphs: generic stand-ins for the SF Symbols the app uses (mask + currentColor) */
@@ -520,3 +522,24 @@
 
 /* Visible only to assistive tech: a state the design shows with a dot or a colour. */
 .nn-sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+
+/* ---------- Pro: mark, card, view, gate */
+.nn-pro-mark { display: inline-flex; align-items: center; gap: var(--spacing-1\.5); color: var(--pro-text); font: var(--text-sans-xs); font-weight: var(--font-weight-semibold); letter-spacing: var(--tracking-widest); text-transform: uppercase; }
+.nn-pro-mark .nn-icon { font-size: var(--spacing-3\.5); }
+.nn-pro-card { display: flex; flex-direction: column; gap: var(--spacing-4); padding: var(--spacing-5); border-radius: var(--radius-3xl); background: var(--pro-soft); box-shadow: var(--shadow-lg); color: var(--text-primary); }
+.nn-pro-card__head { display: flex; flex-direction: column; gap: var(--spacing-1); }
+.nn-pro-card__body { display: flex; flex-direction: column; gap: var(--spacing-4); }
+.nn-pro-card__preview { max-height: var(--spacing-28, 112px); overflow: hidden; filter: blur(6px); user-select: none; pointer-events: none; }
+.nn-pro-card .nn-shelf { margin-inline: calc(-1 * var(--spacing-5)); }
+.nn-pro-card .nn-shelf__track { padding-inline: var(--spacing-5); scroll-padding-left: var(--spacing-5); }
+.nn-pro-card .nn-shelf .nn-section-header { padding-inline: var(--spacing-5); }
+.nn-pro-view { --bg: var(--pro-soft); --sheet: var(--pro-soft); background: var(--pro-soft); color: var(--text-primary); }
+.nn-pro-view .nn-sheet { background: var(--pro-soft); }
+.nn-pro-gate { display: grid; }
+.nn-pro-gate > * { grid-area: 1 / 1; min-width: 0; }
+.nn-pro-gate__preview { filter: blur(8px); opacity: var(--opacity-60, 0.6); user-select: none; pointer-events: none; }
+.nn-pro-gate__panel { align-self: start; margin-top: var(--spacing-6); position: relative; display: flex; flex-direction: column; gap: var(--spacing-4); padding: var(--spacing-6); border-radius: var(--radius-3xl); background: var(--panel); box-shadow: var(--shadow-xl); }
+.nn-pro-gate__benefits { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--spacing-2\.5); }
+.nn-pro-gate__benefits li { display: flex; align-items: baseline; gap: var(--spacing-2\.5); }
+.nn-pro-gate__benefits .nn-icon { flex: none; color: var(--pro-text); transform: translateY(2px); }
+.nn-pro-gate__actions { display: flex; flex-direction: column; gap: var(--spacing-1); margin-top: var(--spacing-1); }

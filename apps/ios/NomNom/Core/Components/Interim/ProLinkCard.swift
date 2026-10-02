@@ -2,8 +2,9 @@
 import SwiftUI
 
 /// A pressable Nom Nom Pro card that leads to a Pro screen (Party detail "See insights"
-/// on the "Nom Nom iOS" canvas): the ProSection ground (`pro-soft`, `radius-3xl`,
-/// `shadow-lg`, `spacing-5` padding) holding the PRO eyebrow, a `serif-sm` title and a
+/// on the "Nom Nom iOS" canvas). The Pro README names link cards as entry points that
+/// carry the ProMark but defines no component for them, so this wears ProCard's ground
+/// (`pro-soft`, `radius-3xl`, `shadow-lg`, `spacing-5` padding) holding the ProMark, a `serif-sm` title and a
 /// `sans-sm` secondary subtitle, with a `pro-text` chevron. Wrap it in a NavigationLink
 /// or Button with `AppPressableButtonStyle`.
 struct ProLinkCard: View {
@@ -17,7 +18,7 @@ struct ProLinkCard: View {
     var body: some View {
         HStack(spacing: DS.Spacing.s4) {
             VStack(alignment: .leading, spacing: DS.Spacing.s2) {
-                ProEyebrow()
+                ProMark()
                 Text(title).textStyle(.serifSm)
                 if let subtitle {
                     Text(subtitle).textStyle(.sansSm, tone: .secondary)

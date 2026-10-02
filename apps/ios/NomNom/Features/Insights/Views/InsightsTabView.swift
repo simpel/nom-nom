@@ -37,7 +37,8 @@ struct InsightsTabView: View {
                         partyID: selectedPartyID,
                         insights: insights,
                         healthInsights: store.healthInsights(forParty: selectedPartyID),
-                        partyTasteMatches: store.memberTasteMatches(forParty: selectedPartyID, insights: insights)
+                        partyTasteMatches: store.memberTasteMatches(forParty: selectedPartyID, insights: insights),
+                        partyAverage: store.recentAverageScore(forParty: selectedPartyID, limit: PartyTasteMatchCard.recentMeals)
                     )
                 }
             }

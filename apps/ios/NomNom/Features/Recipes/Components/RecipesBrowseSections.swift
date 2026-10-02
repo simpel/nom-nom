@@ -11,7 +11,7 @@ struct RecipesBrowseSections: View {
     var body: some View {
         VStack(alignment: .leading, spacing: DS.Spacing.block) {
             if !store.recommendedRecipes.isEmpty {
-                ProSection(
+                ProCard(
                     "Recommended for you",
                     teaser: "Recipes picked from what \(who) rates highest and what you haven\u{2019}t had for a while.",
                     contentBleed: DS.Spacing.s5
