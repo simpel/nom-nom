@@ -62,7 +62,7 @@ struct RecipeShelf<Destination: View>: View {
 
     @ViewBuilder
     private func cell(_ recipe: Recipe) -> some View {
-        let card = RecipeCard(recipe: recipe, subtitle: subtitle?(recipe), score: score?(recipe))
+        let card = RecipeCard(recipe: recipe, category: subtitle?(recipe), score: score?(recipe))
             .frame(width: DS.Spacing.s48, alignment: .top)
         if let onSelect {
             Button { onSelect(recipe) } label: { card }

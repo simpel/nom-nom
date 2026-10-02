@@ -12,15 +12,21 @@ struct DetailHeaderAction {
 }
 
 /// The top of a detail screen (meal, recipe, dinner party): optional avatar and eyebrow,
-/// meta line, `serif-lg` title, `sans-md` summary, fact Badges and up to two actions.
+/// meta line, `serif-lg` title, `sans-md` summary, facts, status badges and up to two
+/// actions (components/DetailHeader/README.md).
+///
+/// - `facts` are plain strings about the subject (30–60 min, Baking, 4 servings), drawn
+///   as one `sans-sm` `text-tertiary` line joined with " · ". Facts are not badges.
+/// - `badges` is the separate slot for the few statuses: Staple, Pro, Archived.
 ///
 /// Meta sits above the title, or below it when there is an eyebrow or an avatar. Inset
 /// `s2`, gap `s2`, actions `s2_5` below. Actions are `[DetailHeaderAction]` values rather
 /// than a ViewBuilder so the header can enforce the `lg` / full-width / two-max rule.
 ///
 /// ```swift
-/// DetailHeader(title: "Everyone loved it", meta: "12 Mar · Taco Night", summary: note,
-///              actions: [.init(title: "Rate this meal") { rate() }])
+/// DetailHeader(title: "Spaghetti carbonara", eyebrow: "Italian", meta: "Never cooked",
+///              facts: ["15–30 min", "Stovetop"], badges: [.rotation(.staple)],
+///              actions: [.init(title: "Use in a meal", icon: "plus") { use() }])
 /// ```
 struct DetailHeader: View {
     enum Align: Equatable { case start, center }
@@ -33,8 +39,10 @@ struct DetailHeader: View {
     var avatar: Avatar?
     /// Avatar size; `xl` unless given.
     var avatarSize: AvatarSize = .xl
-    /// Fact Badges (`secondary sm` by convention; an icon is allowed). Never buttons.
-    var facts: [Badge] = []
+    /// Metadata about the subject; empty parts are dropped.
+    var facts: [String] = []
+    /// Statuses only (Badge, `secondary` by convention).
+    var badges: [Badge] = []
     var actions: [DetailHeaderAction] = []
 
     private var horizontal: HorizontalAlignment { align == .center ? .center : .leading }
@@ -47,12 +55,20 @@ struct DetailHeader: View {
         return avatar
     }
 
+    private var factLine: String? {
+        let parts = facts.filter { !$0.isEmpty }
+        return parts.isEmpty ? nil : parts.joined(separator: " \u{00B7} ")
+    }
+
     var body: some View {
         VStack(alignment: horizontal, spacing: DS.Spacing.s2_5) {
             VStack(alignment: horizontal, spacing: DS.Spacing.s2) {
-                if let sizedAvatar { sizedAvatar }
+                if let sizedAvatar {
+                    // bundle.css `.nn-detail-header > .nn-avatar { margin-bottom: var(--spacing-2) }`.
+                    sizedAvatar.padding(.bottom, DS.Spacing.s2)
+                }
                 if let eyebrow {
-                    SectionHeader(eyebrow, inset: false)
+                    SectionHeader(title: eyebrow)
                         .fixedSize(horizontal: align == .center, vertical: false)
                 }
                 if !metaBelowTitle { metaText }
@@ -63,9 +79,12 @@ struct DetailHeader: View {
                 if let summary, !summary.isEmpty {
                     Text(summary).textStyle(.sansMd, tone: .secondary)
                 }
-                if !facts.isEmpty {
+                if let factLine {
+                    Text(factLine).textStyle(.sansSm, tone: .tertiary)
+                }
+                if !badges.isEmpty {
                     WrappingHStack(alignment: horizontal, spacing: DS.Spacing.s1_5, lineSpacing: DS.Spacing.s1_5) {
-                        ForEach(facts.indices, id: \.self) { facts[$0] }
+                        ForEach(badges.indices, id: \.self) { badges[$0] }
                     }
                 }
             }
@@ -73,7 +92,8 @@ struct DetailHeader: View {
             .frame(maxWidth: .infinity, alignment: align == .center ? .center : .leading)
 
             if !actions.isEmpty {
-                HStack(spacing: DS.Spacing.s2) {
+                // bundle.css `.nn-detail-header__actions { gap: var(--spacing-2\.5) }`.
+                HStack(spacing: DS.Spacing.s2_5) {
                     ForEach(actions.prefix(2).indices, id: \.self) { index in
                         let item = actions[index]
                         AppButton(
@@ -116,11 +136,8 @@ private struct DetailHeaderGallery: View {
                         title: "Spaghetti carbonara",
                         eyebrow: "Italian",
                         meta: "Last cooked 28 Aug 2026 \u{00B7} 6 times",
-                        facts: [
-                            Badge("15\u{2013}30 min", icon: "clock", variant: .secondary, size: .sm),
-                            Badge("Stovetop", variant: .secondary, size: .sm),
-                            .rotation(.staple),
-                        ],
+                        facts: ["15\u{2013}30 min", "Stovetop"],
+                        badges: [.rotation(.staple)],
                         actions: [DetailHeaderAction(title: "Use in a meal", icon: "plus") {}]
                     )
                     DetailHeader(

@@ -1,15 +1,18 @@
 // DS-GAP: pending design system — see Core/Design/DS-GAPS.md
 import SwiftUI
 
-/// LabeledPhotoCard crops. The category photography is a square master, so only
-/// 1:1 and 4:5 are safe (DS README); there is no wide crop.
+/// LabeledPhotoCard crops. The category photography is a square master; there is no
+/// wide crop. PhotoCard has no 4:5 format, so the tall tile is PhotoCard `portrait`
+/// (3:4); see DS-GAPS.md.
 enum LabeledPhotoCardShape: Equatable {
-    /// 1:1 (PhotoCard `md`): grid tiles, cuisine picker, and the category hero cover.
+    /// 1:1 (PhotoCard `md` square): grid tiles, cuisine picker, and the category hero cover.
     case square
-    /// 4:5 (PhotoCard `cover`): a tall feature tile.
+    /// 3:4 (PhotoCard `md` portrait): a tall feature tile.
     case portrait
 
-    var photoSize: PhotoCardSize { self == .square ? .md : .cover }
+    /// bundle.css `.nn-labeled-photo .nn-photo-card { border-radius: var(--radius-2xl) }`: `md`.
+    var photoSize: PhotoCardSize { .md }
+    var photoFormat: PhotoCardFormat { self == .square ? .square : .portrait }
 }
 
 /// A category tile or cover: a PhotoCard filling its width, a bottom scrim
@@ -57,7 +60,7 @@ struct LabeledPhotoCard: View {
     }
 
     private var card: some View {
-        PhotoCard(source, size: size, fillsWidth: true, isSelected: isSelected) {
+        PhotoCard(source, size: size, format: shape.photoFormat, fillsWidth: true, isSelected: isSelected) {
             ZStack(alignment: .bottomLeading) {
                 PhotoScrim()
                 label

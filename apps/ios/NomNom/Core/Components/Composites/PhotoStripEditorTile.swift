@@ -1,8 +1,9 @@
 // DS-GAP: pending design system — see Core/Design/DS-GAPS.md
 import SwiftUI
 
-/// One tile of a PhotoStripEditor: a PhotoCard `sm` (tap to view), an elevated
-/// icon-only remove button top-right and an optional elevated Badge ("Cover",
+/// One tile of a PhotoStripEditor: a PhotoCard `sm` portrait (tap to view), an elevated
+/// 44pt icon-only remove button top-right (where PhotoCard puts its heart) and an
+/// optional elevated Badge ("Cover",
 /// "Page 2") bottom-right. Reordering lives in the tile's context menu and its
 /// accessibility actions: Make cover, Move left, Move right.
 struct PhotoStripEditorTile: View {
@@ -35,10 +36,9 @@ struct PhotoStripEditorTile: View {
                 accessibilityLabel: "Remove photo \(index + 1)",
                 variant: .secondary,
                 appearance: .elevated,
-                size: .sm,
                 action: onRemove
             )
-            .padding(DS.Spacing.s2)
+            .padding(PhotoCardSize.sm.favoriteInset)
         }
         .contextMenu { menu }
         .accessibilityAction(named: "Make cover") { if showsMakeCover, index > 0 { onMove?(0) } }

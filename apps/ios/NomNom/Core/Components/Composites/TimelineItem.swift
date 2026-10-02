@@ -12,8 +12,10 @@ struct TimelineOccasion: Identifiable {
     var isCurrent: Bool = false
 }
 
-/// A Timeline stop: an `s5` dot on the rail (4pt `bg` ring), a PhotoCard `sm` with the
-/// verdict Badge, and the date in `sans-sm` ("This meal", semibold, for the current one).
+/// A Timeline stop: an `s5` dot on the rail (4pt `bg` ring; current `primary`, past
+/// `primary-muted`), a PhotoCard `sm` portrait (`s36` × `s48`) with the verdict Badge
+/// (selected when current), and the date in `sans-sm` ("This meal", semibold, for the
+/// current one). No score numeral: the Badge carries the result, the score its tooltip.
 struct TimelineItem: View {
     let occasion: TimelineOccasion
     var onSelect: (() -> Void)?
@@ -31,7 +33,8 @@ struct TimelineItem: View {
     }
 
     private var content: some View {
-        VStack(spacing: DS.Spacing.s2) {
+        // bundle.css `.nn-timeline__item { gap: var(--spacing-2\.5) }`.
+        VStack(spacing: DS.Spacing.s2_5) {
             Circle()
                 .fill(occasion.isCurrent ? DS.Color.primary : DS.Color.primaryMuted)
                 .frame(width: DS.Spacing.s5, height: DS.Spacing.s5)
@@ -48,7 +51,7 @@ struct TimelineItem: View {
             .accessibilityHidden(true)
 
             Text(occasion.isCurrent ? "This meal" : occasion.date.formatted(.dateTime.day().month(.abbreviated)))
-                .textStyle(.sansSm, weight: occasion.isCurrent ? .semibold : .regular)
+                .textStyle(.sansSm, weight: occasion.isCurrent ? .semibold : .normal)
                 .lineLimit(1)
         }
         .accessibilityElement(children: .ignore)

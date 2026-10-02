@@ -1,8 +1,9 @@
 import SwiftUI
 
 /// Meal Detail's DetailHeader: "date · party" meta, the table's verdict as a
-/// sentence, the dish and its cook as the summary, effort / kind / method /
-/// rotation fact Badges, and "Rate this meal" (or "You rated 90").
+/// sentence, the dish and its cook as the summary, effort / kind / method as a
+/// facts line, the rotation goal as a status Badge, and "Rate this meal" (or
+/// "You rated 90").
 struct MealDetailHeader: View {
     let meal: Meal
     let onRate: () -> Void
@@ -15,6 +16,7 @@ struct MealDetailHeader: View {
             meta: meta,
             summary: summary,
             facts: facts,
+            badges: badges,
             actions: [action]
         )
     }
@@ -43,22 +45,19 @@ struct MealDetailHeader: View {
         return "\(dish), cooked by \(cook)."
     }
 
-    private var facts: [Badge] {
+    /// Facts about the dish (DetailHeader README: "Facts are not badges").
+    private var facts: [String] {
         let recipe = store.dish(meal.dishID)
-        var facts: [Badge] = []
-        if let effort = meal.effort ?? recipe?.effort {
-            facts.append(Badge(effort.label, variant: .secondary, size: .sm))
-        }
-        if let recipe, let kind = store.dishKind(for: recipe) {
-            facts.append(Badge(kind.name, variant: .secondary, size: .sm))
-        }
-        if let recipe, let method = store.cookingMethod(for: recipe) {
-            facts.append(Badge(method.name, variant: .secondary, size: .sm))
-        }
-        if let rotation = store.averageRotation(forMeal: meal.id) {
-            facts.append(.rotation(rotation))
-        }
-        return facts
+        return [
+            (meal.effort ?? recipe?.effort)?.label,
+            recipe.flatMap { store.dishKind(for: $0) }?.name,
+            recipe.flatMap { store.cookingMethod(for: $0) }?.name,
+        ].compactMap { $0 }
+    }
+
+    /// The rotation goal is a status, so it is a Badge.
+    private var badges: [Badge] {
+        store.averageRotation(forMeal: meal.id).map { [.rotation($0)] } ?? []
     }
 
     private var action: DetailHeaderAction {

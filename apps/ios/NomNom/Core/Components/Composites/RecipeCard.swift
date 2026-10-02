@@ -1,15 +1,17 @@
 import SwiftUI
 
-/// A grid or shelf tile for a recipe: a square PhotoCard `md` with the verdict Badge
-/// and favourite heart, an uppercase category eyebrow ("by Name" trailing when the
-/// owner isn't the viewer) and a two-line `sans-sm` semibold title.
+/// A grid or shelf tile for a recipe (components/RecipeCard/README.md): a square
+/// PhotoCard `md` with the verdict Badge and the favourite heart, an uppercase category
+/// SectionHeader ("by Name" trailing when the owner isn't the viewer) and a two-line
+/// `sans-sm` semibold title, the label block a fixed `s14` so rows align.
 ///
-/// `s48` wide on its own; a fixed or grid-column width wins. Long-press: add/remove
+/// `s48` wide on its own; a fixed or grid-column width wins at the same 1:1 ratio.
+/// The heart toggles the favourite (outlined until it is one). Long-press: add/remove
 /// favourite, delete (owner only).
 struct RecipeCard<Footer: View>: View {
     let recipe: Recipe
     /// Overrides the eyebrow (otherwise cuisine → dish kind → method → "Recipe").
-    var subtitle: String?
+    var category: String?
     /// Normalised 0–1 score for the verdict Badge; defaults to the dish's average.
     var score: Double?
     var footer: Footer
@@ -18,26 +20,26 @@ struct RecipeCard<Footer: View>: View {
 
     init(
         recipe: Recipe,
-        subtitle: String? = nil,
+        category: String? = nil,
         score: Double? = nil,
         @ViewBuilder footer: () -> Footer
     ) {
         self.recipe = recipe
-        self.subtitle = subtitle
+        self.category = category
         self.score = score
         self.footer = footer()
     }
 
     init(
         recipe: Recipe,
-        subtitle: String? = nil,
+        category: String? = nil,
         score: Double? = nil
     ) where Footer == EmptyView {
-        self.init(recipe: recipe, subtitle: subtitle, score: score) { EmptyView() }
+        self.init(recipe: recipe, category: category, score: score) { EmptyView() }
     }
 
-    private var category: String {
-        if let subtitle, !subtitle.isEmpty { return subtitle }
+    private var eyebrow: String {
+        if let category, !category.isEmpty { return category }
         if let cuisine = Cuisine.formatDisplayName(recipe.cuisine) { return cuisine }
         if let kind = store.dishKind(for: recipe) { return kind.name }
         if let method = store.cookingMethod(for: recipe) { return method.name }
@@ -56,19 +58,26 @@ struct RecipeCard<Footer: View>: View {
 
     private var isFavorite: Bool { store.isFavorite(recipe: recipe) }
 
+    private func toggleFavorite() {
+        Task { await store.toggleFavorite(recipe: recipe) }
+    }
+
     var body: some View {
-        VStack(alignment: .leading, spacing: DS.Spacing.s2) {
+        // bundle.css `.nn-recipe-card { gap: var(--spacing-1\.5) }`.
+        VStack(alignment: .leading, spacing: DS.Spacing.s1_5) {
             PhotoCard(
                 .recipe(recipe),
                 size: .md,
+                format: .square,
                 fillsWidth: true,
                 badge: resolvedScore.map { .score($0) },
                 isFavorite: isFavorite,
+                onToggleFavorite: toggleFavorite,
                 accessibilityLabel: recipe.name
             )
 
             VStack(alignment: .leading, spacing: DS.Spacing.s0_5) {
-                SectionHeader(category, trailing: creatorLine, inset: false)
+                SectionHeader(title: eyebrow, trailing: creatorLine)
                 Text(recipe.name)
                     .textStyle(.sansSm, weight: .semibold)
                     .lineLimit(2)
@@ -84,11 +93,9 @@ struct RecipeCard<Footer: View>: View {
         .frame(idealWidth: DS.Spacing.s48, maxWidth: .infinity, alignment: .leading)
         .contentShape(Rectangle())
         .contextMenu {
-            Button {
-                Task { await store.toggleFavorite(recipe: recipe) }
-            } label: {
+            Button(action: toggleFavorite) {
                 Label(
-                    isFavorite ? "Remove from Favourites" : "Add to Favourites",
+                    isFavorite ? "Remove from favourites" : "Add to favourites",
                     systemImage: isFavorite ? "heart.slash" : "heart"
                 )
             }
@@ -116,7 +123,7 @@ private struct RecipeCardGallery: View {
                         RecipeCard(recipe: recipe, score: 0.8)
                     }
                     if let recipe = store.recipes.first {
-                        RecipeCard(recipe: recipe, subtitle: "Weeknight") {
+                        RecipeCard(recipe: recipe, category: "Weeknight") {
                             Text("Fits the household's taste").textStyle(.sansSm, tone: .tertiary)
                         }
                     }

@@ -1,7 +1,8 @@
 import SwiftUI
 
-/// Every time a recipe was cooked: a section head with "N times", then a horizontal
-/// rail (2pt `line-strong`) of TimelineItems that bleeds past the gutters. Past items
+/// Every time a recipe was cooked (components/Timeline/README.md): a Section headed
+/// "N times", then a horizontal rail (`border-thick` `line-strong`) of TimelineItems
+/// that scrolls, snapping to each occasion, and bleeds past the gutters. Past items
 /// call `onSelect` with their id (open that meal); the current one isn't tappable.
 ///
 /// Place it inside the screen's gutter padding; `bleed` is how far the rail reaches
@@ -29,27 +30,26 @@ struct Timeline: View {
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            SectionHeader(title, trailing: countText)
-
+        DSSection(title, trailing: countText) {
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(alignment: .top, spacing: DS.Spacing.s3) {
                     ForEach(occasions) { occasion in
                         TimelineItem(occasion: occasion, onSelect: onSelect.map { select in { select(occasion.id) } })
                     }
                 }
+                .scrollTargetLayout()
                 .background(alignment: .top) {
                     Rectangle()
                         .fill(DS.Color.lineStrong)
-                        .frame(height: DS.Spacing.s0_5)
-                        .padding(.top, (TimelineItem.dotFrame - DS.Spacing.s0_5) / 2)
+                        .frame(height: DS.BorderWidth.thick)
+                        .padding(.top, (TimelineItem.dotFrame - DS.BorderWidth.thick) / 2)
                         .accessibilityHidden(true)
                 }
             }
+            .scrollTargetBehavior(.viewAligned)
             .contentMargins(.horizontal, bleed, for: .scrollContent)
             .padding(.horizontal, -bleed)
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
     }
 }
 

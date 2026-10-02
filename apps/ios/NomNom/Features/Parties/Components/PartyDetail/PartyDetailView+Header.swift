@@ -32,7 +32,8 @@ extension PartyDetailView {
         if store.isMember(of: party.id) {
             return [
                 DetailHeaderAction(title: "Log a meal") { showingCreateMeal = true },
-                DetailHeaderAction(title: "Invite", appearance: .soft) { showingInvite = true },
+                // README Dinner party recipe: "Log a meal" + `secondary soft` "Invite".
+                DetailHeaderAction(title: "Invite", variant: .secondary, appearance: .soft) { showingInvite = true },
             ]
         }
         guard party.isPublic else { return [] }

@@ -3,28 +3,26 @@ import SwiftUI
 struct InsightsRecommendationsCarousel: View {
     let recommendations: [PartyInsightRecommendation]
     @Environment(FoodStore.self) private var store
-    
+
     var body: some View {
         if recommendations.isEmpty {
             EmptyView()
         } else {
-            VStack(alignment: .leading, spacing: DS.Spacing.md) {
+            VStack(alignment: .leading, spacing: DS.Spacing.s4) {
                 Text("AI Recipe Recommendations")
-                    .font(.headline)
-                    .foregroundStyle(DS.Color.textPrimary)
+                    .textStyle(.sansLg, weight: .semibold)
 
                 ScrollView(.horizontal, showsIndicators: false) {
-                    HStack(spacing: DS.Spacing.md) {
+                    HStack(alignment: .top, spacing: DS.Spacing.s4) {
                         ForEach(recommendations) { rec in
                             if let dishID = rec.dishID, let recipe = store.recipe(dishID) {
                                 NavigationLink(value: InsightsRoute.dish(dishID)) {
-                                    RecipeCard(recipe: recipe, subtitle: rec.cuisine) {
+                                    RecipeCard(recipe: recipe, category: rec.cuisine) {
                                         Text(rec.description)
-                                            .font(.caption)
-                                            .foregroundStyle(DS.Color.textSecondary)
+                                            .textStyle(.sansSm, tone: .secondary)
                                             .lineLimit(3)
                                     }
-                                    .frame(width: 160)
+                                    .frame(width: DS.Spacing.s48)
                                 }
                                 .buttonStyle(.plain)
                             } else {
@@ -38,40 +36,29 @@ struct InsightsRecommendationsCarousel: View {
     }
 }
 
+/// A recommendation with no recipe yet: RecipeCard's layout (PhotoCard `md` on the
+/// cuisine photo, category SectionHeader, two-line title) plus the description.
 private struct RecommendationCard: View {
     let rec: PartyInsightRecommendation
-    
+
     var body: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            RecipeImageView(photoPath: nil, cuisine: rec.cuisine, cornerRadius: AppRadius.photo)
-            .clipShape(RoundedRectangle(cornerRadius: AppRadius.photo))
-            .aspectRatio(1, contentMode: .fit)
-            .frame(minWidth: 0, maxWidth: .infinity)
-            
-            VStack(alignment: .leading, spacing: 2) {
-                if let cuisine = rec.cuisine {
-                    Text(cuisine.uppercased())
-                        .font(.caption2.weight(.medium))
-                        .tracking(0.4)
-                        .foregroundStyle(DS.Color.accentText)
-                        .lineLimit(1)
-                }
-                
+        VStack(alignment: .leading, spacing: DS.Spacing.s1_5) {
+            PhotoCard(.none(cuisine: rec.cuisine), size: .md, fillsWidth: true, accessibilityLabel: rec.title)
+
+            VStack(alignment: .leading, spacing: DS.Spacing.s0_5) {
+                SectionHeader(title: rec.cuisine ?? "Recipe")
                 Text(rec.title)
-                    .font(.subheadline.weight(.semibold))
-                    .foregroundStyle(DS.Color.textPrimary)
+                    .textStyle(.sansSm, weight: .semibold)
                     .lineLimit(2)
                     .multilineTextAlignment(.leading)
-                
-                Text(rec.description)
-                    .font(.caption)
-                    .foregroundStyle(DS.Color.textSecondary)
-                    .lineLimit(3)
-                    .padding(.top, 2)
             }
-            .frame(height: 58, alignment: .topLeading)
+            .frame(minHeight: DS.Spacing.s14, alignment: .topLeading)
+
+            Text(rec.description)
+                .textStyle(.sansSm, tone: .secondary)
+                .lineLimit(3)
         }
-        .frame(width: 160)
+        .frame(width: DS.Spacing.s48, alignment: .leading)
         .contentShape(Rectangle())
     }
 }
