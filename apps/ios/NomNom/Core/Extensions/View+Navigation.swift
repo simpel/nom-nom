@@ -4,8 +4,8 @@ extension View {
     /// Applies a standardized screen or sheet title with centralized display mode behavior.
     ///
     /// The title typography is set globally in `AppDelegate.configureGlobalTypography()`:
-    /// - Expanded page title: Newsreader 72pt Regular at `DS.TextStyle.serifLg`.
-    /// - Compact navbar title: system semibold.
+    /// - Expanded page title: `DS.TextStyle.serifLg`.
+    /// - Compact navbar title: `DS.TextStyle.sansLg` semibold.
     func screenTitle(
         _ title: String,
         displayMode: NavigationBarItem.TitleDisplayMode = .large
@@ -24,7 +24,7 @@ extension View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
-                    HStack(spacing: 12) {
+                    HStack(spacing: DS.Spacing.s3) {
                         NotificationBellButton()
                         SettingsDropdownMenu()
                     }
@@ -39,7 +39,7 @@ extension View {
     ) -> some View {
         toolbar {
             ToolbarItem(placement: .topBarTrailing) {
-                HStack(spacing: 12) {
+                HStack(spacing: DS.Spacing.s3) {
                     NotificationBellButton()
                     SettingsDropdownMenu()
 

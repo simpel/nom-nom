@@ -12,10 +12,12 @@ struct VisibilityToggleCard: View {
     var body: some View {
         SectionCard(title) {
             VStack(alignment: .leading, spacing: DS.Spacing.s1_5) {
-                Toggle(isOn: $isPublic) {
+                HStack(spacing: DS.Spacing.s3) {
                     Text(label).textStyle(.sansMd, weight: .semibold)
+                        .accessibilityHidden(true)
+                    Spacer(minLength: 0)
+                    AppToggle(label, isOn: $isPublic)
                 }
-                .nativeToggle()
 
                 Text(message)
                     .textStyle(.sansXs, tone: .secondary)

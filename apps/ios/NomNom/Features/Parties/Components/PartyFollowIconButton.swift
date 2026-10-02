@@ -25,7 +25,6 @@ struct PartyFollowIconButton: View {
                 accessibilityLabel: isFollowing ? "Unfollow \(party.name)" : "Follow \(party.name)",
                 variant: isFollowing ? .primary : .secondary,
                 appearance: .soft,
-                size: .sm,
                 isLoading: isProcessing
             ) {
                 toggleFollow()

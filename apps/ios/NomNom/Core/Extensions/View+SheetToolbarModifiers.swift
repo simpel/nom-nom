@@ -2,7 +2,7 @@ import SwiftUI
 
 // Implementations behind the sheet toolbar modifiers in `View+SheetToolbars.swift`.
 
-/// The in-sheet close: AppButton icon-only `secondary soft sm` xmark.
+/// The in-sheet close: AppButton `secondary soft` icon-only xmark (44pt circle).
 struct SheetCloseButton: View {
     var accessibilityLabel: String = "Close"
     let action: () -> Void
@@ -13,7 +13,6 @@ struct SheetCloseButton: View {
             accessibilityLabel: accessibilityLabel,
             variant: .secondary,
             appearance: .soft,
-            size: .sm,
             action: action
         )
     }

@@ -33,9 +33,12 @@ enum DSVariant: Equatable {
         }
     }
 
-    /// Border colour for the `outline` appearance (`line-strong` for secondary).
+    /// Border colour for the `outline` appearance. README "Colour": "A line that
+    /// carries meaning is `line-control`, not `line-strong`. Outline buttons … hold at
+    /// least 3:1" — so secondary uses `line-control` (bundle.css `--role-border`),
+    /// not the AppButton README's older "`line-strong` for secondary" (DS-GAPS.md).
     var outlineBorder: Color {
-        self == .secondary ? DS.Color.lineStrong : role.fill
+        self == .secondary ? DS.Color.lineControl : role.fill
     }
 
     var isReaction: Bool {
@@ -50,15 +53,24 @@ enum DSAppearance: Equatable {
     case solid
     /// `{role}-soft` ground + `{role}-text` ink.
     case soft
-    /// Clear ground, `{role}-text` ink, 1.5pt `{role}` border. Buttons only.
+    /// Clear ground, `{role}-text` ink, `border-hairline` `{role}` border. Buttons only.
     case outline
     /// `{role}-text` ink only. Buttons only.
     case ghost
     /// `panel` ground + `shadow-xs`, for things floating over content.
     case elevated
 
-    /// Border width of the `outline` appearance.
-    static let outlineWidth: CGFloat = 1.5
+    /// Border width of the `outline` appearance: `border-hairline`, as bundle.css
+    /// draws it (`--bw: var(--border-hairline)`). The AppButton README's "1.5px" has
+    /// no token and README "Scales" names hairline and thick as "the only two widths
+    /// the system draws" (DS-GAPS.md).
+    static let outlineBorderWidth: CGFloat = DS.BorderWidth.hairline
+
+    /// Pre-v3 1.5pt width still read by components outside R1a (TasteScoreSelector,
+    /// PhotoStripAddButton, AppInputTypes, TrendChart). AppButton README: "outline =
+    /// clear + `{role}-text` + 1.5px `{role}` border" — superseded, see above.
+    @available(*, deprecated, message: "Use DS.BorderWidth.hairline or DS.BorderWidth.thick")
+    static let outlineWidth: CGFloat = 1.5 // ds-lint:allow pre-v3 width, quoted from AppButton README
 }
 
 /// Which side of the label an icon sits on.

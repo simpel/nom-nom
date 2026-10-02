@@ -1,12 +1,11 @@
 import SwiftUI
 
 extension View {
-    /// Applies native iOS switch styling with standard Apple system green on-tint.
-    /// Ensures consistent, native toggle appearance across all screens and sheets,
-    /// preventing accidental tint overrides from custom brand AccentColors.
+    /// Draws a labelled `SwiftUI.Toggle` as the design-system switch (`DSToggleStyle`),
+    /// label before the switch. The Toggle README puts a switch only in a ListRow's
+    /// trailing slot with no label beside it, so new code uses `AppToggle` there.
+    @available(*, deprecated, message: "Use AppToggle in a ListRow trailing slot (.toggle)")
     func nativeToggle() -> some View {
-        self
-            .toggleStyle(.switch)
-            .tint(Color(uiColor: .systemGreen))
+        toggleStyle(DSToggleStyle())
     }
 }

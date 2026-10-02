@@ -18,9 +18,9 @@ struct RecipeIngredientsCard: View {
             SectionCard("Ingredients", trailing: "\(validIngredients.count) items") {
                 VStack(spacing: 0) {
                     HStack(spacing: DS.Spacing.s3) {
-                        SectionHeader("Amount", inset: false)
+                        SectionHeader(title: "Amount")
                             .frame(width: amountColumnWidth, alignment: .trailing)
-                        SectionHeader("Ingredient", inset: false)
+                        SectionHeader(title: "Ingredient")
                             .frame(maxWidth: .infinity, alignment: .leading)
                     }
                     .padding(.bottom, DS.Spacing.s2)

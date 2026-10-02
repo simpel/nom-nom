@@ -46,7 +46,7 @@ struct HealthMacroDistributionCard: View {
 
     private func highlights(_ items: [String]) -> some View {
         VStack(alignment: .leading, spacing: DS.Spacing.s2) {
-            SectionHeader("Highlights", inset: false)
+            SectionHeader(title: "Highlights")
             ForEach(items, id: \.self) { item in
                 HStack(alignment: .firstTextBaseline, spacing: DS.Spacing.s2) {
                     Circle()

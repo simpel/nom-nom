@@ -2,20 +2,54 @@ import SwiftUI
 
 /// The AppButton capsule as a plain view, for controls that bring their own
 /// tap handling: `PhotosPicker`, `ShareLink`, `Menu` and `NavigationLink` labels.
-/// Pass `title: nil` for a circular icon-only label (set `accessibilityLabel`).
+/// Wrap it in `.buttonStyle(AppPressableButtonStyle())` for the shared press.
 struct AppButtonLabel: View {
-    var title: String?
-    var icon: AppButtonIcon?
-    var iconPosition: DSIconPosition
-    var variant: DSVariant
-    var appearance: DSAppearance
-    var size: AppButtonSize
-    var fullWidth: Bool
-    var isLoading: Bool
-    var accessibilityLabel: String?
+    private let title: String?
+    private let icon: AppButtonIcon?
+    private let iconPosition: DSIconPosition
+    private let variant: DSVariant
+    private let appearance: DSAppearance
+    private let size: AppButtonSize
+    private let fullWidth: Bool
+    private let isLoading: Bool
+    private let accessibilityLabel: String?
+    /// Icon-only diameter. Always `AppButtonSize.iconOnlyDiameter` (44) except for the
+    /// deprecated sized icon-only API, which keeps `lg` at 48 until its callers migrate.
+    private let iconOnlyDiameter: CGFloat
 
     @Environment(\.isEnabled) private var isEnabled
 
+    /// A labelled capsule.
+    init(
+        _ title: String,
+        icon: AppButtonIcon? = nil,
+        iconPosition: DSIconPosition = .start,
+        variant: DSVariant = .primary,
+        appearance: DSAppearance = .solid,
+        size: AppButtonSize = .md,
+        fullWidth: Bool = false,
+        isLoading: Bool = false
+    ) {
+        self.init(title: title, icon: icon, iconPosition: iconPosition, variant: variant, appearance: appearance,
+                  size: size, fullWidth: fullWidth, isLoading: isLoading, accessibilityLabel: nil)
+    }
+
+    /// An icon-only 44 × 44 circle; `accessibilityLabel` is its spoken name. There is
+    /// one icon-only size, so it takes none.
+    init(
+        icon: AppButtonIcon,
+        accessibilityLabel: String,
+        variant: DSVariant = .primary,
+        appearance: DSAppearance = .solid,
+        isLoading: Bool = false
+    ) {
+        self.init(title: nil, icon: icon, iconPosition: .start, variant: variant, appearance: appearance,
+                  size: .md, fullWidth: false, isLoading: isLoading, accessibilityLabel: accessibilityLabel)
+    }
+
+    /// Pre-v3 API: `title: nil` drew an icon-only circle sized by `size`.
+    @_disfavoredOverload
+    @available(*, deprecated, message: "Use AppButtonLabel(_:icon:…) or AppButtonLabel(icon:accessibilityLabel:…)")
     init(
         _ title: String?,
         icon: AppButtonIcon? = nil,
@@ -27,6 +61,23 @@ struct AppButtonLabel: View {
         isLoading: Bool = false,
         accessibilityLabel: String? = nil
     ) {
+        self.init(title: title, icon: icon, iconPosition: iconPosition, variant: variant, appearance: appearance,
+                  size: size, fullWidth: fullWidth, isLoading: isLoading, accessibilityLabel: accessibilityLabel,
+                  iconOnlyDiameter: max(size.height, AppButtonSize.iconOnlyDiameter))
+    }
+
+    init(
+        title: String?,
+        icon: AppButtonIcon?,
+        iconPosition: DSIconPosition,
+        variant: DSVariant,
+        appearance: DSAppearance,
+        size: AppButtonSize,
+        fullWidth: Bool,
+        isLoading: Bool,
+        accessibilityLabel: String?,
+        iconOnlyDiameter: CGFloat = AppButtonSize.iconOnlyDiameter
+    ) {
         self.title = title
         self.icon = icon
         self.iconPosition = iconPosition
@@ -36,6 +87,7 @@ struct AppButtonLabel: View {
         self.fullWidth = fullWidth
         self.isLoading = isLoading
         self.accessibilityLabel = accessibilityLabel
+        self.iconOnlyDiameter = iconOnlyDiameter
     }
 
     private var paint: DSPaint { DSPaint(variant: variant, appearance: appearance) }
@@ -51,21 +103,25 @@ struct AppButtonLabel: View {
                 titleText
             }
         }
-        .textStyle(size.textStyle, tone: nil, weight: .semibold)
-        .lineLimit(1)
+        .textStyle(size.textStyle, tone: nil, weight: .semibold, lines: 1)
         .foregroundStyle(paint.foreground)
         .padding(.horizontal, isIconOnly ? 0 : size.horizontalPadding)
         .frame(maxWidth: fullWidth ? .infinity : nil)
-        .frame(width: isIconOnly && !fullWidth ? size.height : nil)
-        .frame(minHeight: size.height)
+        .frame(width: isIconOnly && !fullWidth ? iconOnlyDiameter : nil)
+        .frame(
+            minWidth: AppButtonSize.minimumTarget,
+            minHeight: isIconOnly ? iconOnlyDiameter : size.height
+        )
         .background(paint.background, in: Capsule())
         .overlay {
             if let border = paint.border {
-                Capsule().strokeBorder(border, lineWidth: DSAppearance.outlineWidth)
+                Capsule().strokeBorder(border, lineWidth: DSAppearance.outlineBorderWidth)
             }
         }
         .modifier(ElevationModifier(isElevated: paint.isElevated))
         .contentShape(Capsule())
+        // README "Motion and states": "Disabled: `opacity-50` on buttons". A pending
+        // button is not disabled, so it does not fade.
         .opacity(!isEnabled && !isLoading ? DS.Opacity.disabled : DS.Opacity.o100)
         .accessibilityElement(children: .combine)
         .modifier(OptionalAccessibilityLabel(label: accessibilityLabel))
@@ -78,6 +134,7 @@ struct AppButtonLabel: View {
         }
     }
 
+    /// "Pending: a spinner replaces the button icon."
     @ViewBuilder
     private var iconSlot: some View {
         if isLoading {
@@ -129,7 +186,7 @@ private struct ElevationModifier: ViewModifier {
     VStack(spacing: DS.Spacing.s3) {
         AppButtonLabel("Add photo", icon: "camera", variant: .secondary, appearance: .elevated, size: .sm)
         AppButtonLabel("Share", icon: "square.and.arrow.up", appearance: .soft)
-        AppButtonLabel(nil, icon: "ellipsis", variant: .secondary, appearance: .soft, accessibilityLabel: "More")
+        AppButtonLabel(icon: "ellipsis", accessibilityLabel: "More", variant: .secondary, appearance: .soft)
     }
     .padding(DS.Spacing.s4)
     .background(DS.Color.bg)

@@ -50,9 +50,7 @@ struct ListRowTrailingView: View {
         case .button(let button):
             button
         case .toggle(let isOn):
-            Toggle(title, isOn: isOn)
-                .labelsHidden()
-                .tint(DS.Color.primary)
+            AppToggle(title, isOn: isOn)
         case .chevron:
             Image(systemName: "chevron.right")
                 .textStyle(.sansSm, tone: .tertiary, weight: .semibold)

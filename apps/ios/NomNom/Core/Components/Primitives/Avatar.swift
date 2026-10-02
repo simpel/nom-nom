@@ -32,6 +32,7 @@ struct Avatar: View {
     var text: String?
     var bucket: String
     var size: AvatarSize
+    var decorative: Bool
 
     @State private var imageData: Data?
 
@@ -39,26 +40,32 @@ struct Avatar: View {
     ///   - name: Accessible name; its first and last word give the initials.
     ///   - text: Shown instead of the initials (at most two characters).
     ///   - bucket: Storage bucket `photoPath` lives in.
+    ///   - decorative: The name is visible beside the avatar, so hide the avatar from
+    ///     VoiceOver and the name is not read twice.
     init(
         name: String,
         photoPath: String? = nil,
         text: String? = nil,
         bucket: String = SupabaseConfig.profileBucket,
-        size: AvatarSize = .md
+        size: AvatarSize = .md,
+        decorative: Bool = false
     ) {
         self.name = name
         self.photoPath = photoPath
         self.text = text
         self.bucket = bucket
         self.size = size
+        self.decorative = decorative
     }
 
-    init(profile: Profile, size: AvatarSize = .md) {
-        self.init(name: profile.shownName, photoPath: profile.photoPath, bucket: SupabaseConfig.profileBucket, size: size)
+    init(profile: Profile, size: AvatarSize = .md, decorative: Bool = false) {
+        self.init(name: profile.shownName, photoPath: profile.photoPath, bucket: SupabaseConfig.profileBucket,
+                  size: size, decorative: decorative)
     }
 
-    init(party: Party, size: AvatarSize = .md) {
-        self.init(name: party.name, photoPath: party.photoPath, bucket: SupabaseConfig.partyBucket, size: size)
+    init(party: Party, size: AvatarSize = .md, decorative: Bool = false) {
+        self.init(name: party.name, photoPath: party.photoPath, bucket: SupabaseConfig.partyBucket,
+                  size: size, decorative: decorative)
     }
 
     private var initials: String {
@@ -83,20 +90,20 @@ struct Avatar: View {
                     .textStyle(
                         size.textStyle(characters: initials.count),
                         tone: .accent,
-                        weight: size.textStyle(characters: initials.count).isSerif ? nil : .semibold
+                        weight: size.textStyle(characters: initials.count).isSerif ? nil : .semibold,
+                        lines: 1
                     )
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.5)
             }
         }
         .frame(width: size.diameter, height: size.diameter)
         .clipShape(Circle())
-        .overlay {
-            Circle().strokeBorder(DS.Color.line.opacity(DS.Opacity.hairline), lineWidth: 0.5)
-        }
+        // README: "0.5px `line` ring at 30%". 0.5px has no token; `.dsHairline` draws
+        // `border-hairline` (1pt) `line` at `opacity-30` (DS-GAPS.md, "Hairline width").
+        .dsHairline(radius: DS.Radius.full)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(name)
         .accessibilityAddTraits(.isImage)
+        .accessibilityHidden(decorative)
         .task(id: photoPath) { await loadPhoto() }
     }
 

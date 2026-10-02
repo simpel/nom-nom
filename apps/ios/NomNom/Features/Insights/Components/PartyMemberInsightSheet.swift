@@ -28,8 +28,7 @@ struct PartyMemberInsightSheet: View {
                     VStack(alignment: .leading, spacing: DS.Spacing.sm) {
                         // Header: Name as heading alone
                         Text(member.name)
-                            .font(Font.newsreader(.largeTitle, weight: .semibold))
-                            .foregroundStyle(DS.Color.textPrimary)
+                            .textStyle(.serifLg)
 
                         // Editorial narrative (Newsreader serif with semantic highlights)
                         EditorialTextView(segments: tipSegments)

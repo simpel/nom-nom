@@ -1,7 +1,12 @@
 import SwiftUI
 
-/// Button sizes (AppButton README): height, side padding, label step and icon gap.
-enum AppButtonSize: Equatable {
+/// Button sizes (AppButton README table): height, side padding, label step and gap.
+///
+/// "No button is smaller than 44 × 44": `xs`, `sm` and `md` are all `spacing-11`
+/// tall and differ only in type and side padding; `lg` is `spacing-12`. Heights are
+/// minimums, so the capsule grows with Dynamic Type instead of clipping.
+enum AppButtonSize: Equatable, CaseIterable {
+    case xs
     case sm
     case md
     case lg
@@ -9,25 +14,33 @@ enum AppButtonSize: Equatable {
     @available(*, deprecated, renamed: "lg")
     static var xl: AppButtonSize { .lg }
 
+    /// Minimum height of a labelled button.
     var height: CGFloat {
         switch self {
-        case .sm: return DS.Spacing.s9
-        case .md: return DS.Spacing.s11
+        case .xs, .sm, .md: return DS.Spacing.s11
         case .lg: return DS.Spacing.s12
         }
     }
 
+    /// The floor on every button's width and height (`min-width` / `min-height`).
+    static let minimumTarget: CGFloat = DS.Spacing.s11
+
+    /// "Icon-only, all four sizes are the same 44 × 44 circle."
+    static let iconOnlyDiameter: CGFloat = DS.Spacing.s11
+
     var horizontalPadding: CGFloat {
         switch self {
+        case .xs: return DS.Spacing.s2_5
         case .sm: return DS.Spacing.s3
         case .md: return DS.Spacing.s4
         case .lg: return DS.Spacing.s5
         }
     }
 
-    /// Label step; icons use the same step so glyph and text match.
+    /// Label step (always set semibold); the icon is the same `text-*` size.
     var textStyle: DS.TextStyle {
         switch self {
+        case .xs: return .sansXs
         case .sm: return .sansSm
         case .md: return .sansMd
         case .lg: return .sansLg
@@ -36,6 +49,7 @@ enum AppButtonSize: Equatable {
 
     var gap: CGFloat {
         switch self {
+        case .xs: return DS.Spacing.s1
         case .sm: return DS.Spacing.s1_5
         case .md, .lg: return DS.Spacing.s2
         }
@@ -43,7 +57,12 @@ enum AppButtonSize: Equatable {
 
     var iconSize: CGFloat { textStyle.size }
 
-    var spinnerSize: ControlSize { self == .sm ? .mini : .small }
+    var spinnerSize: ControlSize {
+        switch self {
+        case .xs, .sm: return .mini
+        case .md, .lg: return .small
+        }
+    }
 }
 
 /// Icon representation supporting system SF Symbols, named assets, or custom SwiftUI Images.
@@ -59,19 +78,31 @@ enum AppButtonIcon: ExpressibleByStringLiteral {
     }
 }
 
-/// Opacity 0.7 + scale 0.985 on press, 120ms ease-out.
+/// README "Motion and states": "Press: `opacity-70` and scale 0.985 over 120ms
+/// ease-out" (`scale-press`, `duration-press`, `ease-standard`). Reduce Motion keeps
+/// the fade and drops the scale ("it also removes press transforms").
 struct AppPressableButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
-        configuration.label
-            .opacity(configuration.isPressed ? DS.Opacity.pressed : DS.Opacity.o100)
-            .scaleEffect(configuration.isPressed ? 0.985 : 1.0)
-            .animation(.easeOut(duration: 0.12), value: configuration.isPressed)
+        AppPressEffect(label: configuration.label, isPressed: configuration.isPressed)
+    }
+}
+
+private struct AppPressEffect<Label: View>: View {
+    let label: Label
+    let isPressed: Bool
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    var body: some View {
+        label
+            .opacity(isPressed ? DS.Opacity.pressed : DS.Opacity.o100)
+            .scaleEffect(isPressed && !reduceMotion ? DS.Motion.scalePress : 1)
+            .animation(DS.Motion.press, value: isPressed)
     }
 }
 
 // MARK: - Legacy axes (pre-design-system AppButton API)
 
-/// Legacy button intent. Maps onto `DSVariant` + `DSAppearance` via `AppButton.legacyAxes`.
+/// Legacy button intent. Maps onto `DSVariant` + `DSAppearance` via `dsAxes(style:)`.
 enum AppButtonVariant {
     case primary
     case secondary
@@ -96,10 +127,9 @@ enum AppButtonIconPosition {
 }
 
 extension AppButtonVariant {
-    /// The design-system variant and appearance a legacy variant/style pair becomes:
-    /// `.primary` → primary solid, `.secondary` → primary soft, `.neutral` → secondary
-    /// (soft), `.destructive` → destructive, `.pro` → pro; `.outlined` → outline,
-    /// `.ghost` → ghost.
+    /// AppButton README "Migration": `.primary` → primary solid, `.secondary` →
+    /// primary soft, `.neutral` → secondary, `.destructive` → destructive, `.pro` →
+    /// pro; style `.outlined` → outline, `.ghost` → ghost.
     func dsAxes(style: AppButtonStyle) -> (DSVariant, DSAppearance) {
         let variant: DSVariant
         let filled: DSAppearance

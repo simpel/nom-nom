@@ -10,16 +10,16 @@ struct EditorialTextView: View {
                 return result + Text(segment.text)
             case .positive:
                 return result + Text(segment.text)
-                    .font(.newsreader(size: 22, weight: .semibold, relativeTo: .title2))
+                    .font(.newsreader(.serifSm))
                     .foregroundStyle(Reaction.great.text)
             case .negative:
                 return result + Text(segment.text)
-                    .font(.newsreader(size: 22, weight: .semibold, relativeTo: .title2))
+                    .font(.newsreader(.serifSm))
                     .foregroundStyle(Reaction.bad.text)
             }
         }
         .font(.editorialSummary)
         .foregroundStyle(DS.Color.textPrimary)
-        .lineSpacing(6)
+        .lineSpacing(DS.TextStyle.serifXs.lineSpacing())
     }
 }

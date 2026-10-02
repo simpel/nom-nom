@@ -9,17 +9,14 @@ import SwiftUI
 /// - `destructive`: irreversible actions only (prefer outline or ghost).
 /// - `pro`: Nom Nom Pro CTAs only.
 /// - `elevated` icon-only: floating controls over content.
+///
+/// Every button is at least 44 × 44; icon-only buttons are one 44pt circle.
+/// `isLoading` swaps the icon for a spinner and drops the action without disabling
+/// the button (README: "A pending button keeps focus").
 struct AppButton: View {
-    private let title: String?
-    private let icon: AppButtonIcon?
-    private let iconPosition: DSIconPosition
-    private let variant: DSVariant
-    private let appearance: DSAppearance
-    private let size: AppButtonSize
-    private let fullWidth: Bool
+    private let label: AppButtonLabel
     private let isLoading: Bool
     private let isDisabled: Bool
-    private let accessibilityLabel: String?
     private let action: () -> Void
 
     /// A labelled button.
@@ -34,39 +31,54 @@ struct AppButton: View {
         isLoading: Bool = false,
         action: @escaping () -> Void
     ) {
-        self.title = title
-        self.icon = icon
-        self.iconPosition = iconPosition
-        self.variant = variant
-        self.appearance = appearance
-        self.size = size
-        self.fullWidth = fullWidth
+        self.label = AppButtonLabel(
+            title, icon: icon, iconPosition: iconPosition, variant: variant, appearance: appearance,
+            size: size, fullWidth: fullWidth, isLoading: isLoading
+        )
         self.isLoading = isLoading
         self.isDisabled = false
-        self.accessibilityLabel = nil
         self.action = action
     }
 
-    /// A circular icon-only button; `accessibilityLabel` is its spoken name.
+    /// A 44pt icon-only circle; `accessibilityLabel` is its spoken name. There is one
+    /// icon-only size, so it takes none.
     init(
         icon: AppButtonIcon,
         accessibilityLabel: String,
         variant: DSVariant = .primary,
         appearance: DSAppearance = .solid,
-        size: AppButtonSize = .md,
         isLoading: Bool = false,
         action: @escaping () -> Void
     ) {
-        self.title = nil
-        self.icon = icon
-        self.iconPosition = .start
-        self.variant = variant
-        self.appearance = appearance
-        self.size = size
-        self.fullWidth = false
+        self.label = AppButtonLabel(
+            icon: icon, accessibilityLabel: accessibilityLabel, variant: variant,
+            appearance: appearance, isLoading: isLoading
+        )
         self.isLoading = isLoading
         self.isDisabled = false
-        self.accessibilityLabel = accessibilityLabel
+        self.action = action
+    }
+
+    /// Pre-v3 icon-only API with a size. Every size draws the 44pt circle except `lg`,
+    /// which keeps its 48pt circle until its callers (TasteScoreSelector) migrate.
+    @_disfavoredOverload
+    @available(*, deprecated, message: "Icon-only buttons have one size: drop `size:`")
+    init(
+        icon: AppButtonIcon,
+        accessibilityLabel: String,
+        variant: DSVariant = .primary,
+        appearance: DSAppearance = .solid,
+        size: AppButtonSize,
+        isLoading: Bool = false,
+        action: @escaping () -> Void
+    ) {
+        self.label = AppButtonLabel(
+            title: nil, icon: icon, iconPosition: .start, variant: variant, appearance: appearance,
+            size: size, fullWidth: false, isLoading: isLoading, accessibilityLabel: accessibilityLabel,
+            iconOnlyDiameter: max(size.height, AppButtonSize.iconOnlyDiameter)
+        )
+        self.isLoading = isLoading
+        self.isDisabled = false
         self.action = action
     }
 
@@ -87,71 +99,55 @@ struct AppButton: View {
         action: @escaping () -> Void
     ) {
         let axes = variant.dsAxes(style: style)
-        self.title = title.isEmpty ? nil : title
-        self.icon = icon ?? systemImage.map { .system($0) }
-        self.iconPosition = iconPosition.dsPosition
-        self.variant = axes.0
-        self.appearance = axes.1
-        self.size = size
-        self.fullWidth = isFullWidth
+        self.label = AppButtonLabel(
+            title: title.isEmpty ? nil : title, icon: icon ?? systemImage.map { .system($0) },
+            iconPosition: iconPosition.dsPosition, variant: axes.0, appearance: axes.1,
+            size: size, fullWidth: isFullWidth, isLoading: isPending, accessibilityLabel: nil,
+            iconOnlyDiameter: max(size.height, AppButtonSize.iconOnlyDiameter)
+        )
         self.isLoading = isPending
         self.isDisabled = disabled
-        self.accessibilityLabel = nil
         self.action = action
     }
 
     var body: some View {
-        Button(action: action) {
-            AppButtonLabel(
-                title,
-                icon: icon,
-                iconPosition: iconPosition,
-                variant: variant,
-                appearance: appearance,
-                size: size,
-                fullWidth: fullWidth,
-                isLoading: isLoading,
-                accessibilityLabel: accessibilityLabel
-            )
+        Button {
+            guard !isLoading else { return }
+            action()
+        } label: {
+            label
         }
         .buttonStyle(AppPressableButtonStyle())
-        .disabled(isDisabled || isLoading)
+        .disabled(isDisabled)
         .accessibilityAddTraits(isLoading ? .updatesFrequently : [])
     }
 }
 
-#Preview {
-    ScrollView {
-        VStack(spacing: DS.Spacing.s3) {
-            AppButton("Rate this meal", size: .lg, fullWidth: true) {}
-            AppButton("Join dinner party", appearance: .soft) {}
-            AppButton("Use a different address", variant: .secondary, appearance: .ghost) {}
-            AppButton("Reset filters", variant: .secondary, appearance: .outline, size: .sm) {}
-            AppButton("Delete meal", icon: "trash", variant: .destructive, appearance: .outline) {}
-            AppButton("Unlock with Pro", icon: "sparkles", variant: .pro) {}
-            AppButton("Next", icon: "arrow.right", iconPosition: .end, appearance: .soft) {}
-            AppButton("Saving", isLoading: true) {}
-            AppButton("Disabled") {}.disabled(true)
-            HStack(spacing: DS.Spacing.s3) {
-                AppButton(icon: "chevron.left", accessibilityLabel: "Back", variant: .secondary, appearance: .elevated) {}
-                AppButton(icon: "xmark", accessibilityLabel: "Close", variant: .secondary, appearance: .soft, size: .sm) {}
-                AppButton(icon: "plus", accessibilityLabel: "Add") {}
+private struct AppButtonGallery: View {
+    var body: some View {
+        ScrollView {
+            VStack(spacing: DS.Spacing.s3) {
+                AppButton("Rate this meal", size: .lg, fullWidth: true) {}
+                AppButton("Join dinner party", appearance: .soft) {}
+                AppButton("Use a different address", variant: .secondary, appearance: .ghost) {}
+                AppButton("Reset filters", variant: .secondary, appearance: .outline, size: .sm) {}
+                AppButton("Resend", variant: .secondary, appearance: .ghost, size: .xs) {}
+                AppButton("Delete meal", icon: "trash", variant: .destructive, appearance: .outline) {}
+                AppButton("Unlock with Pro", icon: "sparkles", variant: .pro) {}
+                AppButton("Next", icon: "arrow.right", iconPosition: .end, appearance: .soft) {}
+                AppButton("Saving", isLoading: true) {}
+                AppButton("Disabled") {}.disabled(true)
+                HStack(spacing: DS.Spacing.s3) {
+                    AppButton(icon: "chevron.left", accessibilityLabel: "Back", variant: .secondary, appearance: .elevated) {}
+                    AppButton(icon: "xmark", accessibilityLabel: "Close", variant: .secondary, appearance: .soft) {}
+                    AppButton(icon: "plus", accessibilityLabel: "Add") {}
+                }
             }
+            .padding(DS.Spacing.gutter)
         }
-        .padding(DS.Spacing.s4)
+        .background(DS.Color.bg)
     }
-    .background(DS.Color.bg)
 }
 
-#Preview("Dark") {
-    VStack(spacing: DS.Spacing.s3) {
-        AppButton("Rate this meal", size: .lg, fullWidth: true) {}
-        AppButton("Join dinner party", appearance: .soft) {}
-        AppButton("Skip step", variant: .secondary, appearance: .soft) {}
-        AppButton("Sign out", variant: .destructive, appearance: .ghost) {}
-        AppButton(icon: "chevron.left", accessibilityLabel: "Back", variant: .secondary, appearance: .elevated) {}
-    }
-    .padding(DS.Spacing.s4)
-    .background(DS.Color.bg)
-    .preferredColorScheme(.dark)
-}
+#Preview("Light") { AppButtonGallery() }
+#Preview("Dark") { AppButtonGallery().preferredColorScheme(.dark) }

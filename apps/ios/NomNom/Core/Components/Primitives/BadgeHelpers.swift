@@ -2,13 +2,18 @@ import Foundation
 
 /// The Badge README recipes: what the old badges become.
 extension Badge {
-    /// Verdict for a normalised 0–1 score: the reaction colour and its word only.
-    static func verdict(score: Double, appearance: DSAppearance = .soft, size: BadgeSize = .md) -> Badge {
-        verdict(Reaction(score: score), appearance: appearance, size: size)
+    /// Verdict for a normalised 0–1 score: the reaction colour and its word only
+    /// (never the number); the 0–100 score rides along as the tooltip.
+    static func verdict(score: Double, appearance: BadgeAppearance = .soft, size: BadgeSize = .md) -> Badge {
+        let reaction = Reaction(score: score)
+        return Badge(
+            reaction.shortLabel, variant: .reaction(reaction), appearance: appearance, size: size,
+            tooltip: (score * 100).rounded().formatted(.number.precision(.fractionLength(0)))
+        )
     }
 
     /// Verdict for a reaction step: the reaction colour and its word only.
-    static func verdict(_ reaction: Reaction, appearance: DSAppearance = .soft, size: BadgeSize = .md) -> Badge {
+    static func verdict(_ reaction: Reaction, appearance: BadgeAppearance = .soft, size: BadgeSize = .md) -> Badge {
         Badge(reaction.shortLabel, variant: .reaction(reaction), appearance: appearance, size: size)
     }
 

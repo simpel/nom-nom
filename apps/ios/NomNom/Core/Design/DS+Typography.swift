@@ -15,18 +15,27 @@ extension DS {
         case sansXs, sansSm, sansMd, sansLg, sansXl
 
         /// The two weights that exist (`font-weight-normal`, `font-weight-semibold`).
+        /// Text README `weight`: `normal` · `semibold`.
         enum Weight {
-            case regular, semibold
+            case normal, semibold
+
+            @available(*, deprecated, renamed: "normal")
+            static var regular: Weight { .normal }
 
             var token: Int {
                 switch self {
-                case .regular: return DSTokens.FontWeight.normal
+                case .normal: return DSTokens.FontWeight.normal
                 case .semibold: return DSTokens.FontWeight.semibold
                 }
             }
 
             /// The SwiftUI weight for the CSS numeric weight.
             var fontWeight: Font.Weight {
+                token >= DSTokens.FontWeight.semibold ? .semibold : .regular
+            }
+
+            /// The UIKit weight for the CSS numeric weight.
+            var uiFontWeight: UIFont.Weight {
                 token >= DSTokens.FontWeight.semibold ? .semibold : .regular
             }
         }
@@ -72,8 +81,18 @@ extension DS {
             if let name = fontName(italic: italic) {
                 return Font.custom(name, size: size, relativeTo: relativeTo)
             }
-            let base = Font.system(size: scaledSize(dynamicTypeSize), weight: (weight ?? .regular).fontWeight)
+            let base = Font.system(size: scaledSize(dynamicTypeSize), weight: (weight ?? .normal).fontWeight)
             return italic ? base.italic() : base
+        }
+
+        /// The style as a UIKit font that follows Dynamic Type (UIKit appearance
+        /// proxies such as the navigation bar).
+        func uiFont(weight: Weight? = nil) -> UIFont {
+            let metrics = UIFontMetrics(forTextStyle: relativeTo.uiTextStyle)
+            if let name = fontName(), let custom = UIFont(name: name, size: size) {
+                return metrics.scaledFont(for: custom)
+            }
+            return metrics.scaledFont(for: UIFont.systemFont(ofSize: size, weight: (weight ?? .normal).uiFontWeight))
         }
 
         /// PostScript name of the bundled serif cut, `nil` for the system sans.
@@ -121,6 +140,8 @@ private struct DSTextStyleModifier: ViewModifier {
     let weight: DS.TextStyle.Weight?
     let italic: Bool
     let numeric: Bool
+    let lines: Int?
+    let align: TextAlignment?
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
     @ViewBuilder
@@ -129,6 +150,7 @@ private struct DSTextStyleModifier: ViewModifier {
         let styled = content
             .font(numeric ? font.monospacedDigit() : font)
             .lineSpacing(style.lineSpacing(dynamicTypeSize))
+            .modifier(DSTextLayoutModifier(lines: lines, align: align))
         // `tone: nil` inherits the surrounding foreground style.
         if let tone {
             styled.foregroundStyle(tone.color)
@@ -138,17 +160,41 @@ private struct DSTextStyleModifier: ViewModifier {
     }
 }
 
+/// Text README `lines` (clamp) and `align` (`center`); `nil` leaves the environment's.
+private struct DSTextLayoutModifier: ViewModifier {
+    let lines: Int?
+    let align: TextAlignment?
+
+    @ViewBuilder
+    func body(content: Content) -> some View {
+        switch (lines, align) {
+        case let (lines?, align?): content.lineLimit(lines).multilineTextAlignment(align)
+        case let (lines?, nil): content.lineLimit(lines)
+        case let (nil, align?): content.multilineTextAlignment(align)
+        case (nil, nil): content
+        }
+    }
+}
+
 extension View {
-    /// Sets copy in a design-system text style: font, line height and tone.
-    /// Pass `numeric: true` for tabular figures (scores, anything in a column).
+    /// The spec's `Text`: sets copy in a design-system text style (font, line height,
+    /// Dynamic Type) and a tone. Every step is regular; opt into `weight: .semibold`
+    /// and `italic` per call site. `numeric: true` sets tabular figures (scores,
+    /// anything in a column); `lines` clamps; `align: .center` centres.
+    /// `tone: nil` inherits the surrounding foreground style.
     func textStyle(
         _ style: DS.TextStyle,
         tone: DS.Tone? = .primary,
         weight: DS.TextStyle.Weight? = nil,
         italic: Bool = false,
-        numeric: Bool = false
+        numeric: Bool = false,
+        lines: Int? = nil,
+        align: TextAlignment? = nil
     ) -> some View {
-        modifier(DSTextStyleModifier(style: style, tone: tone, weight: weight, italic: italic, numeric: numeric))
+        modifier(DSTextStyleModifier(
+            style: style, tone: tone, weight: weight, italic: italic,
+            numeric: numeric, lines: lines, align: align
+        ))
     }
 }
 

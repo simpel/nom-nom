@@ -1,52 +1,27 @@
 import SwiftUI
 
-/// Newsreader is bundled in three cuts only: 16pt Regular, 16pt Italic and
-/// 72pt (display) Regular. The design system has no serif weights, so any
-/// `weight` passed here is ignored and the face is always Regular.
-/// Prefer `.textStyle(.serif…)` / `DS.TextStyle.serif….font` in new code.
+/// Newsreader fonts by design-system step. Sizes come only from `DS.TextStyle`
+/// (tokens.json `type`); there is no free size here. Newsreader is bundled in three
+/// cuts (16pt Regular, 16pt Italic, 72pt display Regular) and the system has no
+/// serif weights, so the face is always Regular.
+/// Prefer `.textStyle(.serif…)` in new code; it also sets line height and tone.
 extension Font {
-    private static func newsreaderFontName(size: CGFloat, italic: Bool) -> String {
-        let serif = DSTokens.FontFamily.serif
-        if italic { return serif.italicPostScriptName ?? "" }
-        let display = DSTokens.FontFamily.serifDisplay
-        return (size >= DS.TextStyle.serifMd.size ? display.postScriptName : serif.postScriptName) ?? ""
+    /// A serif step's font, with Dynamic Type scaling.
+    static func newsreader(_ style: DS.TextStyle, italic: Bool = false) -> Font {
+        style.font(italic: italic)
     }
 
-    /// Creates a Newsreader serif font with Dynamic Type scaling.
-    /// `weight` is accepted for source compatibility and mapped to Regular.
-    static func newsreader(
-        size: CGFloat = 32,
-        weight: Font.Weight = .regular,
-        italic: Bool = false,
-        relativeTo textStyle: Font.TextStyle = .largeTitle
-    ) -> Font {
-        Font.custom(newsreaderFontName(size: size, italic: italic), size: size, relativeTo: textStyle)
-    }
-
-    /// Creates a Newsreader serif font matching a standard Dynamic Type text style.
-    /// `weight` is accepted for source compatibility and mapped to Regular.
+    /// Pre-v3 API keyed by an iOS text style. Maps through the README "Dynamic Type"
+    /// table (the serif step declared relative to that text style); anything smaller
+    /// than `.title3` becomes `serif-xs` — README: "Nothing is set in serif below
+    /// text-xl." `weight` is ignored.
+    @available(*, deprecated, message: "Use Font.newsreader(_: DS.TextStyle) or .textStyle(.serif…)")
     static func newsreader(
         _ style: Font.TextStyle,
         weight: Font.Weight? = nil,
         italic: Bool = false
     ) -> Font {
-        let size = defaultSize(for: style)
-        return Font.custom(newsreaderFontName(size: size, italic: italic), size: size, relativeTo: style)
-    }
-
-    private static func defaultSize(for style: Font.TextStyle) -> CGFloat {
-        switch style {
-        case .largeTitle, .title: return 32
-        case .title2: return 24
-        case .title3: return 20
-        case .headline, .body: return 17
-        case .callout: return 16
-        case .subheadline: return 15
-        case .footnote: return 13
-        case .caption: return 12
-        case .caption2: return 11
-        @unknown default: return 17
-        }
+        newsreader(DS.TextStyle.serif(relativeTo: style), italic: italic)
     }
 
     // MARK: - Editorial shorthands (mapped onto DS.TextStyle)
@@ -68,4 +43,15 @@ extension Font {
 
     /// Italic quote or cook's note.
     static var editorialQuote: Font { DS.TextStyle.serifXs.font(italic: true) }
+}
+
+extension DS.TextStyle {
+    /// The serif step whose Dynamic Type style is `textStyle` (README "Dynamic Type":
+    /// serif-xs `.title3`, serif-sm `.title2`, serif-md `.title`, serif-lg
+    /// `.largeTitle`). `.largeTitle` is shared by serif-lg and serif-xl; it maps to
+    /// serif-lg, the title step.
+    static func serif(relativeTo textStyle: Font.TextStyle) -> DS.TextStyle {
+        let serifSteps: [DS.TextStyle] = [.serifLg, .serifMd, .serifSm, .serifXs]
+        return serifSteps.first { $0.relativeTo == textStyle } ?? .serifXs
+    }
 }

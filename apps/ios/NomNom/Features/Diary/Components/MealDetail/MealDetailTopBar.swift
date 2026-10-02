@@ -22,11 +22,10 @@ struct MealDetailTopBar: View {
             if canEdit {
                 MealDetailOptionsMenu(onEdit: onEdit, onDelete: onDelete) {
                     AppButtonLabel(
-                        nil,
                         icon: "ellipsis",
+                        accessibilityLabel: "Meal options",
                         variant: .secondary,
-                        appearance: .elevated,
-                        accessibilityLabel: "Meal options"
+                        appearance: .elevated
                     )
                 }
             }
