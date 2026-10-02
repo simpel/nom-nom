@@ -182,7 +182,9 @@ enum DevSelfCheck {
 
     /// A small solid JPEG, so there is something real to upload.
     private static func swatch() -> Data {
-        let size = CGSize(width: 240, height: 240)
+        // Pixels of a debug-only fixture upload, not a UI dimension.
+        let side: CGFloat = 240
+        let size = CGSize(width: side, height: side)
         let format = UIGraphicsImageRendererFormat.default()
         format.scale = 1
         format.opaque = true

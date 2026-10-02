@@ -9,7 +9,7 @@ struct RecipesView: View {
 
     enum RecipeTab: String, CaseIterable, Identifiable {
         case favourites = "Favourites"
-        case myRecipes = "My Recipes"
+        case myRecipes = "My recipes"
         case inspiration = "Inspiration"
 
         var id: String { rawValue }
@@ -18,11 +18,11 @@ struct RecipesView: View {
     var body: some View {
         NavigationStack {
             ScrollView {
-                VStack(alignment: .leading, spacing: DS.Spacing.sectionCompact) {
+                VStack(alignment: .leading, spacing: DS.Spacing.s6) {
                     PageHeader("Recipes", actions: [
                         EmptyStateAction("Add recipe", icon: "plus") { showingCreateSheet = true }
                     ])
-                    .padding(.horizontal, DS.Spacing.screenHorizontal)
+                    .padding(.horizontal, DS.Spacing.gutter)
 
                     if store.myRecipes.isEmpty {
                         RecipeInspirationSection()
@@ -38,24 +38,17 @@ struct RecipesView: View {
                                 Text(tab.rawValue).tag(tab)
                             }
                         }
+                        // A native segmented control: the DS has no tab switcher
+                        // (SegmentedBar is a meter).
                         .pickerStyle(.segmented)
-                        .padding(.horizontal, DS.Spacing.screenHorizontal)
+                        .padding(.horizontal, DS.Spacing.gutter)
 
                         switch resolvedTab {
                         case .favourites:
-                            VStack(alignment: .leading, spacing: DS.Spacing.md) {
-                                HStack {
-                                    Text("\(store.favoriteRecipes.count) recipe\(store.favoriteRecipes.count == 1 ? "" : "s")")
-                                        .font(.caption.weight(.medium))
-                                        .monospacedDigit()
-                                        .foregroundStyle(DS.Color.textSecondary)
-                                    Spacer()
-                                }
-                                .padding(.horizontal, DS.Spacing.screenHorizontal)
-                                .padding(.vertical, DS.Spacing.s1)
-                                
-                                MinimalRecipeGrid(recipes: store.favoriteRecipes.sorted { $0.createdAt > $1.createdAt })
-                            }
+                            MinimalRecipeGrid(
+                                recipes: store.favoriteRecipes.sorted { $0.createdAt > $1.createdAt },
+                                title: "Favourites"
+                            )
                         case .inspiration:
                             RecipeInspirationSection()
                         case .myRecipes:
@@ -66,8 +59,8 @@ struct RecipesView: View {
                         }
                     }
                 }
-                .padding(.top, DS.Spacing.screenTop)
-                .padding(.bottom, DS.Spacing.screenBottom)
+                .padding(.top, DS.Spacing.s5)
+                .padding(.bottom, DS.Spacing.s11)
             }
             .background(DS.Color.bg)
             .refreshable {

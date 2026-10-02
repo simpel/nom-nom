@@ -20,20 +20,14 @@ struct CreatePartySheet: View {
 
     var body: some View {
         NavigationStack {
-            ScrollView {
-                VStack(spacing: DS.Spacing.section) {
-                    PageHeader("New dinner party", size: .sm)
+            SheetBody {
+                PageHeader("New dinner party", size: .sm)
 
-                    PartyFormFields(photoDraft: $photoDraft, name: $name, about: $about) {
-                        if canProceed { navigateToSetup = true }
-                    }
+                PartyFormFields(photoDraft: $photoDraft, name: $name, about: $about) {
+                    if canProceed { navigateToSetup = true }
                 }
-                .padding(.horizontal, DS.Spacing.screenHorizontal)
-                .padding(.top, DS.Spacing.screenTop)
-                .padding(.bottom, DS.Spacing.screenBottom)
             }
-            .background(DS.Color.bg)
-            .screenTitle("New Party", displayMode: .inline)
+            .screenTitle("New party", displayMode: .inline)
             .sheetNextToolbar(canProceed: canProceed) {
                 navigateToSetup = true
             }
@@ -48,6 +42,7 @@ struct CreatePartySheet: View {
                 )
             }
         }
+        .dsSheet()
     }
 }
 

@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// Section displaying the user's personal recipes in a 2-column minimalist grid.
+/// The user's own recipes as a titled two-column grid, or an EmptyState card.
 struct MyRecipesSection: View {
     let recipes: [Recipe]
     var onCreateRecipe: (() -> Void)? = nil
@@ -15,20 +15,7 @@ struct MyRecipesSection: View {
             .padding(.horizontal, DS.Spacing.gutter)
             .padding(.top, DS.Spacing.s5)
         } else {
-            VStack(alignment: .leading, spacing: DS.Spacing.md) {
-                HStack {
-                    Text("\(recipes.count) recipe\(recipes.count == 1 ? "" : "s")")
-                        .font(.caption.weight(.medium))
-                        .monospacedDigit()
-                        .foregroundStyle(DS.Color.textSecondary)
-
-                    Spacer()
-                }
-                .padding(.horizontal, DS.Spacing.screenHorizontal)
-                .padding(.vertical, DS.Spacing.sm)
-
-                MinimalRecipeGrid(recipes: recipes)
-            }
+            MinimalRecipeGrid(recipes: recipes, title: "My recipes")
         }
     }
 }

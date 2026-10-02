@@ -20,7 +20,7 @@ struct OnboardingView: View {
     var body: some View {
         NavigationStack {
             ScrollView {
-                VStack(spacing: DS.Spacing.sectionCompact) {
+                VStack(spacing: DS.Spacing.s6) {
                     switch step {
                     case 0:
                         OnboardingProfileStep(
@@ -37,9 +37,9 @@ struct OnboardingView: View {
                         .transition(.opacity)
                     }
                 }
-                .padding(.horizontal, DS.Spacing.screenHorizontal)
-                .padding(.top, DS.Spacing.screenTop)
-                .padding(.bottom, DS.Spacing.md)
+                .padding(.horizontal, DS.Spacing.gutter)
+                .padding(.top, DS.Spacing.s5)
+                .padding(.bottom, DS.Spacing.s4)
             }
             .background(DS.Color.bg)
             .safeAreaInset(edge: .bottom) {
@@ -51,17 +51,10 @@ struct OnboardingView: View {
                     OnboardingStepProgress(currentStep: step, totalSteps: totalSteps)
                 }
                 if step > 0 {
+                    // A sheet toolbar uses a system button (AppButton README "Rules").
                     ToolbarItem(placement: .topBarLeading) {
-                        Button {
-                            withAnimation(.easeInOut(duration: 0.25)) {
-                                step -= 1
-                            }
-                        } label: {
-                            HStack(spacing: 4) {
-                                Image(systemName: "chevron.backward")
-                                Text("Back")
-                            }
-                            .font(.subheadline)
+                        Button("Back", systemImage: "chevron.backward") {
+                            withAnimation(DS.Motion.layout) { step -= 1 }
                         }
                         .disabled(isSaving)
                     }
@@ -83,41 +76,25 @@ struct OnboardingView: View {
     // MARK: - Bottom Actions
 
     private var bottomBar: some View {
-        VStack(spacing: 8) {
+        Group {
             switch step {
             case 0:
-                AppButton(
-                    "Continue",
-                    variant: .primary,
-                    style: .normal,
-                    size: .xl,
-                    isFullWidth: true,
-                    disabled: firstName.trimmedName.isEmpty || lastName.trimmedName.isEmpty
-                ) {
-                    withAnimation(.easeInOut(duration: 0.25)) { step = 1 }
+                AppButton("Continue", size: .lg, fullWidth: true) {
+                    withAnimation(DS.Motion.layout) { step = 1 }
                 }
+                .disabled(firstName.trimmedName.isEmpty || lastName.trimmedName.isEmpty)
 
             default:
-                AppButton(
-                    "Get Cooking",
-                    variant: .primary,
-                    style: .normal,
-                    size: .xl,
-                    isFullWidth: true,
-                    isPending: isSaving,
-                    disabled: isSaving
-                ) {
+                AppButton("Get cooking", size: .lg, fullWidth: true, isLoading: isSaving) {
                     saveAndFinish()
                 }
             }
         }
-        .padding(.horizontal, DS.Spacing.screenHorizontal)
-        .padding(.top, DS.Spacing.sm)
-        .padding(.bottom, DS.Spacing.xs)
-        .background(
-            DS.Color.bg
-                .shadow(color: DS.Color.line.opacity(0.15), radius: 6, y: -2)
-        )
+        .padding(.horizontal, DS.Spacing.gutter)
+        .padding(.top, DS.Spacing.s3)
+        .padding(.bottom, DS.Spacing.s2)
+        // README "Layout": no shadows except on things that float; the bar sits on `bg`.
+        .background(DS.Color.bg)
     }
 
     // MARK: - Actions

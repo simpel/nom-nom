@@ -50,14 +50,9 @@ struct RecipeSearchView: View {
             }
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
-                    Button {
+                    RecipeFilterToolbarButton(isFiltered: !filterCriteria.isDefault) {
                         showingFilterSheet = true
-                    } label: {
-                        Image(systemName: filterCriteria.isDefault
-                              ? "line.3.horizontal.decrease.circle"
-                              : "line.3.horizontal.decrease.circle.fill")
                     }
-                    .accessibilityLabel("Sort and Filter")
                 }
             }
             .sheet(isPresented: $showingFilterSheet) {
@@ -70,7 +65,7 @@ struct RecipeSearchView: View {
 
     private var idleHistoryView: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: DS.Spacing.sectionLarge) {
+            VStack(alignment: .leading, spacing: DS.Spacing.s10) {
                 VStack(alignment: .leading, spacing: DS.Spacing.block) {
                     RecommendedForYouShelf()
                     RecipeShelf("Last used recipes", recipes: store.recentRecipes) { RecipeDetailView(recipe: $0) }
@@ -86,8 +81,8 @@ struct RecipeSearchView: View {
                     SearchHistoryStore.shared.addQuery(query)
                 }
             }
-            .padding(.top, DS.Spacing.screenTop)
-            .padding(.bottom, DS.Spacing.screenBottom)
+            .padding(.top, DS.Spacing.s5)
+            .padding(.bottom, DS.Spacing.s11)
         }
     }
 
@@ -118,29 +113,13 @@ struct RecipeSearchView: View {
             .padding(.horizontal, DS.Spacing.gutter)
         } else {
             ScrollView {
-                VStack(alignment: .leading, spacing: DS.Spacing.md) {
-                    searchSubHeader
-                    MinimalRecipeGrid(recipes: displayedSearchResults, onNavigate: { _ in
-                        SearchHistoryStore.shared.addQuery(trimmedSearch)
-                    })
-                }
-                .padding(.top, DS.Spacing.sm)
-                .padding(.bottom, DS.Spacing.screenBottom)
+                MinimalRecipeGrid(recipes: displayedSearchResults, title: "Results", onNavigate: { _ in
+                    SearchHistoryStore.shared.addQuery(trimmedSearch)
+                })
+                .padding(.top, DS.Spacing.s3)
+                .padding(.bottom, DS.Spacing.s11)
             }
         }
-    }
-
-    private var searchSubHeader: some View {
-        HStack {
-            Text("\(displayedSearchResults.count) result\(displayedSearchResults.count == 1 ? "" : "s")")
-                .font(.caption.weight(.medium))
-                .monospacedDigit()
-                .foregroundStyle(DS.Color.textSecondary)
-
-            Spacer()
-        }
-        .padding(.horizontal, DS.Spacing.gutter)
-        .padding(.vertical, DS.Spacing.s1)
     }
 }
 

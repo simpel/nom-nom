@@ -158,64 +158,12 @@ struct RootTabView: View {
     }
 
     private func handleIncomingURL(_ url: URL) {
-        guard let components = URLComponents(url: url, resolvingAgainstBaseURL: true) else { return }
-
-        let pathParts = url.pathComponents.filter { $0 != "/" }
-        let isUniversalLink = url.host == "www.nomnom.casa" || url.host == "nomnom.casa"
-        let hostOrPath = isUniversalLink ? (pathParts.first ?? "") : (url.host ?? "")
-
-        // 1. Party links: /invite?party_id=... or /party?id=... or /party/<uuid>
-        if let queryItems = components.queryItems {
-            if let partyIDString = queryItems.first(where: { $0.name == "party_id" })?.value ?? (hostOrPath == "party" ? queryItems.first(where: { $0.name == "id" })?.value : nil),
-               let uuid = UUID(uuidString: partyIDString) {
-                selection = 1
-                activePartyID = uuid
-                return
-            }
-        }
-
-        if hostOrPath == "party" {
-            for part in pathParts {
-                if let uuid = UUID(uuidString: part) {
-                    selection = 1
-                    activePartyID = uuid
-                    return
-                }
-            }
-        }
-
-        // 2. Meal links: /rate-meal?id=... or /invite?meal_id=... or /meal?id=...
-        if let queryItems = components.queryItems {
-            if let idString = queryItems.first(where: { $0.name == "id" || $0.name == "meal_id" })?.value,
-               let uuid = UUID(uuidString: idString) {
-                selection = 0
-                if hostOrPath == "rate-meal" || hostOrPath == "invite" {
-                    activeRateMealID = uuid
-                } else {
-                    activeViewMealID = uuid
-                }
-                return
-            }
-        }
-
-        // 3. /meal/<uuid>/rate or /meal/<uuid>
-        for part in pathParts {
-            if let uuid = UUID(uuidString: part) {
-                selection = 0
-                if url.path.contains("rate") {
-                    activeRateMealID = uuid
-                } else {
-                    activeViewMealID = uuid
-                }
-                return
-            }
-        }
-        
-        // 4. nomnom://<uuid> (fallback for legacy meal view)
-        if !isUniversalLink, let host = url.host, let uuid = UUID(uuidString: host) {
-            selection = 0
-            activeViewMealID = uuid
-            return
+        guard let link = DeepLink(url: url) else { return }
+        selection = link.tab
+        switch link {
+        case .party(let id): activePartyID = id
+        case .rateMeal(let id): activeRateMealID = id
+        case .viewMeal(let id): activeViewMealID = id
         }
     }
 
