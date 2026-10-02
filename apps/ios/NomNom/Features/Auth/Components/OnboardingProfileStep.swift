@@ -7,7 +7,7 @@ struct OnboardingProfileStep: View {
     @Binding var photoDraft: FoodStore.PhotosDraft
 
     var body: some View {
-        VStack(spacing: DS.Spacing.section) {
+        VStack(spacing: DS.Spacing.s8) {
             PageHeader(
                 "Your seat at the table",
                 subtitle: "Introduce yourself so the people you eat with recognise you.",
@@ -16,7 +16,7 @@ struct OnboardingProfileStep: View {
 
             AssetPhotosPickerSection(
                 draft: $photoDraft,
-                title: "Profile Photo",
+                title: "Profile photo",
                 bucket: SupabaseConfig.profileBucket,
                 maxCount: 1
             )

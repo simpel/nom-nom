@@ -10,7 +10,7 @@ struct ProfileSettingsSection: View {
 
     var body: some View {
         NameFieldsCard(
-            "Your Profile",
+            "Your profile",
             firstName: $firstName,
             lastName: $lastName,
             placeholder: "Required",

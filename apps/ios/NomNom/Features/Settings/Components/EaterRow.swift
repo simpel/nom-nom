@@ -1,6 +1,8 @@
 import SwiftUI
 
-/// Editable row for a local eater (no account). The avatar is the eater's initials.
+/// Editable row for a local eater (no account): a ListRow with the eater's initials as
+/// Avatar `sm` and the name as a `plain` Input (Input README: `plain` only inside a
+/// Card list row). Saves on return. Place it in `Card(layout: .list)`.
 struct EaterRow: View {
     let eater: Eater
 
@@ -13,10 +15,11 @@ struct EaterRow: View {
     }
 
     var body: some View {
-        HStack(spacing: 12) {
-            UserAvatar(name: name.trimmedName.isEmpty ? eater.name : name, size: 34)
-
-            Input("Name", text: $name, size: .sm, style: .plain)
+        ListRow(
+            accessibilityTitle: eater.name,
+            leading: .avatar(Avatar(name: name.trimmedName.isEmpty ? eater.name : name, size: .sm, decorative: true))
+        ) {
+            Input("Name", text: $name, appearance: .plain)
                 .onSubmit { commit { $0.name = name } }
         }
         .onChange(of: eater.name) { _, updated in

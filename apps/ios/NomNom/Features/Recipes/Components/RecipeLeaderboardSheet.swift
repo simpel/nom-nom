@@ -18,27 +18,27 @@ struct RecipeLeaderboardSheet: View {
 
     var body: some View {
         NavigationStack {
-            ScrollView {
+            SheetBody {
                 if rankedRecipes.isEmpty {
                     emptyState
                 } else {
                     rankedList
                 }
             }
-            .background(DS.Color.bg)
-            .screenTitle("Global Leaderboard", displayMode: .inline)
-            .sheetCloseToolbar(color: DS.Color.textPrimary)
+            .screenTitle("Leaderboard", displayMode: .inline)
+            .sheetCloseToolbar()
             .navigationDestination(for: Recipe.self) { recipe in
                 RecipeDetailView(recipe: recipe)
             }
         }
+        .dsSheet()
     }
 
     // MARK: - Subviews
 
     private var rankedList: some View {
         DSSection(
-            "Ranked Dishes",
+            "Ranked dishes",
             trailing: "\(rankedRecipes.count) \(rankedRecipes.count == 1 ? "dish" : "dishes")"
         ) {
             Card(layout: .list) {
@@ -55,9 +55,6 @@ struct RecipeLeaderboardSheet: View {
                 }
             }
         }
-        .padding(.horizontal, DS.Spacing.gutter)
-        .padding(.top, DS.Spacing.s5)
-        .padding(.bottom, DS.Spacing.s11)
     }
 
     private var emptyState: some View {
@@ -67,7 +64,6 @@ struct RecipeLeaderboardSheet: View {
             message: "Rate a meal and its recipe takes a place on the leaderboard.",
             layout: .screen
         )
-        .padding(.horizontal, DS.Spacing.gutter)
     }
 }
 

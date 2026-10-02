@@ -21,7 +21,7 @@ struct RootView: View {
                     .transition(.opacity)
             }
         }
-        .animation(.easeInOut(duration: 0.25), value: auth.phase)
+        .animation(DS.Motion.layout, value: auth.phase)
         .task(id: auth.userID) {
             if let userID = auth.userID {
                 await EntitlementStore.shared.signIn(userID: userID)
@@ -62,7 +62,7 @@ private struct SignedInView: View {
                     }
             }
         }
-        .animation(.easeInOut(duration: 0.35), value: store?.isProfileSetup)
+        .animation(DS.Motion.layout, value: store?.isProfileSetup)
         .onChange(of: NotificationManager.shared.deviceToken) { _, newToken in
             if let newToken, let store {
                 Task {
@@ -73,15 +73,17 @@ private struct SignedInView: View {
     }
 }
 
+/// The launch screen while the session and store load: the name set in type
+/// (README "Logo": "the name is set in type: 'Nom Nom' in Newsreader") over a spinner.
 struct LaunchPlaceholder: View {
     init(caption: String? = nil) {}
 
     var body: some View {
-        VStack(spacing: DS.Spacing.md) {
-            Text("NomNom")
-                .font(DS.TextStyle.serifLg.font)
-                .foregroundStyle(DS.Color.textPrimary)
+        VStack(spacing: DS.Spacing.s4) {
+            Text("Nom Nom")
+                .textStyle(.serifLg)
             ProgressView()
+                .tint(DS.Color.textTertiary)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(DS.Color.bg)

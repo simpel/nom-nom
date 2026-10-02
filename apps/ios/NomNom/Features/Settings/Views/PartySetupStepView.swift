@@ -22,28 +22,18 @@ struct PartySetupStepView: View {
     }
 
     var body: some View {
-        ScrollView {
-            VStack(spacing: DS.Spacing.section) {
-                if let party {
-                    PartyInviteLinkCard(party: party)
-                }
-
-                if party != nil {
-                    PartyInvitesSection(invites: invites)
-                }
-
-                membersSection
-
-                VisibilityToggleCard.party(isPublic: $isPublic)
+        SheetBody {
+            if let party {
+                PartyInviteLinkCard(party: party)
+                PartyInvitesSection(invites: invites)
             }
-            .padding(.horizontal, DS.Spacing.screenHorizontal)
-            .padding(.top, DS.Spacing.screenTop)
-            .padding(.bottom, DS.Spacing.screenBottom)
+
+            membersSection
+
+            VisibilityToggleCard.party(isPublic: $isPublic)
         }
-        .background(DS.Color.bg)
-        .screenTitle("Party Setup", displayMode: .inline)
+        .screenTitle("Party setup", displayMode: .inline)
         .stepCommitToolbar(isSaving: isSaving, onSave: save)
-        .presentationDragIndicator(.visible)
         .alert("Couldn't save dinner party",
                isPresented: Binding(get: { errorMessage != nil },
                                     set: { if !$0 { errorMessage = nil } })) {

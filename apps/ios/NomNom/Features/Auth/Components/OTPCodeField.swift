@@ -5,6 +5,10 @@ import UIKit
 ///
 /// Handles keyboard typing, backspace deletion, iOS QuickType SMS/Mail autofill,
 /// and pasting complete verification codes from the clipboard.
+///
+/// Not synced with the DS (README "Kept as-is"): each cell borrows Input's ground,
+/// radius and state borders (`InputMetrics`) at the labelled-field height (`s14`),
+/// with the digit in `sans-xl` semibold tabular (README: "large sans figures").
 struct OTPCodeField: View {
     @Binding var code: String
     var numberOfDigits: Int = 6
@@ -17,7 +21,7 @@ struct OTPCodeField: View {
     var body: some View {
         ZStack {
             // Visual individual cells
-            HStack(spacing: 8) {
+            HStack(spacing: DS.Spacing.s2) {
                 ForEach(0..<numberOfDigits, id: \.self) { index in
                     digitCell(at: index)
                 }
@@ -32,12 +36,10 @@ struct OTPCodeField: View {
                 .focused($isFocused)
                 .foregroundStyle(.clear)
                 .tint(.clear)
-                .accentColor(.clear)
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .contentShape(Rectangle())
         }
-        .frame(maxWidth: 340)
-        .frame(height: 56)
+        .frame(height: InputMetrics.labeledHeight)
         .onAppear {
             isFocused = true
         }
@@ -60,47 +62,30 @@ struct OTPCodeField: View {
             return nil
         }()
 
-        let borderColor: Color = {
-            if isError {
-                return Color.red.opacity(0.8)
-            } else if isCurrent {
-                return DS.Color.textPrimary
-            } else {
-                return DS.Color.line.opacity(0.35)
-            }
-        }()
-
-        let borderWidth: CGFloat = {
-            if isError {
-                return 1.0
-            } else if isCurrent {
-                return 1.5
-            } else {
-                return 0.5
-            }
-        }()
+        let state = InputState(focused: isCurrent, error: isError, readOnly: false, disabled: false)
+        let border = InputMetrics.border(.soft, state: state)
 
         ZStack {
             if let character {
                 Text(character)
-                    .font(.title2.weight(.semibold).monospacedDigit())
-                    .foregroundStyle(DS.Color.textPrimary)
+                    .textStyle(.sansXl, weight: .semibold, numeric: true)
             } else if isCurrent {
                 BlinkingCursor()
             } else {
+                // Input README: placeholders are `text-tertiary`.
                 Text("0")
-                    .font(.title2.weight(.semibold).monospacedDigit())
-                    .foregroundStyle(Color(uiColor: .placeholderText))
+                    .textStyle(.sansXl, tone: .tertiary, weight: .semibold, numeric: true)
             }
         }
         .frame(maxWidth: .infinity)
-        .frame(height: 56)
-        .background(Color.white)
-        .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+        .frame(height: InputMetrics.labeledHeight)
+        .background(InputMetrics.background(.soft), in: InputMetrics.shape)
         .overlay {
-            RoundedRectangle(cornerRadius: 12, style: .continuous)
-                .strokeBorder(borderColor, lineWidth: borderWidth)
+            if let border {
+                InputMetrics.shape.strokeBorder(border.color, lineWidth: border.width)
+            }
         }
+        .animation(InputMetrics.animation, value: state)
     }
 
     // MARK: - Change & Paste Handler
@@ -140,12 +125,14 @@ private struct BlinkingCursor: View {
     @State private var isVisible = true
 
     var body: some View {
+        // A `border-thick` caret as tall as the digit step; the DS has no caret or blink
+        // timing, so it blinks over `duration-layout` (DS-GAPS.md, "shell").
         Capsule()
-            .fill(DS.Color.textPrimary)
-            .frame(width: 2, height: 22)
+            .fill(DS.Color.primary)
+            .frame(width: DS.BorderWidth.thick, height: DS.TextStyle.sansXl.size)
             .opacity(isVisible ? 1 : 0)
             .onAppear {
-                withAnimation(.easeInOut(duration: 0.6).repeatForever(autoreverses: true)) {
+                withAnimation(DS.Motion.layout.repeatForever(autoreverses: true)) {
                     isVisible = false
                 }
             }

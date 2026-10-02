@@ -3,19 +3,20 @@ import SwiftUI
 /// Filter and sort criteria for the recipe catalog.
 struct RecipeFilterCriteria: Equatable {
     enum SortOption: String, CaseIterable, Identifiable {
-        case popular = "Most Popular"
-        case effort = "Lowest Effort"
-        case recent = "Recently Cooked"
+        case popular = "Most popular"
+        case effort = "Lowest effort"
+        case recent = "Recently cooked"
         case alphabetical = "A–Z"
 
         var id: String { rawValue }
     }
 
+    /// README "Numbers are data": scores read as 0–100 integers.
     enum ScoreThreshold: String, CaseIterable, Identifiable {
-        case any = "Any Rating"
-        case good = "Good (0.5+)"
-        case great = "Great (0.7+)"
-        case amazing = "Amazing (0.85+)"
+        case any = "Any rating"
+        case good = "Good (50+)"
+        case great = "Great (70+)"
+        case amazing = "Amazing (85+)"
 
         var id: String { rawValue }
 
@@ -39,7 +40,9 @@ struct RecipeFilterCriteria: Equatable {
     }
 }
 
-/// Minimalist modal sheet for adjusting recipe sort order and filtering criteria.
+/// Filter sheet for the recipe catalog: sort order and filters as ListRows in list
+/// Cards (native menu pickers in the trailing slot, a Toggle for favourites), and a
+/// reset when anything differs from the defaults.
 struct RecipeFilterSheet: View {
     @Environment(\.dismiss) private var dismiss
     @Binding var criteria: RecipeFilterCriteria
@@ -53,51 +56,41 @@ struct RecipeFilterSheet: View {
 
     var body: some View {
         NavigationStack {
-            Form {
-                Section {
-                    Picker("Sort by", selection: $draft.sort) {
-                        ForEach(RecipeFilterCriteria.SortOption.allCases) { option in
-                            Text(option.rawValue).tag(option)
+            SheetBody {
+                DSSection("Sort order") {
+                    Card(layout: .list) {
+                        pickerRow("Sort by", selection: $draft.sort) {
+                            ForEach(RecipeFilterCriteria.SortOption.allCases) { option in
+                                Text(option.rawValue).tag(option)
+                            }
                         }
                     }
-                } header: {
-                    Text("SORT ORDER")
                 }
 
-                Section {
-                    Picker("Effort", selection: $draft.effort) {
-                        Text("Any Effort").tag(EffortLevel?.none)
-                        ForEach(EffortLevel.allCases) { level in
-                            Text(level.label).tag(Optional(level))
+                DSSection("Filters") {
+                    Card(layout: .list) {
+                        pickerRow("Effort", selection: $draft.effort) {
+                            Text("Any effort").tag(EffortLevel?.none)
+                            ForEach(EffortLevel.allCases) { level in
+                                Text(level.label).tag(Optional(level))
+                            }
                         }
-                    }
-
-                    Picker("Minimum Rating", selection: $draft.scoreThreshold) {
-                        ForEach(RecipeFilterCriteria.ScoreThreshold.allCases) { threshold in
-                            Text(threshold.rawValue).tag(threshold)
+                        pickerRow("Minimum rating", selection: $draft.scoreThreshold) {
+                            ForEach(RecipeFilterCriteria.ScoreThreshold.allCases) { threshold in
+                                Text(threshold.rawValue).tag(threshold)
+                            }
                         }
+                        ListRow("Favourites only", trailing: .toggle($draft.onlyFavorites))
                     }
-
-                    ListRow("Favourites only", trailing: .toggle($draft.onlyFavorites))
-                } header: {
-                    Text("FILTERS")
                 }
 
                 if !draft.isDefault {
-                    Section {
-                        AppButton(
-                            "Reset to Defaults",
-                            variant: .neutral,
-                            style: .ghost,
-                            size: .md,
-                            isFullWidth: true
-                        ) {
-                            draft = RecipeFilterCriteria()
-                        }
+                    AppButton("Reset to defaults", variant: .secondary, appearance: .ghost, fullWidth: true) {
+                        draft = RecipeFilterCriteria()
                     }
                 }
             }
-            .screenTitle("Sort & Filter", displayMode: .inline)
+            .screenTitle("Sort and filter", displayMode: .inline)
             .sheetCommitToolbar(
                 isSaving: false,
                 canSave: true,
@@ -108,6 +101,21 @@ struct RecipeFilterSheet: View {
                 }
             )
         }
+        .dsSheet()
+    }
+
+    /// A ListRow whose trailing slot is a native menu picker (a system menu, like
+    /// `Menu`); the row title names it.
+    private func pickerRow<Value: Hashable, Options: View>(
+        _ title: String,
+        selection: Binding<Value>,
+        @ViewBuilder options: () -> Options
+    ) -> ListRow {
+        let picker = Picker(title, selection: selection, content: options)
+            .pickerStyle(.menu)
+            .labelsHidden()
+            .tint(DS.Color.primaryText)
+        return ListRow(title, trailing: .view { picker })
     }
 }
 

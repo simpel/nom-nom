@@ -37,17 +37,17 @@ struct SignInView: View {
                     // 2. Sign in with email (Leads to separate screen)
                     AppButton(
                         "Sign in with email",
-                        variant: .neutral,
-                        style: .outlined,
-                        size: .xl,
-                        isFullWidth: true,
-                        disabled: auth.isWorking
+                        variant: .secondary,
+                        appearance: .outline,
+                        size: .lg,
+                        fullWidth: true
                     ) {
                         auth.errorMessage = nil
                         navigateToEmailSignIn = true
                     }
+                    .disabled(auth.isWorking)
                 }
-                .padding(.bottom, DS.Spacing.screenBottom)
+                .padding(.bottom, DS.Spacing.s11)
             }
             .padding(.horizontal, DS.Spacing.s6)
             .frame(maxWidth: DS.Container.sm)

@@ -12,38 +12,33 @@ struct ProfileSheetView: View {
 
     var body: some View {
         NavigationStack {
-            ScrollView {
-                VStack(spacing: DS.Spacing.section) {
-                    AssetPhotosPickerSection(
-                        draft: $photoDraft,
-                        title: "Profile Photo",
-                        bucket: SupabaseConfig.profileBucket,
-                        maxCount: 1
-                    )
+            SheetBody {
+                AssetPhotosPickerSection(
+                    draft: $photoDraft,
+                    title: "Profile photo",
+                    bucket: SupabaseConfig.profileBucket,
+                    maxCount: 1
+                )
 
-                    NameFieldsCard(
-                        "Profile Details",
-                        firstName: $firstName,
-                        lastName: $lastName,
-                        onSubmit: saveProfile
-                    )
+                NameFieldsCard(
+                    "Profile details",
+                    firstName: $firstName,
+                    lastName: $lastName,
+                    onSubmit: saveProfile
+                )
 
-                    NotificationPreferencesSection()
+                NotificationPreferencesSection()
 
-                    AccountActionsSection(includesSignOut: false)
-                }
-                .padding(.horizontal, DS.Spacing.screenHorizontal)
-                .padding(.top, DS.Spacing.screenTop)
-                .padding(.bottom, DS.Spacing.screenBottom)
+                AccountActionsSection(includesSignOut: false)
             }
-            .background(DS.Color.bg)
-            .screenTitle("My Profile", displayMode: .inline)
+            .screenTitle("My profile", displayMode: .inline)
             .sheetCommitToolbar(onSave: {
                 saveProfile()
                 dismiss()
             })
             .onAppear(perform: loadProfileIfNeeded)
         }
+        .dsSheet()
     }
 
     private func loadProfileIfNeeded() {
