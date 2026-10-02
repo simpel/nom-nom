@@ -20,7 +20,7 @@ struct PartySummaryMeal: Identifiable {
 
 /// A party at a glance, on one Card: Avatar `md` + name (`serif-sm`) + meta
 /// (`sans-sm` tertiary), the about text (`sans-md` secondary, three lines), the
-/// average score (ScoreValue `sm` + meal count over a ProgressBar, "Unrated" when
+/// average score (ScoreValue `sm` + meal count over a Bar, "Unrated" when
 /// nil) and an optional row of PhotoCard `sm` recent meals with verdicts.
 ///
 /// Wrap it in a NavigationLink to open the party. Named `PartySummaryCard` until
@@ -100,7 +100,7 @@ struct PartySummaryCard<Trailing: View>: View {
                 Spacer(minLength: DS.Spacing.s2)
                 Text(mealCountText).textStyle(.sansSm, tone: .secondary, numeric: true)
             }
-            ProgressBar(value: score.map { $0 * 100 })
+            Bar(value: score.map { $0 * 100 })
                 .accessibilityHidden(true)
         }
         .accessibilityElement(children: .combine)

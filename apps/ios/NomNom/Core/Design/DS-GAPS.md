@@ -30,7 +30,7 @@ This file lists UI patterns that exist in the app but not in the design system. 
 - **PhotoCard `.thumb`**: `s12` square, `radius-xl`, no badge, for ListRow leading thumbnails. The DS's smallest tile (`xs`, `s20`) is taller than a `rowMin` row.
 - **PhotoCard `.cover`**: 4:5 (`s16` × `s20` ratio, used with `fillsWidth`), `radius-3xl`, for LabeledPhotoCard `.portrait`. The DS has no 4:5 tile; 4:5 is one of the two safe crops of the square category photography.
 - **Category hero cover**: today a wide 140pt banner. A wide crop is not safe (README: only 1:1 and 4:5), so it becomes a full-width LabeledPhotoCard `.square`. That is tall for a header; the DS should decide whether drill-downs get a cover at all.
-- **PartySummaryCard score**: ScoreCard `compact` is itself a Card and Cards don't nest, so the party card draws ScoreCard compact's content (ScoreValue `sm`, count, ProgressBar) without the surface.
+- **PartySummaryCard score**: ScoreCard `compact` is itself a Card and Cards don't nest, so the party card draws ScoreCard compact's content (ScoreValue `sm`, count, Bar) without the surface.
 - **PendingInviteRow feedback**: "Invitation resent" and errors show in the row's meta line instead of alerts.
 ### Notes: charts, media and form blocks (rows 6, 7, 8, 14, 15)
 
@@ -68,3 +68,15 @@ Where the vendored v3 snapshot contradicts itself, these are the calls taken. Re
 - **Dynamic Type.** The README table maps `sans-sm` → `.footnote` (13pt default) and `sans-md` → `.body` (17pt), while the scale says 14 / 16. Sizes come from `tokens.json`; only the text style each scales relative to comes from the table.
 - **Photo overlays.** No token or README defines white-on-photo or the 45% black disc. PhotoCard's heart now uses the v3 heart (AppButton `secondary elevated`: `panel` ground, `destructive-text` filled heart); LabeledPhotoCard text and the media viewer spinner use `stone-0`, the ramp step under README "Imagery"'s `stone-1000` scrim.
 - **Featured ProgressBar track** (`primary` at 18%) is not in v3: Bar README says "Ground is `track`".
+
+## v3 spec calls made in R1b (Bar, ScoreValue, Input, TextArea)
+
+- **ProgressBar removed.** Every call site now uses `Bar`; `Primitives/ProgressBar.swift` is deleted (no shim). SegmentedBar draws its track with `Bar(segments:)` and takes `BarSize`.
+- **Bar on a featured card.** `bundle.css` tints the track inside a primary card (`.nn-card[data-variant="primary"] .nn-bar { background: color-mix(in srgb, var(--primary) 20%, var(--panel)) }`), but `components/Bar/README.md` says "Ground is `track`" and no token holds the mix. Bar always draws `track`.
+- **Bar chart index out of range.** The README says chart colours go "by a stable index, never cycled" but not what happens past `chart-series7`. `BarSegment.Ink.chart(n)` past the palette falls back to `primary` (README: "A block with no `reaction` or `color` is `primary`").
+- **Field rest border: `line` vs `line-control`.** Input README "One style" table says "1px `line`"; its "Shape" section says "`line-control`, never a half-pixel and never `line`" (WCAG 1.4.11), its state table says rest "1px `line-control`", and `bundle.css` `.nn-field` uses `--line-control`. TextArea README says "rest 1px `line`, hover 1px `line-control`" but shares Input's CSS. Call: rest is 1pt `line-control` for both; disabled is 1pt `line`.
+- **Error border colour.** Input README: "2px `destructive`"; `bundle.css` uses `--destructive-text` for the error ring. Component README wins: `destructive`. Label, icon and message ink are `destructive-text` (both agree).
+- **TextArea focus / disabled.** TextArea README "Rules" still says "1.5px `primary` / `destructive` at `opacity-80`" and "Disabled: `opacity-50`", contradicting its own "States" ("Identical to Input") and Input's README. Call: Input's states; no opacity on fields.
+- **Hover.** Input README's hover state (1px `text-tertiary`) is "pointer only"; not drawn on iOS.
+- **Alert glyph.** Input README: "the message prints below with an alert glyph"; no symbol is named. iOS uses `exclamationmark.circle` at `sans-xs` (`bundle.css` `.nn-field__msg .nn-icon { font-size: var(--text-xs) }`).
+- **`InputAppearance.outline` / `AppInputStyle.outlined`** both draw `soft` (README: "`.outlined` … dropped"); `.outline` is a deprecated alias.

@@ -132,7 +132,7 @@ private struct CardGallery: View {
                 }
                 Card(size: .sm, featured: true) {
                     Text("Featured card").textStyle(.sansMd, weight: .semibold)
-                    ProgressBar(value: 72, featured: true)
+                    Bar(value: 72)
                 }
                 Card(layout: .list) {
                     ForEach(["Anna", "Joel", "Sam"], id: \.self) { name in
