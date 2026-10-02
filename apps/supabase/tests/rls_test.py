@@ -61,7 +61,8 @@ check("profile has display_name derived from first and last name",
 
 print("\n== cook creates dish + meal ==")
 st, dish = call("POST", "/rest/v1/dishes", a_tok,
-                {"owner_id": a_id, "name": "Tacos", "normalized_name": f"tacos {tag}"}, REP)
+                {"owner_id": a_id, "name": "Tacos", "normalized_name": f"tacos {tag}",
+                 "is_public": False}, REP)
 check("cook can insert own dish", st == 201, f"{st} {dish}")
 dish_id = dish[0]["id"]
 
@@ -74,7 +75,14 @@ print("\n== outsider is walled off ==")
 st, r = call("GET", f"/rest/v1/meals?id=eq.{meal_id}", o_tok)
 check("outsider cannot read someone else's meal", st == 200 and r == [], f"{st} {r}")
 st, r = call("GET", f"/rest/v1/dishes?id=eq.{dish_id}", o_tok)
-check("outsider cannot read someone else's dish", st == 200 and r == [], f"{st} {r}")
+check("outsider cannot read someone else's private dish", st == 200 and r == [], f"{st} {r}")
+
+# Dishes default to public (20260902180000_dish_public_and_cuisine); a public dish is readable by anyone.
+st, pub = call("POST", "/rest/v1/dishes", a_tok,
+               {"owner_id": a_id, "name": "Pancakes", "normalized_name": f"pancakes {tag}"}, REP)
+check("cook can insert a dish that defaults to public", st == 201 and pub[0].get("is_public") is True, f"{st} {pub}")
+st, r = call("GET", f"/rest/v1/dishes?id=eq.{pub[0]['id']}", o_tok)
+check("outsider can read a public dish", st == 200 and len(r) == 1, f"{st} {r}")
 st, r = call("POST", "/rest/v1/meal_ratings", o_tok,
              {"meal_id": meal_id, "rater_id": o_id, "reaction": 0}, REP)
 check("outsider cannot rate a meal they're not part of", st >= 400, f"{st} {r}")
