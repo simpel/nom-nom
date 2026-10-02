@@ -18,6 +18,9 @@ struct DSSection<Content: View>: View {
     var trailingTone: SectionHeaderTrailingTone
     var systemImage: String?
     var uppercase: Bool
+    /// Header-to-content gap; `spacing-2` (`.nn-section__head`) unless a block sets
+    /// its own (SegmentedBar: bundle.css `.nn-segbar-section { gap: spacing-3 }`).
+    var spacing: CGFloat
     @ViewBuilder var content: Content
 
     init(
@@ -26,6 +29,7 @@ struct DSSection<Content: View>: View {
         trailingTone: SectionHeaderTrailingTone = .secondary,
         systemImage: String? = nil,
         uppercase: Bool = true,
+        spacing: CGFloat = DS.Spacing.s2,
         @ViewBuilder content: () -> Content
     ) {
         self.title = title
@@ -33,12 +37,13 @@ struct DSSection<Content: View>: View {
         self.trailingTone = trailingTone
         self.systemImage = systemImage
         self.uppercase = uppercase
+        self.spacing = spacing
         self.content = content()
     }
 
     var body: some View {
         // bundle.css `.nn-section__head`: padding 0 `spacing-2`, margin-bottom `spacing-2`.
-        VStack(alignment: .leading, spacing: DS.Spacing.s2) {
+        VStack(alignment: .leading, spacing: spacing) {
             SectionHeader(
                 title: title,
                 trailing: trailing,

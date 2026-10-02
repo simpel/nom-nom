@@ -71,19 +71,13 @@ struct RecipeSearchView: View {
     private var idleHistoryView: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: DS.Spacing.sectionLarge) {
-                RecommendedForYouShelf()
-
-                if !store.recentRecipes.isEmpty {
-                    RecipeHorizontalShelf(title: "Last Used Recipes", recipes: store.recentRecipes)
+                VStack(alignment: .leading, spacing: DS.Spacing.block) {
+                    RecommendedForYouShelf()
+                    RecipeShelf("Last used recipes", recipes: store.recentRecipes) { RecipeDetailView(recipe: $0) }
+                    RecipeShelf("Favourites", recipes: store.favoriteRecipes) { RecipeDetailView(recipe: $0) }
+                    RecipeShelf("Popular recipes", recipes: store.popularRecipes) { RecipeDetailView(recipe: $0) }
                 }
-
-                if !store.favoriteRecipes.isEmpty {
-                    RecipeHorizontalShelf(title: "Favourites", recipes: store.favoriteRecipes)
-                }
-
-                if !store.popularRecipes.isEmpty {
-                    PopularRecipesShelf(recipes: store.popularRecipes)
-                }
+                .padding(.horizontal, DS.Spacing.gutter)
 
                 SearchHistorySection(
                     showsEmptyState: store.recentRecipes.isEmpty && store.favoriteRecipes.isEmpty && store.popularRecipes.isEmpty
@@ -144,8 +138,8 @@ struct RecipeSearchView: View {
 
             Spacer()
         }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 4)
+        .padding(.horizontal, DS.Spacing.gutter)
+        .padding(.vertical, DS.Spacing.s1)
     }
 }
 

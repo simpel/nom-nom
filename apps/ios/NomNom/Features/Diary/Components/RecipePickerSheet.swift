@@ -84,41 +84,12 @@ struct RecipePickerSheet: View {
     // MARK: - Idle Mode Content
 
     private var idleContent: some View {
-        VStack(alignment: .leading, spacing: DS.Spacing.sectionLarge) {
+        VStack(alignment: .leading, spacing: DS.Spacing.block) {
             RecommendedForYouShelf(onSelect: selectRecipe)
-
-            if !store.favoriteRecipes.isEmpty {
-                RecipeHorizontalShelf(
-                    title: "Favourites",
-                    recipes: store.favoriteRecipes,
-                    onSelect: selectRecipe
-                )
-            }
-
-            if !store.recentAndFrequentRecipes.isEmpty {
-                RecipeHorizontalShelf(
-                    title: "Recent & Frequent",
-                    recipes: store.recentAndFrequentRecipes,
-                    onSelect: selectRecipe
-                )
-            }
-
-            if !store.pastFavoriteRecipes.isEmpty {
-                RecipeHorizontalShelf(
-                    title: "Past Favourites",
-                    recipes: store.pastFavoriteRecipes,
-                    onSelect: selectRecipe
-                )
-            }
-
-            if !store.popularRecipes.isEmpty {
-                RecipeHorizontalShelf(
-                    title: "Popular Recipes",
-                    recipes: store.popularRecipes,
-                    onSelect: selectRecipe
-                )
-            }
-
+            RecipeShelf("Favourites", recipes: store.favoriteRecipes, onSelect: selectRecipe)
+            RecipeShelf("Recent & frequent", recipes: store.recentAndFrequentRecipes, onSelect: selectRecipe)
+            RecipeShelf("Past favourites", recipes: store.pastFavoriteRecipes, onSelect: selectRecipe)
+            RecipeShelf("Popular recipes", recipes: store.popularRecipes, onSelect: selectRecipe)
             RecipeCategoryGridSection(onSelectRecipe: selectRecipe)
 
             if store.recipes.isEmpty {
@@ -127,9 +98,10 @@ struct RecipePickerSheet: View {
                 } description: {
                     Text("Type the name of what you cooked to create your first recipe.")
                 }
-                .padding(.top, 40)
+                .padding(.top, DS.Spacing.s10)
             }
         }
+        .padding(.horizontal, DS.Spacing.gutter)
         .padding(.top, DS.Spacing.screenTop)
         .padding(.bottom, DS.Spacing.screenBottom)
     }
@@ -139,40 +111,18 @@ struct RecipePickerSheet: View {
     private var searchContent: some View {
         VStack(alignment: .leading, spacing: DS.Spacing.section) {
             if !exactMatchExists {
-                Button {
+                Card(spacing: DS.Spacing.s0_5, action: {
                     onSelectNewRecipe(trimmedSearch)
                     dismiss()
-                } label: {
-                    HStack(spacing: 12) {
-                        Image(systemName: "plus.circle.fill")
-                            .font(.title3)
-                            .foregroundStyle(DS.Color.accent)
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text("Add “\(trimmedSearch)”")
-                                .font(.body.weight(.semibold))
-                                .foregroundStyle(DS.Color.textPrimary)
-                            Text("Create as a new recipe")
-                                .font(.caption)
-                                .foregroundStyle(DS.Color.textSecondary)
-                        }
-                        Spacer()
-                    }
-                    .padding(14)
-                    .background {
-                        RoundedRectangle(cornerRadius: AppRadius.card, style: .continuous)
-                            .fill(DS.Color.panel)
-                            .overlay {
-                                RoundedRectangle(cornerRadius: AppRadius.card, style: .continuous)
-                                    .strokeBorder(DS.Color.line.opacity(0.35), lineWidth: 0.5)
-                            }
-                    }
+                }) {
+                    Text("Add “\(trimmedSearch)”").textStyle(.sansMd, weight: .semibold)
+                    Text("Create as a new recipe").textStyle(.sansSm, tone: .secondary)
                 }
-                .buttonStyle(.plain)
-                .padding(.horizontal, 16)
+                .padding(.horizontal, DS.Spacing.gutter)
             }
 
             if !matchingRecipes.isEmpty {
-                VStack(alignment: .leading, spacing: 10) {
+                VStack(alignment: .leading, spacing: DS.Spacing.s2_5) {
                     SectionHeader("Matching Recipes", trailingText: "\(matchingRecipes.count) found")
                     MinimalRecipeGrid(recipes: matchingRecipes, onSelect: selectRecipe)
                 }
@@ -182,7 +132,7 @@ struct RecipePickerSheet: View {
                 } description: {
                     Text("No recipes match “\(trimmedSearch)”.")
                 }
-                .padding(.top, 40)
+                .padding(.top, DS.Spacing.s10)
             }
         }
         .padding(.top, DS.Spacing.screenTop)

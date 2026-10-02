@@ -25,16 +25,16 @@ struct DinnerPartiesView: View {
                     PendingPartyInvitesSection()
 
                     if store.myParties.isEmpty {
-                        CurrentPartyHeroView(party: nil) {
-                            showingCreateSheet = true
-                        }
-                    } else {
-                        VStack(spacing: DS.Spacing.md) {
-                            ForEach(store.myParties) { party in
-                                CurrentPartyHeroView(party: party) {
-                                    showingCreateSheet = true
-                                }
+                        EmptyState(
+                            "No dinner party yet",
+                            message: "Create or join a dinner party to start logging meals and ratings together.",
+                            action: EmptyStateAction(title: "Create a party", icon: "plus") {
+                                showingCreateSheet = true
                             }
+                        )
+                    } else {
+                        VStack(spacing: DS.Spacing.s4) {
+                            ForEach(store.myParties) { DinnerPartyCard(party: $0) }
                         }
                     }
 
@@ -76,7 +76,7 @@ struct DinnerPartiesView: View {
                     }
                 } else {
                     ToolbarItem(placement: .topBarTrailing) {
-                        HStack(spacing: 12) {
+                        HStack(spacing: DS.Spacing.s3) {
                             NotificationBellButton()
                             SettingsDropdownMenu()
                         }

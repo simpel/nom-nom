@@ -11,17 +11,9 @@ struct FollowedPartiesSection: View {
 
     var body: some View {
         if !followed.isEmpty {
-            VStack(alignment: .leading, spacing: 12) {
-                SectionHeader(
-                    "Parties You Follow",
-                    trailingText: "\(followed.count)",
-                    horizontalPadding: 0
-                )
-
-                VStack(spacing: DS.Spacing.md) {
-                    ForEach(followed) { party in
-                        PartyCard(party: party, showFollowButton: true)
-                    }
+            DSSection("Parties you follow", trailing: "\(followed.count)") {
+                VStack(spacing: DS.Spacing.s4) {
+                    ForEach(followed) { DinnerPartyCard(party: $0) }
                 }
             }
         }
@@ -31,6 +23,6 @@ struct FollowedPartiesSection: View {
 #Preview {
     NomNomPreview { _ in
         FollowedPartiesSection()
-            .padding()
+            .padding(DS.Spacing.gutter)
     }
 }

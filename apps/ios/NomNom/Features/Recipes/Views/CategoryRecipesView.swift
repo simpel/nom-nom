@@ -56,8 +56,8 @@ struct CategoryRecipesView: View {
         Group {
             if rawRecipes.isEmpty {
                 VStack(spacing: DS.Spacing.md) {
-                    CategoryHeroCoverCard(category: currentCategoryItem, count: 0)
-                        .padding(.top, DS.Spacing.sm)
+                    heroCover(count: 0)
+                        .padding(.top, DS.Spacing.s3)
 
                     ContentUnavailableView {
                         Label("No \(displayName) recipes", systemImage: "fork.knife")
@@ -71,8 +71,8 @@ struct CategoryRecipesView: View {
                 }
             } else if displayedRecipes.isEmpty {
                 VStack(spacing: DS.Spacing.md) {
-                    CategoryHeroCoverCard(category: currentCategoryItem, count: rawRecipes.count)
-                        .padding(.top, DS.Spacing.sm)
+                    heroCover(count: rawRecipes.count)
+                        .padding(.top, DS.Spacing.s3)
 
                     ContentUnavailableView {
                         Label("No matching recipes", systemImage: "line.3.horizontal.decrease")
@@ -87,7 +87,7 @@ struct CategoryRecipesView: View {
             } else {
                 ScrollView {
                     VStack(alignment: .leading, spacing: DS.Spacing.md) {
-                        CategoryHeroCoverCard(category: currentCategoryItem, count: rawRecipes.count)
+                        heroCover(count: rawRecipes.count)
                         subHeader
                         MinimalRecipeGrid(recipes: displayedRecipes, onSelect: onSelectRecipe)
                     }
@@ -187,8 +187,22 @@ struct CategoryRecipesView: View {
                 showingFilterSheet = true
             }
         }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 4)
+        .padding(.horizontal, DS.Spacing.gutter)
+        .padding(.vertical, DS.Spacing.s1)
+    }
+
+    /// The category's cover: a LabeledPhotoCard `lg` `landscape` across the gutter
+    /// (LabeledPhotoCard README: "Replaces … CategoryHeroCoverCard"; see DS-GAPS.md).
+    private func heroCover(count: Int) -> some View {
+        LabeledPhotoCard(
+            .category(currentCategoryItem),
+            label: displayName,
+            meta: CategoryItem.recipeCountText(count),
+            size: .lg,
+            format: .landscape,
+            fillsWidth: true
+        )
+        .padding(.horizontal, DS.Spacing.gutter)
     }
 }
 

@@ -11,14 +11,14 @@ This file lists UI patterns that exist in the app but not in the design system. 
 | 1 | **ListRow** | Leading slot (Avatar, PhotoCard xs, rank numeral), title, meta, and a trailing slot (Badge, ScoreValue xs, AppButton sm, Toggle, chevron). Also handles toggle rows and key-value rows. Lives inside `Card(layout: .list)`. | MealRow, profile/recipe/meal history rows, leaderboard row, member rows, party rows, notification row, settings nav rows, info rows |
 | 2 | **PendingInviteRow** | Email, "Pending", Resend, revoke | 4 invite-row copies (party invite, members sheet, party setup, household) |
 | 3 | **EmptyState** | Title, message, optional AppButton; no artwork for now | ContentUnavailableView uses, "No … yet" cards, arc empty states |
-| 4 | **SegmentedBar + legend** | Distribution of reaction tiers, macros, health tiers | 4 hand-built segmented bars |
-| 5 | **ValueStepper** | Minus / value / plus | Recipe servings |
+| 4 | ~~**SegmentedBar + legend**~~ | Resolved in R3b: `Composites/SegmentedBar` per `components/SegmentedBar/README.md` | ~~4 hand-built segmented bars~~ |
+| 5 | ~~**ValueStepper**~~ | Resolved in R3b: `Composites/ValueStepper` | ~~Recipe servings~~ |
 | 6 | **TrendChart** (+ tooltip card) | Single or multi-series line/area chart with scrub | InsightsTrendChart, PartyTasteTrendChart, PartyTrendTooltipCard |
 | 7 | **MediaViewerSheet** | Full-screen paged photo viewer, dark chrome | 3 viewer sheets |
 | 8 | **PhotoStrip edit mode** | Reorder, remove, "Cover" badge, add | Photo pickers in the meal, recipe, scanner and party-cover editors |
-| 9 | **LabeledPhotoCard** | Category tile or cover with a scrim label and a selected state | CategoryGridCard, CategoryHeroCoverCard, cuisine picker tiles |
-| 10 | **RecipeShelf** | Horizontal recipe carousel under a section header | 4 shelf variants |
-| 11 | **PartyCard** | Party summary with score and recent meals; "mine" and "discover" modes | PartyCard, CurrentPartyHeroView |
+| 9 | ~~**LabeledPhotoCard**~~ | Resolved in R3b: `Composites/LabeledPhotoCard` | ~~CategoryGridCard, CategoryHeroCoverCard, cuisine picker tiles~~ |
+| 10 | ~~**RecipeShelf**~~ | Resolved in R3b: `Composites/RecipeShelf` | ~~4 shelf variants~~ |
+| 11 | ~~**PartyCard**~~ | Resolved in R3b: `Composites/PartyCard` (fed by `Features/Parties/Components/DinnerPartyCard`) | ~~PartyCard, CurrentPartyHeroView~~ |
 | 12 | **Notification unread state** | Highlights an unread row | Tinted notification card |
 | 13 | **PageHeader** | Hero title and subtitle on screens without a subject (sign-in, onboarding, paywall) | PageHeader, PageHeading |
 | 14 | **Form blocks** | Name fields, party form, visibility toggle card, account/danger actions | Duplicated form cards |
@@ -26,10 +26,9 @@ This file lists UI patterns that exist in the app but not in the design system. 
 
 ### Interim files and token stretches
 
-- `Interim/ListRow.swift` + `ListRowSlots.swift` (#1), `PendingInviteRow.swift` (#2), `EmptyState.swift` (#3), `SegmentedBar.swift` (#4), `ValueStepper.swift` (#5), `LabeledPhotoCard.swift` (#9), `RecipeShelf.swift` (#10), `PartySummaryCard.swift` (#11; renamed `PartyCard` once the feature PartyCard is replaced in Phase 5).
+- `Interim/ListRow.swift` + `ListRowSlots.swift` (#1), `PendingInviteRow.swift` (#2), `EmptyState.swift` (#3). SegmentedBar, ValueStepper, LabeledPhotoCard, RecipeShelf and PartyCard (was `PartySummaryCard`) moved to `Composites/` in R3b.
 - ~~PhotoCard `.thumb`~~ and ~~`.cover`~~: removed in R2b (see "v3 spec calls made in R2b").
-- **Category hero cover**: today a wide 140pt banner. A wide crop is not safe (README: only 1:1 and 4:5), so it becomes a full-width LabeledPhotoCard `.square`. That is tall for a header; the DS should decide whether drill-downs get a cover at all.
-- **PartySummaryCard score**: ScoreCard `compact` is itself a Card and Cards don't nest, so the party card draws ScoreCard compact's content (ScoreValue `sm`, count, Bar) without the surface.
+- ~~Category hero cover~~ and ~~PartySummaryCard score~~: resolved in R3b (see "v3 spec calls made in R3b").
 - **PendingInviteRow feedback**: "Invitation resent" and errors show in the row's meta line instead of alerts.
 ### Notes: charts, media and form blocks (rows 6, 7, 8, 14, 15)
 
@@ -53,7 +52,7 @@ This file lists UI patterns that exist in the app but not in the design system. 
 
 ## Removed with no replacement
 
-- Arc photo decks (ArcHeroHeaderView, HeroPhotoDeck*, MiniPhotoArcDeck, CategoryPhotoArcView, EmptyPhotoDeckHeroView, MealPhotoDeckArcView, AuthHeroArcView). PhotoStrip and PhotoCard replace them. If empty states should have artwork, the DS needs to define it.
+- Arc photo decks (ArcHeroHeaderView, HeroPhotoDeck*, MiniPhotoArcDeck, CategoryPhotoArcView, EmptyPhotoDeckHeroView, MealPhotoDeckArcView, AuthHeroArcView). PhotoStrip and PhotoCard replace them. If empty states should have artwork, the DS needs to define it. The last unreferenced files (`Legacy/ArcHeroHeaderView`, `EmptyPhotoDeckHeroView`, `HeroPhotoCardView`, `HeroPhotoDeckModels`, `HeroPhotoDeckView`) were deleted in R3b, with the unreferenced `Legacy/DividedScoreCard`, `RecipeVerdictBadge` and `SubtleCapsuleLabel`.
 - Emoji avatars for eaters. Avatar initials replace them.
 
 ## v3 spec calls made in R0 (tokens generated from `design-system/tokens.json`)
@@ -133,3 +132,19 @@ Where the vendored v3 snapshot contradicts itself, these are the calls taken. Re
 - **Timeline.** Built on DSSection (README: "Built from: Section"). Rail `border-thick`. Item gap `spacing-2.5` (bundle.css `.nn-timeline__item`); README is silent. Track snaps to each occasion.
 - **RecipeCard.** `subtitle:` renamed `category:` (RecipeCardProps). The heart is now a toggle (README: "outlined until it is a favourite, then filled"). Card gap `spacing-1.5` (bundle.css `.nn-recipe-card`), previously `s2`.
 - **RecipeLinkCard.** Thumbnail is PhotoCard `xs` `portrait` (60 × 80) with a `format` parameter; body gap `spacing-1` (bundle.css `.nn-recipe-link__body`). `index.d.ts` keeps `name` (RecipeLinkCard) and `title` (RecipeCard); it declares no deprecated aliases.
+
+## v3 spec calls made in R3b (SegmentedBar, ValueStepper, LabeledPhotoCard, RecipeShelf, PartyCard)
+
+- **SegmentedBar key: swatch vs Badge.** The component README says "Every key is a swatch and a label … Not a Badge"; `index.d.ts` ("`reaction` … gives the key a reaction Badge; `color` … gives it a dot"), root README's composition table ("Badge `reaction sm`") and the README's own zero rule ("keeps its full-strength Badge") still say Badge. The "Not a Badge" section wins: every key is a `radius-sm` swatch (`spacing-2.5` inline, `spacing-3` in rows).
+- **SegmentedBar `lg`.** README: "`lg` (`spacing-4`)"; Bar README stops at `xl` 12 (`spacing-3`) and SegmentedBar is built from Bar. `sm` → Bar `sm`, `md` (`spacing-2.5`) → Bar `lg`, `lg` → Bar `xl` (12, not 16).
+- **SegmentedBar inline figure.** `format` names "legend figures" but the inline key's figure has no type step. It is `sans-sm` tabular after the label (the label's step), `text-primary`, `text-tertiary` at zero.
+- **SegmentedBar rows = RatingList rows.** `RatingListRow` gained a `swatch`, and RatingList's general-shape figure is now `serif-xs` tabular (SegmentedBar README; was `sans-sm`). Without a `title` the rows render as the bar over a Card `.list`.
+- **Macro grams.** SegmentedBar figures are a count or a percent, so HealthMacroDistributionCard puts the grams in the label ("Protein 24 g") and the figure is the calorie share; the per-macro kcal detail is gone. Fat moved from `chart-series5` to `chart-series3` (stable index 0/1/2). Health tiers take `chart-series1…4` by `HealthTier` index, replacing role colours.
+- **ValueStepper unset.** The README has no unset state (default = `min`). Recipe servings (`Int?`) read the minimum until changed; "Not set yet" shows beside the stepper, and stepping below 1 no longer clears the value. `sm` changes only the readout width (`spacing-8`, bundle.css); the buttons are AppButton's one 44pt icon-only size.
+- **LabeledPhotoCard `lg` radius.** bundle.css sets `radius-2xl` on every size; PhotoCard draws `lg` at `radius-3xl`. The tile keeps PhotoCard's radius so the scrim matches the photo.
+- **LabeledPhotoCard meta.** README: "One line of meta at most, `sans-xs`"; bundle.css dims it to `opacity-80`. Check: `spacing-6` `primary` disc, `on-primary` glyph at `text-xs`, `spacing-2` inset (bundle.css `__check`). Scrim is `PhotoScrim` (bundle.css 72% `stone-1000` → clear at 68%; neither value is a token, unchanged from R0).
+- **Category drill-down cover.** The LabeledPhotoCard README says it replaces CategoryHeroCoverCard, so the cover is a LabeledPhotoCard `lg` `landscape` across the gutter. Root README "Imagery" says only 1:1 and 4:5 crops of the square master are safe; PhotoCard's `landscape` is 4:3. The DS should confirm the 4:3 cover crop.
+- **RecipeShelf track.** bundle.css `.nn-shelf__track` pads `0 spacing-2 spacing-2`; iOS follows PhotoStrip and Timeline instead (snaps to cards, bleeds past the gutter via `contentMargins`), so the first card sits on the gutter. Card gap `spacing-3`. Shelves on screens without gutter padding are now wrapped in it. An empty shelf renders nothing unless it gets an `emptyState`. AI recommendations without a recipe use RecipeShelf's general `items:` shape with a RecipeCard-shaped idea card (`RecommendationShelfCard`).
+- **PartyCard type steps.** README names only the summary (`sans-sm secondary`, two lines). Name is `serif-sm`, the meta line `sans-sm` tertiary, the `mine` score ScoreValue `xs` (no size given). Head/main/meals gaps from bundle.css (`spacing-3` / `spacing-2` / `spacing-2`, card gap `spacing-3`).
+- **PartyCard join.** README: `discover` renders "Ask to join". The app follows public parties instead of requesting to join, so the slot is `PartyFollowButton` ("Follow" `primary solid` / "Following" `primary soft` + check, as on the party screen), under the card's link. Followed parties are `discover` (not a member, so no score); member parties are `mine` with the invite / share context menu. Discover parties stack vertically (the old 320pt-wide horizontal cards had no token). The no-party hero is now an EmptyState.
+- **PartyCard meta.** "N members · N meals"; the member-name list and the DividedScoreCard verdict + Bar are gone. Recent meals are PhotoCard `xs` squares with no verdicts (README).

@@ -35,11 +35,9 @@ struct PartyMemberInsightSheet: View {
                     }
                     .padding(.top, DS.Spacing.xs)
 
-                    // Recipes Member Will Love (Horizontal Scroll reusing MinimalRecipeCard)
-                    PartyMemberRecommendationsShelf(
-                        memberName: member.name,
-                        recommendations: recommendations
-                    )
+                    RecipeShelf("Recipes \(member.name) will love", recipes: recommendations.map(\.recipe)) {
+                        RecipeDetailView(recipe: $0)
+                    }
 
                     // Personal Rating History in this Party (reusing startpage MealRow)
                     PartyMemberPartyRatingsSection(
