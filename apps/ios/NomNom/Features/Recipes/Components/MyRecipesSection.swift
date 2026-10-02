@@ -8,9 +8,9 @@ struct MyRecipesSection: View {
     var body: some View {
         if recipes.isEmpty {
             EmptyState(
-                "Create your first recipe",
-                message: "Recipes you create will appear here.",
-                action: EmptyStateAction(title: "Create recipe", appearance: .solid) { onCreateRecipe?() }
+                "No recipes yet",
+                message: "Add a recipe you cook often and it will show up here.",
+                action: EmptyStateAction("Add recipe") { onCreateRecipe?() }
             )
             .padding(.horizontal, DS.Spacing.gutter)
             .padding(.top, DS.Spacing.s5)

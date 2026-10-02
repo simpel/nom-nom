@@ -1,7 +1,7 @@
 import SwiftUI
 
-/// Section displaying public dinner parties available to follow.
-/// Provides an instant 1-tap follow action and tap-to-open detail navigation.
+/// Public dinner parties to follow: a DSSection over a horizontal row of PartyCards
+/// with a 1-tap follow action, or an EmptyState when there are none.
 struct DiscoverPartiesSection: View {
     @Environment(FoodStore.self) private var store
 
@@ -10,35 +10,25 @@ struct DiscoverPartiesSection: View {
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            PageHeading(title: "Parties to follow")
-
+        DSSection("Parties to follow") {
             if discoverable.isEmpty {
-                SectionCard {
-                    VStack(spacing: 4) {
-                        Text("No new parties to follow right now")
-                            .font(.subheadline.weight(.medium))
-                            .foregroundStyle(DS.Color.textPrimary)
-
-                        Text("New public dinner parties created by other food lovers will appear here.")
-                            .font(.caption)
-                            .foregroundStyle(DS.Color.textSecondary)
-                            .multilineTextAlignment(.center)
-                    }
-                    .frame(maxWidth: .infinity, alignment: .center)
-                    .padding(.vertical, 8)
-                }
+                EmptyState(
+                    "No new parties to follow",
+                    message: "Public dinner parties other people start will show up here."
+                )
             } else {
                 ScrollView(.horizontal, showsIndicators: false) {
-                    HStack(spacing: DS.Spacing.md) {
+                    HStack(spacing: DS.Spacing.s4) {
                         ForEach(discoverable) { party in
+                            // No README width for a scrolled PartyCard: `spacing-72`
+                            // (see DS-GAPS "PartyCard in a scroller").
                             PartyCard(party: party, showFollowButton: true)
-                                .frame(width: 320)
+                                .frame(width: DS.Spacing.s72)
                         }
                     }
-                    .padding(.horizontal, DS.Spacing.screenHorizontal)
+                    .padding(.horizontal, DS.Spacing.gutter)
                 }
-                .padding(.horizontal, -DS.Spacing.screenHorizontal)
+                .padding(.horizontal, -DS.Spacing.gutter)
             }
         }
     }
@@ -47,6 +37,6 @@ struct DiscoverPartiesSection: View {
 #Preview {
     NomNomPreview { _ in
         DiscoverPartiesSection()
-            .padding()
+            .padding(DS.Spacing.gutter)
     }
 }

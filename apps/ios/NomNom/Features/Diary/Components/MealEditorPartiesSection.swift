@@ -1,6 +1,7 @@
 import SwiftUI
 
-/// Section in MealEditorView managing party assignments.
+/// The dinner parties a meal is served to: one ListRow Toggle row per party (its
+/// Avatar `sm` and name) in a list Card.
 struct MealEditorPartiesSection: View {
     @Binding var selectedParties: Set<UUID>
 
@@ -8,34 +9,30 @@ struct MealEditorPartiesSection: View {
 
     var body: some View {
         if !store.myParties.isEmpty {
-            SectionCard("Serve to Dinner Parties") {
-                VStack(spacing: 12) {
+            DSSection("Serve to dinner parties") {
+                Card(layout: .list) {
                     ForEach(store.myParties) { party in
-                        Toggle(isOn: Binding(
-                            get: { selectedParties.contains(party.id) },
-                            set: { isSelected in
-                                if isSelected {
-                                    selectedParties.insert(party.id)
-                                } else {
-                                    selectedParties.remove(party.id)
-                                }
-                            }
-                        )) {
-                            HStack(spacing: 10) {
-                                PartyAvatar(party: party, size: 28)
-                                Text(party.name)
-                                    .font(.body)
-                                    .foregroundStyle(DS.Color.textPrimary)
-                            }
-                        }
-                        .nativeToggle()
-
-                        if party.id != store.myParties.last?.id {
-                            Divider()
-                        }
+                        ListRow(
+                            party.name,
+                            leading: .avatar(Avatar(party: party, size: .sm, decorative: true)),
+                            trailing: .toggle(isServed(party))
+                        )
                     }
                 }
             }
         }
+    }
+
+    private func isServed(_ party: Party) -> Binding<Bool> {
+        Binding(
+            get: { selectedParties.contains(party.id) },
+            set: { isSelected in
+                if isSelected {
+                    selectedParties.insert(party.id)
+                } else {
+                    selectedParties.remove(party.id)
+                }
+            }
+        )
     }
 }

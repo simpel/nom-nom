@@ -16,34 +16,15 @@ struct MealMemberScoreRow: View {
         return top.shortSummary + more
     }
 
-    private var insightColor: Color? {
-        guard let top = affinities.first else { return nil }
-        return top.delta < 0 ? DS.Color.warningText : DS.Color.primaryText
-    }
-
     var body: some View {
-        if canExplain {
-            ListRow(
-                detail.name,
-                meta: insight,
-                metaColor: insightColor,
-                leading: .avatar(Avatar(name: detail.name, size: .sm)),
-                trailing: scoreSlot, .chevron,
-                action: onTapExplain
-            )
-        } else {
-            ListRow(
-                detail.name,
-                meta: insight,
-                metaColor: insightColor,
-                leading: .avatar(Avatar(name: detail.name, size: .sm)),
-                trailing: scoreSlot
-            )
-        }
-    }
-
-    private var scoreSlot: ListRowTrailing {
-        if let reaction = detail.reaction { return .score(reaction.score) }
-        return .value("Pending")
+        // Meta is `sans-sm` secondary (README); the insight's direction is in its words.
+        ListRow(
+            detail.name,
+            meta: insight,
+            value: detail.reaction == nil ? "Pending" : nil,
+            leading: .avatar(Avatar(name: detail.name, size: .sm)),
+            trailing: detail.reaction.map { .score($0.score) },
+            action: canExplain ? onTapExplain : nil
+        )
     }
 }

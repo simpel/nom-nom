@@ -57,12 +57,15 @@ struct InsightsPaywallSheet: View {
     // MARK: - Sections
     
     private var headerSection: some View {
+        // PageHeader README: one sentence, centred for the paywall.
         PageHeader(
-            title: "Nom Nom Pro",
-            subtitle: "Unlock your group's taste profiles, get advanced meal suggestions, and never wonder what to eat again.",
-            alignment: .center
+            "Know what your table loves",
+            subtitle: "Taste profiles for your group and meal suggestions they will eat.",
+            eyebrow: "Nom Nom Pro",
+            align: .center
         )
-        .padding(.top, DS.Spacing.screenTop)
+        .padding(.horizontal, DS.Spacing.gutter)
+        .padding(.top, DS.Spacing.s5)
     }
     
     private var featuresSection: some View {
@@ -117,13 +120,13 @@ struct InsightsPaywallSheet: View {
             }
         } label: {
             HStack {
-                VStack(alignment: .leading, spacing: 4) {
+                VStack(alignment: .leading, spacing: DS.Spacing.s1) {
                     Text(title)
                         .font(.headline)
-                        .foregroundStyle(isBestValue ? DS.Color.Pro.proAccent : DS.Color.textPrimary)
+                        .foregroundStyle(isBestValue ? DS.Color.proText : DS.Color.textPrimary)
                     Text(subtitle)
                         .font(.subheadline)
-                        .foregroundStyle(isBestValue ? DS.Color.Pro.proAccent.opacity(0.8) : DS.Color.textSecondary)
+                        .foregroundStyle(isBestValue ? DS.Color.proText : DS.Color.textSecondary)
                 }
 
                 Spacer()
@@ -138,24 +141,25 @@ struct InsightsPaywallSheet: View {
             }
             .padding(.horizontal, DS.Spacing.md)
             .padding(.vertical, isBestValue ? DS.Spacing.md + 4 : DS.Spacing.md)
+            // README "Tints": a fill over its ground at `opacity-10`; the selected ring is
+            // `border-thick`, at rest `border-hairline`. Cards draw no shadow.
             .background(
-                isBestValue
-                    ? AnyShapeStyle(LinearGradient(
-                        colors: [DS.Color.Pro.proAccent.opacity(0.3), DS.Color.panel],
-                        startPoint: .topLeading,
-                        endPoint: UnitPoint(x: 0.85, y: 0.9)
-                    ))
-                    : AnyShapeStyle(DS.Color.panel)
+                RoundedRectangle(cornerRadius: DS.Radius.xl2, style: .continuous)
+                    .fill(DS.Color.panel)
+                    .overlay {
+                        if isBestValue {
+                            RoundedRectangle(cornerRadius: DS.Radius.xl2, style: .continuous)
+                                .fill(DS.Color.pro.opacity(DS.Opacity.tint))
+                        }
+                    }
             )
-            .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
             .overlay {
-                RoundedRectangle(cornerRadius: 16, style: .continuous)
+                RoundedRectangle(cornerRadius: DS.Radius.xl2, style: .continuous)
                     .strokeBorder(
-                        isBestValue ? DS.Color.Pro.proAccent : (isSelected ? DS.Color.accent : DS.Color.line),
-                        lineWidth: isBestValue ? 1 : (isSelected ? 2 : 1)
+                        isBestValue ? DS.Color.proText : (isSelected ? DS.Color.primary : DS.Color.line),
+                        lineWidth: isSelected ? DS.BorderWidth.thick : DS.BorderWidth.hairline
                     )
             }
-            .shadow(color: isBestValue ? DS.Color.Pro.proAccent.opacity(0.12) : .clear, radius: 12, x: 0, y: 4)
             .overlay(alignment: .topTrailing) {
                 // Straddles the top border (vertical center on the 1px line), inset from
                 // the corner rather than flush, matching the ProGate teaser badge.

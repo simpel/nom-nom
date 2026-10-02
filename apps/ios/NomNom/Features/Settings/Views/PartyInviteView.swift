@@ -27,9 +27,7 @@ struct PartyInviteView: View {
 
                     emailInviteSection
 
-                    if !pendingInvites.isEmpty {
-                        pendingInvitesSection
-                    }
+                    PartyInvitesSection(invites: pendingInvites)
                 }
                 .padding(.horizontal, DS.Spacing.screenHorizontal)
                 .padding(.top, DS.Spacing.screenTop)
@@ -53,8 +51,8 @@ struct PartyInviteView: View {
 
     private var emailInviteSection: some View {
         SectionCard("Invite by Email") {
-            VStack(alignment: .leading, spacing: 10) {
-                HStack(spacing: 8) {
+            VStack(alignment: .leading, spacing: DS.Spacing.s2_5) {
+                HStack(spacing: DS.Spacing.s2) {
                     Input(
                         "friend@example.com",
                         text: $email,
@@ -82,26 +80,16 @@ struct PartyInviteView: View {
                 if let success = sentSuccessMessage {
                     Text(success)
                         .font(.caption)
-                        .foregroundStyle(DS.Color.Pine.pine600)
+                        .foregroundStyle(DS.Color.primaryText)
                         .transition(.opacity)
                 } else if !email.trimmedName.isEmpty && !email.isValidEmail {
                     Text("Please enter a valid email address.")
                         .font(.caption)
-                        .foregroundStyle(.red)
+                        .foregroundStyle(DS.Color.destructiveText)
                 } else {
                     Text("We'll send them a notification and an invitation email to join.")
                         .font(.caption)
                         .foregroundStyle(DS.Color.textSecondary)
-                }
-            }
-        }
-    }
-
-    private var pendingInvitesSection: some View {
-        DSSection("Pending invitations") {
-            Card(layout: .list) {
-                ForEach(pendingInvites) { invite in
-                    PendingInviteRow(invite: invite, store: store)
                 }
             }
         }

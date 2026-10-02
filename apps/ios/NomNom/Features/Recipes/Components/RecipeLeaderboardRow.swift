@@ -2,13 +2,12 @@ import SwiftUI
 
 /// One recipe on the leaderboard: a ListRow with its rank numeral, PhotoCard thumbnail,
 /// cuisine, effort and times cooked, its score and a chevron. Place it in a
-/// `Card(layout: .list)`. The highlighted recipe gets a semibold title.
+/// `Card(layout: .list)` inside a NavigationLink.
 struct RecipeLeaderboardRow: View {
     let rank: Int
     let recipe: Recipe
     let score: Double
     let reaction: Reaction
-    var isHighlighted: Bool = false
 
     @Environment(FoodStore.self) private var store
 
@@ -27,9 +26,9 @@ struct RecipeLeaderboardRow: View {
         ListRow(
             recipe.name,
             meta: meta,
-            emphasized: isHighlighted,
             leading: .rank(rank),
-            trailing: .score(score), .chevron
+            trailing: .score(score),
+            chevron: true
         )
     }
 }
@@ -38,7 +37,7 @@ struct RecipeLeaderboardRow: View {
     NomNomPreview { store in
         Card(layout: .list) {
             ForEach(Array(store.myDishes.prefix(4).enumerated()), id: \.element.id) { index, recipe in
-                RecipeLeaderboardRow(rank: index + 1, recipe: recipe, score: 0.8, reaction: .great, isHighlighted: index == 1)
+                RecipeLeaderboardRow(rank: index + 1, recipe: recipe, score: 0.8, reaction: .great)
             }
         }
         .padding(DS.Spacing.gutter)

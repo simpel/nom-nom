@@ -1,6 +1,7 @@
 import SwiftUI
 
-/// Combined dinner party memberships and average scores list showing name, scores, and navigation arrow.
+/// The dinner parties a person belongs to: ListRows (party Avatar, name, their average
+/// score) that open the party, or an EmptyState when there are none.
 struct ProfilePartiesSection: View {
     let parties: [Party]
     let raterRef: RaterRef
@@ -8,50 +9,23 @@ struct ProfilePartiesSection: View {
     @Environment(FoodStore.self) private var store
 
     var body: some View {
-        SectionCard("Dinner Parties (\(parties.count))") {
+        DSSection("Dinner parties", trailing: "\(parties.count)") {
             if parties.isEmpty {
-                Text("No dinner party memberships.")
-                    .font(.subheadline)
-                    .foregroundStyle(DS.Color.textSecondary)
-                    .padding(.vertical, DS.Spacing.sm)
+                EmptyState("No dinner parties yet", message: "Parties this person joins will show up here.")
             } else {
-                VStack(spacing: 0) {
-                    ForEach(Array(parties.enumerated()), id: \.element.id) { index, party in
-                        let stats = store.partyAverageScore(partyID: party.id, for: raterRef, limit: 20)
-
+                Card(layout: .list) {
+                    ForEach(parties) { party in
                         NavigationLink {
                             PartyDetailView(partyID: party.id)
                         } label: {
-                            HStack(spacing: 12) {
-                                PartyAvatar(party: party, size: 36)
-
-                                Text(party.name)
-                                    .font(.body.weight(.medium))
-                                    .foregroundStyle(DS.Color.textPrimary)
-                                    .lineLimit(1)
-
-                                Spacer()
-
-                                if let stats {
-                                    ScoreBadge(stats: stats, format: .both, size: .sm)
-                                } else {
-                                    Text("—")
-                                        .font(.subheadline.weight(.medium))
-                                        .foregroundStyle(DS.Color.textTertiary)
-                                }
-
-                                Image(systemName: "chevron.right")
-                                    .font(.caption2.weight(.semibold))
-                                    .foregroundStyle(DS.Color.textTertiary)
-                            }
-                            .padding(.vertical, DS.Spacing.sm)
-                            .contentShape(Rectangle())
+                            ListRow(
+                                party.name,
+                                leading: .avatar(Avatar(party: party, size: .sm, decorative: true)),
+                                trailing: .score(store.partyAverageScore(partyID: party.id, for: raterRef, limit: 20)?.score),
+                                chevron: true
+                            )
                         }
-                        .buttonStyle(.plain)
-
-                        if index < parties.count - 1 {
-                            Divider()
-                        }
+                        .buttonStyle(ListRowButtonStyle())
                     }
                 }
             }
@@ -65,6 +39,6 @@ struct ProfilePartiesSection: View {
             parties: store.parties,
             raterRef: .account(store.userID)
         )
-        .padding()
+        .padding(DS.Spacing.gutter)
     }
 }

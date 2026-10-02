@@ -5,7 +5,7 @@ import SwiftUI
 struct MealRow: View {
     let meal: Meal
     var raterRef: RaterRef? = nil
-    /// Parties only in the meta line, no notes and no chevron.
+    /// Parties only in the meta line and no chevron.
     var isMinimal: Bool = false
 
     @Environment(FoodStore.self) private var store
@@ -43,29 +43,16 @@ struct MealRow: View {
             .joined(separator: " \u{00B7} ")
     }
 
-    private var notes: String? {
-        guard !isMinimal else { return nil }
-        let trimmed = meal.notes.trimmingCharacters(in: .whitespacesAndNewlines)
-        return trimmed.isEmpty ? nil : trimmed
-    }
-
-    private var trailing: [ListRowTrailing] {
-        var slots: [ListRowTrailing] = []
-        if let score { slots.append(.score(score)) }
-        if !isMinimal { slots.append(.chevron) }
-        return slots
-    }
-
     var body: some View {
-        var row = ListRow(
+        // ListRow has one meta line (README: title + meta), so the cook's notes are
+        // left to the meal screen.
+        ListRow(
             store.dishName(forMeal: meal),
             meta: meta,
-            detail: notes,
-            metaTone: isMinimal ? .accent : .tertiary,
-            leading: .photo(.meal(meal))
+            leading: .photo(.meal(meal)),
+            trailing: score.map { .score($0) },
+            chevron: !isMinimal
         )
-        row.trailing = trailing
-        return row
     }
 }
 

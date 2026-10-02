@@ -27,24 +27,15 @@ struct PartyMembersSheet: View {
         NavigationStack {
             ScrollView {
                 VStack(spacing: DS.Spacing.section) {
-                    VStack(spacing: 12) {
+                    VStack(spacing: DS.Spacing.s3) {
                         ShareLink(
                             item: party.webInviteURL,
                             subject: Text("Join \(party.name) on Nom Nom"),
                             message: Text(party.shareMessage)
                         ) {
-                            HStack(spacing: 8) {
-                                Image(systemName: "square.and.arrow.up")
-                                Text("Share Link")
-                            }
-                            .font(.callout.weight(.semibold))
-                            .frame(maxWidth: .infinity)
-                            .frame(height: 42)
-                            .background(DS.Color.accentSoft)
-                            .foregroundStyle(DS.Color.accentText)
-                            .clipShape(Capsule())
+                            AppButtonLabel("Share link", icon: "square.and.arrow.up", appearance: .soft, fullWidth: true)
                         }
-                        .buttonStyle(.plain)
+                        .buttonStyle(AppPressableButtonStyle())
 
                         AppButton(
                             "Invite by Email",
@@ -58,9 +49,7 @@ struct PartyMembersSheet: View {
                         }
                     }
 
-                    if !pendingInvites.isEmpty {
-                        invitesSection
-                    }
+                    PartyInvitesSection(invites: pendingInvites)
                     
                     membersSection
                 }
@@ -117,51 +106,19 @@ struct PartyMembersSheet: View {
     // MARK: - Sections
 
     private var membersSection: some View {
-        SectionCard("Current Members") {
-            VStack(spacing: 0) {
-                ForEach(Array(members.enumerated()), id: \.element.id) { index, member in
-                    HStack(spacing: 12) {
-                        UserAvatar(profile: member, size: 36)
-
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text(member.shownName)
-                                .font(.body.weight(.medium))
-                                .foregroundStyle(DS.Color.textPrimary)
-
-                            Text(memberRoleLabel(for: member))
-                                .font(.caption2)
-                                .foregroundStyle(DS.Color.textSecondary)
-                        }
-
-                        Spacer()
-
-                        if canRemove(member: member) {
-                            AppButton(
-                                systemImage: "minus.circle",
-                                variant: .destructive,
-                                style: .ghost,
-                                size: .sm
-                            ) {
+        DSSection("Members", trailing: "\(members.count)") {
+            Card(layout: .list) {
+                ForEach(members) { member in
+                    ListRow(
+                        member.shownName,
+                        meta: memberRoleLabel(for: member),
+                        leading: .avatar(Avatar(profile: member, size: .sm, decorative: true)),
+                        trailingAction: canRemove(member: member)
+                            ? ListRowIconAction(icon: "xmark", accessibilityLabel: "Remove \(member.shownName)") {
                                 memberToRemove = member
                             }
-                            .accessibilityLabel("Remove \(member.shownName)")
-                        }
-                    }
-                    .padding(.vertical, DS.Spacing.sm)
-
-                    if index < members.count - 1 {
-                        Divider()
-                    }
-                }
-            }
-        }
-    }
-
-    private var invitesSection: some View {
-        DSSection("Pending invitations") {
-            Card(layout: .list) {
-                ForEach(pendingInvites) { invite in
-                    PendingInviteRow(invite: invite, store: store)
+                            : nil
+                    )
                 }
             }
         }

@@ -29,14 +29,14 @@ struct RecipeEditSheet: View {
                                 cuisine: $recipeDraft.cuisine
                             )
                         } else {
-                            ContentUnavailableView(
-                                "Creator Only",
-                                systemImage: "lock.fill",
-                                description: Text("Only the creator of this recipe can edit its details.")
+                            EmptyState(
+                                "Only the creator can edit this",
+                                message: "Ask whoever added this recipe to change its details.",
+                                layout: .screen
                             )
                         }
                     } else {
-                        ContentUnavailableView("Recipe not found", systemImage: "questionmark.folder")
+                        EmptyState("Recipe is gone", message: "It was deleted.", layout: .screen)
                     }
                 }
                 .padding(.horizontal, DS.Spacing.screenHorizontal)

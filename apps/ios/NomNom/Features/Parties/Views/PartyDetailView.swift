@@ -39,7 +39,8 @@ struct PartyDetailView: View {
             } else {
                 EmptyState(
                     "Party not found",
-                    message: "This dinner party might have been deleted or is no longer accessible."
+                    message: "It may have been deleted, or you no longer have access.",
+                    layout: .screen
                 )
                 .padding(.horizontal, DS.Spacing.gutter)
                 .frame(maxWidth: .infinity, maxHeight: .infinity)

@@ -13,21 +13,22 @@ struct SignInView: View {
                 VStack(spacing: DS.Spacing.s5) {
                     AppIconMark()
 
+                    // The sign-in buttons stay at the bottom: Sign in with Apple is
+                    // Apple's own control, not an AppButton the header could build.
                     PageHeader(
-                        title: "Nom Nom",
-                        subtitle: "Keep track of what you cooked, whether the kids ate it, and what to cook next."
+                        "Nom Nom",
+                        subtitle: "Keep track of what you cooked, whether the kids ate it, and what to cook next.",
+                        align: .center
                     )
                 }
 
                 Spacer()
 
-                VStack(spacing: 12) {
+                VStack(spacing: DS.Spacing.s3) {
                     if let message = auth.errorMessage {
                         Text(message)
-                            .font(.subheadline)
-                            .foregroundStyle(DS.Color.textSecondary)
-                            .multilineTextAlignment(.center)
-                            .padding(.bottom, 4)
+                            .textStyle(.sansSm, tone: .secondary, align: .center)
+                            .padding(.bottom, DS.Spacing.s1)
                     }
 
                     // 1. Sign in with Apple (Black button with Apple logo)
@@ -48,8 +49,8 @@ struct SignInView: View {
                 }
                 .padding(.bottom, DS.Spacing.screenBottom)
             }
-            .padding(.horizontal, 24)
-            .frame(maxWidth: 460)
+            .padding(.horizontal, DS.Spacing.s6)
+            .frame(maxWidth: DS.Container.sm)
             .frame(maxWidth: .infinity)
             .background(DS.Color.bg)
             .navigationDestination(isPresented: $navigateToEmailSignIn) {

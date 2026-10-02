@@ -47,11 +47,8 @@ struct MealRatingSheet: View {
                     ProgressView()
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
                 } else {
-                    ContentUnavailableView(
-                        "Meal Not Found",
-                        systemImage: "questionmark.folder",
-                        description: Text("This meal may have been removed.")
-                    )
+                    EmptyState("Meal is gone", message: "It looks like this meal was deleted.", layout: .screen)
+                        .padding(.horizontal, DS.Spacing.gutter)
                 }
             }
             .screenTitle("Rate Meal", displayMode: .inline)

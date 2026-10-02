@@ -2,8 +2,6 @@ import SwiftUI
 
 /// Modal sheet displaying the global leaderboard of recipes ranked by average meal rating score.
 struct RecipeLeaderboardSheet: View {
-    var highlightedRecipeID: UUID? = nil
-
     @Environment(FoodStore.self) private var store
     @Environment(\.dismiss) private var dismiss
 
@@ -50,11 +48,10 @@ struct RecipeLeaderboardSheet: View {
                             rank: index + 1,
                             recipe: item.recipe,
                             score: item.score,
-                            reaction: item.reaction,
-                            isHighlighted: item.recipe.id == highlightedRecipeID
+                            reaction: item.reaction
                         )
                     }
-                    .buttonStyle(.plain)
+                    .buttonStyle(ListRowButtonStyle())
                 }
             }
         }
@@ -64,12 +61,13 @@ struct RecipeLeaderboardSheet: View {
     }
 
     private var emptyState: some View {
+        // README case "Not enough data yet": no action, waiting is the answer.
         EmptyState(
-            "No ranked dishes",
-            message: "Cook and rate meals to rank your recipes on the leaderboard."
+            "Not enough meals yet",
+            message: "Rate a meal and its recipe takes a place on the leaderboard.",
+            layout: .screen
         )
         .padding(.horizontal, DS.Spacing.gutter)
-        .padding(.top, DS.Spacing.s10)
     }
 }
 

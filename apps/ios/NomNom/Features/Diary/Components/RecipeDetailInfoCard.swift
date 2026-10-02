@@ -23,16 +23,16 @@ struct RecipeDetailInfoCard: View {
                 NavigationLink {
                     PersonDetailView(raterRef: .account(recipe.ownerID))
                 } label: {
-                    ListRow("Created by", trailing: .value(creatorName), .chevron)
+                    ListRow("Created by", value: creatorName, chevron: true)
                 }
-                .buttonStyle(AppPressableButtonStyle())
+                .buttonStyle(ListRowButtonStyle())
 
                 if let serves = recipe.serves {
-                    ListRow("Servings", trailing: .value(serves == 1 ? "1 serving" : "\(serves) servings"))
+                    ListRow("Servings", value: serves == 1 ? "1 serving" : "\(serves) servings")
                 }
 
                 if let kind = store.dishKind(for: recipe) {
-                    ListRow("Dish kind", trailing: .badge(Badge(kind.name, variant: .secondary, size: .sm)))
+                    ListRow("Dish kind", value: kind.name)
                 }
             }
         }

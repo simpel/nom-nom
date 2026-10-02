@@ -50,7 +50,7 @@ struct RecipeHistorySection: View {
             meal.eatenOn.formatted(.dateTime.day().month(.abbreviated).year()),
             meta: subtitle(for: meal),
             leading: .photo(.meal(meal)),
-            trailing: .score(store.averageScore(forMeal: meal.id)), .chevron,
+            trailing: .score(store.averageScore(forMeal: meal.id)),
             action: { onSelectMeal(meal) }
         )
     }

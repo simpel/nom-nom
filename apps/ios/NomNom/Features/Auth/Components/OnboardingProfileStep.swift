@@ -9,8 +9,9 @@ struct OnboardingProfileStep: View {
     var body: some View {
         VStack(spacing: DS.Spacing.section) {
             PageHeader(
-                title: "Your Seat at the Table",
-                subtitle: "Welcome to Nom Nom. Introduce yourself so companions recognize you at dinner."
+                "Your seat at the table",
+                subtitle: "Introduce yourself so the people you eat with recognise you.",
+                align: .center
             )
 
             AssetPhotosPickerSection(

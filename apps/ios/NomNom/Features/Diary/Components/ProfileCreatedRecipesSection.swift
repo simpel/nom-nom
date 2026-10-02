@@ -1,89 +1,26 @@
 import SwiftUI
 
-/// Section showcasing recipes created by a user, showing image and name.
+/// The recipes a person created: a DSSection over ListRows (PhotoCard `xs` and the
+/// name) that open the recipe, or an EmptyState when there are none.
 struct ProfileCreatedRecipesSection: View {
     let recipes: [Recipe]
 
     var body: some View {
-        SectionCard("Created Recipes (\(recipes.count))") {
+        DSSection("Created recipes", trailing: "\(recipes.count)") {
             if recipes.isEmpty {
-                Text("No recipes created yet.")
-                    .font(.subheadline)
-                    .foregroundStyle(DS.Color.textSecondary)
-                    .padding(.vertical, DS.Spacing.sm)
+                EmptyState("No recipes yet", message: "Recipes this person adds will show up here.")
             } else {
-                VStack(spacing: 0) {
-                    ForEach(Array(recipes.enumerated()), id: \.element.id) { index, recipe in
+                Card(layout: .list) {
+                    ForEach(recipes) { recipe in
                         NavigationLink {
                             RecipeDetailView(recipe: recipe)
                         } label: {
-                            HStack(spacing: 12) {
-                                recipeThumbnail(for: recipe)
-
-                                Text(recipe.name)
-                                    .font(.body.weight(.medium))
-                                    .foregroundStyle(DS.Color.textPrimary)
-                                    .lineLimit(1)
-
-                                Spacer()
-
-                                Image(systemName: "chevron.right")
-                                    .font(.caption2.weight(.semibold))
-                                    .foregroundStyle(DS.Color.textTertiary)
-                            }
-                            .padding(.vertical, DS.Spacing.sm)
-                            .contentShape(Rectangle())
+                            ListRow(recipe.name, leading: .photo(.recipe(recipe)), chevron: true)
                         }
-                        .buttonStyle(.plain)
-
-                        if index < recipes.count - 1 {
-                            Divider()
-                        }
+                        .buttonStyle(ListRowButtonStyle())
                     }
                 }
             }
-        }
-    }
-
-    @ViewBuilder
-    private func recipeThumbnail(for recipe: Recipe) -> some View {
-        if let primaryPhoto = recipe.photoPath {
-            RemoteMealPhoto(
-                path: primaryPhoto,
-                cornerRadius: AppRadius.photo,
-                bucket: SupabaseConfig.photoBucket
-            )
-            .frame(width: 46, height: 46)
-            .clipShape(RoundedRectangle(cornerRadius: AppRadius.photo, style: .continuous))
-            .overlay(
-                RoundedRectangle(cornerRadius: AppRadius.photo, style: .continuous)
-                    .strokeBorder(DS.Color.line.opacity(0.35), lineWidth: 0.5)
-            )
-        } else if let cuisine = recipe.cuisine,
-                  let cuisineAsset = Cuisine.assetImageName(for: cuisine) {
-            Image(cuisineAsset)
-                .resizable()
-                .scaledToFill()
-                .frame(width: 46, height: 46)
-                .clipShape(RoundedRectangle(cornerRadius: AppRadius.photo, style: .continuous))
-                .overlay(
-                    RoundedRectangle(cornerRadius: AppRadius.photo, style: .continuous)
-                        .strokeBorder(DS.Color.line.opacity(0.35), lineWidth: 0.5)
-                )
-        } else {
-            Rectangle()
-                .fill(DS.Color.sunken)
-                .frame(width: 46, height: 46)
-                .clipShape(RoundedRectangle(cornerRadius: AppRadius.photo, style: .continuous))
-                .overlay(
-                    RoundedRectangle(cornerRadius: AppRadius.photo, style: .continuous)
-                        .strokeBorder(DS.Color.line.opacity(0.35), lineWidth: 0.5)
-                )
-                .overlay {
-                    Image(systemName: "fork.knife")
-                        .font(.caption)
-                        .foregroundStyle(DS.Color.textTertiary)
-                }
         }
     }
 }
@@ -91,6 +28,6 @@ struct ProfileCreatedRecipesSection: View {
 #Preview {
     NomNomPreview { store in
         ProfileCreatedRecipesSection(recipes: store.recipes)
-            .padding()
+            .padding(DS.Spacing.gutter)
     }
 }

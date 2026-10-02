@@ -52,6 +52,15 @@ extension DS {
     }
 }
 
+extension DS {
+    /// Container widths (`container-*`), aliased from `DSTokens.Container`.
+    enum Container {
+        /// `container-sm` (384): the measure for a sentence under a title
+        /// (PageHeader subtitle, EmptyState message).
+        static let sm = DSTokens.Container.sm
+    }
+}
+
 // MARK: - Deprecated pre-spec names (pure renames of steps; removed in Phase 6)
 
 extension DS.Spacing {

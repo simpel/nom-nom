@@ -28,8 +28,8 @@ struct PartySetupStepView: View {
                     PartyInviteLinkCard(party: party)
                 }
 
-                if party != nil && !invites.isEmpty {
-                    invitesSection
+                if party != nil {
+                    PartyInvitesSection(invites: invites)
                 }
 
                 membersSection
@@ -54,63 +54,23 @@ struct PartySetupStepView: View {
     }
 
     private var membersSection: some View {
-        SectionCard("Members") {
-            if let party {
-                let members = store.members(of: party.id)
-                VStack(spacing: 8) {
-                    ForEach(members) { member in
-                        HStack(spacing: 12) {
-                            UserAvatar(profile: member, size: 32)
-
-                            VStack(alignment: .leading, spacing: 2) {
-                                Text(member.shownName)
-                                    .font(.body)
-                                    .foregroundStyle(DS.Color.textPrimary)
-                                Text(member.id == party.createdBy ? "Host" : "Member")
-                                    .font(.caption2)
-                                    .foregroundStyle(DS.Color.textSecondary)
-                            }
-
-                            Spacer()
-                        }
-                        .padding(.vertical, DS.Spacing.sm)
-
-                        if member.id != members.last?.id {
-                            Divider()
-                        }
-                    }
-                }
-            } else {
-                HStack(spacing: 12) {
-                    ZStack {
-                        Circle()
-                            .fill(DS.Color.accentSoft)
-                            .frame(width: 40, height: 40)
-                        Image(systemName: "person.badge.shield.checkmark")
-                            .font(.system(size: 17, weight: .semibold))
-                            .foregroundStyle(DS.Color.accentText)
-                    }
-
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text("You (Host)")
-                            .font(.subheadline.weight(.semibold))
-                            .foregroundStyle(DS.Color.textPrimary)
-
-                        Text("You will be able to share invite links and invite friends as soon as this party is created.")
-                            .font(.caption)
-                            .foregroundStyle(DS.Color.textSecondary)
-                    }
-                }
-                .padding(.vertical, DS.Spacing.sm)
-            }
-        }
-    }
-
-    private var invitesSection: some View {
-        DSSection("Invited") {
+        DSSection("Members") {
             Card(layout: .list) {
-                ForEach(invites) { invite in
-                    PendingInviteRow(invite: invite, store: store)
+                if let party {
+                    ForEach(store.members(of: party.id)) { member in
+                        ListRow(
+                            member.shownName,
+                            meta: member.id == party.createdBy ? "Host" : "Member",
+                            leading: .avatar(Avatar(profile: member, size: .sm, decorative: true))
+                        )
+                    }
+                } else {
+                    // One line of meta (ListRow README); invites open once the party exists.
+                    ListRow(
+                        "You",
+                        meta: "Host \u{00B7} invite people once the party is created",
+                        leading: .avatar(Avatar(name: store.myProfile?.shownName ?? "You", size: .sm, decorative: true))
+                    )
                 }
             }
         }

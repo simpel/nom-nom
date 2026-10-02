@@ -62,7 +62,7 @@ struct RecipeDetailView: View {
                 ProgressView()
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else {
-                EmptyState("Recipe is gone", message: "It was deleted.")
+                EmptyState("Recipe is gone", message: "It was deleted.", layout: .screen)
                     .padding(.horizontal, DS.Spacing.gutter)
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
                     .background(DS.Color.bg)
@@ -110,7 +110,7 @@ struct RecipeDetailView: View {
             }
         }
         .sheet(isPresented: $showGlobalLeaderboard) {
-            RecipeLeaderboardSheet(highlightedRecipeID: recipe?.id)
+            RecipeLeaderboardSheet()
         }
     }
 

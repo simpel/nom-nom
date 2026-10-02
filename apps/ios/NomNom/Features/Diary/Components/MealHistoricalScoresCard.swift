@@ -17,11 +17,12 @@ struct MealHistoricalScoresCard: View {
 
     var body: some View {
         if history.isEmpty {
-            SectionCard("Historical scores", trailing: trailing) {
-                Text("First time with this recipe").textStyle(.sansMd, weight: .semibold)
-                Text("This is the first time your dinner party has logged this meal. Comparisons will appear on future occasions.")
-                    .textStyle(.sansSm, tone: .secondary)
-                    .fixedSize(horizontal: false, vertical: true)
+            // EmptyState "Not enough data yet": no action, waiting is the answer.
+            DSSection("Historical scores", trailing: trailing) {
+                EmptyState(
+                    "First time with this recipe",
+                    message: "Comparisons show up the next time your dinner party logs it."
+                )
             }
         } else {
             DSSection("Historical scores", trailing: trailing) {

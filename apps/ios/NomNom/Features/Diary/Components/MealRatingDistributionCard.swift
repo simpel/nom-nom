@@ -27,9 +27,12 @@ struct MealRatingDistributionCard: View {
     var body: some View {
         SectionCard("Who thought what", trailing: trailing) {
             if ratings.isEmpty {
-                Text("No dinner party members have submitted a rating for this meal yet.")
-                    .textStyle(.sansMd, tone: .secondary)
-                    .fixedSize(horizontal: false, vertical: true)
+                // README case "Nobody has rated": inside the SectionCard, so `plain`.
+                EmptyState(
+                    "Nobody has rated this",
+                    message: "Ratings show up here as the party rates the meal.",
+                    layout: .plain
+                )
             } else {
                 SegmentedBar(segments, label: "Rating distribution")
             }

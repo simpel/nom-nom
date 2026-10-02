@@ -1,7 +1,8 @@
 import SwiftUI
 
-/// Empty state for the Meals tab when no meals have been recorded yet: the current
-/// party's name (when there is one) over an EmptyState with a "Log a meal" button.
+/// The Meals tab before anything is logged: EmptyState `screen` (README case "First
+/// run — nothing logged") with "Log a meal". The current party, when there is one, is
+/// named in the message.
 struct MealsEmptyStateView: View {
     @Environment(FoodStore.self) private var store
     let onLogMeal: () -> Void
@@ -9,19 +10,13 @@ struct MealsEmptyStateView: View {
     var body: some View {
         GeometryReader { proxy in
             ScrollView {
-                VStack(spacing: DS.Spacing.s4) {
-                    if let partyName = store.currentParty?.name {
-                        Text(partyName)
-                            .textStyle(.serifLg)
-                            .multilineTextAlignment(.center)
-                    }
-
-                    EmptyState(
-                        "Log your first meal",
-                        message: message,
-                        action: EmptyStateAction(title: "Log a meal", appearance: .solid, perform: onLogMeal)
-                    )
-                }
+                EmptyState(
+                    "No meals yet",
+                    message: message,
+                    icon: "fork.knife",
+                    layout: .screen,
+                    action: EmptyStateAction("Log a meal", perform: onLogMeal)
+                )
                 .padding(.horizontal, DS.Spacing.gutter)
                 .frame(maxWidth: .infinity, minHeight: proxy.size.height)
             }
@@ -34,9 +29,9 @@ struct MealsEmptyStateView: View {
 
     private var message: String {
         if let party = store.currentParty {
-            return "No meals have been served to \(party.name) yet. Log tonight\u{2019}s dinner and serve it to this party."
+            return "Log tonight\u{2019}s dinner and serve it to \(party.name)."
         }
-        return "Snap a photo of tonight\u{2019}s dinner, give it a name and mark how it went down."
+        return "Log tonight\u{2019}s dinner and it will show up here."
     }
 }
 

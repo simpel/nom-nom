@@ -21,14 +21,14 @@ struct InsightsTabView: View {
         NavigationStack {
             Group {
                 if selectedParty == nil {
-                    VStack {
-                        Text("No Party Selected")
-                            .font(.title2.weight(.bold))
-                        Text("Please select a dinner party from the Parties tab to view insights.")
-                            .foregroundStyle(.secondary)
-                            .multilineTextAlignment(.center)
-                            .padding()
-                    }
+                    EmptyState(
+                        "No party picked",
+                        message: "Pick a dinner party from the Parties tab to see its insights.",
+                        layout: .screen
+                    )
+                    .padding(.horizontal, DS.Spacing.gutter)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .background(DS.Color.bg)
                 } else if isLoading {
                     ProgressView("Loading Insights...")
                         .controlSize(.large)

@@ -24,9 +24,9 @@ struct EmailSignInView: View {
                 developmentHint
                 #endif
             }
-            .padding(.horizontal, 24)
+            .padding(.horizontal, DS.Spacing.s6)
             .padding(.bottom, DS.Spacing.screenBottom)
-            .frame(maxWidth: 460)
+            .frame(maxWidth: DS.Container.sm)
             .frame(maxWidth: .infinity)
         }
         .background(DS.Color.bg)
@@ -41,18 +41,19 @@ struct EmailSignInView: View {
 
     private var header: some View {
         PageHeader(
-            title: auth.step == .email ? "Sign in with email" : "Check your inbox",
+            auth.step == .email ? "Sign in with email" : "Check your inbox",
             subtitle: auth.step == .email
                 ? "Enter your email and we'll send you a six-digit verification code."
-                : "Enter the code we mailed to complete sign in."
+                : "Enter the code we mailed to complete sign in.",
+            align: .center
         )
-        .padding(.top, DS.Spacing.screenTop)
+        .padding(.top, DS.Spacing.s5)
     }
 
     // MARK: - Step one: Email
 
     private var emailStep: some View {
-        VStack(spacing: 14) {
+        VStack(spacing: DS.Spacing.s3_5) {
             Input(
                 "you@example.com",
                 text: $email,
@@ -91,14 +92,14 @@ struct EmailSignInView: View {
                 action: send
             )
         }
-        .animation(.easeInOut(duration: 0.2), value: auth.errorMessage)
+        .animation(DS.Motion.state, value: auth.errorMessage)
         .onAppear { emailFocused = true }
     }
 
     // MARK: - Step two: Code
 
     private func codeStep(sentTo address: String) -> some View {
-        VStack(spacing: 14) {
+        VStack(spacing: DS.Spacing.s3_5) {
             Text("We sent a code to **\(address)**")
                 .font(.subheadline)
                 .multilineTextAlignment(.center)
@@ -115,10 +116,10 @@ struct EmailSignInView: View {
                     }
                 }
             )
-            .padding(.vertical, 4)
+            .padding(.vertical, DS.Spacing.s1)
 
             if auth.errorMessage != nil {
-                HStack(spacing: 6) {
+                HStack(spacing: DS.Spacing.s1_5) {
                     Text("The code didn't work.")
                         .foregroundStyle(DS.Color.textSecondary)
 
@@ -164,7 +165,7 @@ struct EmailSignInView: View {
             }
             #endif
         }
-        .animation(.easeInOut(duration: 0.2), value: auth.errorMessage)
+        .animation(DS.Motion.state, value: auth.errorMessage)
     }
 
     // MARK: - Actions
@@ -194,7 +195,7 @@ struct EmailSignInView: View {
                     .font(.footnote)
                     .foregroundStyle(DS.Color.textSecondary)
             }
-            .padding(12)
+            .padding(DS.Spacing.s3)
             .background {
                 RoundedRectangle(cornerRadius: AppRadius.card, style: .continuous)
                     .fill(DS.Color.sunken)

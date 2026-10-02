@@ -102,25 +102,26 @@ struct RecipeSearchView: View {
     @ViewBuilder
     private var searchResultsView: some View {
         if rawSearchResults.isEmpty {
-            ContentUnavailableView {
-                Label("No matching recipes", systemImage: "magnifyingglass")
-            } description: {
-                Text("Try searching with a different term, ingredient, or cuisine.")
-            } actions: {
-                AppButton("Clear Search", variant: .neutral, style: .outlined, size: .md) {
-                    searchText = ""
-                }
-            }
+            // README cases "Search found nothing" and "Filters found nothing": the whole
+            // results view is empty, so `screen`.
+            EmptyState(
+                "No recipes match \u{2018}\(trimmedSearch)\u{2019}",
+                message: "Try a shorter search, an ingredient or a cuisine.",
+                icon: "magnifyingglass",
+                layout: .screen,
+                action: EmptyStateAction("Clear search", variant: .secondary) { searchText = "" }
+            )
+            .padding(.horizontal, DS.Spacing.gutter)
         } else if displayedSearchResults.isEmpty {
-            ContentUnavailableView {
-                Label("No filtered results", systemImage: "line.3.horizontal.decrease")
-            } description: {
-                Text("No recipes match your current sort and filter criteria.")
-            } actions: {
-                AppButton("Reset Filters", variant: .neutral, style: .outlined, size: .md) {
+            EmptyState(
+                "Nothing with these filters",
+                message: "Effort and rating narrow the list the most.",
+                layout: .screen,
+                action: EmptyStateAction("Clear filters", variant: .secondary) {
                     filterCriteria = RecipeFilterCriteria()
                 }
-            }
+            )
+            .padding(.horizontal, DS.Spacing.gutter)
         } else {
             ScrollView {
                 VStack(alignment: .leading, spacing: DS.Spacing.md) {
@@ -144,8 +145,8 @@ struct RecipeSearchView: View {
 
             Spacer()
         }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 4)
+        .padding(.horizontal, DS.Spacing.gutter)
+        .padding(.vertical, DS.Spacing.s1)
     }
 }
 

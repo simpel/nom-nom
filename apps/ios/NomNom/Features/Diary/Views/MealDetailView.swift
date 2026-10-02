@@ -38,7 +38,8 @@ struct MealDetailView: View {
                     ProgressView()
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
                 } else {
-                    EmptyState("Meal is gone", message: "It looks like this meal was deleted.")
+                    EmptyState("Meal is gone", message: "It looks like this meal was deleted.", layout: .screen)
+                        .padding(.horizontal, DS.Spacing.gutter)
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
                 }
             }

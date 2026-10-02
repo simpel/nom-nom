@@ -17,17 +17,20 @@ struct DinnerPartiesView: View {
             ScrollView {
                 VStack(spacing: DS.Spacing.section) {
                     if !isSheet {
-                        PageHeading(title: "Parties", actionTitle: "New party") {
-                            showingCreateSheet = true
-                        }
+                        PageHeader("Parties", actions: [
+                            EmptyStateAction("New party", icon: "plus") { showingCreateSheet = true }
+                        ])
                     }
 
                     PendingPartyInvitesSection()
 
                     if store.myParties.isEmpty {
-                        CurrentPartyHeroView(party: nil) {
-                            showingCreateSheet = true
-                        }
+                        // README case "A list the person will fill": the action that fills it.
+                        EmptyState(
+                            "No dinner parties yet",
+                            message: "Start one to log meals and rate them together.",
+                            action: EmptyStateAction("New party") { showingCreateSheet = true }
+                        )
                     } else {
                         VStack(spacing: DS.Spacing.md) {
                             ForEach(store.myParties) { party in
@@ -76,7 +79,7 @@ struct DinnerPartiesView: View {
                     }
                 } else {
                     ToolbarItem(placement: .topBarTrailing) {
-                        HStack(spacing: 12) {
+                        HStack(spacing: DS.Spacing.s3) {
                             NotificationBellButton()
                             SettingsDropdownMenu()
                         }

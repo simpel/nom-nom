@@ -19,9 +19,9 @@ struct RecipesView: View {
         NavigationStack {
             ScrollView {
                 VStack(alignment: .leading, spacing: DS.Spacing.sectionCompact) {
-                    PageHeading(title: "Recipes", actionTitle: "Add recipe") {
-                        showingCreateSheet = true
-                    }
+                    PageHeader("Recipes", actions: [
+                        EmptyStateAction("Add recipe", icon: "plus") { showingCreateSheet = true }
+                    ])
                     .padding(.horizontal, DS.Spacing.screenHorizontal)
 
                     if store.myRecipes.isEmpty {
@@ -52,7 +52,7 @@ struct RecipesView: View {
                                     Spacer()
                                 }
                                 .padding(.horizontal, DS.Spacing.screenHorizontal)
-                                .padding(.vertical, 4)
+                                .padding(.vertical, DS.Spacing.s1)
                                 
                                 MinimalRecipeGrid(recipes: store.favoriteRecipes.sorted { $0.createdAt > $1.createdAt })
                             }

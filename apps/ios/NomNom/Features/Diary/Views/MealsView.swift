@@ -27,9 +27,9 @@ struct MealsView: View {
                 } else {
                     ScrollView {
                         VStack(alignment: .leading, spacing: DS.Spacing.section) {
-                            PageHeading(title: "Meals", actionTitle: "Add meal") {
-                                editorTarget = .new
-                            }
+                            PageHeader("Meals", actions: [
+                                EmptyStateAction("Add meal", icon: "plus") { editorTarget = .new }
+                            ])
 
                             MealsToRateSection()
 
@@ -39,7 +39,7 @@ struct MealsView: View {
                                     data: section.meals,
                                     dividerPadding: 0,
                                     leadingIcon: { _ in "trash.fill" },
-                                    leadingColor: { _ in .red },
+                                    leadingColor: { _ in DS.Color.destructive },
                                     onLeadingAction: { meal in
                                         mealToRemove = meal
                                     }

@@ -1,7 +1,7 @@
 import SwiftUI
 
 /// "What they're eating": the party's meals as a two-column grid of PhotoCard `md`
-/// tiles with their verdict Badge, dish name and date. Empty, an in-card EmptyState.
+/// tiles with their verdict Badge, dish name and date. Empty, an EmptyState `card`.
 struct PartyMealsSection: View {
     let party: Party
 
@@ -23,8 +23,8 @@ struct PartyMealsSection: View {
 
     var body: some View {
         if partyMeals.isEmpty {
-            SectionCard("What they\u{2019}re eating") {
-                EmptyState("No meals logged yet", alignment: .leading, style: .inCard)
+            DSSection("What they\u{2019}re eating") {
+                EmptyState("No meals yet", message: "Meals served to this party will show up here.")
             }
         } else {
             DSSection("What they\u{2019}re eating", trailing: countText) {

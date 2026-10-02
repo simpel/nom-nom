@@ -9,8 +9,8 @@ struct ProfileMealHistorySection: View {
 
     var body: some View {
         if meals.isEmpty {
-            SectionCard("Meal History", trailing: "\(meals.count)") {
-                EmptyState("No meals logged yet", alignment: .leading, style: .inCard)
+            DSSection("Meal History", trailing: "\(meals.count)") {
+                EmptyState("No meals yet", message: "Meals this person has eaten will show up here.")
             }
         } else {
             DSSection("Meal History", trailing: "\(meals.count)") {
@@ -21,7 +21,7 @@ struct ProfileMealHistorySection: View {
                         } label: {
                             row(for: meal)
                         }
-                        .buttonStyle(.plain)
+                        .buttonStyle(ListRowButtonStyle())
                     }
                 }
             }
@@ -29,18 +29,13 @@ struct ProfileMealHistorySection: View {
     }
 
     private func row(for meal: Meal) -> ListRow {
-        var row = ListRow(
+        ListRow(
             store.dishName(forMeal: meal),
             meta: meal.eatenOn.formatted(.dateTime.day().month(.abbreviated).year()),
-            leading: .photo(.meal(meal))
+            leading: .photo(.meal(meal)),
+            trailing: userRating(for: meal).map { .badge(.verdict($0, size: .sm)) },
+            chevron: true
         )
-        var trailing: [ListRowTrailing] = []
-        if let rating = userRating(for: meal) {
-            trailing.append(.badge(.verdict(rating, size: .sm)))
-        }
-        trailing.append(.chevron)
-        row.trailing = trailing
-        return row
     }
 
     private func userRating(for meal: Meal) -> Reaction? {

@@ -122,12 +122,11 @@ struct RecipePickerSheet: View {
             RecipeCategoryGridSection(onSelectRecipe: selectRecipe)
 
             if store.recipes.isEmpty {
-                ContentUnavailableView {
-                    Label("No recipes yet", systemImage: "fork.knife")
-                } description: {
-                    Text("Type the name of what you cooked to create your first recipe.")
-                }
-                .padding(.top, 40)
+                EmptyState(
+                    "No recipes yet",
+                    message: "Type the name of what you cooked to create your first recipe."
+                )
+                .padding(.horizontal, DS.Spacing.gutter)
             }
         }
         .padding(.top, DS.Spacing.screenTop)
@@ -139,50 +138,27 @@ struct RecipePickerSheet: View {
     private var searchContent: some View {
         VStack(alignment: .leading, spacing: DS.Spacing.section) {
             if !exactMatchExists {
-                Button {
-                    onSelectNewRecipe(trimmedSearch)
-                    dismiss()
-                } label: {
-                    HStack(spacing: 12) {
-                        Image(systemName: "plus.circle.fill")
-                            .font(.title3)
-                            .foregroundStyle(DS.Color.accent)
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text("Add “\(trimmedSearch)”")
-                                .font(.body.weight(.semibold))
-                                .foregroundStyle(DS.Color.textPrimary)
-                            Text("Create as a new recipe")
-                                .font(.caption)
-                                .foregroundStyle(DS.Color.textSecondary)
-                        }
-                        Spacer()
-                    }
-                    .padding(14)
-                    .background {
-                        RoundedRectangle(cornerRadius: AppRadius.card, style: .continuous)
-                            .fill(DS.Color.panel)
-                            .overlay {
-                                RoundedRectangle(cornerRadius: AppRadius.card, style: .continuous)
-                                    .strokeBorder(DS.Color.line.opacity(0.35), lineWidth: 0.5)
-                            }
+                Card(layout: .list) {
+                    ListRow("Add \u{201C}\(trimmedSearch)\u{201D}", meta: "Create as a new recipe", leading: .icon("plus")) {
+                        onSelectNewRecipe(trimmedSearch)
+                        dismiss()
                     }
                 }
-                .buttonStyle(.plain)
-                .padding(.horizontal, 16)
+                .padding(.horizontal, DS.Spacing.gutter)
             }
 
             if !matchingRecipes.isEmpty {
-                VStack(alignment: .leading, spacing: 10) {
+                VStack(alignment: .leading, spacing: DS.Spacing.s2_5) {
                     SectionHeader("Matching Recipes", trailingText: "\(matchingRecipes.count) found")
                     MinimalRecipeGrid(recipes: matchingRecipes, onSelect: selectRecipe)
                 }
             } else if exactMatchExists {
-                ContentUnavailableView {
-                    Label("No matching recipes", systemImage: "magnifyingglass")
-                } description: {
-                    Text("No recipes match “\(trimmedSearch)”.")
-                }
-                .padding(.top, 40)
+                // README case "Search found nothing"; the only way out is editing the search.
+                EmptyState(
+                    "No recipes match \u{2018}\(trimmedSearch)\u{2019}",
+                    message: "Try a shorter search."
+                )
+                .padding(.horizontal, DS.Spacing.gutter)
             }
         }
         .padding(.top, DS.Spacing.screenTop)

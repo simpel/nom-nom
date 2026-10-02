@@ -59,30 +59,29 @@ struct CategoryRecipesView: View {
                     CategoryHeroCoverCard(category: currentCategoryItem, count: 0)
                         .padding(.top, DS.Spacing.sm)
 
-                    ContentUnavailableView {
-                        Label("No \(displayName) recipes", systemImage: "fork.knife")
-                    } description: {
-                        Text("Add a new recipe categorized under \(displayName) to see it here.")
-                    } actions: {
-                        AppButton("Create Recipe", variant: .primary, style: .normal, size: .md) {
-                            showingCreateSheet = true
-                        }
-                    }
+                    EmptyState(
+                        "No \(displayName) recipes yet",
+                        message: "Add a \(displayName) recipe and it will show up here.",
+                        action: EmptyStateAction("Add recipe") { showingCreateSheet = true }
+                    )
+                    .padding(.horizontal, DS.Spacing.gutter)
+                    Spacer(minLength: 0)
                 }
             } else if displayedRecipes.isEmpty {
                 VStack(spacing: DS.Spacing.md) {
                     CategoryHeroCoverCard(category: currentCategoryItem, count: rawRecipes.count)
                         .padding(.top, DS.Spacing.sm)
 
-                    ContentUnavailableView {
-                        Label("No matching recipes", systemImage: "line.3.horizontal.decrease")
-                    } description: {
-                        Text("Try loosening your effort or rating filters.")
-                    } actions: {
-                        AppButton("Reset Filters", variant: .neutral, style: .outlined, size: .md) {
+                    // README case "Filters found nothing".
+                    EmptyState(
+                        "Nothing with these filters",
+                        message: "Effort and rating narrow the list the most.",
+                        action: EmptyStateAction("Clear filters", variant: .secondary) {
                             filterCriteria = RecipeFilterCriteria()
                         }
-                    }
+                    )
+                    .padding(.horizontal, DS.Spacing.gutter)
+                    Spacer(minLength: 0)
                 }
             } else {
                 ScrollView {
@@ -187,8 +186,8 @@ struct CategoryRecipesView: View {
                 showingFilterSheet = true
             }
         }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 4)
+        .padding(.horizontal, DS.Spacing.gutter)
+        .padding(.vertical, DS.Spacing.s1)
     }
 }
 

@@ -30,44 +30,35 @@ struct RatingListEntry: Identifiable {
     var onTap: (() -> Void)?
 }
 
-/// A RatingList row on ListRow's rhythm (`spacing-14` minimum, `spacing-3` padding).
-/// Title: name `sans-md` + role `sans-sm` `text-tertiary`. Trailing: the change vs
-/// their usual (delta Badge `sm`, a `secondary` "New" Badge, or "As usual" / "Not rated
-/// yet" in `text-tertiary`) and ScoreValue `xs` right-aligned in `spacing-9`. No avatar.
-///
-/// ListRow (Interim) takes a plain-string title, so the two-style title is drawn here.
+/// A RatingList row: a ListRow (RatingList README: "Rows are ListRows"). Title: name
+/// `sans-md` + role `sans-sm` `text-tertiary`. Trailing: the change vs their usual
+/// (delta Badge `sm`, a `secondary` "New" Badge, or "As usual" / "Not rated yet" in
+/// `text-tertiary`) and ScoreValue `xs` right-aligned in `spacing-9`. No avatar, no chevron.
 struct RatingRow: View {
     let entry: RatingListEntry
 
-    var body: some View {
-        if let onTap = entry.onTap {
-            Button(action: onTap) { content }
-                .buttonStyle(AppPressableButtonStyle())
-        } else {
-            content
-        }
-    }
+    private var name: String { entry.isViewer ? "You" : entry.name }
 
-    private var content: some View {
-        HStack(spacing: DS.Spacing.s3) {
+    var body: some View {
+        // README: "the note and the score share its `trailing` slot".
+        ListRow(
+            accessibilityTitle: name,
+            trailing: .view {
+                HStack(spacing: DS.Spacing.s2) {
+                    change
+                    trailing
+                }
+            },
+            chevron: false,
+            action: entry.onTap
+        ) {
             HStack(alignment: .firstTextBaseline, spacing: DS.Spacing.s1_5) {
-                Text(entry.isViewer ? "You" : entry.name).textStyle(.sansMd)
+                Text(name).textStyle(.sansMd)
                 if let role = entry.role {
                     Text(role).textStyle(.sansSm, tone: .tertiary)
                 }
             }
-            .lineLimit(1)
-
-            Spacer(minLength: 0)
-
-            // bundle.css `.nn-row__trail`: the note and the score share the trailing slot.
-            HStack(spacing: DS.Spacing.s2) {
-                change
-                trailing
-            }
-            .layoutPriority(1)
         }
-        .ratingListRowMetrics()
     }
 
     @ViewBuilder

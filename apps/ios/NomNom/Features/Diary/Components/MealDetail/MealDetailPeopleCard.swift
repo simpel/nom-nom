@@ -21,21 +21,20 @@ struct MealDetailPeopleCard: View {
             } label: {
                 ListRow(
                     "Cooked by",
+                    value: cookName,
                     leading: .avatar(Avatar(
                         name: cookName,
                         photoPath: store.profiles[meal.createdBy]?.photoPath,
-                        size: .sm
+                        size: .sm,
+                        decorative: true
                     )),
-                    trailing: .value(cookName), .chevron
+                    chevron: true
                 )
             }
-            .buttonStyle(AppPressableButtonStyle())
+            .buttonStyle(ListRowButtonStyle())
 
             if let party = parties.first {
-                ListRow(
-                    "Dinner party",
-                    trailing: .value(parties.map(\.name).joined(separator: ", ")), .chevron
-                ) {
+                ListRow("Dinner party", value: parties.map(\.name).joined(separator: ", ")) {
                     onOpenParty(party)
                 }
             }

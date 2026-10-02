@@ -22,7 +22,7 @@ struct CreatePartySheet: View {
         NavigationStack {
             ScrollView {
                 VStack(spacing: DS.Spacing.section) {
-                    PageHeader(title: "New dinner party")
+                    PageHeader("New dinner party", size: .sm)
 
                     PartyFormFields(photoDraft: $photoDraft, name: $name, about: $about) {
                         if canProceed { navigateToSetup = true }

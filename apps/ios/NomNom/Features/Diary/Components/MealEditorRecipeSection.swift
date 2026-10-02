@@ -74,7 +74,7 @@ struct MealEditorRecipeSection: View {
                 EmptyState(
                     "No recipe yet",
                     message: "Choose what you cooked from your recipes, or start a new one.",
-                    action: EmptyStateAction(title: "Pick a recipe", appearance: .solid, perform: onPickRecipe)
+                    action: EmptyStateAction("Pick a recipe", perform: onPickRecipe)
                 )
             } else {
                 selectedRecipe

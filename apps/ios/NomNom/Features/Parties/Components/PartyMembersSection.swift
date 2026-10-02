@@ -34,7 +34,7 @@ struct PartyMembersSection: View {
                 row(for: member)
                     .padding(.horizontal, DS.Spacing.s4)
             }
-            .buttonStyle(AppPressableButtonStyle())
+            .buttonStyle(ListRowButtonStyle())
         }
         .alert(
             "Remove Member?",
@@ -72,11 +72,13 @@ struct PartyMembersSection: View {
 
     private func row(for member: Profile) -> ListRow {
         let stats = store.partyAverageScore(partyID: party.id, for: .account(member.id), limit: 20)
-        let leading = ListRowLeading.avatar(Avatar(profile: member, size: .sm))
-        if let stats {
-            return ListRow(member.shownName, meta: role(of: member), leading: leading, trailing: .score(stats.score), .chevron)
-        }
-        return ListRow(member.shownName, meta: role(of: member), leading: leading, trailing: .chevron)
+        return ListRow(
+            member.shownName,
+            meta: role(of: member),
+            leading: .avatar(Avatar(profile: member, size: .sm)),
+            trailing: stats.map { .score($0.score) },
+            chevron: true
+        )
     }
 }
 
