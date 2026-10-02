@@ -1,9 +1,10 @@
 import SwiftUI
 
-/// A recipe's detail screen, composed top to bottom on `bg`: PhotoStrip, DetailHeader
-/// (cuisine, name, last cooked, facts, "Use in a meal"), the household and health
-/// ScoreCards, ingredients, steps, recipe pages, cooking history and details.
-/// The owner gets Edit / Delete / Generate photo in the toolbar menu.
+/// A recipe's detail screen ("Nom Nom iOS" canvas), top to bottom on `bg`: DetailHeader
+/// (cuisine, name, last cooked, facts, "Start cooking" / "Use in a meal"), PhotoStrip,
+/// the party and health ScoreCards, ingredients with servings, steps, cooking history,
+/// recipe pages and details. The toolbar has the favourite heart and the PageMenu,
+/// whose recipe group gives the owner Generate photo / Edit / Delete.
 struct RecipeDetailView: View {
     let recipeID: UUID
     var showCloseButton: Bool = false
@@ -24,6 +25,7 @@ struct RecipeDetailView: View {
     @State var showHealthRationale = false
     @State var showGlobalLeaderboard = false
     @State var isGeneratingPhoto = false
+    @State var showCookMode = false
 
     init(recipeID: UUID, showCloseButton: Bool = false) {
         self.recipeID = recipeID
@@ -68,7 +70,7 @@ struct RecipeDetailView: View {
                     .background(DS.Color.bg)
             }
         }
-        .screenTitle(recipe?.name ?? "Recipe", displayMode: .inline)
+        .screenTitle(showCloseButton ? (recipe?.name ?? "Recipe") : "", displayMode: .inline)
         .task { await loadRecipeAndHealth() }
         .toolbar { toolbarContent }
         .alert("Delete this recipe?", isPresented: $confirmDeleteRecipe) {
@@ -112,21 +114,29 @@ struct RecipeDetailView: View {
         .sheet(isPresented: $showGlobalLeaderboard) {
             RecipeLeaderboardSheet()
         }
+        .fullScreenCover(isPresented: $showCookMode) {
+            if let recipe {
+                CookModeView(recipe: recipe) { showMealEditor = true }
+            }
+        }
     }
 
     private func content(for recipe: Recipe) -> some View {
         let isOwner = recipe.ownerID == store.userID
         return ScrollView {
             VStack(alignment: .leading, spacing: DS.Spacing.block) {
+                RecipeDetailHeader(
+                    recipe: recipe,
+                    history: history,
+                    onStartCooking: { showCookMode = true },
+                    onUseInMeal: { showMealEditor = true }
+                )
+
                 PhotoStrip(
                     photos: allPhotos.map { .remote(path: $0, bucket: SupabaseConfig.recipeBucket, cuisine: recipe.cuisine) },
                     onAddPhoto: isOwner ? { showEditSheet = true } : nil,
                     onSelect: { selectedPhotoIndex = $0 }
                 )
-
-                RecipeDetailHeader(recipe: recipe, history: history) {
-                    showMealEditor = true
-                }
 
                 RecipeScoreCards(
                     recipe: recipe,
@@ -137,21 +147,21 @@ struct RecipeDetailView: View {
                 )
 
                 if !recipe.ingredients.isEmpty {
-                    RecipeIngredientsCard(ingredients: recipe.ingredients)
+                    RecipeIngredientsCard(ingredients: recipe.ingredients, serves: recipe.serves)
                 }
 
                 if !recipe.instructions.isEmpty {
                     RecipeStepsCard(instructions: recipe.instructions)
                 }
 
-                if !recipe.recipePhotoPaths.isEmpty {
-                    RecipePhotosCard(recipe: recipe)
-                }
-
                 if !history.isEmpty {
                     RecipeHistorySection(history: history) { meal in
                         selectedMealForDetail = meal
                     }
+                }
+
+                if !recipe.recipePhotoPaths.isEmpty {
+                    RecipePhotosCard(recipe: recipe)
                 }
 
                 RecipeDetailInfoCard(recipe: recipe)

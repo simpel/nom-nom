@@ -33,7 +33,7 @@ struct RecipeScoreCards: View {
             ScoreCard(
                 score: store.averageScore(forDish: recipe.id),
                 layout: .compact,
-                title: "Household score",
+                title: "\(store.currentParty?.name ?? "Household") score",
                 count: householdCount,
                 action: onOpenLeaderboard
             )

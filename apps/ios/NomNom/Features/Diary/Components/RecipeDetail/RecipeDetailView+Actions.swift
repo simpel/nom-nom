@@ -11,7 +11,7 @@ extension RecipeDetailView {
             }
         }
 
-        ToolbarItemGroup(placement: .topBarTrailing) {
+        ToolbarItem(placement: .topBarTrailing) {
             if let recipe {
                 let isFavorite = store.isFavorite(recipe: recipe)
                 Button {
@@ -22,27 +22,26 @@ extension RecipeDetailView {
                 }
                 .accessibilityLabel(isFavorite ? "Remove from Favourites" : "Add to Favourites")
             }
+        }
 
-            if let recipe, recipe.ownerID == store.userID {
-                Menu {
-                    if recipe.photoPaths.isEmpty {
-                        Button {
-                            generatePhoto(for: recipe)
-                        } label: {
-                            Label(isGeneratingPhoto ? "Generating Photo…" : "Generate Photo with AI", systemImage: "sparkles")
-                        }
-                        .disabled(isGeneratingPhoto)
+        ToolbarItem(placement: .topBarTrailing) {
+            PageMenu { recipeMenu }
+        }
+    }
+
+    /// The page menu's recipe group: Generate photo, Edit and Delete for the owner.
+    @ViewBuilder
+    var recipeMenu: some View {
+        if let recipe, recipe.ownerID == store.userID {
+            Section {
+                if recipe.photoPaths.isEmpty {
+                    Button(isGeneratingPhoto ? "Generating photo\u{2026}" : "Generate photo", systemImage: "sparkles") {
+                        generatePhoto(for: recipe)
                     }
-                    Button { showEditSheet = true } label: {
-                        Label("Edit", systemImage: "pencil")
-                    }
-                    Button(role: .destructive) { confirmDeleteRecipe = true } label: {
-                        Label("Delete recipe", systemImage: "trash")
-                    }
-                } label: {
-                    Image(systemName: "ellipsis").fontWeight(.semibold)
+                    .disabled(isGeneratingPhoto)
                 }
-                .accessibilityLabel("Recipe options")
+                Button("Edit recipe", systemImage: "pencil") { showEditSheet = true }
+                Button("Delete recipe", systemImage: "trash", role: .destructive) { confirmDeleteRecipe = true }
             }
         }
     }

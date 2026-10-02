@@ -450,6 +450,10 @@ verify_jwt = true
 [functions.analyze-recipe-health]
 verify_jwt = true
 
+# Called by a signed-in user for cook mode: per-step timers and ingredients via Vercel AI Gateway.
+[functions.analyze-recipe-steps]
+verify_jwt = true
+
 # Called by a signed-in user for recipes, or by a database trigger webhook for categories.
 # Uses verify_jwt = false so database triggers over pg_net with x-webhook-secret can invoke it.
 [functions.generate-dish-photo]

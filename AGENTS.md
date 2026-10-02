@@ -144,7 +144,7 @@ When creating or moving a file, use this decision tree:
 
 Never add new domain methods directly into `FoodStore.swift`.
 - `FoodStore.swift` contains only core `@Observable` state declarations and shared initialization.
-- Group all async actions, database calls, and domain-specific mutations into `FoodStore+<Domain>.swift` files (one per domain — `Meals`, `Recipes`, `RecipeAI`, `RecipeDiscovery`, `RecipeFavorites`, `Parties`, `PartyFollowing`, `PartyInvites`, `PartyScores`, `Ratings`, `Health`, `Insights`, `Notifications`, `Inbox`, `MealInviteReminders`, `Categories`, `Eaters`, `Profile`, `Loading`, `Errors`, `Preview`).
+- Group all async actions, database calls, and domain-specific mutations into `FoodStore+<Domain>.swift` files (one per domain — `Meals`, `Recipes`, `RecipeAI`, `RecipeDiscovery`, `RecipeSafeBets`, `RecipeSteps`, `RecipeFavorites`, `Parties`, `PartyFollowing`, `PartyInvites`, `PartyScores`, `Ratings`, `Health`, `Insights`, `Notifications`, `Inbox`, `MealInviteReminders`, `Categories`, `Eaters`, `Profile`, `Loading`, `Errors`, `Preview`).
 - When adding a new domain concept, create a new `FoodStore+<NewDomain>.swift` extension file rather than growing an existing one or `FoodStore.swift` itself.
 
 ---

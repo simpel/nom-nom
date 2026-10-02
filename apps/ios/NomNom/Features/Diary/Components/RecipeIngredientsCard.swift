@@ -1,75 +1,54 @@
 import SwiftUI
 
-/// Two-column ingredients table (amount, ingredient) in a SectionCard. Tapping a row
-/// checks it off (struck through, `text-tertiary`) for the cook.
+/// A recipe's ingredients ("Nom Nom iOS" canvas): a Section "Ingredients" with the
+/// count, over a list Card. When the recipe says how many it serves, the first row is
+/// "Servings" with a ValueStepper `sm`, and every amount scales with it
+/// (QuantityScaler; free-text amounts stay as written). Each ingredient is a ListRow
+/// `sm`: the name and the amount as its tabular value.
 struct RecipeIngredientsCard: View {
     let ingredients: [RecipeIngredient]
+    /// The recipe's own servings; nil hides the stepper and shows amounts as written.
+    var serves: Int?
 
-    @State private var completedIDs: Set<UUID> = []
+    @State private var servings: Int
+
+    init(ingredients: [RecipeIngredient], serves: Int? = nil) {
+        self.ingredients = ingredients
+        self.serves = serves
+        self._servings = State(initialValue: serves ?? 1)
+    }
 
     private var validIngredients: [RecipeIngredient] {
         ingredients.filter { !$0.isEmpty }
     }
 
-    private let amountColumnWidth = DS.Spacing.s20
+    private var factor: Double {
+        guard let serves, serves > 0 else { return 1 }
+        return Double(servings) / Double(serves)
+    }
 
     var body: some View {
         if !validIngredients.isEmpty {
-            SectionCard("Ingredients", trailing: "\(validIngredients.count) items") {
-                VStack(spacing: 0) {
-                    HStack(spacing: DS.Spacing.s3) {
-                        SectionHeader(title: "Amount")
-                            .frame(width: amountColumnWidth, alignment: .trailing)
-                        SectionHeader(title: "Ingredient")
-                            .frame(maxWidth: .infinity, alignment: .leading)
+            DSSection("Ingredients", trailing: "\(validIngredients.count)") {
+                Card(layout: .list) {
+                    if serves != nil {
+                        ListRow(
+                            "Servings",
+                            trailing: .view {
+                                ValueStepper(value: $servings, in: 1...24, size: .sm, label: "Servings")
+                            }
+                        )
                     }
-                    .padding(.bottom, DS.Spacing.s2)
-
                     ForEach(validIngredients) { item in
-                        hairline
-                        ingredientRow(for: item)
+                        ListRow(item.trimmedIngredient, value: amount(item), size: .sm)
                     }
                 }
             }
         }
     }
 
-    private var hairline: some View {
-        Rectangle()
-            .fill(DS.Color.line)
-            .frame(height: DS.BorderWidth.hairline)
-            .accessibilityHidden(true)
-    }
-
-    private func ingredientRow(for item: RecipeIngredient) -> some View {
-        let isCompleted = completedIDs.contains(item.id)
-
-        return Button {
-            withAnimation(DS.Motion.state) {
-                if isCompleted {
-                    completedIDs.remove(item.id)
-                } else {
-                    completedIDs.insert(item.id)
-                }
-            }
-        } label: {
-            HStack(alignment: .firstTextBaseline, spacing: DS.Spacing.s3) {
-                Text(item.formattedAmount)
-                    .strikethrough(isCompleted, color: DS.Color.textTertiary)
-                    .textStyle(.sansSm, tone: isCompleted ? .tertiary : .accent, weight: .semibold, numeric: true)
-                    .frame(width: amountColumnWidth, alignment: .trailing)
-                    .lineLimit(1)
-
-                Text(item.trimmedIngredient)
-                    .strikethrough(isCompleted, color: DS.Color.textTertiary)
-                    .textStyle(.sansSm, tone: isCompleted ? .tertiary : .primary)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .multilineTextAlignment(.leading)
-            }
-            .padding(.vertical, DS.Spacing.s2)
-            .contentShape(Rectangle())
-        }
-        .buttonStyle(.plain)
-        .accessibilityAddTraits(isCompleted ? .isSelected : [])
+    private func amount(_ item: RecipeIngredient) -> String {
+        let quantity = QuantityScaler.scale(item.trimmedQuantity, by: factor)
+        return [quantity, item.trimmedMeasurement].filter { !$0.isEmpty }.joined(separator: " ")
     }
 }

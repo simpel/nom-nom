@@ -41,21 +41,28 @@ struct RecipeShelf<Item: Identifiable, Cell: View>: View {
 
     var body: some View {
         if !items.isEmpty {
-            DSSection(title, trailing: trailing) {
-                // README: "touch gets the platform's own" bar, so the system indicator stays on.
-                ScrollView(.horizontal) {
-                    LazyHStack(alignment: .top, spacing: DS.Spacing.s3) {
-                        ForEach(items) { cell($0) }
-                    }
-                    .scrollTargetLayout()
-                }
-                .scrollTargetBehavior(.viewAligned)
-                .contentMargins(.horizontal, bleed, for: .scrollContent)
-                .padding(.horizontal, -bleed)
+            if title.isEmpty {
+                track
+            } else {
+                DSSection(title, trailing: trailing) { track }
             }
         } else if let emptyState {
             DSSection(title, trailing: trailing) { emptyState }
         }
+    }
+
+    /// An empty `title` drops the header (a shelf inside a titled ProSection).
+    private var track: some View {
+        // README: "touch gets the platform's own" bar, so the system indicator stays on.
+        ScrollView(.horizontal) {
+            LazyHStack(alignment: .top, spacing: DS.Spacing.s3) {
+                ForEach(items) { cell($0) }
+            }
+            .scrollTargetLayout()
+        }
+        .scrollTargetBehavior(.viewAligned)
+        .contentMargins(.horizontal, bleed, for: .scrollContent)
+        .padding(.horizontal, -bleed)
     }
 }
 

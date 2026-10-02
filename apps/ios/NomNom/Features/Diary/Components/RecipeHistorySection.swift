@@ -28,7 +28,7 @@ struct RecipeHistorySection: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: DS.Spacing.block) {
-            Timeline(occasions: occasions) { id in
+            Timeline(occasions: occasions, title: "Every time \(store.currentParty?.name ?? "you") cooked it") { id in
                 if let meal = history.first(where: { AnyHashable($0.id) == id }) {
                     onSelectMeal(meal)
                 }
