@@ -198,8 +198,6 @@ struct PartyPatch: Encodable {
     var photo_path: String?
 }
 
-typealias PartyNamePatch = PartyPatch
-
 struct NewPartyMember: Encodable {
     let party_id: UUID
     let user_id: UUID

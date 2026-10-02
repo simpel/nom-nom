@@ -58,14 +58,15 @@ struct Input: View {
         self.externalFocus = isFocused
     }
 
-    /// A labelled field; `plain` by default because labelled fields sit in Card list rows.
+    /// A labelled field. `soft` by default like every field (README: "`appearance`
+    /// (`soft` default; `plain` only inside a Card list row)"); pass `.plain` in a row.
     init(
         label: String,
         placeholder: String = "",
         text: Binding<String>,
         leadingIcon: AppInputIcon? = nil,
         trailingIcon: AppInputIcon? = nil,
-        appearance: InputAppearance = .plain,
+        appearance: InputAppearance = .soft,
         clearable: Bool = false,
         hint: String? = nil,
         error: String? = nil,
@@ -129,12 +130,16 @@ struct Input: View {
             }
 
             if showsClear {
+                // bundle.css `.nn-field__clear`: `text-tertiary`, pulled `spacing-2` into
+                // the side padding.
                 AppButton(
                     icon: "xmark",
                     accessibilityLabel: "Clear text",
                     variant: .secondary,
-                    appearance: .ghost
+                    appearance: .ghost,
+                    iconColor: DS.Color.textTertiary
                 ) { text = "" }
+                .padding(.trailing, -DS.Spacing.s2)
             }
 
             if let trailingIcon { iconView(trailingIcon, leading: false) }
@@ -189,5 +194,3 @@ struct Input: View {
         .accessibilityHidden(true)
     }
 }
-
-typealias AppInput = Input

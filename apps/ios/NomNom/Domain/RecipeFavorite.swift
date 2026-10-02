@@ -30,11 +30,7 @@ struct RecipeFavorite: Identifiable, Hashable, Decodable {
     }
 }
 
-typealias DishFavorite = RecipeFavorite
-
 struct NewRecipeFavorite: Encodable {
     let recipe_id: UUID
     let user_id: UUID
 }
-
-typealias NewDishFavorite = NewRecipeFavorite

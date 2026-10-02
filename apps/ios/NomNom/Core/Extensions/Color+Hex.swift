@@ -24,13 +24,13 @@ extension UIColor {
 extension Color {
     /// A fixed sRGB colour from a hex string.
     init(hex: String) {
-        self.init(uiColor: UIColor(hex: hex))
+        self.init(uiColor: UIColor(hex: hex)) // ds-lint:allow hex parser
     }
 
     /// A colour that resolves per interface style. `dark` defaults to `light`.
     init(light: String, dark: String? = nil) {
-        let lightColor = UIColor(hex: light)
-        let darkColor = UIColor(hex: dark ?? light)
+        let lightColor = UIColor(hex: light) // ds-lint:allow hex parser
+        let darkColor = UIColor(hex: dark ?? light) // ds-lint:allow hex parser
         self.init(uiColor: UIColor { traits in
             traits.userInterfaceStyle == .dark ? darkColor : lightColor
         })

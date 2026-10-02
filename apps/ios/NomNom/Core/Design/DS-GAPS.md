@@ -1,222 +1,117 @@
 # Design system gaps (iOS)
 
-Source of truth: https://claude.ai/artifact/4jeEJ91V5eRxpDn8NtqNgK
+Source of truth: https://claude.ai/artifact/4jeEJ91V5eRxpDn8NtqNgK, vendored at `design-system/` (version in `design-system/VERSION`).
 
-This file lists UI patterns that exist in the app but not in the design system. Each one either has a single interim component in `Core/Components/Interim/` or is kept as-is with tokens applied. Remove an entry once the design system covers it and the interim component has been replaced.
+This is the hand-off for design-system work. It has four parts:
 
-## Interim components (consolidated, built from DS primitives, to be designed)
+- **A. Open gaps**: patterns the app needs that the DS does not define yet.
+- **B. Spec contradictions**: places where the snapshot disagrees with itself, and the call taken for each.
+- **C. Values with no token**: values the spec gives that have no token, and what iOS draws instead.
+- **D. Resolved**: gaps that have closed, kept as history.
 
-| # | Component | What it covers | Replaces |
-| --- | --- | --- | --- |
-| 1 | ~~**ListRow**~~ | **Resolved in R3a**: v3 component, `Composites/ListRow.swift` (components/ListRow/README.md) | MealRow, profile/recipe/meal history rows, leaderboard row, member rows, party rows, notification row, settings nav rows, info rows |
-| 2 | ~~**PendingInviteRow**~~ | **Resolved in R3a**: removed in v3; ListRow's Invite shape (`Features/Parties/Components/PartyInviteRow` + `PartyInvitesSection`) | 4 invite-row copies (party invite, members sheet, party setup, household) |
-| 3 | ~~**EmptyState**~~ | **Resolved in R3a**: v3 component, `Composites/EmptyState.swift`, layouts screen / card / plain / row | ContentUnavailableView uses, "No … yet" cards, arc empty states |
-| 4 | ~~**SegmentedBar + legend**~~ | Resolved in R3b: `Composites/SegmentedBar` per `components/SegmentedBar/README.md` | ~~4 hand-built segmented bars~~ |
-| 5 | ~~**ValueStepper**~~ | Resolved in R3b: `Composites/ValueStepper` | ~~Recipe servings~~ |
-| 6 | **TrendChart** (+ tooltip card) | Single or multi-series line/area chart with scrub | InsightsTrendChart, PartyTasteTrendChart, PartyTrendTooltipCard |
-| 7 | **MediaViewerSheet** | Full-screen paged photo viewer, dark chrome | 3 viewer sheets |
-| 8 | **PhotoStrip edit mode** | Reorder, remove, "Cover" badge, add | Photo pickers in the meal, recipe, scanner and party-cover editors |
-| 9 | ~~**LabeledPhotoCard**~~ | Resolved in R3b: `Composites/LabeledPhotoCard` | ~~CategoryGridCard, CategoryHeroCoverCard, cuisine picker tiles~~ |
-| 10 | ~~**RecipeShelf**~~ | Resolved in R3b: `Composites/RecipeShelf` | ~~4 shelf variants~~ |
-| 11 | ~~**PartyCard**~~ | Resolved in R3b: `Composites/PartyCard` (fed by `Features/Parties/Components/DinnerPartyCard`) | ~~PartyCard, CurrentPartyHeroView~~ |
-| 12 | ~~**Notification unread state**~~ | **Resolved in R3a**: ListRow `unread` (a `primary` dot in the gutter + semibold title, never a tinted ground). NotificationRow itself has not moved onto it yet | Tinted notification card |
-| 13 | ~~**PageHeader**~~ | **Resolved in R3a**: v3 component, `Layout/PageHeader.swift`; PageHeading deleted | PageHeader, PageHeading |
-| 14 | **Form blocks** | Name fields, party form, visibility toggle card, account/danger actions | Duplicated form cards |
-| 15 | **Sheet step toolbars** | "Next" and step-commit toolbars for multi-step sheets (native; the convention needs documenting) | 8 hand-written toolbars |
+The rule when the spec disagrees with itself: the component README wins over older root-README prose and over `index.d.ts` / `api/`. `bundle.css` settles anything a README leaves out. A call that breaks this rule says why.
 
-### Interim files and token stretches
+## A. Open gaps (need DS work)
 
-- ~~`Interim/ListRow.swift` + `ListRowSlots.swift` (#1), `PendingInviteRow.swift` (#2), `EmptyState.swift` (#3)~~ (moved to `Composites/` or deleted in R3a). SegmentedBar, ValueStepper, LabeledPhotoCard, RecipeShelf and PartyCard (was `PartySummaryCard`) moved to `Composites/` in R3b.
-- ~~PhotoCard `.thumb`~~ and ~~`.cover`~~: removed in R2b (see "v3 spec calls made in R2b").
-- ~~Category hero cover~~ and ~~PartySummaryCard score~~: resolved in R3b (see "v3 spec calls made in R3b").
-- **Invite feedback** (was PendingInviteRow): "Invitation resent" and errors show in PartyInviteRow's meta line instead of alerts, in the meta's `text-secondary` (ListRow has no meta colour axis).
-### Notes: charts, media and form blocks (rows 6, 7, 8, 14, 15)
+### Interim components (`Core/Components/Interim/`, built only from DS primitives)
 
-- **6 TrendChart**: `Interim/TrendChart` + `TrendChartTooltip` + `TrendSeries`. Values are 0–1 and read ×100. The total line is `primary`, member lines are dashed `chart-series` by stable index, gridlines are `line`. With no member series it draws a `primary` area under the total. Drag to scrub (native `chartXSelection`); the tooltip is a `sm` Card with `shadow-lg` and clears on release. `visibleDays` makes the x axis scroll. For the DS to decide: stroke widths and dash (today 3pt total, 1.5pt dashed members), what an 8th member gets (the palette repeats), and whether the tooltip should stay after release.
-- **7 MediaViewerSheet**: `Interim/MediaViewerSheet` + `MediaViewerPage` + `MediaViewerSource` (stored paths, a PhotosDraft or a RecipeDraft). Paged TabView, "Photo 2 of 5" title, `.mediaViewerStyle()`.
-- **8 PhotoStrip edit mode**: `Composites/PhotoStripEditor` (+ `Tile`, `Item`, `+Drafts`). PhotoCard `sm` tiles. Remove is an AppButton `secondary elevated sm` xmark. The first photo gets a "Cover" Badge `elevated sm`, or every photo gets "Page N" for recipe pages. "Camera" (AppButton) and "Library" (PhotosPicker with an AppButtonLabel) add photos; empty, it shows PhotoStrip's dashed add tile. Reordering uses each tile's context menu and accessibility actions (Make cover, Move left, Move right) rather than drag, because a drag fights the horizontal scroll. Recipe page photos can't be reordered: RecipeDraft keeps stored and new pages in separate lists. The DS should say whether it wants drag-to-reorder. PartyDetailHeader's cover picker moves in Phase 4.
-- **14 Form blocks**: `Interim/NameFieldsCard`, `PartyFormFields`, `VisibilityToggleCard`, `AccountActionsSection` and `View+AccountConfirmations` (the one copy of the sign-out and delete-account alerts). Two feature-level blocks are used only by Diary: `Features/Diary/Components/RatingBlocks` (taste and rotation) and `RecipeBasicsForm` (cover, name, cooking time, cuisine).
-- **15 Step toolbars**: `.sheetNextToolbar` (CreateRecipeSheet, RecipeEditSheet, CreatePartySheet) and `.stepCommitToolbar` (MealVerdictStepView, RecipeDetailsStepView, PartySetupStepView). MealDetailsStepView still writes its own toolbar, because one trailing slot switches between "Next" (new meal) and the checkmark (editing).
+| Component | Covers | What the DS needs to decide |
+| --- | --- | --- |
+| **TrendChart** (+ `TrendChartTooltip`, `TrendSeries`) | Insights and party taste trends: total line `primary`, members dashed `chart-series` by stable index, `line` gridlines, a `primary` area when there are no members, drag to scrub, tooltip = Card `sm` + `shadow-lg`, cleared on release | Stroke widths and dash (today total `border-thick`, members dashed `border-hairline`); what an 8th member gets (the palette repeats); whether the tooltip stays after release |
+| **MediaViewerSheet** (+ `MediaViewerPage`, `MediaViewerSource`) | The one full-screen photo viewer: paged, "Photo 2 of 5" title, `.mediaViewerStyle()` (`stone-1000` ground, bar at `opacity-90`) | A dark-chrome viewer spec, including the bar's opacity (no 85% step) |
+| **Form blocks**: `NameFieldsCard`, `PartyFormFields`, `VisibilityToggleCard`, `AccountActionsSection`, `View+AccountConfirmations` | Name fields, party form, visibility toggle card, sign-out / delete-account actions and their alerts. Diary-only: `RatingBlocks`, `RecipeBasicsForm` | Form-section patterns |
 
-## Kept as-is, tokens applied only (the DS lists these as "not synced")
+### Composites with an interim mode
 
-- Selectors: BurnerMeter, CookingTimeSelector, RotationGoalSelector, TactileOptionPicker, TactileTasteSelector (household eater rows)
-- Swipe rows: SwipeActionRow, SwipeableListCard
-- Pro: ProGate, paywall package cards, feature checklist
-- Auth: OTPCodeField, AppleSignInButton
-- Recipe content: ingredients table (checkable, two columns), numbered steps on a rail, and their editors
-- EditorialTextView: sentence segments with positive/negative tones; those tones are not in the DS
-- Menus: CreateDropdownMenu, SettingsDropdownMenu, NotificationBellButton (unread dot)
-- Photo plumbing: CameraPicker, PhotoTools, RemoteMealPhoto, RecipeImageView, WrappingHStack, LabeledWrappingRow
-- RecipeScannerOverlay (floating progress panel)
+- **PhotoStrip edit mode** (`Composites/PhotoStripEditor` + `Tile`, `Item`, `+Drafts`). It uses PhotoCard `sm` tiles. Remove is AppButton `secondary elevated` icon-only (the one 44pt size). The first tile carries a "Cover" Badge `elevated sm`; recipe pages are badged "Page N". "Camera" is an AppButton and "Library" a PhotosPicker with an AppButtonLabel. Reorder works through the context menu and accessibility actions (Make cover, Move left, Move right) rather than drag, which would fight the horizontal scroll. Recipe page photos cannot be reordered. **The DS should say** whether it wants drag-to-reorder.
+- **Sheet step toolbars**: `.sheetNextToolbar` (first step: close + "Next") and `.stepCommitToolbar` (pushed step: checkmark or spinner, no interactive dismiss while saving). MealDetailsStepView still writes its own toolbar, because one trailing slot switches between "Next" for a new meal and the checkmark when editing. **The DS should document** multi-step sheets.
 
-## Removed with no replacement
+### Not synced (kept, tokens applied; the DS lists these as "not synced")
 
-- Arc photo decks (ArcHeroHeaderView, HeroPhotoDeck*, MiniPhotoArcDeck, CategoryPhotoArcView, EmptyPhotoDeckHeroView, MealPhotoDeckArcView, AuthHeroArcView). PhotoStrip and PhotoCard replace them. If empty states should have artwork, the DS needs to define it. The last unreferenced files (`Legacy/ArcHeroHeaderView`, `EmptyPhotoDeckHeroView`, `HeroPhotoCardView`, `HeroPhotoDeckModels`, `HeroPhotoDeckView`) were deleted in R3b, with the unreferenced `Legacy/DividedScoreCard`, `RecipeVerdictBadge` and `SubtleCapsuleLabel`.
-- Emoji avatars for eaters. Avatar initials replace them.
+- **Selectors**: CookingTimeSelector, RotationGoalSelector and TactileTasteSelector, all on the shared `OptionCell`. TactileTasteSelector is in the household eater rows; there is no compact DS taste control for a list row. PendingRatingCard's six `spacing-12` steps need 328pt and scroll sideways on an iPhone SE.
+- **Swipe rows**: SwipeActionRow and SwipeableListCard.
+- **Pro**: ProGate (a `pro-soft` Card shape, bottom fade, `shadow-lg` blur standing in for a blur token), PaywallPackageCard and the feature checklist. The DS should define a gate.
+- **Auth**: OTPCodeField (Input's ground and borders at `spacing-14`, a `border-thick` caret blinking over `duration-layout`) and AppleSignInButton (Apple's control at the `lg` height). The DS should define a code field.
+- **Recipe content**: the checkable two-column ingredients table, numbered steps on a rail (`primary-soft` disc), and their editors. There is no numbered-step component.
+- **EditorialTextView**: positive / negative fragments in `primary-text` / `warning-text` at `serif-xs`.
+- **Menus and chrome**: SettingsDropdownMenu, and NotificationBellButton's unread dot (ListRow's dot, offset `spacing-0.5`; there is no toolbar badge). A toolbar text action ("Mark all read") is `sans-sm` semibold `primary-text`, which no rule covers.
+- **Pickers in rows**: RecipeFilterSheet rows end in a native `.menu` Picker. There is no select / picker row.
+- **RecipeScannerOverlay**: a `scrim` plus a Card with `shadow-lg`, capped at `spacing-72`.
+- **Plumbing**: CameraPicker, PhotoTools, WrappingHStack.
 
-## v3 spec calls made in R0 (tokens generated from `design-system/tokens.json`)
+### Questions for the DS
 
-Where the vendored v3 snapshot contradicts itself, these are the calls taken. Revisit when the DS is updated.
+- **Avatar and Dynamic Type.** The circle is fixed, so initials can clip at accessibility sizes. Should Avatar scale?
+- **Thumbnail in a row.** ListRow's photo lead is PhotoCard `xs` (80pt), so photo rows are about 96pt tall in a `spacing-14` row. Confirm.
+- **Category cover crop.** LabeledPhotoCard `lg landscape` is 4:3, but "Imagery" says only 1:1 and 4:5 crops are safe. Confirm.
+- **"Current row" state.** The recipe leaderboard can no longer mark the recipe it was opened from.
+- **Field success state.** EmailInviteCard's "Invitation sent" sits in the hint slot with no colour.
+- **ListRow meta.** There is one meta line and one ink, so meal notes, notification dates and the "Invitation resent" feedback lose their emphasis.
+- **Value step.** The README gives no type step for a ListRow `value` or a SegmentedBar inline figure. Both are `sans-sm` tabular.
+- **Onboarding progress.** The Bar has no width in the navigation bar; it takes `spacing-20`.
+- **AppButton `reaction solid`.** Neither README says how it looks ("A solid fill never carries text"). Only `soft` is used; `solid` inks `reaction-text` on the fill, as bundle.css does.
+- **Semibold serif.** Only Newsreader Regular is bundled, so `weight: .semibold` has no effect on serif steps.
+- **TextArea over `maxLength`.** The README doesn't say whether the hint turns `destructive-text`. Today only the border and the counter change.
+- **PhotoStrip empty tile title ink.** The README gives "'Add a photo' `sans-sm` semibold"; bundle.css sets the tile to `text-secondary`. It is drawn in `text-primary`.
+- **Timeline rail.** bundle.css draws the 2px rail at `top: spacing-2.5` (centre 11), one point below the dot's centre (10). iOS centres the rail on the dot.
 
-- **`line-placeholder`** is named by `components/PhotoStrip/README.md` ("1.5px dashed `line-placeholder`") but does not exist in `tokens.json`. The main README says "the dashed placeholder tile … use `line-control`", so the Add photo tile uses `lineControl`.
-- **Hairline width.** Avatar and PhotoCard READMEs say "0.5px `line` ring at 30%"; `tokens.json` `border-hairline` says "Never 0.5px". `.dsHairline()` draws `border-hairline` (1pt).
-- **Focus / error borders.** README "Motion and states" says 1.5px at `opacity-80`; `components/Input/README.md` says 2px full-strength. Component README wins: the `DS.Opacity.focus` alias is gone and fields use `primary` / `destructive` at full strength.
-- **Tracking.** `api/tokens.md` lists six tracking steps (incl. `tracking-wider` 0.05em for badges); `tokens.json` has only `tracking-tight` and `tracking-widest`. `api/tokens.md` is stale against `tokens.json` (it also still says `bg` #f2f3f5); `tokens.json` wins, so Badge has no tracking. Type styles carry no tracking either, so `tracking-tight` is no longer applied automatically to serif-lg/xl (opt in with `trackingTight`).
-- **Dynamic Type.** The README table maps `sans-sm` → `.footnote` (13pt default) and `sans-md` → `.body` (17pt), while the scale says 14 / 16. Sizes come from `tokens.json`; only the text style each scales relative to comes from the table.
-- **Photo overlays.** No token or README defines white-on-photo or the 45% black disc. PhotoCard's heart now uses the v3 heart (AppButton `secondary elevated`: `panel` ground, `destructive-text` filled heart); LabeledPhotoCard text and the media viewer spinner use `stone-0`, the ramp step under README "Imagery"'s `stone-1000` scrim.
-- **Featured ProgressBar track** (`primary` at 18%) is not in v3: Bar README says "Ground is `track`".
+## B. Spec contradictions and the call taken
 
-## v3 spec calls made in R1a (AppButton, Badge, Avatar, Toggle, Text, SectionHeader)
+| Topic | The disagreement | Call |
+| --- | --- | --- |
+| Hairline width | Avatar and PhotoCard READMEs: "0.5px `line` ring at 30%"; tokens.json `border-hairline`: "Never 0.5px" | `.dsHairline()` = `border-hairline` (1pt) |
+| Focus / error borders | Root "Motion and states": 1.5px at `opacity-80`; Input README: 2px full strength | Input: `border-thick`, `primary` / `destructive` |
+| Tracking | `api/tokens.md` lists six steps (incl. `tracking-wider` for badges); tokens.json has `tight` and `widest` | tokens.json. Badge has no tracking; `tracking-tight` is opt-in (`trackingTight`) |
+| Dynamic Type sizes | The README table maps `sans-sm` to `.footnote` (13) and `sans-md` to `.body` (17); the scale says 14 / 16 | Sizes from tokens.json; only the `relativeTo:` style from the table |
+| AppButton heights | `index.d.ts` / api: 36 / 44 / 48; README: xs, sm and md are all 44 | README: xs/sm/md 44, lg 48, 44pt floor |
+| Icon-only size | bundle.css: `lg` icon-only is 48 wide; README: "all four sizes are the same 44 × 44 circle" | README. The icon-only API takes no size |
+| Outline border | AppButton README: "1.5px `{role}` border (`line-strong` for secondary)"; root README: meaningful lines are `line-control` at ≥3:1; bundle.css: `border-hairline`, secondary `line-control` | Against README-wins: `border-hairline` + `line-control`, because 1.5px has no token and `line-strong` fails 3:1 |
+| Elevated button ink | README: `text-primary`; bundle.css: `{role}-text` except secondary | README |
+| SectionHeader trailing | README: `trailingVariant` `secondary` · `primary`; `index.d.ts`: `trailingTone` `tertiary` · `accent` | README values under the Swift label `trailingTone` |
+| Field rest border | Input "One style" table: "1px `line`"; its "Shape" and state table, and bundle.css: `line-control` | 1pt `line-control` at rest, 1pt `line` when disabled |
+| Error border colour | Input README: `destructive`; bundle.css: `destructive-text` | `destructive`; label, icon and message in `destructive-text` |
+| TextArea states | TextArea "Rules": 1.5px at `opacity-80`, disabled `opacity-50`; its "States": "Identical to Input" | Input's states; no opacity on fields |
+| Input read-only ground | `index.d.ts`: "panel ground, text-secondary"; Input README: "The ground never changes" | README: `sunken`, no border, `text-secondary` |
+| Bar on a featured card | bundle.css tints the track inside a primary card; Bar README: "Ground is `track`" | Always `track` |
+| TasteScoreSelector role | Its "Toggle buttons, not radios" section vs its "Rules" (`role="radio"`) | Buttons with the selected trait; tap again to clear |
+| TasteScoreSelector step size | AppButton: icon-only is 44; TasteScoreSelector: "AppButton `size="lg"` (`spacing-12` circle)" | 48pt steps via `AppButtonLabel(iconOnlyDiameter: DS.Spacing.s12)` |
+| DetailHeader facts | Its Rules: "Facts are Badges"; its "Facts are not badges" section | Facts are text joined " · "; badges hold statuses only |
+| PhotoCard formats | PhotoCard: square and 3:4; root "Imagery": "1:1 and 4:5 are safe" | PhotoCard's formats; the 4:5 `.cover` is gone |
+| Favourite heart ink | PhotoCard README: `destructive-text` when on; bundle.css: `primary-text` | README |
+| PhotoStrip collapsed Add | PhotoStrip: "a `spacing-9` icon-only circle"; AppButton: 44pt floor | 44pt |
+| `line-placeholder` | Named by PhotoStrip; not in tokens.json; root README: the dashed tile uses `line-control` | `line-control`, `border-thick` dashed (bundle.css) |
+| SegmentedBar key | Its README: "Not a Badge"; `index.d.ts`, the root composition table and its zero rule: Badge | Swatch (`radius-sm`) |
+| SegmentedBar `lg` | SegmentedBar: `lg` = `spacing-4`; Bar stops at `xl` (`spacing-3`) | `lg` maps to Bar `xl` (12) |
+| LabeledPhotoCard `lg` radius | bundle.css: `radius-2xl` on every size; PhotoCard `lg`: `radius-3xl` | PhotoCard's radius, so the scrim matches the photo |
+| ListRow title weight | `index.d.ts`: semibold when pressable or unread; README: unread only | Both |
+| Notification unread | Plan: SectionCard featured; ListRow README: "a dot — never a tinted ground" | ListRow `unread` dot |
+| Scroll bars | Root README / PhotoStrip: "absent on touch, where the platform draws its own. Never hide the scrollbar outright" | Horizontal scrollers (PhotoStrip, editor, RecipeShelf, Timeline, PartyCard) keep the system indicator |
+| Verdict word vs numeral | Badge: "≥85 Amazing" on the 0–100 numeral; `Reaction(score:)` thresholded the raw 0–1 score, so 0.849 read "85 · Great" | `Reaction(score:)` thresholds the rounded numeral |
 
-- **AppButton heights.** `index.d.ts` / `api/components/AppButton.md` say "Heights spacing-9 / 11 / 12 (36 / 44 / 48)"; the AppButton README says xs, sm and md are all `spacing-11` and "No button is smaller than 44 × 44". README wins: xs/sm/md 44, lg 48, 44pt minimum width and height on every button.
-- **Icon-only size.** bundle.css draws an `lg` icon-only button 48 wide (`spacing-12`); the README says "Icon-only, all four sizes are the same 44 × 44 circle." README wins: the icon-only API takes no size. A deprecated sized icon-only initialiser keeps `lg` at 48 for TasteScoreSelector until R2 (bundle.css also sets its steps to `spacing-12`).
-- **Outline border.** AppButton README: "`outline` = clear + `{role}-text` + 1.5px `{role}` border (`line-strong` for secondary)". The root README ("A line that carries meaning is `line-control` … Outline buttons … hold at least 3:1") and bundle.css (`--bw: var(--border-hairline)`, secondary `--role-border: var(--line-control)`) disagree, and 1.5px has no token ("the only two widths the system draws" are 1 and 2). Called for `border-hairline` + `line-control`, against the usual README-wins rule, because the README value has no token and fails 3:1; DS-V2-DELTA.md made the same colour call. The old 1.5pt `DSAppearance.outlineWidth` is deprecated and still read by TasteScoreSelector, PhotoStripAddButton, AppInputTypes and TrendChart.
-- **Elevated button ink.** AppButton README: "`elevated` = `panel` + `shadow-xs` + `text-primary`"; bundle.css uses `{role}-text` except for secondary. README wins: every elevated button inks in `text-primary`.
-- **Focus ring and hover.** "focus 2px `focus-ring`, 2px offset" and hover are web/pointer rules; iOS draws its own focus for Full Keyboard Access and has no hover on touch. Not drawn.
-- **Loading.** README: "A pending button keeps focus … drops the handler rather than `disabled`". `isLoading` no longer disables the button; it swallows the tap. The spinner uses `ControlSize` `.mini` (xs, sm) / `.small` (md, lg); bundle.css sizes it 1em with a `border-thick` ring, which `ProgressView` cannot draw.
-- **Badge `title`** (tooltip) is `tooltip:` in Swift (`.help` + accessibility hint), because `title` reads as the label. `Badge.rank` is kept: the Badge README recipes list Rank, though ListRow draws a rank as `Text serif-xs`.
-- **Avatar ring.** README: "0.5px `line` ring at 30% on both." Drawn with `.dsHairline` (1pt, see "Hairline width" above). Its `minimumScaleFactor(0.5)` was invented and is gone; at accessibility sizes the initials can now clip inside the fixed circle. The DS should say whether Avatar scales with Dynamic Type.
-- **Toggle name.** `Toggle` collides with `SwiftUI.Toggle`, so it is `AppToggle` (README: "Names carry a prefix only where they collide with SwiftUI"). It is a `ToggleStyle` (`DSToggleStyle`) on `SwiftUI.Toggle` rather than an AppButton, so VoiceOver keeps switch semantics. `nativeToggle()` now draws the DS switch with its label beside it and is deprecated: the README says "No label beside the switch", so those Features call sites move into ListRow in R3/Phase 5.
-- **SectionHeader trailing.** README / `api` card: `trailingVariant` `secondary` · `primary`; `index.d.ts`: `trailingTone` `tertiary` · `accent`. README wins on the values (`SectionHeaderTrailingTone.secondary` / `.primary`); the Swift label stays `trailingTone`. The README does not name the figure's type step: it is `sans-xs`, the label's own step (previously `sans-sm` when inset).
-- **SectionHeader title weight.** README: "a `sans-xs` title in `text-tertiary`"; only `variant: 'primary'` is semibold. The default semibold is dropped. The title icon is `text-sm` (bundle.css `.nn-section-header__title .nn-icon`).
-- **SectionHeader inset.** v3 removes `inset`; the v3 initialiser is `SectionHeader(title:)`. The unlabelled `SectionHeader(_:…, inset:)` is deprecated and still draws the old `spacing-2` inset by default, so Composites, Card, SectionCard and DSSection (not in R1a) keep their layout until R2 moves the inset into DSSection.
-- **Navigation bar titles.** No README names a style for UIKit navigation titles. Inline titles use `sans-lg` semibold (README: "sans-lg … sheet and reason titles … (each sets semibold itself)"); large titles use `serif-lg` ("page and hero titles").
-- **`Font.newsreader`.** The free-size `newsreader(size:)` (default 32) and its per-text-style size table are gone. `newsreader(_: DS.TextStyle)` replaces them; the deprecated `newsreader(_: Font.TextStyle)` maps through the README Dynamic Type table, with anything below `.title3` set as `serif-xs` ("Nothing is set in serif below text-xl"). EditorialTextView's 22pt highlights became `serif-sm` (24pt, the step relative to `.title2`).
-## v3 spec calls made in R1b (Bar, ScoreValue, Input, TextArea)
+## C. Values with no token
 
-- **ProgressBar removed.** Every call site now uses `Bar`; `Primitives/ProgressBar.swift` is deleted (no shim). SegmentedBar draws its track with `Bar(segments:)` and takes `BarSize`.
-- **Bar on a featured card.** `bundle.css` tints the track inside a primary card (`.nn-card[data-variant="primary"] .nn-bar { background: color-mix(in srgb, var(--primary) 20%, var(--panel)) }`), but `components/Bar/README.md` says "Ground is `track`" and no token holds the mix. Bar always draws `track`.
-- **Bar chart index out of range.** The README says chart colours go "by a stable index, never cycled" but not what happens past `chart-series7`. `BarSegment.Ink.chart(n)` past the palette falls back to `primary` (README: "A block with no `reaction` or `color` is `primary`").
-- **Field rest border: `line` vs `line-control`.** Input README "One style" table says "1px `line`"; its "Shape" section says "`line-control`, never a half-pixel and never `line`" (WCAG 1.4.11), its state table says rest "1px `line-control`", and `bundle.css` `.nn-field` uses `--line-control`. TextArea README says "rest 1px `line`, hover 1px `line-control`" but shares Input's CSS. Call: rest is 1pt `line-control` for both; disabled is 1pt `line`.
-- **Error border colour.** Input README: "2px `destructive`"; `bundle.css` uses `--destructive-text` for the error ring. Component README wins: `destructive`. Label, icon and message ink are `destructive-text` (both agree).
-- **TextArea focus / disabled.** TextArea README "Rules" still says "1.5px `primary` / `destructive` at `opacity-80`" and "Disabled: `opacity-50`", contradicting its own "States" ("Identical to Input") and Input's README. Call: Input's states; no opacity on fields.
-- **Hover.** Input README's hover state (1px `text-tertiary`) is "pointer only"; not drawn on iOS.
-- **Alert glyph.** Input README: "the message prints below with an alert glyph"; no symbol is named. iOS uses `exclamationmark.circle` at `sans-xs` (`bundle.css` `.nn-field__msg .nn-icon { font-size: var(--text-xs) }`).
-- **`InputAppearance.outline` / `AppInputStyle.outlined`** both draw `soft` (README: "`.outlined` … dropped"); `.outline` is a deprecated alias.
+| README text | iOS draws |
+| --- | --- |
+| BottomSheet: "`scrim` behind" | The system sheet dimming (SwiftUI exposes no colour) |
+| BottomSheet grabber, no radius named | `radius-sm` (bundle.css), `spacing-2` from the top; the system indicator's VoiceOver resize action is lost |
+| TasteScoreSelector: "a 1.5px fill ring" | `border-thick` (tokens.json: "selected ring") |
+| TasteScoreSelector: "Spring 0.25 / 0.75" | The README values, quoted in code (no spring token) |
+| Root "Motion and states": "Selection springs (≈0.25s)" | `.spring(duration: duration-layout)` |
+| Toggle: "Pressing scales the knob", no duration | `duration-state` for slide and scale (bundle.css transition) |
+| PhotoCard: "`portrait` and `landscape` are both 3:4" | `shortEdgeRatio = 3/4` (`ds-lint:allow`); xs portrait 60 and lg portrait 216 fall off the spacing scale |
+| PhotoScrim / "Imagery": `stone-1000` at 72%, clear at 32% | The quoted values (`ds-lint:allow`) |
+| PhotoStrip dashed border: no dash pattern | `spacing-1` on / `spacing-1` off |
+| Photo overlays (white on photo) | `stone-0`, the ramp step under the `stone-1000` scrim |
+| Input: "an alert glyph" | `exclamationmark.circle` at `sans-xs` |
+| AppButton loading: spinner 1em with a `border-thick` ring | `ProgressView` `.mini` (xs, sm) / `.small` (md, lg) |
+| ProGate blur | `shadow-lg`'s blur radius |
+| Bar chart index past `chart-series7` | `primary` ("A block with no `reaction` or `color` is `primary`") |
+| RatingList row value: no step | `serif-xs` tabular (SegmentedBar rows), `sans-sm` in the general shape |
+| Hover, focus ring with offset | Pointer-only rules; not drawn on iOS |
 
-## v3 spec calls made in R2a (Card, Section, SectionCard, ScoreCard, BottomSheet, TasteScoreSelector, RatingList)
+## D. Resolved
 
-- **Card gap.** bundle.css `.nn-card { --nn-gap: 0 }`; the README says "a component sets the gap". `Card(spacing:)` now defaults to 0 (was an invented `spacing-3`); ScoreCard sets `spacing-3.5` / `spacing-3`, SectionCard `spacing-1.5`, SheetCard 0. The chevron is `text-base` (`sans-md`) with no weight (bundle.css `.nn-card__chevron`). `featured: Bool` is now `variant: CardVariant?` (`.primary`) on Card, SectionCard and ScoreCard.
-- **Card hover.** bundle.css `.nn-card[data-pressable]:hover { background: sunken }` is pointer only; not drawn on iOS.
-- **SectionCard has one shape.** The `layout` axis (`stacked` / `inset`) is gone; every SectionCard puts its label inside the card, and the old stacked call sites now render that way (README: "Prefer the label inside"). A label above a card is `DSSection(_:) { Card { … } }`. Children of a SectionCard are `spacing-1.5` apart, so form cards that used to get `spacing-3` between children are tighter. `SectionCard+Legacy.swift` (caption / color / innerPadding inits) is deleted; its 6 callers were migrated.
-- **SectionCard `onClick`** (index.d.ts) is `action:`; CuisinePickerSection uses it in place of a hand-built row with its own chevron.
-- **ScoreCard rank.** ScoreCard README: "No rank or leaderboard position on the card". The recipe's "Ranked 3rd of your recipes" caption is removed; the leaderboard stays behind the card's action.
-- **BottomSheet scrim.** README: "`scrim` behind". SwiftUI's sheet dims with the system scrim and exposes no colour for it; not drawn.
-- **BottomSheet grabber.** README: "grabber `spacing-10` × `spacing-1.5` in `grabber`". `.dsSheet` hides the system drag indicator and draws `SheetGrabber` (`radius-sm` from bundle.css, `spacing-2` from the top: the sheet's top padding). The system indicator's VoiceOver resize action goes with it; the README calls the grabber decorative.
-- **BottomSheet body.** README: "padding `spacing-2`/`spacing-5`/`spacing-10`, gap `spacing-6`". `SheetBody` holds those; the health rationale and methodology sheets moved off `spacing-7` / `spacing-4` / `spacing-12`, and their leading control is the Close (`sheetCloseToolbar`), not Cancel.
-- **SheetCard provenance ink.** README: "provenance `sans-xs`" with no ink named. It stays `text-tertiary`. `ReasonProps.weight` (index.d.ts) is not described anywhere, so SheetReason has no weight.
-- **TasteScoreSelector toggle vs radio.** Its README's "Toggle buttons, not radios" section says `role="group"` + `aria-pressed`; its "Rules" still say "Radio group: `role="radio"` + `aria-checked`" and the markup line says `role=radiogroup`. Called for the dedicated section: each step is a button with the `isSelected` trait, tap again to clear.
-- **TasteScoreSelector ring.** README: "a 1.5px fill ring". No 1.5px width exists; `tokens.json` `border-thick` is "focus ring, error border, selected ring", so the ring is `border-thick` (2pt). `DSAppearance.outlineWidth` is no longer read by TasteScoreSelector.
-- **TasteScoreSelector step size.** AppButton README: icon-only buttons are one 44pt circle. TasteScoreSelector README: "a standard AppButton `size="lg"` (`spacing-12` circle …)" and bundle.css `.nn-taste__row > .nn-button { width: spacing-12; padding: 0 }`. The steps are labelled buttons, so the TasteScoreSelector README applies: 48pt circles, drawn with `AppButtonLabel` (`iconOnlyDiameter: DS.Spacing.s12`). Verdict line is `spacing-2` below (bundle.css `.nn-taste` gap; was `spacing-3`).
-- **TasteScoreSelector spring.** README: "Spring 0.25 / 0.75." No motion token is a spring; the README values are used, quoted in code.
-- **RatingList avatars.** README rows have no leading slot ("Name Text `sans-md`, role `sans-sm` `tertiary`, both in the row's `title`"). `showsAvatars` and `RatingListEntry.photoPath` are removed; Meal Detail's list has no faces.
-- ~~**RatingList rows vs ListRow.**~~ Resolved in R3a: `RatingRow` is a ListRow with a view-builder title (name + role) and the note + score in one `trailing` slot. The general-shape `RatingListValueRow` still draws ListRow metrics itself (its note sits beside the value, not under the title).
-- **RatingList Rate / Ask actions.** The README names "the viewer's own state" but not the unrated actions. The `sm` AppButtons (Rate, Ask to rate, Asked) stay in the trailing slot, which ListRowProps allows ("AppButton 'sm'").
-- **RatingList general shape.** `RatingList(_:trailing:rows:meter:)` takes `RatingListRow`s and any meter (index.d.ts `rows` + `bar`). The README gives no type for the row value; it is `sans-sm` tabular, `text-tertiary` when zero ("only the figure drops to `text-tertiary`"). SegmentedBar (R3) can move onto it.
-## v3 spec calls made in R2b (PhotoCard, PhotoStrip, DetailHeader, Timeline, RecipeCard, RecipeLinkCard)
-
-- **PhotoCard `.thumb` removed.** ListRow README: "`leading` | node — Avatar, PhotoCard `xs`". The 48pt (`s12`) thumb was invented; ListRow's `.photo` leading is now PhotoCard `xs` (80 × 80), so photo rows grow to about 96pt. The DS should confirm an 80pt thumbnail in a `spacing-14` row.
-- **PhotoCard `.cover` removed.** PhotoCard has no 4:5 format (formats are square and 3:4), although root README "Imagery" still says "1:1 and 4:5 are safe". LabeledPhotoCard `.portrait` is now PhotoCard `md` `portrait` (3:4) at `radius-2xl` (bundle.css `.nn-labeled-photo .nn-photo-card { border-radius: var(--radius-2xl) }`), previously `radius-3xl`.
-- **3:4 short edge.** README: "`portrait` and `landscape` are both **3:4**". No ratio token; `PhotoCardFormat.shortEdgeRatio` = 3/4 quotes the README. xs portrait 60 and lg portrait 216 are off the spacing scale although the README says "all on the spacing scale".
-- **Favourite heart ink.** PhotoCard README: "filled (`heart`) and `destructive-text`"; bundle.css colours the heart `primary-text` in both states. Component README wins: `destructive-text` when on, the elevated button's `text-primary` when off. AppButton / AppButtonLabel gained an `iconColor:` option (icon-only inits) to draw it.
-- **Heart inset.** README gives none; bundle.css `.nn-photo-card__fav` is `spacing-2` from the top-right (`spacing-1` on `xs`). The read-only marker (bundle.css `__fav[data-marker]`: 44pt `panel` circle, `shadow-xs`) is drawn with AppButtonLabel and hidden from VoiceOver; the tile's label says "Favourite".
-- **No-photo glyph.** One size, `text-xl` (bundle.css `.nn-photo-card__none .nn-icon`), gap `spacing-1`; the per-size glyph steps and the `s2` inner padding were invented and are gone.
-- **Selected ring.** README "2px `primary` ring" = `border-thick`.
-- **PhotoStrip collapsed Add photo.** README: "collapses to a `spacing-9` icon-only circle"; AppButton README: every button is at least 44 × 44 and icon-only has one size. The 44pt floor wins; the collapsed button is AppButton's 44pt icon-only circle. Durations are `duration-state` (label fade) and `duration-layout` (width).
-- **PhotoStrip empty add tile border.** README: "1.5px dashed `line-placeholder`". Neither the width nor the colour is a token: `border-thick` (bundle.css `.nn-photo-strip__empty { border: var(--border-thick) dashed … }`) in `line-control` (root README: "the dashed placeholder tile … use `line-control`"). The dash pattern is unspecified (CSS `dashed` is browser-drawn); iOS uses `spacing-1` on / `spacing-1` off. Side padding `spacing-5`, content leading (bundle.css).
-- **PhotoStrip bleed.** README: "the strip runs past the right gutter". iOS keeps the first tile on the gutter at rest but lets tiles scroll past both screen edges (`contentMargins`), the platform idiom. Snaps to tiles (`.viewAligned`).
-- **PhotoStripEditor animation.** An invented 0.42s spring became `duration-layout` ease-out.
-- **DetailHeader.** `facts` are `[String]` joined " · " (`sans-sm` tertiary); `badges` hold statuses only. The README's own Rules line "Facts are Badges (`sm` icon allowed)" contradicts its "Facts are not badges" section; the section wins. Meal and recipe rotation goals are badges; effort, dish kind and method are facts. Avatar gets `spacing-2` below it and the two actions sit `spacing-2.5` apart (bundle.css `__avatar`, `__actions`); the README's "actions `spacing-2.5` below" is the gap above the row.
-- **Dinner party Invite.** README: "`secondary soft` 'Invite'" (was `primary soft`).
-- **Timeline.** Built on DSSection (README: "Built from: Section"). Rail `border-thick`. Item gap `spacing-2.5` (bundle.css `.nn-timeline__item`); README is silent. Track snaps to each occasion.
-- **RecipeCard.** `subtitle:` renamed `category:` (RecipeCardProps). The heart is now a toggle (README: "outlined until it is a favourite, then filled"). Card gap `spacing-1.5` (bundle.css `.nn-recipe-card`), previously `s2`.
-- **RecipeLinkCard.** Thumbnail is PhotoCard `xs` `portrait` (60 × 80) with a `format` parameter; body gap `spacing-1` (bundle.css `.nn-recipe-link__body`). `index.d.ts` keeps `name` (RecipeLinkCard) and `title` (RecipeCard); it declares no deprecated aliases.
-
-## v3 spec calls made in R3a (ListRow, EmptyState, PageHeader)
-
-- **ListRow API.** `ListRow(_:meta:value:leading:trailing:trailingAction:chevron:unread:tone:size:label:action:)`, plus `ListRow(accessibilityTitle:…title:)` for a view-builder title. Removed: `detail` (a second meta line), `metaTone`, `metaColor`, `emphasized`, and the `.chevron` / `.value` trailing slots (now the `chevron` and `value` props). `trailing` is one slot; the README's "second ghost icon button" is `trailingAction` (`ListRowIconAction`, AppButton `ghost` icon-only, `destructive` by default). Leading gained `.icon`.
-- **Title weight.** index.d.ts: "semibold when the row is pressable or unread"; the README only names `unread`. Both apply. A row wrapped in a `NavigationLink` passes `chevron: true`, which counts as pressable; `ListRowButtonStyle` gives the link the row press (`opacity-70`, `scale-press-row`).
-- **Meta ink.** index.d.ts: "a string becomes sans-sm / secondary" (the interim row used `text-tertiary`).
-- **Value step and ink.** README: "right-aligned tabular value", no step or ink. `sans-sm` at full strength, matching RatingList's value rows ("only the figure drops to `text-tertiary`"). The DS should state it.
-- **Row score width.** ListRow is silent; `.score` keeps `min-width: spacing-9` from bundle.css `.nn-rating-row__score` so numerals line up down any list.
-- **Leading icon size.** Unspecified; `text-base` (`sans-md`), the row's own size (`.nn-icon` is 1em). Rank numerals are `serif-xs` numeric in `text-primary` (Text's default tone); the interim top-three / tertiary split was invented.
-- **Split rows.** A pressable row splits only when `trailing` is a control (AppButton, Toggle, custom) or there is a `trailingAction`; Badge and ScoreValue stay inside the button. The chevron sits after the trailing slot outside the button.
-- **Unread dot.** bundle.css `::before`: `spacing-2` `primary`, `spacing-3` into the gutter (an `offset`).
-- **Leaderboard highlight.** `emphasized` is gone and every navigating row is semibold, so the recipe leaderboard no longer marks the recipe it was opened from (`highlightedRecipeID` removed). The DS has no "current row" state.
-- **MealRow notes.** ListRow has one meta line, so a meal's notes no longer show in lists. MealMemberScoreRow's insight colour (warning / primary) is gone with `metaColor`.
-- **Dish kind** is a fact, so RecipeDetailInfoCard shows it as a `value`, not a Badge (README "A fact is not a status").
-- **Invite shape.** Section title "Invited" (README); the callers said "Pending invitations". Meta "Invited {relative date}". Revoke is `xmark` (README `x`), previously `trash`.
-- **EmptyState.** `card` padding `spacing-8` × `spacing-5`: Card draws `spacing-5`, EmptyState adds `spacing-3` top and bottom. `row` action appearance is unspecified ("`sm`, pushed right"): `primary soft sm` like `card`. `secondaryAction` is `secondary ghost` (README: "secondary `ghost`"), `md` on `screen`, `sm` elsewhere. Message `sans-md` secondary (README: "the same type steps as … body copy"), capped at `container-sm`. Icon sizes `text-3xl` / `text-4xl` / `text-base` are drawn at the `serif-md` / `serif-lg` / `sans-md` steps that carry those sizes.
-- **EmptyState copy** follows the README table where a case matches ("No meals yet", "Nothing with these filters" + "Clear filters", "No recipes match ‘…’" + "Clear search", "Nobody has rated this", "Not enough meals yet"). "Recipe is gone", "Meal is gone", "Party not found", "Only the creator can edit this" are missing-item states the table does not list.
-- **PageHeader actions** (`EmptyStateAction`, as index.d.ts types them): `lg` at `md`, `md` at `sm`; start-aligned actions sit in a row (no wrap rule beyond `flex-wrap`). The actions' `margin-top: spacing-4` is added to the `spacing-2` gap, as in CSS. Tab roots (Meals, Recipes, Parties) moved from PageHeading's title-plus-`sm`-button row to PageHeader `start` with the action under the title. Sign-in keeps its buttons at the bottom of the screen: Sign in with Apple is Apple's control, not an AppButton the header can build.
-- **Profile header** is a screen about a person, so ProfileHeaderCard is now a centred DetailHeader with an Avatar `xl` (was an invented 80pt avatar).
-- **Container.** `DS.Container.sm` aliases `container-sm` (subtitle and message measure). The sign-in and email screens' invented 460pt column is now `container-sm`.
-- ~~**PartyCard in a scroller.**~~ Superseded in R3b: discover PartyCards stack vertically, so no scroller width is needed.
-- **Paywall package cards.** The invented gradient, shadow and 16pt radius became `radius-2xl`, a `pro` tint at `opacity-10` and `border-hairline` / `border-thick` rings. Still a "kept as-is" block awaiting a design.
-- **Not migrated (dead code).** `Features/Suggestions/Views/{SuggestionsView, RecipeInsightView, SuggestionFiltersView}` and `Components/{SuggestionRow, MeterRow}` have no callers (plan: delete the dead Suggestions UI); they still hold 2 `ContentUnavailableView` and 3 `.nativeToggle()`. `RecipeScoreHistorySection` ("No score history yet") and `Features/Calendar` are also unreferenced. CurrentPartyHeroView's `party: nil` empty card was unreachable (DinnerPartiesView shows an EmptyState); CurrentPartyHeroView was removed in R3b.
-
-## v3 spec calls made in R3b (SegmentedBar, ValueStepper, LabeledPhotoCard, RecipeShelf, PartyCard)
-
-- **SegmentedBar key: swatch vs Badge.** The component README says "Every key is a swatch and a label … Not a Badge"; `index.d.ts` ("`reaction` … gives the key a reaction Badge; `color` … gives it a dot"), root README's composition table ("Badge `reaction sm`") and the README's own zero rule ("keeps its full-strength Badge") still say Badge. The "Not a Badge" section wins: every key is a `radius-sm` swatch (`spacing-2.5` inline, `spacing-3` in rows).
-- **SegmentedBar `lg`.** README: "`lg` (`spacing-4`)"; Bar README stops at `xl` 12 (`spacing-3`) and SegmentedBar is built from Bar. `sm` → Bar `sm`, `md` (`spacing-2.5`) → Bar `lg`, `lg` → Bar `xl` (12, not 16).
-- **SegmentedBar inline figure.** `format` names "legend figures" but the inline key's figure has no type step. It is `sans-sm` tabular after the label (the label's step), `text-primary`, `text-tertiary` at zero.
-- **SegmentedBar rows = RatingList rows.** `RatingListRow` gained a `swatch`, and RatingList's general-shape figure is now `serif-xs` tabular (SegmentedBar README; was `sans-sm`). Without a `title` the rows render as the bar over a Card `.list`.
-- **Macro grams.** SegmentedBar figures are a count or a percent, so HealthMacroDistributionCard puts the grams in the label ("Protein 24 g") and the figure is the calorie share; the per-macro kcal detail is gone. Fat moved from `chart-series5` to `chart-series3` (stable index 0/1/2). Health tiers take `chart-series1…4` by `HealthTier` index, replacing role colours.
-- **ValueStepper unset.** The README has no unset state (default = `min`). Recipe servings (`Int?`) read the minimum until changed; "Not set yet" shows beside the stepper, and stepping below 1 no longer clears the value. `sm` changes only the readout width (`spacing-8`, bundle.css); the buttons are AppButton's one 44pt icon-only size.
-- **LabeledPhotoCard `lg` radius.** bundle.css sets `radius-2xl` on every size; PhotoCard draws `lg` at `radius-3xl`. The tile keeps PhotoCard's radius so the scrim matches the photo.
-- **LabeledPhotoCard meta.** README: "One line of meta at most, `sans-xs`"; bundle.css dims it to `opacity-80`. Check: `spacing-6` `primary` disc, `on-primary` glyph at `text-xs`, `spacing-2` inset (bundle.css `__check`). Scrim is `PhotoScrim` (bundle.css 72% `stone-1000` → clear at 68%; neither value is a token, unchanged from R0).
-- **Category drill-down cover.** The LabeledPhotoCard README says it replaces CategoryHeroCoverCard, so the cover is a LabeledPhotoCard `lg` `landscape` across the gutter. Root README "Imagery" says only 1:1 and 4:5 crops of the square master are safe; PhotoCard's `landscape` is 4:3. The DS should confirm the 4:3 cover crop.
-- **RecipeShelf track.** bundle.css `.nn-shelf__track` pads `0 spacing-2 spacing-2`; iOS follows PhotoStrip and Timeline instead (snaps to cards, bleeds past the gutter via `contentMargins`), so the first card sits on the gutter. Card gap `spacing-3`. Shelves on screens without gutter padding are now wrapped in it. An empty shelf renders nothing unless it gets an `emptyState`. AI recommendations without a recipe use RecipeShelf's general `items:` shape with a RecipeCard-shaped idea card (`RecommendationShelfCard`).
-- **PartyCard type steps.** README names only the summary (`sans-sm secondary`, two lines). Name is `serif-sm`, the meta line `sans-sm` tertiary, the `mine` score ScoreValue `xs` (no size given). Head/main/meals gaps from bundle.css (`spacing-3` / `spacing-2` / `spacing-2`, card gap `spacing-3`).
-- **PartyCard join.** README: `discover` renders "Ask to join". The app follows public parties instead of requesting to join, so the slot is `PartyFollowButton` ("Follow" `primary solid` / "Following" `primary soft` + check, as on the party screen), under the card's link. Followed parties are `discover` (not a member, so no score); member parties are `mine` with the invite / share context menu. Discover parties stack vertically (the old 320pt-wide horizontal cards had no token). The no-party hero is now an EmptyState.
-- **PartyCard meta.** "N members · N meals"; the member-name list and the DividedScoreCard verdict + Bar are gone. Recent meals are PhotoCard `xs` squares with no verdicts (README).
-
-## Phase 5 calls (core: not-synced Core components, Extensions, token preview)
-
-- **OptionCell (new, `Composites/OptionCell`).** The one picker cell behind CookingTimeSelector, RotationGoalSelector, TactileOptionPicker and TactileTasteSelector (four hand-rolled copies before). README: "`radius-lg` for … picker cells", "`opacity-20` selected cells", control boundaries in `line-control`. At rest `panel` + `border-hairline` `line-control`; chosen: the tint at `opacity-20` + a `border-thick` tint ring. The cells' invented 0.6–0.7pt borders, 1.5pt rings, accent shadows, 40% soft fills, 10–13pt system fonts and `minimumScaleFactor`s are gone: label `sans-sm` semibold (`primary-text` when chosen) over a `sans-xs` `text-secondary` description (two lines allowed instead of shrinking). Heights are minimums: `spacing-16` (was 70), `spacing-12` (was 48), `spacing-7` for the eater taste cells (was 26).
-- **Selection spring.** README "Motion and states": "Selection springs (≈0.25s) with a light haptic." No spring token; the selectors spring over `duration-layout` (250ms) with the system's default damping (`.spring(duration:)`), and Reduce Motion drops it. TasteScoreSelector keeps its README-quoted 0.25 / 0.75. SwipeActionRow's 0.3 / 0.8 snap is the same `duration-layout` spring; its 0.15s action delay is `duration-state`.
-- **BurnerMeter.** Bars 9pt wide, 3pt apart, 7/12/17/22pt tall had no tokens: now `spacing-2` wide, `spacing-1` apart, `spacing-2`/`3`/`4`/`5` tall, `radius-sm` ends, `primary` / `line-strong` (README "Colour"). Label `sans-sm` tabular.
-- **TactileOptionPicker** has no callers (only Domain conformances to `TactilePickerOption`). Retokened, its RotationPill replaced by `Badge.rotation`; the protocol's default tint is `primary` (was `.accentColor`). Candidate for deletion with the Domain conformances.
-- **ProGate.** tokens.json `pro-soft`: "gated-card grounds". The locked gate is a `pro-soft` Card shape (`radius-3xl`); the violet border, the 20pt violet shadow and the corner-to-corner 30% `pro-text` gradient are gone ("No borders, no shadows on cards"). The bottom fade is clear → `pro-soft` over at most `spacing-48` (was 200pt, with an invented 94% stop at 55%). **No blur token exists**: the blurred preview uses `shadow-lg`'s blur (15pt light) instead of an invented 14pt. ProBadge → `Badge.pro` (`md`; it was `compact`). The DS should define a gate.
-- **PhotoScrim** keeps README "Imagery"'s 72% and 32% (no opacity step or stop token), quoted at the constants.
-- **MealPhoto / RecipeImageView / RemoteMealPhoto** default to `radius-2xl` (README: "`radius-2xl` (in lists)"; was 16pt `AppRadius.photo`, the same value). MealPhoto's no-photo tile matches PhotoCard's (`sunken`, `sans-xl` glyph, `sans-sm` caption, no dashed border: the dashed tile is the add-photo control). RecipeImageView's 0.5pt ring at 35% is `.dsHairline`.
-- **SwipeableListCard** is a `DSSection` label above a `Card(layout: .list)` (was a SectionCard with the label inside and Legacy AppList dividers at 30%). `dividerPadding` is kept for source compatibility but no longer read; Card draws its own full-width hairlines and `spacing-4` row inset, so callers that pad their rows by `spacing-4` themselves now get double inset.
-- **SwipeActionRow.** Action width 74pt → `spacing-20`; full swipe at two widths (160pt, unchanged); drag threshold `spacing-4` (was 15). Glyph `sans-xl` (was `.title3` medium; medium is not a weight) in the ground role's `on-{role}` (was `.white`).
-- **WrappingHStack / LabeledWrappingRow** default gaps 6pt are `spacing-1.5` (same value); label gap `spacing-3`, label drop `spacing-0.5`.
-- **Media viewer chrome.** `Color.black` → `stone-1000`; the bar's 85% → `opacity-90` (no 85 step); the close tint `stone-0`.
-- **TrendChart strokes.** README "Scales": hairline and thick are "the only two widths the system draws". Total `border-thick` (was 3pt), members dashed `border-hairline` (was 1.5pt). The DS still has to decide chart strokes (row 6).
-## social (Phase 5: Parties, Insights, Notifications)
-
-- **Notification unread state.** The plan's "Unread state = SectionCard `featured`" is overruled by the ListRow README: "`unread` is the only row state with colour, and it is a dot — never a tinted ground." NotificationRow is a ListRow with `unread`; the tinted card, accent rail and read-state dimming are gone. Meta is the notification body (one line); the relative date is no longer shown (ListRow has one meta line). The thumbnail is the ListRow lead: PhotoCard `xs` (meal / recipe), Avatar `sm` (party) or the kind's symbol.
-- **Inbox header.** The unread capsule is gone: the "Unread" DSSection carries the count as its `primary` trailing figure, and a row does not repeat its header. The header is a PageHeader; the empty inbox is an EmptyState `screen`. The DS has no rule for a toolbar text action ("Mark all read"): `sans-sm` semibold `primary-text`.
-- **Toolbar unread dot.** NotificationBellButton's orange dot is ListRow's unread dot (`spacing-2` `primary`), offset `spacing-0.5`; the DS has no toolbar badge.
-- **Swipe in a ScrollView.** NotificationRow keeps its `swipeActions` and context menu, but SwiftUI only runs swipe actions inside a `List`; the context menu is the working path (unchanged behaviour).
-- **Taste match.** ListRow (custom title: name + figure over a Bar `sm` in `primary`), meta "N rated meals", trailing `Badge.delta` for the change (up `primary`, down `warning`); `Color.green` / `Color.red` and the ≥80 / ≥60 colour tiers are gone. Empty is EmptyState "Not enough meals yet".
-- **Insights sunken cards.** SectionCard has one layout now (no `inset`), so: strengths / watch-outs are SectionCards of `sans-md` lines (icons dropped, minimal iconography); Average dinner is ListRow key–value rows; the ingredient profile is one DSSection per category of key–value rows ("80% loved", sentiment as meta) — the old chips put a word and a number in one pill (Badge README forbids it), and FlavorSentiment's reaction tints are no longer used.
-- **Editorial text.** Positive / negative fragments of the AI narrative were set a step larger in reaction-ramp ink; README: reaction colour "never tints … body text". They are now the same `serif-xs` step in `primary-text` / `warning-text`.
-- **Chart series index.** PartyInsightsSection colours a member line by the member's position in the party's member list (README: "by a stable index per party member, never cycled"); non-member raters follow after the members. The Insights tab dashboard had no chart; its unused trend props were removed.
-- **Paywall.** Package card split into `PaywallPackageCard` (still kept as-is). "BEST VALUE" ProBadge → Badge `pro solid sm` "Best value". Subscribe is `pro solid lg` (AppButton README: `pro` for Pro CTAs); it was `primary`. The sheet is a BottomSheet (`dsSheet` + SheetBody) with the footer pinned in a bottom safe-area inset.
-- **Pending party invites.** ListRow with Accept (`primary solid sm`) and decline as the second trailing element, a `secondary ghost` ✕ (was a "Decline" outline button). Recent companions' "Invited" capsule → Badge `primary sm`.
-- **Follow logic.** The plan's "follow logic into PartyFollowIconButton" is not done: DetailHeader takes `DetailHeaderAction`s, not views, so PartyDetailView still builds its own Follow action (same rules as PartyFollowButton).
-- **Removed (no callers):** PartyRowCard, PartyScoreBadge (last ScoreBadge user here), PartyMemberTrendPicker, InboxHeaderView, NotificationThumbnailView.
-## diary (Phase 5: Features/Diary)
-
-- **Sheets.** Every Diary editor and picker sheet (MealEditorView, MealRatingSheet, CreateRecipeSheet, RecipeEditSheet, DishRecipeEditSheet, RecipePickerSheet, RecipeScannerSheet) is now `.dsSheet()` on the `sheet` ground (README: "`sheet` for bottom sheets"), with the pushed steps (Details, Rate Meal, Recipe Details) on `sheet` too. Screen padding is `gutter` / `spacing-5` top / `spacing-11` bottom (the deprecated `screen*` steps) and blocks are `block` (`spacing-7`; the deprecated `section` was `spacing-8`).
-- **Waiting for your rating.** PendingRatingCard is a navigating ListRow (PhotoCard `xs`, dish, "cook · date") whose decline ✕ is its `trailingAction` (`secondary`, not the default `destructive`: declining is not irreversible), over a TasteScoreSelector that rates on tap (`showVerdict: false`). The cook's name is no longer `primary-text` (ListRow has one meta ink). Six `spacing-12` steps need 328pt; the selector scrolls sideways when the card is narrower (iPhone SE). The DS has no compact taste row for a list.
-- **Scanner overlay.** A `scrim` over the sheet and a Card with `shadow-lg` (README "`shadow-lg` for popovers"), capped at `spacing-72` wide (the old 280pt had no token). The scanner's "Cookbook & Card Scanner" title block is PageHeader `sm`; its bottom CTA sits in a `safeAreaInset` instead of an invented 100pt clearance.
-- **Editor step numbers.** RecipeInstructionsEditorSection numbers are `sans-xs` semibold tabular in a `spacing-6` `sunken` circle, `spacing-2.5` from the top so they sit on the TextArea's first line (TextArea's own top padding). RecipeStepsCard keeps its `primary-soft` disc; the DS has no numbered-step component.
-- **Ingredient columns.** Qty / Unit Inputs are `spacing-14` / `spacing-16` wide (were 58 / 68). RecipeIngredientsCard's amount column dropped an invented `minimumScaleFactor(0.85)`.
-- **Kept as-is.** MealRatingEatersCard still uses `TactileTasteSelector` (README "Not synced"); there is no compact DS taste control for a list row.
-- **Dead code (no callers), migrated to tokens but not deleted:** DishNameField, RecipeScoreHistorySection (now a TrendChart; the old tap-a-point-to-open-meal is gone), RecipePartyHistorySection, MyVerdictCard, RecipeHealthScoreButton, DiaryContextMenu, MealEditorVerdictsSection (ReactionPicker → TasteScoreSelector), MealEditorPhotoSection (PhotoCard `lg` landscape), MealRatingBadge (Legacy badges → Badge / ScoreValue), MealRecipeStepView. Candidates for removal.
-## Phase 5 calls: shell (Auth, Recipes, Settings, Suggestions engine, App)
-
-- **OTPCodeField** (not synced, retokened): each cell is Input's `soft` ground, `radius-xl` and state borders (`InputMetrics.border`: rest 1pt `line-control`, current cell 2pt `primary`, error 2pt `destructive`) at the labelled-field height `spacing-14`; digits `sans-xl` semibold tabular, placeholder `text-tertiary`. The invented 340pt max width is gone (the column is already `container-sm`). The caret is `border-thick` wide and `sans-xl` tall in `primary`; the DS has no caret or blink timing, so it blinks over `duration-layout`. The DS should define a code field.
-- **AppleSignInButton** (not synced): Apple's control at AppButton `lg` height (`spacing-12`, was an invented 50pt), dimmed `opacity-50` while working (README "Disabled: `opacity-50`", was 0.6).
-- **Onboarding progress** is a single-fill Bar `xs` ("step N of total") in the navigation bar's principal slot. The DS gives a bar no width; it takes `spacing-20` there. The old capsule dots (3pt, 28/12pt wide) had no tokens. The onboarding bottom bar lost its invented shadow (README: shadows only on things that float). The Back toolbar item is a system button.
-- **Filter pills removed.** `CuisineFilterStrip` had no callers and was deleted (it would have been `sm` AppButtons). Recipe count lines ("12 recipes" in `caption` medium) are now the trailing figure of a DSSection over the grid (`MinimalRecipeGrid(title:)`); the category screen's "Sort & Filter" text button moved into the toolbar next to Add, as on the search tab (`RecipeFilterToolbarButton`).
-- **RecipeFilterSheet** left the native `Form`: DSSections of `Card(layout: .list)` ListRows whose trailing slot is a native `.menu` Picker (a system menu, tinted `primary-text`). Score thresholds read 0–100 ("Good (50+)", README "Numbers are data"). The DS has no select/picker row.
-- **Sheets** in this area (CuisinePicker, RecipeFilter, RecipeLeaderboard, CreateParty + PartySetupStep, PartyInvite, ProfileSheet) now use `.dsSheet()` and `SheetBody` (`sheet` ground, `spacing-5` sides, `spacing-6` gaps), so their content moved from `bg`/`spacing-4` gutters to the BottomSheet metrics.
-- **EmailInviteCard** (Settings) is the one email-invite block (household and party invite): Input with hint / error / confirmation in the hint slot plus "Send" `primary soft sm`. The confirmation lost its `primary-text` ink (Input has no success message); the DS should say whether a field has a success state.
-- **Settings parties row** is a navigation ListRow; pending invites are a `primary solid` count Badge (was an invented orange capsule "N invite"). Eater rows are ListRows with Avatar `sm` (was an invented 34pt UserAvatar) and a `plain` Input as the title.
-- **Launch placeholder** sets "Nom Nom" in `serif-lg` (README "Logo"; was "NomNom").
+- **v3 components shipped** (each follows `design-system/components/<Name>/README.md`): AppButton, AppButtonLabel, Badge, Avatar, Bar (replaced ProgressBar), ScoreValue, Text (`.textStyle`), SectionHeader, AppToggle, Input, TextArea, Card, DSSection, SectionCard (one layout; `stacked` / `inset` gone), PageHeader (replaced PageHeading), BottomSheet (`.dsSheet`, SheetBody, SheetCard, SheetHero), ListRow (replaced every hand-built row, including the PendingInviteRow copies, now `PartyInviteRow`), EmptyState (replaced every `ContentUnavailableView` and "No … yet" card), DetailHeader, ScoreCard (replaced DividedScoreCard), PhotoCard (owns the photo → cuisine → no-photo fallback), PhotoStrip (replaced the arc decks), RatingList, Timeline, RecipeCard, RecipeLinkCard, RecipeShelf, PartyCard, SegmentedBar, ValueStepper, LabeledPhotoCard and TasteScoreSelector.
+- **Removed with no replacement**: the arc photo decks (PhotoStrip and PhotoCard replace them; empty states have no artwork unless the DS defines some) and the eater emoji (Avatar initials replace them).
+- **Removed in Phase 6** (no callers, or shims): every `@available(*, deprecated)` alias and legacy initialiser (DS+ColorDeprecated, the pre-spec `DS.Spacing` names, `AppRadius`, the legacy AppButton / AppButtonLabel / Input / TextArea / SectionHeader / PageHeader initialisers, `AppButtonVariant` / `AppButtonStyle`, `AppInputStyle` / `Size` / `Shape`, `InputAppearance.outline`, `DSAppearance.outlineWidth`, `nativeToggle()`, `Font.newsreader(_: Font.TextStyle)`, `sheetCloseToolbar(color:)`, `SwipeableListCard.dividerPadding`). Dead code: CreateDropdownMenu, TactileOptionPicker, BurnerMeter, RecipeImageView, RemoteMealPhoto, MealPhoto, Font+Newsreader, Int+Ordinal, View+PendingState, `sheetDoneToolbar`, `photoBottomScrim`, PartyListView and the unused Dish-era typealiases. The dead Calendar feature, the Suggestions UI and the unreferenced Diary views went in the commit before.
+- **Settled earlier and kept**: Card gap 0 by default; ScoreCard shows no rank; RatingList rows have no avatars; ListRow API (`meta`, `value`, one `trailing` slot, `trailingAction`, `chevron`, `unread`); EmptyState copy follows the README table; sheets use the BottomSheet metrics; the paywall Subscribe button is `pro solid lg`; macros put grams in the label; chart series go by stable member index; PartyCard `discover` uses Follow instead of "Ask to join", because the app follows public parties rather than asking to join.

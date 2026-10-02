@@ -60,34 +60,3 @@ extension DS {
         static let sm = DSTokens.Container.sm
     }
 }
-
-// MARK: - Deprecated pre-spec names (pure renames of steps; removed in Phase 6)
-
-extension DS.Spacing {
-    @available(*, deprecated, message: "Use DS.Spacing.s1")
-    static let xxs = s1
-    @available(*, deprecated, message: "Use DS.Spacing.s2")
-    static let xs = s2
-    @available(*, deprecated, message: "Use DS.Spacing.s3")
-    static let sm = s3
-    @available(*, deprecated, message: "Use DS.Spacing.s4")
-    static let md = s4
-    @available(*, deprecated, message: "Use DS.Spacing.s6")
-    static let sectionCompact = s6
-    @available(*, deprecated, message: "Use DS.Spacing.s8")
-    static let section = s8
-    @available(*, deprecated, message: "Use DS.Spacing.s10")
-    static let sectionLarge = s10
-    @available(*, deprecated, message: "Use DS.Spacing.s7")
-    static let heroInner = s7
-    @available(*, deprecated, message: "Use DS.Spacing.s10")
-    static let heroToContent = s10
-    @available(*, deprecated, message: "Use DS.Spacing.s3_5")
-    static let heroDeckPadding = s3_5
-    @available(*, deprecated, message: "Use DS.Spacing.gutter")
-    static let screenHorizontal = gutter
-    @available(*, deprecated, message: "Use DS.Spacing.s5")
-    static let screenTop = s5
-    @available(*, deprecated, message: "Use DS.Spacing.s11")
-    static let screenBottom = s11
-}

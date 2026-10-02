@@ -110,10 +110,11 @@ struct ScoreCard: View {
         .accessibilityElement(children: .combine)
     }
 
-    /// bundle.css `__head` (baseline row, `spacing-3`) with `__aside` (count + compact
-    /// delta, `spacing-2`, pushed to the end).
+    /// bundle.css `__head` (`spacing-3`) with `__aside` (count + compact delta,
+    /// `spacing-2`, pushed to the end, `align-self: center`). The numeral and verdict
+    /// baseline-align inside ScoreValue; the aside is centred on the row.
     private var scoreRow: some View {
-        HStack(alignment: .firstTextBaseline, spacing: DS.Spacing.s3) {
+        HStack(alignment: .center, spacing: DS.Spacing.s3) {
             Group {
                 if isLoading {
                     ScoreValue(score: 0.88, verdict: "Loading", size: scoreSize)

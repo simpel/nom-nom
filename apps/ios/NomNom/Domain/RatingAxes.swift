@@ -37,7 +37,7 @@ enum EffortLevel: Int, Codable, CaseIterable, Identifiable, Hashable, TactilePic
     }
 
     var tint: Color {
-        DS.Color.accent
+        DS.Color.primary
     }
 
     var title: String { label }
@@ -78,7 +78,7 @@ enum RotationGoal: Int, Codable, CaseIterable, Identifiable, Hashable, TactilePi
     }
 
     var tint: Color {
-        DS.Color.accent
+        DS.Color.primary
     }
 
     var title: String { label }

@@ -66,7 +66,9 @@ struct PhotoStrip: View {
     }
 
     private var strip: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
+        // README "Use": the bar is "absent on touch, where the platform draws its own.
+        // Never hide the scrollbar outright" — so the system indicator stays on.
+        ScrollView(.horizontal) {
             HStack(spacing: DS.Spacing.s2_5) {
                 ForEach(photos.indices, id: \.self) { index in
                     Button { onSelect(index) } label: {

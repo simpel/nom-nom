@@ -12,7 +12,7 @@ struct TimelineOccasion: Identifiable {
     var isCurrent: Bool = false
 }
 
-/// A Timeline stop: an `s5` dot on the rail (4pt `bg` ring; current `primary`, past
+/// A Timeline stop: an `s5` dot on the rail (`s1` `bg` ring inside it; current `primary`, past
 /// `primary-muted`), a PhotoCard `sm` portrait (`s36` × `s48`) with the verdict Badge
 /// (selected when current), and the date in `sans-sm` ("This meal", semibold, for the
 /// current one). No score numeral: the Badge carries the result, the score its tooltip.
@@ -20,8 +20,9 @@ struct TimelineItem: View {
     let occasion: TimelineOccasion
     var onSelect: (() -> Void)?
 
-    /// Dot plus its ring, so Timeline can centre the rail on it.
-    static let dotFrame = DS.Spacing.s5 + DS.Spacing.s1 * 2
+    /// The dot's outer size, ring included (bundle.css `.nn-timeline__dot`: `spacing-5`,
+    /// `box-sizing: border-box`), so Timeline can centre the rail on it.
+    static let dotFrame = DS.Spacing.s5
 
     var body: some View {
         if let onSelect, !occasion.isCurrent {
@@ -33,12 +34,14 @@ struct TimelineItem: View {
     }
 
     private var content: some View {
-        // bundle.css `.nn-timeline__item { gap: var(--spacing-2\.5) }`.
-        VStack(spacing: DS.Spacing.s2_5) {
+        // bundle.css `.nn-timeline__item { gap: var(--spacing-2\.5) }`, a start-aligned
+        // column (the dot and the date sit at the tile's leading edge).
+        VStack(alignment: .leading, spacing: DS.Spacing.s2_5) {
+            // A `spacing-5` dot whose `spacing-1` `bg` ring is inside that size.
             Circle()
                 .fill(occasion.isCurrent ? DS.Color.primary : DS.Color.primaryMuted)
-                .frame(width: DS.Spacing.s5, height: DS.Spacing.s5)
                 .padding(DS.Spacing.s1)
+                .frame(width: Self.dotFrame, height: Self.dotFrame)
                 .background(DS.Color.bg, in: Circle())
                 .accessibilityHidden(true)
 

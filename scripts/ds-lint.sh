@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
 # ds-lint: fail on values that did not come from the design system.
 #
-# Scans Swift files in apps/ios/NomNom/Core/Components and apps/ios/NomNom/Features
-# for invented values: numeric literals in font sizes, padding, spacing, frames and
+# Scans Swift files in apps/ios/NomNom/Core/Components, Core/Extensions, Core/Design
+# (except Core/Design/Generated, which scripts/ds-tokens-swift.py writes from
+# tokens.json) and apps/ios/NomNom/Features for invented values: numeric literals in font sizes, padding, spacing, frames and
 # sizes, corner radii, opacities, line widths, line spacing, tracking, scale and
 # shadow/blur radii; colour literals (Color(red:/white:/hex:), "#rrggbb" strings);
 # and named system colours (Color.red, .foregroundStyle(.white), …).
@@ -22,11 +23,18 @@ if [[ "${1:-}" == "--summary" ]]; then SUMMARY_ONLY=1; shift; fi
 if [[ $# -gt 0 ]]; then
   TARGETS=("$@")
 else
-  TARGETS=("$ROOT/apps/ios/NomNom/Core/Components" "$ROOT/apps/ios/NomNom/Features")
+  TARGETS=(
+    "$ROOT/apps/ios/NomNom/Core/Components"
+    "$ROOT/apps/ios/NomNom/Core/Extensions"
+    "$ROOT/apps/ios/NomNom/Core/Design"
+    "$ROOT/apps/ios/NomNom/Features"
+  )
 fi
 
 FILES=()
-while IFS= read -r -d '' f; do FILES+=("$f"); done < <(find "${TARGETS[@]}" -type f -name '*.swift' -print0 | sort -z)
+while IFS= read -r -d '' f; do FILES+=("$f"); done < <(
+  find "${TARGETS[@]}" -type f -name '*.swift' -not -path '*/Core/Design/Generated/*' -print0 | sort -z
+)
 if [[ ${#FILES[@]} -eq 0 ]]; then echo "ds-lint: no Swift files found"; exit 0; fi
 
 HITS="$(awk -v root="$ROOT/" '
@@ -85,9 +93,9 @@ if [[ $SUMMARY_ONLY -eq 0 ]]; then
 fi
 
 TOTAL=$(printf '%s\n' "$HITS" | wc -l | tr -d ' ')
-CORE=$(printf '%s\n' "$HITS" | grep -c '^apps/ios/NomNom/Core/Components/' || true)
+CORE=$(printf '%s\n' "$HITS" | grep -c '^apps/ios/NomNom/Core/' || true)
 FEAT=$(printf '%s\n' "$HITS" | grep -c '^apps/ios/NomNom/Features/' || true)
-echo "ds-lint: $TOTAL invented values (Core/Components $CORE, Features $FEAT) in ${#FILES[@]} files"
+echo "ds-lint: $TOTAL invented values (Core $CORE, Features $FEAT) in ${#FILES[@]} files"
 echo "by rule:"
 printf '%s\n' "$HITS" | awk -F': ' '{print $2}' | sort | uniq -c | sort -rn | sed 's/^/  /'
 echo "top files:"

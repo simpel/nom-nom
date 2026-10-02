@@ -11,9 +11,6 @@ enum AppButtonSize: Equatable, CaseIterable {
     case md
     case lg
 
-    @available(*, deprecated, renamed: "lg")
-    static var xl: AppButtonSize { .lg }
-
     /// Minimum height of a labelled button.
     var height: CGFloat {
         switch self {
@@ -97,53 +94,5 @@ private struct AppPressEffect<Label: View>: View {
             .opacity(isPressed ? DS.Opacity.pressed : DS.Opacity.o100)
             .scaleEffect(isPressed && !reduceMotion ? DS.Motion.scalePress : 1)
             .animation(DS.Motion.press, value: isPressed)
-    }
-}
-
-// MARK: - Legacy axes (pre-design-system AppButton API)
-
-/// Legacy button intent. Maps onto `DSVariant` + `DSAppearance` via `dsAxes(style:)`.
-enum AppButtonVariant {
-    case primary
-    case secondary
-    case neutral
-    case destructive
-    case pro
-}
-
-/// Legacy visual weight: `.normal` / `.outlined` / `.ghost`.
-enum AppButtonStyle {
-    case normal
-    case outlined
-    case ghost
-}
-
-/// Legacy icon position: `.leading` / `.trailing`.
-enum AppButtonIconPosition {
-    case leading
-    case trailing
-
-    var dsPosition: DSIconPosition { self == .trailing ? .end : .start }
-}
-
-extension AppButtonVariant {
-    /// AppButton README "Migration": `.primary` → primary solid, `.secondary` →
-    /// primary soft, `.neutral` → secondary, `.destructive` → destructive, `.pro` →
-    /// pro; style `.outlined` → outline, `.ghost` → ghost.
-    func dsAxes(style: AppButtonStyle) -> (DSVariant, DSAppearance) {
-        let variant: DSVariant
-        let filled: DSAppearance
-        switch self {
-        case .primary: variant = .primary; filled = .solid
-        case .secondary: variant = .primary; filled = .soft
-        case .neutral: variant = .secondary; filled = .soft
-        case .destructive: variant = .destructive; filled = .solid
-        case .pro: variant = .pro; filled = .solid
-        }
-        switch style {
-        case .normal: return (variant, filled)
-        case .outlined: return (variant, .outline)
-        case .ghost: return (variant, .ghost)
-        }
     }
 }

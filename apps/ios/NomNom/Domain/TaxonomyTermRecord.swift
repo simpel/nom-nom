@@ -50,5 +50,3 @@ struct TaxonomyTermRecord: Identifiable, Hashable, Decodable, Sendable {
         self.updatedAt = updatedAt
     }
 }
-
-typealias DishKindRecord = TaxonomyTermRecord

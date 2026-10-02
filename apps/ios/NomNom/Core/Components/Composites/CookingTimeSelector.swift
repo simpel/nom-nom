@@ -21,8 +21,6 @@ struct CookingTimeSelector: View {
     }
 }
 
-typealias EffortLevelSelector = CookingTimeSelector
-
 #Preview {
     @Previewable @State var effort: EffortLevel? = .thirtyTo60
 

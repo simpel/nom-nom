@@ -1,7 +1,5 @@
 import SwiftUI
 
-typealias EatersView = SettingsView
-
 /// Settings tab/sheet: dinner parties, household members, profile settings, and account management.
 struct SettingsView: View {
     @Environment(FoodStore.self) private var store
@@ -38,7 +36,7 @@ struct SettingsView: View {
         return DSSection("Sharing") {
             Card(layout: .list) {
                 NavigationLink {
-                    PartyListView()
+                    DinnerPartiesView()
                 } label: {
                     ListRow(
                         "Dinner parties",

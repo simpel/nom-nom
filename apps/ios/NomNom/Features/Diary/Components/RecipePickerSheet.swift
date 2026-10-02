@@ -14,12 +14,6 @@ struct RecipePickerSheet: View {
         self.onSelectNewRecipe = onSelectNewRecipe
     }
 
-    // Compatibility init
-    init(onSelectExistingDish: @escaping (Recipe) -> Void, onSelectNewDish: @escaping (String) -> Void) {
-        self.onSelectExistingRecipe = onSelectExistingDish
-        self.onSelectNewRecipe = onSelectNewDish
-    }
-
     @State private var searchText = ""
     @State private var showingCreateRecipeSheet = false
 
@@ -134,5 +128,3 @@ struct RecipePickerSheet: View {
         dismiss()
     }
 }
-
-typealias DishPickerSheet = RecipePickerSheet

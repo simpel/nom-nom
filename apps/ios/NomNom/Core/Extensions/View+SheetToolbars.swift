@@ -1,7 +1,7 @@
 import SwiftUI
 
 // Sheet chrome (AGENTS.md §5). The leading close is always an AppButton
-// `secondary soft sm` xmark on `.topBarLeading`, alone; primary actions sit on
+// `secondary soft` icon-only xmark on `.topBarLeading`, alone; primary actions sit on
 // `.topBarTrailing`. Implementations live in `View+SheetToolbarModifiers.swift`.
 
 extension View {
@@ -64,9 +64,7 @@ extension View {
     }
 
     /// Media viewers, photo lightboxes and read-only sheets: a leading close.
-    /// `color` is ignored now that the close is an AppButton; kept for call sites.
     func sheetCloseToolbar(
-        color: Color = .primary,
         onClose: (() -> Void)? = nil
     ) -> some View {
         modifier(SheetCloseToolbarModifier(accessibilityLabel: "Close", onClose: onClose))
@@ -91,19 +89,6 @@ extension View {
             onPrimaryAction: onPrimaryAction,
             onClose: onClose
         ))
-    }
-
-    /// Forwards to `sheetOverviewToolbar`.
-    func sheetDoneToolbar(
-        primarySystemImage: String? = nil,
-        onPrimaryAction: (() -> Void)? = nil,
-        onDone: (() -> Void)? = nil
-    ) -> some View {
-        sheetOverviewToolbar(
-            primarySystemImage: primarySystemImage,
-            onPrimaryAction: onPrimaryAction,
-            onClose: onDone
-        )
     }
 }
 

@@ -15,7 +15,7 @@ struct MealDetailsStepView: View {
     var body: some View {
         ScrollView {
             VStack(spacing: DS.Spacing.block) {
-                MealPhotosPickerSection(
+                AssetPhotosPickerSection(
                     draft: Binding(
                         get: { draft.photos },
                         set: { draft.photos = $0 }

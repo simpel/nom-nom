@@ -17,6 +17,8 @@ struct RootTabView: View {
                 legacyTabView
             }
         }
+        // README "Colour": `primary` is "the main action, active tab, focused field".
+        .tint(DS.Color.primary)
         .sheet(item: Binding(
             get: { activeRateMealID.map { RateMealSheetTarget(id: $0) } },
             set: { activeRateMealID = $0?.id }

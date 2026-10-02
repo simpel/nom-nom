@@ -42,7 +42,8 @@ struct RecipeShelf<Item: Identifiable, Cell: View>: View {
     var body: some View {
         if !items.isEmpty {
             DSSection(title, trailing: trailing) {
-                ScrollView(.horizontal, showsIndicators: false) {
+                // README: "touch gets the platform's own" bar, so the system indicator stays on.
+                ScrollView(.horizontal) {
                     LazyHStack(alignment: .top, spacing: DS.Spacing.s3) {
                         ForEach(items) { cell($0) }
                     }

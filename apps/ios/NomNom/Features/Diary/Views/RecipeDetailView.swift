@@ -164,8 +164,6 @@ struct RecipeDetailView: View {
     }
 }
 
-typealias DishDetailView = RecipeDetailView
-
 #Preview {
     NomNomPreview { store in
         if let firstRecipe = store.dishes.first {

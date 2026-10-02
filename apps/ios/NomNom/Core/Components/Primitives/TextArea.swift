@@ -52,6 +52,7 @@ struct TextArea: View {
 
     private var isFocused: Bool { externalFocus?.wrappedValue ?? internalFocus }
     private var isPlain: Bool { appearance == .plain }
+    private var hasLabel: Bool { !(label ?? "").isEmpty }
     private var isOver: Bool { maxLength.map { text.count > $0 } ?? false }
     private var isInvalid: Bool { isError || isOver || !(error ?? "").isEmpty }
     private var state: InputState {
@@ -69,7 +70,7 @@ struct TextArea: View {
 
     private var fieldBox: some View {
         VStack(alignment: .leading, spacing: DS.Spacing.s0_5) {
-            if let label, !label.isEmpty {
+            if let label, hasLabel {
                 Text(label)
                     .textStyle(.sansXs, tone: nil)
                     .foregroundStyle(InputMetrics.label(state))
@@ -81,7 +82,10 @@ struct TextArea: View {
                 .lineLimit(lineLimit)
                 .disabled(disabled)
         }
-        .frame(maxWidth: .infinity, minHeight: InputMetrics.height, alignment: .topLeading)
+        // bundle.css `.nn-textarea { min-height: var(--nn-h) }`: an Input's height,
+        // `spacing-14` with a label (`.nn-field[data-labeled]`).
+        .frame(maxWidth: .infinity, minHeight: hasLabel ? InputMetrics.labeledHeight : InputMetrics.height,
+               alignment: .topLeading)
         .padding(.horizontal, isPlain ? 0 : InputMetrics.sidePadding)
         .padding(.vertical, isPlain ? 0 : InputMetrics.textAreaTopPadding)
         .modifier(InputChrome(appearance: appearance, state: state))

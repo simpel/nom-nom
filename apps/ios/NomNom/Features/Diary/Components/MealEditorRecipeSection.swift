@@ -27,23 +27,6 @@ struct MealEditorRecipeSection: View {
         self.onRemoveRecipe = onRemoveRecipe
     }
 
-    // Compatibility init
-    init(
-        title: Binding<String>,
-        existingMatchedDish: Recipe?,
-        isExistingDish: Bool,
-        onPickDish: @escaping () -> Void,
-        onEditRecipe: @escaping () -> Void,
-        onRemoveDish: @escaping () -> Void
-    ) {
-        self._title = title
-        self.existingMatchedRecipe = existingMatchedDish
-        self.isExistingRecipe = isExistingDish
-        self.onPickRecipe = onPickDish
-        self.onEditRecipe = onEditRecipe
-        self.onRemoveRecipe = onRemoveDish
-    }
-
     private var isCreator: Bool {
         guard let recipe = existingMatchedRecipe else { return true }
         return recipe.ownerID == store.userID
@@ -125,5 +108,3 @@ struct MealEditorRecipeSection: View {
         .frame(maxWidth: .infinity, alignment: .leading)
     }
 }
-
-typealias MealEditorDishSection = MealEditorRecipeSection

@@ -34,11 +34,6 @@ struct SectionHeader: View {
     var uppercase: Bool
     var variant: SectionHeaderVariant?
 
-    /// Pre-v3 spacing the deprecated initialisers still draw. `nil` on the v3 API.
-    private var legacyHorizontalPadding: CGFloat?
-    private var legacyBottomPadding: CGFloat?
-    private var legacyTrailingColor: Color?
-
     init(
         title: String,
         trailing: String? = nil,
@@ -55,43 +50,8 @@ struct SectionHeader: View {
         self.variant = variant
     }
 
-    /// Pre-v3 API. `inset: true` (the default) drew the `spacing-2` side inset and gap
-    /// that now belong to `DSSection`; `inset: false` is `SectionHeader(title:)`.
-    @available(*, deprecated, message: "SectionHeader reserves no space: use SectionHeader(title:…) inside DSSection, SectionCard or a Card")
-    init(
-        _ title: String,
-        trailing: String? = nil,
-        trailingTone: SectionHeaderTrailingTone = .secondary,
-        systemImage: String? = nil,
-        uppercase: Bool = true,
-        inset: Bool = true,
-        variant: SectionHeaderVariant? = nil
-    ) {
-        self.init(title: title, trailing: trailing, trailingTone: trailingTone, systemImage: systemImage,
-                  uppercase: uppercase, variant: variant)
-        if inset {
-            self.legacyHorizontalPadding = DS.Spacing.sectionInset
-            self.legacyBottomPadding = DS.Spacing.s2
-        }
-    }
-
-    /// Pre-design-system API, kept so existing call sites compile until Phase 5.
-    @_disfavoredOverload
-    @available(*, deprecated, message: "Use SectionHeader(title:trailing:trailingTone:systemImage:uppercase:variant:)")
-    init(
-        _ title: String,
-        trailingText: String? = nil,
-        trailingColor: Color? = nil,
-        horizontalPadding: CGFloat = DS.Spacing.s4
-    ) {
-        self.init(title: title, trailing: trailingText)
-        self.legacyTrailingColor = trailingColor
-        self.legacyHorizontalPadding = horizontalPadding
-    }
-
     private var trailingColor: Color {
-        if let legacyTrailingColor { return legacyTrailingColor }
-        return trailingTone == .primary ? DS.Color.primaryText : DS.Color.textTertiary
+        trailingTone == .primary ? DS.Color.primaryText : DS.Color.textTertiary
     }
 
     var body: some View {
@@ -123,8 +83,6 @@ struct SectionHeader: View {
                     .layoutPriority(1)
             }
         }
-        .padding(.horizontal, legacyHorizontalPadding ?? 0)
-        .padding(.bottom, legacyBottomPadding ?? 0)
         .accessibilityElement(children: .combine)
     }
 }

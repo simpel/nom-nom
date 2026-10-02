@@ -22,12 +22,3 @@ struct PhotoScrim: View {
         .allowsHitTesting(false)
     }
 }
-
-extension View {
-    /// Applies a standard photo bottom scrim gradient.
-    func photoBottomScrim() -> some View {
-        overlay(alignment: .bottom) {
-            PhotoScrim()
-        }
-    }
-}

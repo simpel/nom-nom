@@ -37,7 +37,6 @@ struct MealsView: View {
                                 SwipeableListCard(
                                     title: section.title,
                                     data: section.meals,
-                                    dividerPadding: 0,
                                     leadingIcon: { _ in "trash.fill" },
                                     leadingColor: { _ in DS.Color.destructive },
                                     onLeadingAction: { meal in
@@ -102,8 +101,6 @@ struct MealsView: View {
         }
     }
 }
-
-typealias LogListView = MealsView
 
 #Preview("With Meals") {
     NomNomPreview(inNavigationStack: false) {

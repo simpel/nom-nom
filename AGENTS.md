@@ -10,19 +10,35 @@ This is a pnpm/Turborepo monorepo. Three apps under `apps/`, shared configs unde
 Every `NomNom/...` path elsewhere in this doc is shorthand for `apps/ios/NomNom/...`.
 
 ```
+design-system/          # Vendored snapshot of the design system artifact (see VERSION). Never hand-edit.
+│                         README.md (rules), tokens.json (every value), components/<Name>/README.md
+├── components/         # One README per component + bundle.css / index.d.ts (reference implementation)
+scripts/
+├── ds-tokens-swift.py  # tokens.json -> apps/ios/NomNom/Core/Design/Generated/DSTokens.generated.swift
+└── ds-lint.sh          # Fails on invented values in Core/ and Features/. Must be clean.
 apps/
 ├── ios/NomNom/         # SwiftUI app
 │   ├── App/            # App lifecycle, root navigation (RootTabView, RootView, NomNomApp)
-│   ├── Features/       # Vertical slices: Auth, Calendar, Diary, Insights, Notifications,
-│   │   │                 Parties, Recipes, Settings, Suggestions
+│   ├── Features/       # Vertical slices: Auth, Diary, Insights, Notifications, Parties,
+│   │   │                 Recipes, Settings, Suggestions (Engine only)
 │   │   ├── Components/ # Feature-specific subviews, cards, sheets, pickers
 │   │   ├── Views/      # Screen-level views
 │   │   └── Engine/     # Feature-specific non-UI logic where present (e.g. Suggestions/, Recipes/)
-│   ├── Core/           # Shared, feature-agnostic primitives
-│   │   ├── Components/ # Design system components (AppButton, Chip, VerdictStrip, SectionCard, etc.)
-│   │   ├── Design/     # Design tokens
-│   │   ├── Extensions/ # Foundation & SwiftUI extensions
-│   │   ├── Fonts/      # Bundled font files + registry
+│   ├── Core/           # Shared, feature-agnostic code
+│   │   ├── Components/ # Design system components, in layers (see §7):
+│   │   │   ├── Foundations/ # Axes and paint (DSAxes), preview host, camera/photo plumbing
+│   │   │   ├── Primitives/  # AppButton, AppButtonLabel, Badge, Avatar, Bar, ScoreValue,
+│   │   │   │                  SectionHeader, AppToggle, Input, TextArea
+│   │   │   ├── Layout/      # Card, DSSection, SectionCard, PageHeader, SwipeableListCard
+│   │   │   ├── Composites/  # ListRow, EmptyState, DetailHeader, ScoreCard, PhotoCard, PhotoStrip,
+│   │   │   │                  RatingList, Timeline, RecipeCard, RecipeLinkCard, RecipeShelf,
+│   │   │   │                  PartyCard, SegmentedBar, ValueStepper, LabeledPhotoCard,
+│   │   │   │                  TasteScoreSelector, SheetBody/SheetCard/SheetHero (BottomSheet)
+│   │   │   └── Interim/     # Patterns the DS does not cover yet (TrendChart, MediaViewerSheet,
+│   │   │                      form blocks). Each is listed in Core/Design/DS-GAPS.md
+│   │   ├── Design/     # DS+*.swift token aliases, Generated/ (never hand-edit), README.md, DS-GAPS.md
+│   │   ├── Extensions/ # Foundation & SwiftUI extensions, sheet/navigation modifiers
+│   │   ├── Fonts/      # Bundled Newsreader cuts (registered via INFOPLIST_KEY_UIAppFonts)
 │   │   └── Parsing/    # Parsers, formatters, text helpers
 │   ├── Domain/         # Models and entities (Meal, Recipe, Party, Profile, Reaction, HealthIndex, etc.) — NO UI code
 │   └── Services/       # Backend, networking, data store
@@ -57,6 +73,12 @@ To keep the codebase maintainable and readable:
 4. **Sheet & Dialog Isolation**:
    - Every modal sheet, bottom sheet, or complex dialog must live in its own file under `Features/<Feature>/Components/` (or `Core/Components/` if shared across features).
 
+5. **The design system is the only source of values**:
+   - No font size, spacing, colour, radius, shadow, opacity, border width, duration or dimension is invented. Every value is a `DS.*` token or a `.textStyle(...)` step.
+   - Tokens are generated from `design-system/tokens.json` by `scripts/ds-tokens-swift.py` into `Core/Design/Generated/`. **Never hand-edit `Generated/`** or `design-system/`; `Core/Design/DS+*.swift` only alias generated values. See `Core/Design/README.md`.
+   - `scripts/ds-lint.sh` must be clean. A literal that has to stay ends in `// ds-lint:allow <reason>` quoting the README it came from.
+   - Where the spec contradicts itself, the component README wins over older root-README prose; log every such call in `Core/Design/DS-GAPS.md`.
+
 ---
 
 ## 3. Placement Decision Matrix
@@ -68,7 +90,9 @@ When creating or moving a file, use this decision tree:
 | **Screen / Route View** | Primary navigation target | `NomNom/Features/<Feature>/Views/<ScreenName>View.swift` |
 | **Feature Section / Card / Sheet** | Used within one feature | `NomNom/Features/<Feature>/Components/<SectionName>.swift` |
 | **Feature Logic / Scoring** | Non-UI algorithm or state engine | `NomNom/Features/<Feature>/Engine/` or `Models/` |
-| **Reusable UI Primitive** | Used or usable across $\ge 2$ features | `NomNom/Core/Components/<ComponentName>.swift` |
+| **Design-system component** | Has a README in `design-system/components/` | `NomNom/Core/Components/<Foundations\|Primitives\|Layout\|Composites>/<Name>.swift` |
+| **Shared pattern the DS lacks** | Used or usable across $\ge 2$ features | `NomNom/Core/Components/Interim/<Name>.swift` + `Core/Design/DS-GAPS.md` entry |
+| **Design token alias** | A value from `tokens.json` | `NomNom/Core/Design/DS+<Family>.swift` (generated values in `Generated/`, never hand-edited) |
 | **Extension / Utility** | General type extensions | `NomNom/Core/Extensions/<Type>+<Functionality>.swift` |
 | **Data Entity / Value Type** | App-wide data model | `NomNom/Domain/<ModelName>.swift` |
 | **Store Mutation / Query** | Domain-specific backend logic | `NomNom/Services/FoodStore/FoodStore+<Domain>.swift` |
@@ -86,51 +110,41 @@ Never add new domain methods directly into `FoodStore.swift`.
 
 ## 5. Modal Sheet Dismissal & Confirmation Convention (Apple HIG Aligned)
 
-Every modal sheet must place the close button ("X") consistently on `.topBarLeading` alone, with any primary or secondary actions (e.g. `+`, `checkmark` to save, `Next`, or `Edit`) placed on the opposite side (`.topBarTrailing`):
+Every modal sheet is a design-system **BottomSheet** (`design-system/components/BottomSheet/README.md`): `.dsSheet()` on its root for the `sheet` ground, `radius-4xl` corners and the DS grabber, and `SheetBody { … }` for the content padding and gaps. The close button sits on `.topBarLeading` alone (an AppButton `secondary soft` icon-only `xmark`, drawn by the modifiers below); any primary action (`+`, `checkmark` to save, `Next`) sits on `.topBarTrailing`.
 
 ### A. Intent Matrix
 
-| Sheet Type | Purpose & Examples | Leading Action (`.topBarLeading`) | Trailing Action (`.topBarTrailing`) |
-| :--- | :--- | :--- | :--- |
-| **Commit / Form / Editor** | User inputs, edits, ratings, or filters (`MealEditorView`, `MealRatingSheet`, `RecipeEditSheet`, `CreatePartySheet`, `ProfileSheetView`, `SuggestionFiltersView`) | `Image(systemName: "xmark")` (discards uncommitted draft state, alone) | `Image(systemName: "checkmark")` (saves / confirms / commits) or `ProgressView().controlSize(.small)` during async save |
-| **Media / Photo Viewer / Lightbox** | Inspecting photos, galleries, full-screen documents with NO state changes (`MealPhotoViewerSheet`, `MealGalleryViewerSheet`, `RecipePhotoViewerSheet`) | `Image(systemName: "xmark")` with `.accessibilityLabel("Close")` (alone) | *None* |
-| **Selection / Entity Picker** | Picking an item (`RecipePickerSheet`) | `Image(systemName: "xmark")` (alone) | Optional primary action (e.g. `+` `Image(systemName: "plus")`) |
-| **Management / List Overview** | Modal navigation overview (`PartyListView`, `HouseholdMembersSheet`) | `Image(systemName: "xmark")` (alone when modal) | Optional primary action (e.g. `+` `Image(systemName: "plus")`) |
+| Sheet Type | Purpose & Examples | Leading Action (`.topBarLeading`) | Trailing Action (`.topBarTrailing`) | Modifier |
+| :--- | :--- | :--- | :--- | :--- |
+| **Commit / Form / Editor** | Inputs, edits, ratings, filters (`MealEditorView`, `MealRatingSheet`, `RecipeEditSheet`, `ProfileSheetView`, `RecipeFilterSheet`) | Close (discards the draft) | Checkmark, or a spinner while saving | `.sheetCommitToolbar` |
+| **Multi-step, first step** | `CreateRecipeSheet`, `RecipeEditSheet`, `CreatePartySheet` | Close | "Next", disabled until the step is valid | `.sheetNextToolbar` |
+| **Multi-step, later step** | Pushed steps (`MealVerdictStepView`, `RecipeDetailsStepView`, `PartySetupStepView`) | System back button | Checkmark or spinner; interactive dismiss disabled while saving | `.stepCommitToolbar` |
+| **Media / Photo Viewer** | Full-screen photos with no state changes (`MediaViewerSheet`) | Close | *None* | `.mediaViewerStyle()` |
+| **Read-only sheet** | Explanations, insight sheets (`PartyMemberInsightSheet`) | Close | *None* | `.sheetCloseToolbar()` |
+| **Selection / Picker** | Choosing an item dismisses (`RecipePickerSheet`, `CuisinePickerSheet`) | Close | Optional primary action | `.sheetCancelToolbar()` |
+| **Management / Overview** | Modal list overview (`PartyMembersSheet`) | Close | Optional primary action (`plus`) | `.sheetOverviewToolbar` |
 
 ---
 
-### B. Centralized View Modifiers (`NomNom/Core/Extensions/`)
+### B. Centralized View Modifiers (`NomNom/Core/Extensions/View+SheetToolbars.swift`)
 
-Instead of hand-writing repetitive toolbar boilerplate, **ALWAYS** use the centralized view modifiers:
+Never hand-write sheet toolbars, grabbers or sheet padding. **ALWAYS** use:
 
-1. **Commit / Form Sheets**:
-   ```swift
-   .sheetCommitToolbar(
-       isSaving: isSaving,
-       canSave: canSave,
-       onCancel: { /* optional custom discard handler */ },
-       onSave: { save() }
-   )
-   ```
+```swift
+NavigationStack {
+    SheetBody { /* sections */ }
+        .screenTitle("Rate meal", displayMode: .inline)
+        .sheetCommitToolbar(isSaving: isSaving, canSave: canSave, onCancel: nil) { save() }
+}
+.dsSheet()                                   // or .dsSheet(detents: [.medium, .large])
 
-2. **Media Viewers & Lightboxes**:
-   ```swift
-   .mediaViewerStyle()
-   // Or standalone: .sheetCloseToolbar(color: .white)
-   ```
-
-3. **Pickers (Item Selection Dismisses)**:
-   ```swift
-   .sheetCancelToolbar()
-   ```
-
-4. **Management / Overview Sheets**:
-   ```swift
-   .sheetOverviewToolbar(
-       primarySystemImage: "plus",
-       onPrimaryAction: { showingCreate = true }
-   )
-   ```
+.sheetNextToolbar(canProceed: isValid) { path.append(.details) }
+.stepCommitToolbar(isSaving: isSaving, canSave: canSave) { save() }
+.sheetCloseToolbar()                         // read-only sheets
+.sheetCancelToolbar()                        // pickers
+.sheetOverviewToolbar(primarySystemImage: "plus") { showingCreate = true }
+.mediaViewerStyle()                          // photo viewers (dark chrome + close)
+```
 
 ---
 
@@ -151,8 +165,20 @@ To prevent duplication and ensure high consistency:
 
 2. **Centralized Screen Navigation & Headers**:
    - Always use `.screenTitle(_ title: String, displayMode: NavigationBarItem.TitleDisplayMode = .large)` for screen/sheet titles.
-   - Use `PageHeader(title:subtitle:)` for hero/in-body narrative titles.
-   - Never hardcode raw point sizes or font names in individual views — reference `AppTypography` or semantic typography tokens.
+   - Use `PageHeader(_:subtitle:eyebrow:align:size:actions:)` for tab-root and in-body titles, and `DetailHeader` for the hero of a detail screen (meal, recipe, party, profile).
+   - Text is set only with `.textStyle(_:tone:weight:italic:numeric:lines:align:)` (`serifXs…serifXl`, `sansXs…sansXl`; weight `.semibold` is opt-in). Never `.font(.system(size:))`, a font name or a raw size.
+
+3. **Compose from `Core/Components`, in layers**:
+   - **Foundations**: `DSAxes` (`DSVariant` primary/secondary/destructive/pro/warning/reaction, `DSAppearance` solid/soft/outline/ghost/elevated, `DSPaint`), `NomNomPreview`, photo plumbing.
+   - **Primitives**: `AppButton` / `AppButtonLabel`, `Badge` (`.verdict`, `.delta`, `.rotation`, `.pro`, `.dishSummary`, `.rank`), `Avatar`, `Bar`, `ScoreValue`, `SectionHeader`, `AppToggle`, `Input`, `TextArea`.
+   - **Layout**: `Card` (`layout: .block/.list`, `size`, `variant: .primary`, optional `action`), `DSSection` (label above content), `SectionCard` (label inside a card), `PageHeader`, `SwipeableListCard`.
+   - **Composites**: `ListRow` (the one row: leading Avatar / PhotoCard `xs` / icon / rank, meta, value, trailing Badge / ScoreValue / AppButton / Toggle, chevron, unread), `EmptyState` (`screen` / `card` / `plain` / `row`), `DetailHeader`, `ScoreCard`, `PhotoCard` (owns the photo → cuisine → no-photo fallback), `PhotoStrip`, `RatingList`, `Timeline`, `RecipeCard`, `RecipeLinkCard`, `RecipeShelf`, `PartyCard`, `SegmentedBar`, `ValueStepper`, `LabeledPhotoCard`, `TasteScoreSelector`, and the BottomSheet parts `SheetBody` / `SheetCard` / `SheetHero`.
+   - Every list is `Card(layout: .list)` of `ListRow`s; never hand-draw dividers, capsules, avatars or thumbnails.
+   - Each component follows its README in `design-system/components/<Name>/README.md`. Read it before changing the component.
+
+4. **A pattern the DS lacks goes in `Core/Components/Interim/` + `DS-GAPS.md`; never hand-roll it**:
+   - Build the interim component only from DS primitives and tokens, start the file with a `// DS-GAP: pending design system` header, and add an entry to `Core/Design/DS-GAPS.md` (section "Open gaps").
+   - Today: `TrendChart`, `MediaViewerSheet`, `NameFieldsCard`, `PartyFormFields`, `VisibilityToggleCard`, `AccountActionsSection`.
 
 ---
 
@@ -160,42 +186,37 @@ To prevent duplication and ensure high consistency:
 
 ## 8. Button System (`AppButton`) — Rules & Usage Matrix
 
-**ALL** action buttons in screens, sheets, cards, section headers, row accessories, and empty states **MUST** use the centralized `AppButton` component (`NomNom/Core/Components/AppButton.swift`). No exemptions for view-body buttons.
+**ALL** action buttons in screens, sheets, cards, section headers, row accessories, and empty states **MUST** use `AppButton` (`NomNom/Core/Components/Primitives/AppButton.swift`), spec `design-system/components/AppButton/README.md`. No exemptions for view-body buttons. Controls that bring their own tap handling (`PhotosPicker`, `ShareLink`, `Menu`, `NavigationLink`) use `AppButtonLabel` as their label with `.buttonStyle(AppPressableButtonStyle())`.
 
-### A. Dimensions & Options
+### A. Axes
 
-1. **`variant` (Intent & Hierarchy)**:
-   - **`.primary`**: The single primary call-to-action on a screen or modal. Brand accent background in `.normal` style, white text. (*Only one primary normal button per view*).
-   - **`.secondary`**: Supporting actions paired with a primary CTA, or branded actions (e.g. "Send", "Resend", "Follow"). Uses soft accent background (`DS.Color.accentSoft`) and accent text (`DS.Color.accentText`).
-   - **`.neutral`**: Alternative paths, utility actions, dismissive or non-accented secondary flows (e.g. "Use a different address", "Reset Filters", "Skip Step", "Clear Search"). Uses high-contrast text (`DS.Color.textSecondary` in ghost style, 8.3:1+ contrast) and neutral styling.
-   - **`.destructive`**: Irreversible or high-consequence actions (e.g. "Delete Meal", "Leave Party", "Sign out", "Delete account"). System red styling.
+```swift
+AppButton("Rate this meal", size: .lg, fullWidth: true) { … }                 // primary solid
+AppButton("Resend", appearance: .soft, size: .sm) { … }
+AppButton("Reset filters", variant: .secondary, appearance: .ghost) { … }
+AppButton("Delete meal", icon: "trash", variant: .destructive, appearance: .outline) { … }
+AppButton("Next", icon: "arrow.right", iconPosition: .end, isLoading: isSaving) { … }
+AppButton(icon: "chevron.left", accessibilityLabel: "Back", variant: .secondary, appearance: .elevated) { … }
+```
 
-2. **`style` (Visual Weight)**:
-   - **`.normal`**: Solid filled background. Highest visual weight for primary commitments.
-   - **`.outlined`**: Transparent background with a distinct 1.5pt border. Medium priority for card actions, secondary tools, or adjacent buttons.
-   - **`.ghost`**: 100% transparent background (`Color.clear`), no border. Lowest visual weight for alternatives, skips, and tertiary links.
-
-3. **`size` (Context & Touch Targets)**:
-   - **`.xl` (50pt)**: Full-width screen-bottom actions, auth flows, hero forms (matches 50pt input field height). `.headline.weight(.semibold)`.
-   - **`.md` (42pt)**: Standard screen section CTAs, empty-state callouts, dialog action buttons, card footers. `.callout.weight(.semibold)`.
-   - **`.sm` (34pt)**: Compact row actions (e.g. "Resend" in member row, "Edit" in section headers, follow/unfollow pill). `.subheadline.weight(.semibold)`.
-
-4. **Typography & Shape**:
-   - **Font weight**: Every button variant/style **MUST** maintain `Font.weight(.semibold)` for visual consistency.
-   - **Shape**: Always a clean `Capsule()` boundary.
-
-5. **Icon Support (`AppButtonIcon`)**:
-   - Accepts string literals (`icon: "plus"`), explicit SF symbols (`icon: .system("camera")`), named asset images (`icon: .asset("badge")`), or custom `Image`s (`icon: .image(...)`).
-   - Placement: `iconPosition: .leading` (default) or `.trailing` (e.g. `iconPosition: .trailing` for forward flow arrows).
-   - Icon-only buttons: omit `title` to get a circular button sized to `size.height` (34pt, 42pt, or 50pt).
-
+1. **`variant`** (colour role, default `.primary`):
+   - **`.primary`**: `solid` is the one main commitment on a screen ("Log a meal", "Rate this meal"); one per view. `soft` is for supporting branded actions ("Resend", "Join dinner party").
+   - **`.secondary`**: alternatives and utilities ("Use a different address", "Reset filters", "Skip step"). `secondary soft` icon-only is the in-sheet close.
+   - **`.destructive`**: irreversible actions only ("Delete meal", "Leave party", "Sign out"). Prefer `outline` or `ghost`, and confirm with an alert.
+   - **`.pro`**: Nom Nom Pro CTAs only ("Unlock with Pro").
+   - `.reaction(r)` is used only inside TasteScoreSelector, never as an action.
+2. **`appearance`** (visual weight, default `.solid`): `solid` = role fill + `on-{role}`; `soft` = `{role}-soft` + `{role}-text`; `outline` = clear + `{role}-text` + `border-hairline` `line-control`; `ghost` = `{role}-text` only; `elevated` = `panel` + `shadow-xs` + `text-primary`, for floating controls over content.
+3. **`size`** (default `.md`): `xs`, `sm` and `md` are all 44pt tall and differ in type step (`sans-xs` / `sans-sm` / `sans-md`) and side padding; `lg` is 48pt (`sans-lg`) for full-width screen-bottom actions. **No button is smaller than 44 × 44.**
+4. **Icon-only**: `AppButton(icon:accessibilityLabel:…)` takes no size. Every icon-only button is the same 44pt circle.
+5. **Options**: `icon` (SF Symbol string, `.asset`, `.image`) + `iconPosition` `.start` / `.end`; `fullWidth`; `isLoading` (a spinner replaces the icon and the tap is dropped; the button is not disabled). Disable with `.disabled(_:)` (`opacity-50`).
+6. **Fixed**: label always semibold, sentence case; shape always a capsule; press is `opacity-70` + `scale-press`. Icons only where they remove ambiguity (camera, trash, plus, back, close, forward arrow).
 
 ### B. Platform Exceptions (Native Constraints)
 
 Only these specific system-level APIs are exempt from `AppButton`:
 1. **Alerts & Dialogs (`alert`, `confirmationDialog`)**: Must use native `Button("Title", role: ...)` primitives required by SwiftUI.
 2. **System Menus & Swipes (`swipeActions`, `contextMenu`, `Menu`)**: Must use native `Button` primitives required by iOS system menus.
-3. **Sheet Navigation Toolbars**: Handled by `.sheetCommitToolbar` / `.sheetOverviewToolbar` per Section 5.
+3. **Sheet Navigation Toolbars**: Handled by the sheet modifiers in Section 5.
 
 ---
 
@@ -236,11 +257,13 @@ Only these specific system-level APIs are exempt from `AppButton`:
 - [ ] Are repeated UI structures or modifiers extrapolated into reusable composables?
 - [ ] Is `NomNom/Domain/` kept clean of UI code and SwiftUI imports (unless raw type conformances require it)?
 - [ ] Are store methods placed in the corresponding `FoodStore+<Domain>.swift` extension?
-- [ ] Do screens use `.screenTitle(...)` and `PageHeader` rather than ad-hoc navigation/header modifiers?
-- [ ] Do modal sheets place the close button (`Image(systemName: "xmark")`) on `.topBarLeading` alone?
-- [ ] Are primary actions (`+`, `checkmark` save, Next, Edit) placed on `.topBarTrailing` opposite to the close button?
-- [ ] Are all action buttons in screens, sheets, cards, and sections using `AppButton` rather than raw `Button`?
-- [ ] Are button variants (`primary`, `secondary`, `neutral`, `destructive`), styles (`normal`, `outlined`, `ghost`), and sizes (`sm`, `md`, `xl`) used according to Section 8?
+- [ ] Do screens use `.screenTitle(...)` and `PageHeader` / `DetailHeader` rather than ad-hoc navigation/header modifiers?
+- [ ] Does every value come from a `DS.*` token or `.textStyle(...)`, and is `scripts/ds-lint.sh` clean?
+- [ ] Is the view composed from `Core/Components` (Card, ListRow, EmptyState, …)? Is a pattern the DS lacks in `Interim/` with a `DS-GAPS.md` entry, not hand-rolled?
+- [ ] Is `Core/Design/Generated/` untouched (regenerated with `scripts/ds-tokens-swift.py` only)?
+- [ ] Do modal sheets use `.dsSheet()`, `SheetBody` and one of the sheet toolbar modifiers (close on `.topBarLeading`, primary action on `.topBarTrailing`)?
+- [ ] Are all action buttons in screens, sheets, cards, and sections using `AppButton` (or `AppButtonLabel` inside a picker, share link or menu) rather than raw `Button`?
+- [ ] Are AppButton variants (`primary`, `secondary`, `destructive`, `pro`), appearances (`solid`, `soft`, `outline`, `ghost`, `elevated`) and sizes (`xs`, `sm`, `md`, `lg`) used according to Section 8?
 - [ ] Are emojis completely avoided across all UI and data representations?
 - [ ] Is iconography strictly minimal and purposeful rather than decorative?
 - [ ] Are database seeds executed strictly against the local Docker instance via `./scripts/seed.sh`, never against production?

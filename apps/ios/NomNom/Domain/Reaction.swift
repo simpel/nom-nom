@@ -18,14 +18,16 @@ enum Reaction: Int, Codable, CaseIterable, Identifiable, Hashable, Comparable, T
     var id: Int { rawValue }
 
     /// The verdict for a normalised 0...1 score (averages, recency-weighted
-    /// scores). The single source of the score→verdict thresholds.
+    /// scores). The single source of the score→verdict thresholds. The thresholds
+    /// apply to the displayed 0–100 numeral (Badge README: "≥85 Amazing, ≥70 Great,
+    /// ≥50 Good, ≥30 Meh, ≥15 Bad"), so 0.849 shows "85" and "Amazing" together.
     init(score: Double) {
-        switch score {
-        case 0.85...: self = .amazing
-        case 0.70..<0.85: self = .great
-        case 0.50..<0.70: self = .good
-        case 0.30..<0.50: self = .meh
-        case 0.15..<0.30: self = .bad
+        switch (score * 100).rounded() {
+        case 85...: self = .amazing
+        case 70..<85: self = .great
+        case 50..<70: self = .good
+        case 30..<50: self = .meh
+        case 15..<30: self = .bad
         default: self = .inedible
         }
     }

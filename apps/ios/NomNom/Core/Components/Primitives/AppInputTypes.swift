@@ -7,9 +7,6 @@ enum InputAppearance: Equatable {
     /// No ground, border or side padding: only inside a `Card(layout: .list)` row,
     /// where the row already draws all three.
     case plain
-
-    @available(*, deprecated, message: "v3 has one field style; .outline draws .soft")
-    static var outline: InputAppearance { .soft }
 }
 
 /// The state a field draws. The ground never changes: the border carries every state.
@@ -110,37 +107,6 @@ struct InputChrome: ViewModifier {
             .contentShape(InputMetrics.shape)
             .animation(InputMetrics.animation, value: state)
     }
-}
-
-// MARK: - Legacy (pre-design-system field API)
-
-/// Pre-design-system field sizes. Every field is now one height (44, or 56 with a label).
-enum AppInputSize {
-    case sm
-    case md
-    case xl
-}
-
-/// Pre-design-system field styles; see `appearance` for the mapping.
-enum AppInputStyle {
-    case filled
-    case cardRow
-    case outlined
-    case plain
-
-    /// `.filled`/`.outlined` → soft (v3 has one style), `.cardRow`/`.plain` → plain.
-    var appearance: InputAppearance {
-        switch self {
-        case .filled, .outlined: return .soft
-        case .cardRow, .plain: return .plain
-        }
-    }
-}
-
-/// Pre-design-system field shape. Ignored: every field is `radius-xl`.
-enum AppInputShape: Equatable {
-    case rounded(CGFloat = DS.Radius.xl)
-    case capsule
 }
 
 /// Leading or trailing icon: a system symbol, an asset or an image.

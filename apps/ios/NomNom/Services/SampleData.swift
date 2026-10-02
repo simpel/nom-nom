@@ -71,7 +71,7 @@ enum SampleData {
 
         let dishes: [Dish] = try await supabase
             .from("dishes")
-            .insert(todo.map { NewDish(ownerID: store.userID, name: $0.0, cuisine: $0.1) })
+            .insert(todo.map { NewRecipe(ownerID: store.userID, name: $0.0, cuisine: $0.1) })
             .select()
             .execute()
             .value

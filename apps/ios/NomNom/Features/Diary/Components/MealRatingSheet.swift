@@ -176,8 +176,6 @@ struct MealRatingSheet: View {
     }
 }
 
-typealias MealEaterRatingSheet = MealRatingSheet
-
 #Preview {
     NomNomPreview { store in
         if let meal = store.meals.first {

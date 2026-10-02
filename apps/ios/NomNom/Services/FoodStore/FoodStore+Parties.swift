@@ -99,7 +99,7 @@ extension FoodStore {
         do {
             let updated: Party = try await supabase
                 .from("parties")
-                .update(PartyNamePatch(name: trimmed))
+                .update(PartyPatch(name: trimmed))
                 .eq("id", value: party.id.uuidString)
                 .select()
                 .single()

@@ -119,12 +119,6 @@ extension PageHeader where Content == EmptyView {
         self.init(title, subtitle: subtitle, eyebrow: eyebrow, align: align, size: size,
                   actions: actions) { EmptyView() }
     }
-
-    /// Pre-v3 API (the Legacy arc header still calls it).
-    @available(*, deprecated, message: "Use PageHeader(_:subtitle:eyebrow:align:size:actions:)")
-    init(title: String, subtitle: String? = nil, alignment: HorizontalAlignment = .center) {
-        self.init(title, subtitle: subtitle, align: alignment == .leading ? .start : .center)
-    }
 }
 
 private struct PageHeaderGallery: View {

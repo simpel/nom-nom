@@ -1,7 +1,7 @@
 import SwiftUI
 
 /// One selectable picker cell, shared by the "not synced" selectors (CookingTimeSelector,
-/// RotationGoalSelector, TactileOptionPicker, TactileTasteSelector).
+/// RotationGoalSelector, TactileTasteSelector).
 ///
 /// README "Layout, radius, elevation": "`radius-lg` for compact score boxes and picker
 /// cells", "`opacity-20` selected cells"; "Every control boundary clears 3:1 … use

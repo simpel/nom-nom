@@ -3,12 +3,11 @@ import SwiftUI
 /// A grouped list whose rows can each be swiped to reveal an action: an optional
 /// `DSSection` label (`title`, `caption` as its trailing text) above a `Card(layout: .list)`
 /// with one `SwipeActionRow` per item. Card draws the rows' padding and the hairline
-/// between them, so `dividerPadding` is no longer read (kept for source compatibility).
+/// between them.
 struct SwipeableListCard<Data: RandomAccessCollection, Content: View>: View where Data.Element: Identifiable {
     var title: String? = nil
     var caption: String? = nil
     let data: Data
-    var dividerPadding: CGFloat = 0
 
     // Action definitions (closures so each item can conditionally enable/disable actions)
     var leadingIcon: ((Data.Element) -> String?)? = nil

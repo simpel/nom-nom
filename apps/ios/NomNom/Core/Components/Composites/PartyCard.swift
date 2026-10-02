@@ -109,7 +109,9 @@ struct PartyCard<Destination: View, Join: View>: View {
 
     /// bundle.css `.nn-party-card__meals`: a scroller, gap `spacing-2`.
     private var mealsRow: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
+        // `.nn-scroller`: on touch "the platform draws its own" scroll bar (root README);
+        // "Never hide the scrollbar outright" (PhotoStrip README).
+        ScrollView(.horizontal) {
             LazyHStack(spacing: DS.Spacing.s2) {
                 ForEach(recentMeals) { meal in
                     PhotoCard(meal.source, size: .xs, format: .square, accessibilityLabel: meal.title)

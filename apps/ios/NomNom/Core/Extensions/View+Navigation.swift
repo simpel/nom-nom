@@ -16,8 +16,7 @@ extension View {
     }
 
     /// Standard top-bar trailing toolbar for primary root tabs (Meals, Parties, Recipes).
-    /// Houses the shared `SettingsDropdownMenu` alongside the `CreateDropdownMenu`,
-    /// ensuring identical icon sizing, font weights, inter-item spacing, and edge insets.
+    /// Houses the shared `SettingsDropdownMenu`, ensuring identical icon sizing, font weights, inter-item spacing, and edge insets.
     func mainTabToolbar() -> some View {
         self
             .navigationTitle("")

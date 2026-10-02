@@ -19,9 +19,6 @@ extension DS {
         enum Weight {
             case normal, semibold
 
-            @available(*, deprecated, renamed: "normal")
-            static var regular: Weight { .normal }
-
             var token: Int {
                 switch self {
                 case .normal: return DSTokens.FontWeight.normal

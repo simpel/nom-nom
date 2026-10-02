@@ -17,7 +17,7 @@ private struct InputGallery: View {
                 Input("Quantity", text: $name, isError: true)
                 Input("Household", label: "Household", text: $name, readOnly: true)
                 Input("Disabled", text: $name, disabled: true)
-                Card(layout: .list) { Input(label: "First name", placeholder: "Anna", text: $empty) }
+                Card(layout: .list) { Input(label: "First name", placeholder: "Anna", text: $empty, appearance: .plain) }
                 TextArea("Describe your dinner party\u{2026}", text: $empty)
                 TextArea("Add any adjustments\u{2026}", label: "Notes", text: $notes, maxLength: 40)
                 TextArea("Error", text: $notes, error: "Keep it under a paragraph.")

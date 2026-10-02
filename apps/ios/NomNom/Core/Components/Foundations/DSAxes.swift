@@ -24,11 +24,13 @@ enum DSVariant: Equatable {
         case .pro: return .pro
         case .warning: return .warning
         case .reaction(let reaction):
+            // README "Colour": `reaction-<step>-text` is the ink for its numeral or word;
+            // there is no `on-reaction`. bundle.css: `--role-on: var(--nn-text)`.
             return DS.Role(
                 fill: reaction.fill,
                 soft: reaction.fill.opacity(DS.Opacity.reactionBadge),
                 text: reaction.text,
-                on: DS.Color.onPrimary
+                on: reaction.text
             )
         }
     }
@@ -65,12 +67,6 @@ enum DSAppearance: Equatable {
     /// no token and README "Scales" names hairline and thick as "the only two widths
     /// the system draws" (DS-GAPS.md).
     static let outlineBorderWidth: CGFloat = DS.BorderWidth.hairline
-
-    /// Pre-v3 1.5pt width still read by components outside R1a (TasteScoreSelector,
-    /// PhotoStripAddButton, AppInputTypes, TrendChart). AppButton README: "outline =
-    /// clear + `{role}-text` + 1.5px `{role}` border" — superseded, see above.
-    @available(*, deprecated, message: "Use DS.BorderWidth.hairline or DS.BorderWidth.thick")
-    static let outlineWidth: CGFloat = 1.5 // ds-lint:allow pre-v3 width, quoted from AppButton README
 }
 
 /// Which side of the label an icon sits on.

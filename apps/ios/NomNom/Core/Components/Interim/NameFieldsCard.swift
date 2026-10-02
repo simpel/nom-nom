@@ -36,7 +36,7 @@ struct NameFieldsCard<Accessory: View>: View {
             HStack(spacing: DS.Spacing.s3_5) {
                 accessory
                 VStack(spacing: 0) {
-                    Input(label: "First name", placeholder: placeholder, text: $firstName)
+                    Input(label: "First name", placeholder: placeholder, text: $firstName, appearance: .plain)
                         .textContentType(.givenName)
                         .textInputAutocapitalization(.words)
                         .onSubmit { onSubmit?() }
@@ -44,7 +44,7 @@ struct NameFieldsCard<Accessory: View>: View {
                         .fill(DS.Color.line)
                         .frame(height: 1)
                         .accessibilityHidden(true)
-                    Input(label: "Last name", placeholder: placeholder, text: $lastName)
+                    Input(label: "Last name", placeholder: placeholder, text: $lastName, appearance: .plain)
                         .textContentType(.familyName)
                         .textInputAutocapitalization(.words)
                         .onSubmit { onSubmit?() }

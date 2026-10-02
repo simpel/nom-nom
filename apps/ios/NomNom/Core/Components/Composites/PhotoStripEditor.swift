@@ -80,7 +80,8 @@ struct PhotoStripEditor: View {
     }
 
     private var strip: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
+        // As PhotoStrip: never hide the scroll bar; touch gets the platform's own.
+        ScrollView(.horizontal) {
             HStack(spacing: DS.Spacing.s2_5) {
                 ForEach(Array(items.enumerated()), id: \.element.id) { index, item in
                     PhotoStripEditorTile(
@@ -95,7 +96,10 @@ struct PhotoStripEditor: View {
                     )
                 }
             }
+            .scrollTargetLayout()
         }
+        // `.nn-scroller`: snap to each tile, as PhotoStrip.
+        .scrollTargetBehavior(.viewAligned)
         .contentMargins(.horizontal, bleed, for: .scrollContent)
         .padding(.horizontal, -bleed)
     }

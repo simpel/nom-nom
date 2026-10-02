@@ -13,8 +13,8 @@ struct AppButtonLabel: View {
     private let fullWidth: Bool
     private let isLoading: Bool
     private let accessibilityLabel: String?
-    /// Icon-only diameter. Always `AppButtonSize.iconOnlyDiameter` (44) except for the
-    /// deprecated sized icon-only API, which keeps `lg` at 48 until its callers migrate.
+    /// Icon-only diameter: `AppButtonSize.iconOnlyDiameter` (44), except the
+    /// TasteScoreSelector steps (`spacing-12`).
     private let iconOnlyDiameter: CGFloat
     /// Overrides the icon's ink only (PhotoCard's favourite heart: `destructive-text`
     /// when on, components/PhotoCard/README.md). Nil inks it like the label.
@@ -52,25 +52,8 @@ struct AppButtonLabel: View {
                   iconColor: iconColor)
     }
 
-    /// Pre-v3 API: `title: nil` drew an icon-only circle sized by `size`.
-    @_disfavoredOverload
-    @available(*, deprecated, message: "Use AppButtonLabel(_:icon:…) or AppButtonLabel(icon:accessibilityLabel:…)")
-    init(
-        _ title: String?,
-        icon: AppButtonIcon? = nil,
-        iconPosition: DSIconPosition = .start,
-        variant: DSVariant = .primary,
-        appearance: DSAppearance = .solid,
-        size: AppButtonSize = .md,
-        fullWidth: Bool = false,
-        isLoading: Bool = false,
-        accessibilityLabel: String? = nil
-    ) {
-        self.init(title: title, icon: icon, iconPosition: iconPosition, variant: variant, appearance: appearance,
-                  size: size, fullWidth: fullWidth, isLoading: isLoading, accessibilityLabel: accessibilityLabel,
-                  iconOnlyDiameter: max(size.height, AppButtonSize.iconOnlyDiameter))
-    }
-
+    /// The full initialiser. TasteScoreSelector uses it for its `spacing-12` steps
+    /// (bundle.css `.nn-taste__row > .nn-button`); everything else uses the two above.
     init(
         title: String?,
         icon: AppButtonIcon?,

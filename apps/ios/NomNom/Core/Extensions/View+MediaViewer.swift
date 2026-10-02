@@ -11,7 +11,7 @@ extension View {
             .toolbarBackground(.visible, for: .navigationBar)
             .toolbarBackground(DS.Color.Stone.stone1000.opacity(DS.Opacity.o90), for: .navigationBar)
             .toolbarColorScheme(.dark, for: .navigationBar)
-            .sheetCloseToolbar(color: DS.Color.Stone.stone0, onClose: onClose)
+            .sheetCloseToolbar(onClose: onClose)
             .preferredColorScheme(.dark)
     }
 }

@@ -21,29 +21,21 @@ struct AppToggle: View {
 
     var body: some View {
         SwiftUI.Toggle(label, isOn: $isOn)
-            .toggleStyle(DSToggleStyle(showsLabel: false))
+            .toggleStyle(DSToggleStyle())
     }
 }
 
 /// The DS switch as a `ToggleStyle`, so a `SwiftUI.Toggle` keeps its switch semantics
-/// for VoiceOver. `showsLabel` draws the label before the switch, for pre-v3 call
-/// sites that have not moved into a ListRow yet; the label is always the spoken name.
+/// for VoiceOver. The label is never drawn (the Toggle README puts the switch in a
+/// ListRow's trailing slot, the row title beside it); it is the spoken name.
 struct DSToggleStyle: ToggleStyle {
-    var showsLabel = true
-
     func makeBody(configuration: Configuration) -> some View {
-        HStack(spacing: DS.Spacing.s3) {
-            if showsLabel {
-                configuration.label
-                Spacer(minLength: 0)
-            }
-            Button {
-                configuration.isOn.toggle()
-            } label: {
-                DSToggleTrack(isOn: configuration.isOn)
-            }
-            .buttonStyle(DSToggleKnobPressStyle(isOn: configuration.isOn))
+        Button {
+            configuration.isOn.toggle()
+        } label: {
+            DSToggleTrack(isOn: configuration.isOn)
         }
+        .buttonStyle(DSToggleKnobPressStyle(isOn: configuration.isOn))
         .accessibilityRepresentation {
             SwiftUI.Toggle(isOn: configuration.$isOn) { configuration.label }
         }
@@ -74,8 +66,10 @@ private struct DSToggleTrack: View {
             .frame(minHeight: AppButtonSize.minimumTarget)
             .contentShape(Rectangle())
             .opacity(isEnabled ? DS.Opacity.o100 : DS.Opacity.disabled)
+            // bundle.css `.nn-toggle__knob`: one `duration-state` transform transition
+            // carries both the slide and the press scale.
             .animation(reduceMotion ? nil : DS.Motion.state, value: isOn)
-            .animation(DS.Motion.press, value: isPressed)
+            .animation(DS.Motion.state, value: isPressed)
     }
 }
 

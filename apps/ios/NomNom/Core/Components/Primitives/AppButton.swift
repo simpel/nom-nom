@@ -16,7 +16,6 @@ import SwiftUI
 struct AppButton: View {
     private let label: AppButtonLabel
     private let isLoading: Bool
-    private let isDisabled: Bool
     private let action: () -> Void
 
     /// A labelled button.
@@ -36,7 +35,6 @@ struct AppButton: View {
             size: size, fullWidth: fullWidth, isLoading: isLoading
         )
         self.isLoading = isLoading
-        self.isDisabled = false
         self.action = action
     }
 
@@ -56,59 +54,6 @@ struct AppButton: View {
             appearance: appearance, isLoading: isLoading, iconColor: iconColor
         )
         self.isLoading = isLoading
-        self.isDisabled = false
-        self.action = action
-    }
-
-    /// Pre-v3 icon-only API with a size. Every size draws the 44pt circle except `lg`,
-    /// which keeps its 48pt circle. (TasteScoreSelector no longer uses it: it draws its
-    /// `spacing-12` steps with `AppButtonLabel` directly.)
-    @_disfavoredOverload
-    @available(*, deprecated, message: "Icon-only buttons have one size: drop `size:`")
-    init(
-        icon: AppButtonIcon,
-        accessibilityLabel: String,
-        variant: DSVariant = .primary,
-        appearance: DSAppearance = .solid,
-        size: AppButtonSize,
-        isLoading: Bool = false,
-        action: @escaping () -> Void
-    ) {
-        self.label = AppButtonLabel(
-            title: nil, icon: icon, iconPosition: .start, variant: variant, appearance: appearance,
-            size: size, fullWidth: false, isLoading: isLoading, accessibilityLabel: accessibilityLabel,
-            iconOnlyDiameter: max(size.height, AppButtonSize.iconOnlyDiameter)
-        )
-        self.isLoading = isLoading
-        self.isDisabled = false
-        self.action = action
-    }
-
-    /// Pre-design-system API, kept so existing call sites compile until Phase 5.
-    @_disfavoredOverload
-    @available(*, deprecated, message: "Use AppButton(_:icon:iconPosition:variant:appearance:size:fullWidth:isLoading:action:)")
-    init(
-        _ title: String = "",
-        icon: AppButtonIcon? = nil,
-        systemImage: String? = nil,
-        iconPosition: AppButtonIconPosition = .leading,
-        variant: AppButtonVariant = .primary,
-        style: AppButtonStyle = .normal,
-        size: AppButtonSize = .md,
-        isFullWidth: Bool = false,
-        isPending: Bool = false,
-        disabled: Bool = false,
-        action: @escaping () -> Void
-    ) {
-        let axes = variant.dsAxes(style: style)
-        self.label = AppButtonLabel(
-            title: title.isEmpty ? nil : title, icon: icon ?? systemImage.map { .system($0) },
-            iconPosition: iconPosition.dsPosition, variant: axes.0, appearance: axes.1,
-            size: size, fullWidth: isFullWidth, isLoading: isPending, accessibilityLabel: nil,
-            iconOnlyDiameter: max(size.height, AppButtonSize.iconOnlyDiameter)
-        )
-        self.isLoading = isPending
-        self.isDisabled = disabled
         self.action = action
     }
 
@@ -120,7 +65,6 @@ struct AppButton: View {
             label
         }
         .buttonStyle(AppPressableButtonStyle())
-        .disabled(isDisabled)
         .accessibilityAddTraits(isLoading ? .updatesFrequently : [])
     }
 }

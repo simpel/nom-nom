@@ -31,7 +31,9 @@ struct Timeline: View {
 
     var body: some View {
         DSSection(title, trailing: countText) {
-            ScrollView(.horizontal, showsIndicators: false) {
+            // README (root): on touch "the platform draws its own" scroll bar; PhotoStrip
+            // README: "Never hide the scrollbar outright".
+            ScrollView(.horizontal) {
                 HStack(alignment: .top, spacing: DS.Spacing.s3) {
                     ForEach(occasions) { occasion in
                         TimelineItem(occasion: occasion, onSelect: onSelect.map { select in { select(occasion.id) } })
@@ -39,10 +41,13 @@ struct Timeline: View {
                 }
                 .scrollTargetLayout()
                 .background(alignment: .top) {
+                    // README: "The rail bleeds off the right edge" (bundle.css
+                    // `.nn-timeline::before { right: 0 }`), past the last occasion.
                     Rectangle()
                         .fill(DS.Color.lineStrong)
                         .frame(height: DS.BorderWidth.thick)
                         .padding(.top, (TimelineItem.dotFrame - DS.BorderWidth.thick) / 2)
+                        .padding(.trailing, -bleed)
                         .accessibilityHidden(true)
                 }
             }
