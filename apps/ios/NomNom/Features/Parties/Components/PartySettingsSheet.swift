@@ -22,17 +22,11 @@ struct PartySettingsSheet: View {
 
     var body: some View {
         NavigationStack {
-            ScrollView {
-                VStack(spacing: DS.Spacing.section) {
-                    PartyFormFields(photoDraft: $photoDraft, name: $name, about: $about)
+            SheetBody {
+                PartyFormFields(photoDraft: $photoDraft, name: $name, about: $about)
 
-                    VisibilityToggleCard.party(isPublic: $isPublic)
-                }
-                .padding(.horizontal, DS.Spacing.screenHorizontal)
-                .padding(.top, DS.Spacing.screenTop)
-                .padding(.bottom, DS.Spacing.screenBottom)
+                VisibilityToggleCard.party(isPublic: $isPublic)
             }
-            .background(DS.Color.bg)
             .screenTitle("Edit Party", displayMode: .inline)
             .sheetCommitToolbar(
                 isSaving: isSaving,
@@ -50,6 +44,7 @@ struct PartySettingsSheet: View {
                 Text(saveError ?? "")
             }
         }
+        .dsSheet()
     }
 
     private func populate() {

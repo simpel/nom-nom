@@ -37,10 +37,7 @@ struct InsightsTabView: View {
                         partyID: selectedPartyID,
                         insights: insights,
                         healthInsights: store.healthInsights(forParty: selectedPartyID),
-                        trendData: store.trendline(forParty: selectedPartyID),
-                        memberTrendSeries: store.memberTrendlines(forParty: selectedPartyID),
-                        partyTasteMatches: store.memberTasteMatches(forParty: selectedPartyID, insights: insights),
-                        mealsLoggedCount: store.meals(forParty: selectedPartyID).count
+                        partyTasteMatches: store.memberTasteMatches(forParty: selectedPartyID, insights: insights)
                     )
                 }
             }

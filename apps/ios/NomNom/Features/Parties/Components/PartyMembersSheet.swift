@@ -25,39 +25,26 @@ struct PartyMembersSheet: View {
 
     var body: some View {
         NavigationStack {
-            ScrollView {
-                VStack(spacing: DS.Spacing.section) {
-                    VStack(spacing: DS.Spacing.s3) {
-                        ShareLink(
-                            item: party.webInviteURL,
-                            subject: Text("Join \(party.name) on Nom Nom"),
-                            message: Text(party.shareMessage)
-                        ) {
-                            AppButtonLabel("Share link", icon: "square.and.arrow.up", appearance: .soft, fullWidth: true)
-                        }
-                        .buttonStyle(AppPressableButtonStyle())
-
-                        AppButton(
-                            "Invite by Email",
-                            systemImage: "envelope",
-                            variant: .secondary,
-                            style: .outlined,
-                            size: .md,
-                            isFullWidth: true
-                        ) {
-                            showingInviteSheet = true
-                        }
+            SheetBody {
+                VStack(spacing: DS.Spacing.s3) {
+                    ShareLink(
+                        item: party.webInviteURL,
+                        subject: Text("Join \(party.name) on Nom Nom"),
+                        message: Text(party.shareMessage)
+                    ) {
+                        AppButtonLabel("Share link", icon: "square.and.arrow.up", appearance: .soft, fullWidth: true)
                     }
+                    .buttonStyle(AppPressableButtonStyle())
 
-                    PartyInvitesSection(invites: pendingInvites)
-                    
-                    membersSection
+                    AppButton("Invite by email", icon: "envelope", appearance: .outline, fullWidth: true) {
+                        showingInviteSheet = true
+                    }
                 }
-                .padding(.horizontal, DS.Spacing.screenHorizontal)
-                .padding(.top, DS.Spacing.screenTop)
-                .padding(.bottom, DS.Spacing.screenBottom)
+
+                PartyInvitesSection(invites: pendingInvites)
+
+                membersSection
             }
-            .background(DS.Color.bg)
             .screenTitle("Members", displayMode: .inline)
             .sheetOverviewToolbar(
                 primarySystemImage: "person.badge.plus",
@@ -101,6 +88,7 @@ struct PartyMembersSheet: View {
                 Text(actionError ?? "")
             }
         }
+        .dsSheet()
     }
 
     // MARK: - Sections

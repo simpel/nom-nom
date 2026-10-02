@@ -1,7 +1,7 @@
 import SwiftUI
 
-/// Section displaying an individual member's highest and lowest rated dinners served in this party,
-/// reusing the canonical startpage meal row component (`MealRow`).
+/// A member's highest and lowest rated dinners served in this party: one DSSection
+/// each over a `Card(layout: .list)` of MealRows that open the meal.
 struct PartyMemberPartyRatingsSection: View {
     let memberRef: RaterRef
     let memberName: String
@@ -10,19 +10,12 @@ struct PartyMemberPartyRatingsSection: View {
 
     var body: some View {
         if !highest.isEmpty || !lowest.isEmpty {
-            VStack(alignment: .leading, spacing: DS.Spacing.md) {
-                Text("\(memberName)'s Party Ratings")
-                    .font(.headline)
-                    .foregroundStyle(DS.Color.textPrimary)
-
-                VStack(spacing: DS.Spacing.md) {
-                    if !highest.isEmpty {
-                        ratingsGroup(title: "Highest in this party", records: highest)
-                    }
-
-                    if !lowest.isEmpty {
-                        ratingsGroup(title: "Lowest in this party", records: lowest)
-                    }
+            VStack(alignment: .leading, spacing: DS.Spacing.block) {
+                if !highest.isEmpty {
+                    ratingsGroup(title: "\(memberName)\u{2019}s highest here", records: highest)
+                }
+                if !lowest.isEmpty {
+                    ratingsGroup(title: "\(memberName)\u{2019}s lowest here", records: lowest)
                 }
             }
         }
@@ -37,7 +30,7 @@ struct PartyMemberPartyRatingsSection: View {
                     } label: {
                         MealRow(meal: record.meal, raterRef: memberRef, isMinimal: true)
                     }
-                    .buttonStyle(.plain)
+                    .buttonStyle(ListRowButtonStyle())
                 }
             }
         }

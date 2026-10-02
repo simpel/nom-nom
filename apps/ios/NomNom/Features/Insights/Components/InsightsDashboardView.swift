@@ -1,13 +1,13 @@
 import SwiftUI
 
+/// The Insights tab's body for one party: the AI summary, then (Pro) taste match, the
+/// health blocks and AI recipe recommendations, `spacing-7` apart on `bg` with
+/// `spacing-4` gutters (README "Layout").
 struct InsightsDashboardView: View {
     let partyID: UUID
     let insights: PartyInsights?
     let healthInsights: PartyHealthInsights?
-    let trendData: [(date: Date, averageScore: Double)]
-    let memberTrendSeries: [MemberTrendSeries]
     let partyTasteMatches: [MemberTasteMatch]
-    let mealsLoggedCount: Int
 
     @State private var selectedMember: MemberTasteMatch?
 
@@ -21,22 +21,17 @@ struct InsightsDashboardView: View {
 
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: DS.Spacing.section) {
-                // 1. Editorial summary text combined with flavor profile
+            VStack(alignment: .leading, spacing: DS.Spacing.block) {
                 EditorialTextView(segments: combinedSummary)
-                    .padding(.top, DS.Spacing.sm)
-                    .padding(.horizontal, DS.Spacing.screenHorizontal)
 
-                // 2-4. Health metrics, recommendations — Pro
                 ProGate {
-                    VStack(alignment: .leading, spacing: DS.Spacing.section) {
+                    VStack(alignment: .leading, spacing: DS.Spacing.block) {
                         PartyTasteMatchCard(matches: partyTasteMatches) { member in
                             selectedMember = member
                         }
-                        .padding(.horizontal, DS.Spacing.screenHorizontal)
 
                         if let health = healthInsights {
-                            VStack(alignment: .leading, spacing: DS.Spacing.md) {
+                            VStack(alignment: .leading, spacing: DS.Spacing.s4) {
                                 PartyHealthDistributionCard(distribution: health.healthTierDistribution)
 
                                 PartyHealthStrengthsCard(
@@ -48,19 +43,19 @@ struct InsightsDashboardView: View {
                                     AverageMacrosCard(macros: macros)
                                 }
                             }
-                            .padding(.horizontal, DS.Spacing.screenHorizontal)
                         }
 
                         if let recommendations = insights?.recommendations, !recommendations.isEmpty {
                             RecipeShelf("AI recipe recommendations", items: recommendations) {
                                 RecommendationShelfCard(rec: $0)
                             }
-                            .padding(.horizontal, DS.Spacing.gutter)
                         }
                     }
                 }
             }
-            .padding(.bottom, DS.Spacing.screenBottom)
+            .padding(.horizontal, DS.Spacing.gutter)
+            .padding(.top, DS.Spacing.s3)
+            .padding(.bottom, DS.Spacing.s11)
         }
         .background(DS.Color.bg)
         .sheet(item: $selectedMember) { member in

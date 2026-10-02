@@ -1,13 +1,12 @@
 import SwiftUI
 
-/// Contextual sheet showing an individual member's taste insights in relation to the current dinner party.
-/// Presented as a standard modal sheet matching `MealRatingSheet`.
+/// A member's taste insights for one dinner party, as a BottomSheet: their name and the
+/// AI tip, recipes they will love, then their highest and lowest rated dinners here.
 struct PartyMemberInsightSheet: View {
     let member: MemberTasteMatch
     let partyID: UUID
 
     @Environment(FoodStore.self) private var store
-    @Environment(\.dismiss) private var dismiss
 
     private var tipSegments: [GuestNoteSegment] {
         store.nextDinnerTipSegments(for: member.ref, partyID: partyID)
@@ -23,35 +22,28 @@ struct PartyMemberInsightSheet: View {
 
     var body: some View {
         NavigationStack {
-            ScrollView {
-                VStack(alignment: .leading, spacing: DS.Spacing.section) {
-                    VStack(alignment: .leading, spacing: DS.Spacing.sm) {
-                        // Header: Name as heading alone
-                        Text(member.name)
-                            .textStyle(.serifLg)
-
-                        // Editorial narrative (Newsreader serif with semantic highlights)
-                        EditorialTextView(segments: tipSegments)
-                    }
-                    .padding(.top, DS.Spacing.xs)
-
-                    RecipeShelf("Recipes \(member.name) will love", recipes: recommendations.map(\.recipe)) {
-                        RecipeDetailView(recipe: $0)
-                    }
-
-                    // Personal Rating History in this Party (reusing startpage MealRow)
-                    PartyMemberPartyRatingsSection(
-                        memberRef: member.ref,
-                        memberName: member.name,
-                        highest: history.highest,
-                        lowest: history.lowest
-                    )
+            SheetBody {
+                // PageHeader spacing: `spacing-2` between the parts.
+                VStack(alignment: .leading, spacing: DS.Spacing.s2) {
+                    Text(member.name)
+                        .textStyle(.serifLg)
+                        .accessibilityAddTraits(.isHeader)
+                    EditorialTextView(segments: tipSegments)
                 }
-                .padding(.horizontal, DS.Spacing.screenHorizontal)
-                .padding(.bottom, DS.Spacing.screenBottom)
+
+                RecipeShelf("Recipes \(member.name) will love", recipes: recommendations.map(\.recipe)) {
+                    RecipeDetailView(recipe: $0)
+                }
+
+                PartyMemberPartyRatingsSection(
+                    memberRef: member.ref,
+                    memberName: member.name,
+                    highest: history.highest,
+                    lowest: history.lowest
+                )
             }
-            .background(DS.Color.bg)
             .sheetCloseToolbar()
         }
+        .dsSheet()
     }
 }

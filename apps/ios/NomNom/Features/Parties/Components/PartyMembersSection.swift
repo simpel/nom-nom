@@ -12,14 +12,11 @@ struct PartyMembersSection: View {
         store.members(of: party.id)
     }
 
-    /// Divider inset: row padding, the `sm` avatar and the ListRow gap.
-    private static let dividerInset = DS.Spacing.s4 + AvatarSize.sm.diameter + DS.Spacing.s3
-
     var body: some View {
+        // SwipeableListCard draws the section header, the list Card and the row padding.
         SwipeableListCard(
             title: "Members",
             data: members,
-            dividerPadding: Self.dividerInset,
             leadingIcon: { canRemove(member: $0) ? "trash.fill" : nil },
             leadingColor: { canRemove(member: $0) ? DS.Color.destructive : nil },
             onLeadingAction: { member in
@@ -32,7 +29,6 @@ struct PartyMembersSection: View {
                 PersonDetailView(raterRef: .account(member.id))
             } label: {
                 row(for: member)
-                    .padding(.horizontal, DS.Spacing.s4)
             }
             .buttonStyle(ListRowButtonStyle())
         }
