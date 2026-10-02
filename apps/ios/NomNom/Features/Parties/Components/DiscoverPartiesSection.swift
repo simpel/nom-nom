@@ -1,7 +1,7 @@
 import SwiftUI
 
-/// Public dinner parties to follow: a DSSection over a horizontal row of PartyCards
-/// with a 1-tap follow action, or an EmptyState when there are none.
+/// Public dinner parties to follow: a DSSection over `discover` PartyCards with the
+/// follow control under each card's link, or an EmptyState when there are none.
 struct DiscoverPartiesSection: View {
     @Environment(FoodStore.self) private var store
 
@@ -17,18 +17,9 @@ struct DiscoverPartiesSection: View {
                     message: "Public dinner parties other people start will show up here."
                 )
             } else {
-                ScrollView(.horizontal, showsIndicators: false) {
-                    HStack(spacing: DS.Spacing.s4) {
-                        ForEach(discoverable) { party in
-                            // No README width for a scrolled PartyCard: `spacing-72`
-                            // (see DS-GAPS "PartyCard in a scroller").
-                            PartyCard(party: party, showFollowButton: true)
-                                .frame(width: DS.Spacing.s72)
-                        }
-                    }
-                    .padding(.horizontal, DS.Spacing.gutter)
+                VStack(spacing: DS.Spacing.s4) {
+                    ForEach(discoverable) { DinnerPartyCard(party: $0) }
                 }
-                .padding(.horizontal, -DS.Spacing.gutter)
             }
         }
     }

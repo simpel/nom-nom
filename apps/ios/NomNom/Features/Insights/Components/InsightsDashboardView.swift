@@ -52,8 +52,10 @@ struct InsightsDashboardView: View {
                         }
 
                         if let recommendations = insights?.recommendations, !recommendations.isEmpty {
-                            InsightsRecommendationsCarousel(recommendations: recommendations)
-                                .padding(.horizontal, DS.Spacing.screenHorizontal)
+                            RecipeShelf("AI recipe recommendations", items: recommendations) {
+                                RecommendationShelfCard(rec: $0)
+                            }
+                            .padding(.horizontal, DS.Spacing.gutter)
                         }
                     }
                 }

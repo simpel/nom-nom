@@ -1,47 +1,41 @@
 import SwiftUI
 
-/// Minimal, high-contrast button for following or unfollowing a public dinner party.
+/// The follow control under a `discover` PartyCard, for a public party the viewer isn't
+/// a member of. Same labels and appearances as the party screen's DetailHeader action:
+/// "Follow" (`primary solid`) or "Following" (`primary soft`, checkmark), one request
+/// at a time, with a light haptic on change.
+///
+/// PartyCard README names this slot "Ask to join"; the app follows public parties
+/// instead of requesting to join them (see DS-GAPS.md).
 struct PartyFollowButton: View {
     let party: Party
-    var size: ControlSize = .small
 
     @Environment(FoodStore.self) private var store
     @State private var isProcessing = false
 
-    private var isMember: Bool {
-        store.isMember(of: party.id)
-    }
-
-    private var isFollowing: Bool {
-        store.isFollowing(partyID: party.id)
-    }
+    private var isMember: Bool { store.isMember(of: party.id) }
+    private var isFollowing: Bool { store.isFollowing(partyID: party.id) }
 
     var body: some View {
         if !isMember && party.isPublic {
             AppButton(
                 isFollowing ? "Following" : "Follow",
-                variant: isFollowing ? .neutral : .primary,
-                style: isFollowing ? .outlined : .normal,
+                icon: isFollowing ? "checkmark" : nil,
+                appearance: isFollowing ? .soft : .solid,
                 size: .sm,
-                isPending: isProcessing,
-                disabled: isProcessing
-            ) {
-                handleTap()
-            }
+                isLoading: isProcessing,
+                action: toggleFollow
+            )
             .accessibilityLabel(isFollowing ? "Unfollow \(party.name)" : "Follow \(party.name)")
+            .sensoryFeedback(.impact(weight: .light), trigger: isFollowing)
         }
     }
 
-    private func handleTap() {
-        guard !isMember && party.isPublic else { return }
-        guard !isProcessing else { return }
+    private func toggleFollow() {
+        guard !isMember && party.isPublic, !isProcessing else { return }
         isProcessing = true
         Task {
-            if isFollowing {
-                await store.unfollowParty(party)
-            } else {
-                await store.followParty(party)
-            }
+            await store.toggleFollow(party: party)
             isProcessing = false
         }
     }
@@ -50,10 +44,8 @@ struct PartyFollowButton: View {
 #Preview {
     NomNomPreview { store in
         if let party = store.parties.first {
-            HStack(spacing: 20) {
-                PartyFollowButton(party: party)
-            }
-            .padding()
+            PartyFollowButton(party: party)
+                .padding(DS.Spacing.gutter)
         }
     }
 }

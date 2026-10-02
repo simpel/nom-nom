@@ -9,6 +9,8 @@ struct RatingListRow: Identifiable {
     /// `isZero` so only the figure drops to `text-tertiary`.
     var value: String?
     var isZero: Bool = false
+    /// SegmentedBar's key: the tier's colour as a swatch before the label.
+    var swatch: Color?
 }
 
 /// The one "section header + meter + list of rows" block, in two shapes:
@@ -82,20 +84,29 @@ struct RatingListMeter: View {
     }
 }
 
-/// A general-shape row: ListRow rhythm, label `sans-md`, note `sans-sm` tertiary,
-/// value `sans-sm` tabular (tertiary when zero).
-private struct RatingListValueRow: View {
+/// A general-shape row: ListRow rhythm, an optional swatch (SegmentedBar's key,
+/// `spacing-3` square at `radius-sm`, bundle.css `.nn-segbar-list .nn-segbar__swatch`),
+/// label `sans-md`, note `sans-sm` tertiary, value `serif-xs` tabular (tertiary when
+/// zero; SegmentedBar README: "Figures are set `serif-xs` tabular, the step a
+/// ScoreValue `xs` uses").
+struct RatingListValueRow: View {
     let row: RatingListRow
 
     var body: some View {
-        HStack(alignment: .firstTextBaseline, spacing: DS.Spacing.s3) {
+        HStack(alignment: .center, spacing: DS.Spacing.s3) {
+            if let swatch = row.swatch {
+                RoundedRectangle(cornerRadius: DS.Radius.sm, style: .continuous)
+                    .fill(swatch)
+                    .frame(width: DS.Spacing.s3, height: DS.Spacing.s3)
+                    .accessibilityHidden(true)
+            }
             Text(row.label).textStyle(.sansMd, lines: 1)
             Spacer(minLength: 0)
             if let note = row.note {
                 Text(note).textStyle(.sansSm, tone: .tertiary, lines: 1)
             }
             if let value = row.value {
-                Text(value).textStyle(.sansSm, tone: row.isZero ? .tertiary : .primary, numeric: true, lines: 1)
+                Text(value).textStyle(.serifXs, tone: row.isZero ? .tertiary : .primary, numeric: true, lines: 1)
             }
         }
         .ratingListRowMetrics()

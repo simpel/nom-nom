@@ -48,7 +48,7 @@ extension PartyDetailView {
         ]
     }
 
-    /// Same rules as PartyFollowIconButton: only non-members of public parties, one
+    /// Same rules as PartyFollowButton: only non-members of public parties, one
     /// request at a time. Errors surface in the screen's alert.
     private func toggleFollow(_ party: Party) {
         guard !store.isMember(of: party.id), party.isPublic, !isFollowProcessing else { return }

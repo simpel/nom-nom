@@ -11,17 +11,19 @@ struct HealthMacroDistributionCard: View {
         macros?.calories.map { "\($0) kcal / serving" }
     }
 
+    /// `chart-series` by a stable index per macro (protein 1, carbohydrates 2, fat 3),
+    /// never cycled. Widths are each macro's share of the calories.
     private var segments: [SegmentedBarSegment] {
         guard let macros else { return [] }
         var result: [SegmentedBarSegment] = []
         if let protein = macros.proteinGrams {
-            result.append(segment("Protein", grams: protein, kcal: macros.proteinCalories, color: DS.Color.chartSeries1))
+            result.append(segment("Protein", grams: protein, kcal: macros.proteinCalories, series: 0))
         }
         if let carbs = macros.carbsGrams {
-            result.append(segment("Carbohydrates", grams: carbs, kcal: macros.carbsCalories, color: DS.Color.chartSeries2))
+            result.append(segment("Carbohydrates", grams: carbs, kcal: macros.carbsCalories, series: 1))
         }
         if let fat = macros.fatGrams {
-            result.append(segment("Fat", grams: fat, kcal: macros.fatCalories, color: DS.Color.chartSeries5))
+            result.append(segment("Fat", grams: fat, kcal: macros.fatCalories, series: 2))
         }
         return result
     }
@@ -29,7 +31,7 @@ struct HealthMacroDistributionCard: View {
     var body: some View {
         SectionCard("Macronutrients", trailing: caloriesText) {
             if !segments.isEmpty {
-                SegmentedBar(segments, label: "Macronutrient distribution")
+                SegmentedBar(segments, legend: .inline, format: .percent, label: "Macronutrient distribution")
             }
 
             if let positives, !positives.isEmpty {
@@ -61,13 +63,12 @@ struct HealthMacroDistributionCard: View {
         }
     }
 
-    private func segment(_ label: String, grams: Double, kcal: Double, color: Color) -> SegmentedBarSegment {
+    /// SegmentedBar's figures are a count or a percent, so the grams go in the key's label.
+    private func segment(_ label: String, grams: Double, kcal: Double, series: Int) -> SegmentedBarSegment {
         SegmentedBarSegment(
+            label: "\(label) \(Self.format(grams)) g",
             value: kcal.isFinite ? max(kcal, 0) : 0,
-            color: color,
-            label: label,
-            valueText: "\(Self.format(grams)) g",
-            detail: "\(Int(kcal.rounded())) kcal"
+            ink: .chart(series)
         )
     }
 

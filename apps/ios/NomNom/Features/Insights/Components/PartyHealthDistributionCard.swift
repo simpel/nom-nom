@@ -1,52 +1,27 @@
 import SwiftUI
 
+/// How a party's meals split across health tiers: a SegmentedBar whose breakdown is a
+/// RatingList, one row per tier with its percentage. Health tiers are not taste data,
+/// so they take `chart-series` by the tier's stable index, not the reaction ramp.
 struct PartyHealthDistributionCard: View {
+    /// Each tier's share, 0–1.
     let distribution: [HealthTier: Double]
-    
-    var body: some View {
-        VStack(alignment: .leading, spacing: DS.Spacing.md) {
-            Text("Dietary Balance")
-                .font(.headline)
-                .foregroundStyle(DS.Color.textPrimary)
-            
-            // Progress Bar
-            GeometryReader { geometry in
-                HStack(spacing: 0) {
-                    ForEach(HealthTier.allCases) { tier in
-                        if let percentage = distribution[tier], percentage > 0 {
-                            Rectangle()
-                                .fill(tier.color)
-                                .frame(width: max(0, geometry.size.width * CGFloat(percentage)))
-                        }
-                    }
-                }
-            }
-            .frame(height: 12)
-            .clipShape(Capsule())
-            
-            // Legend
-            VStack(spacing: DS.Spacing.sm) {
-                ForEach(HealthTier.allCases) { tier in
-                    if let percentage = distribution[tier], percentage > 0 {
-                        HStack {
-                            Circle()
-                                .fill(tier.color)
-                                .frame(width: 8, height: 8)
-                            Text(tier.displayName)
-                                .font(.subheadline)
-                                .foregroundStyle(DS.Color.textPrimary)
-                            Spacer()
-                            Text("\(Int(percentage * 100))%")
-                                .font(.subheadline.weight(.semibold))
-                                .foregroundStyle(DS.Color.textSecondary)
-                        }
-                    }
-                }
-            }
-            .padding(.top, DS.Spacing.xs)
+
+    private var segments: [SegmentedBarSegment] {
+        HealthTier.allCases.enumerated().map { index, tier in
+            SegmentedBarSegment(label: tier.displayName, value: distribution[tier] ?? 0, ink: .chart(index))
         }
-        .padding(DS.Spacing.md)
-        .background(DS.Color.sunken)
-        .clipShape(RoundedRectangle(cornerRadius: AppRadius.card, style: .continuous))
+    }
+
+    var body: some View {
+        SegmentedBar(segments, legend: .rows, format: .percent, title: "Dietary balance")
+    }
+}
+
+#Preview {
+    NomNomPreview { _ in
+        PartyHealthDistributionCard(distribution: [.nutritious: 0.4, .balanced: 0.35, .moderate: 0.2, .indulgent: 0.05])
+            .padding(DS.Spacing.gutter)
+            .background(DS.Color.bg)
     }
 }

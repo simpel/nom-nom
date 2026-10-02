@@ -13,8 +13,8 @@ struct CuisinePickerSheet: View {
     @State private var customText: String
 
     private let categoryColumns = [
-        GridItem(.flexible(), spacing: 12),
-        GridItem(.flexible(), spacing: 12)
+        GridItem(.flexible(), spacing: DS.Spacing.s3),
+        GridItem(.flexible(), spacing: DS.Spacing.s3)
     ]
 
     init(selection: Binding<String?>) {
@@ -33,22 +33,18 @@ struct CuisinePickerSheet: View {
     var body: some View {
         NavigationStack {
             ScrollView {
-                VStack(alignment: .leading, spacing: 16) {
-                    LazyVGrid(columns: categoryColumns, spacing: 12) {
+                VStack(alignment: .leading, spacing: DS.Spacing.s4) {
+                    LazyVGrid(columns: categoryColumns, spacing: DS.Spacing.s3) {
                         ForEach(store.allCategories) { category in
-                            let isSelected = draftSelection.contains(category.name.lowercased())
-                            let count = store.recipeCount(forCategory: category.name)
-
-                            Button {
+                            LabeledPhotoCard(
+                                .category(category),
+                                label: category.displayName,
+                                meta: CategoryItem.recipeCountText(store.recipeCount(forCategory: category.name)),
+                                fillsWidth: true,
+                                selected: draftSelection.contains(category.name.lowercased())
+                            ) {
                                 toggleSelection(for: category.name)
-                            } label: {
-                                CategoryGridCard(
-                                    category: category,
-                                    count: count,
-                                    isSelected: isSelected
-                                )
                             }
-                            .buttonStyle(.plain)
                         }
                     }
 
@@ -58,8 +54,8 @@ struct CuisinePickerSheet: View {
                             .textInputAutocapitalization(.words)
                     }
                 }
-                .padding(.horizontal, 16)
-                .padding(.vertical, 14)
+                .padding(.horizontal, DS.Spacing.gutter)
+                .padding(.vertical, DS.Spacing.s4)
             }
             .background(DS.Color.bg)
             .screenTitle("Kitchen / Cuisine", displayMode: .inline)

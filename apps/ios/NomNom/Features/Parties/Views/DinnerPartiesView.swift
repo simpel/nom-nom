@@ -32,12 +32,8 @@ struct DinnerPartiesView: View {
                             action: EmptyStateAction("New party") { showingCreateSheet = true }
                         )
                     } else {
-                        VStack(spacing: DS.Spacing.md) {
-                            ForEach(store.myParties) { party in
-                                CurrentPartyHeroView(party: party) {
-                                    showingCreateSheet = true
-                                }
-                            }
+                        VStack(spacing: DS.Spacing.s4) {
+                            ForEach(store.myParties) { DinnerPartyCard(party: $0) }
                         }
                     }
 

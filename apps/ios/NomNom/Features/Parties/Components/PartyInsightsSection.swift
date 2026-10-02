@@ -62,7 +62,9 @@ struct PartyInsightsSection: View {
                     FlavorProfileCard(entries: flavorProfile)
 
                     if let recommendations = insights?.recommendations, !recommendations.isEmpty {
-                        InsightsRecommendationsCarousel(recommendations: recommendations)
+                        RecipeShelf("AI recipe recommendations", items: recommendations) {
+                            RecommendationShelfCard(rec: $0)
+                        }
                     }
                 }
             }

@@ -84,41 +84,12 @@ struct RecipePickerSheet: View {
     // MARK: - Idle Mode Content
 
     private var idleContent: some View {
-        VStack(alignment: .leading, spacing: DS.Spacing.sectionLarge) {
+        VStack(alignment: .leading, spacing: DS.Spacing.block) {
             RecommendedForYouShelf(onSelect: selectRecipe)
-
-            if !store.favoriteRecipes.isEmpty {
-                RecipeHorizontalShelf(
-                    title: "Favourites",
-                    recipes: store.favoriteRecipes,
-                    onSelect: selectRecipe
-                )
-            }
-
-            if !store.recentAndFrequentRecipes.isEmpty {
-                RecipeHorizontalShelf(
-                    title: "Recent & Frequent",
-                    recipes: store.recentAndFrequentRecipes,
-                    onSelect: selectRecipe
-                )
-            }
-
-            if !store.pastFavoriteRecipes.isEmpty {
-                RecipeHorizontalShelf(
-                    title: "Past Favourites",
-                    recipes: store.pastFavoriteRecipes,
-                    onSelect: selectRecipe
-                )
-            }
-
-            if !store.popularRecipes.isEmpty {
-                RecipeHorizontalShelf(
-                    title: "Popular Recipes",
-                    recipes: store.popularRecipes,
-                    onSelect: selectRecipe
-                )
-            }
-
+            RecipeShelf("Favourites", recipes: store.favoriteRecipes, onSelect: selectRecipe)
+            RecipeShelf("Recent & frequent", recipes: store.recentAndFrequentRecipes, onSelect: selectRecipe)
+            RecipeShelf("Past favourites", recipes: store.pastFavoriteRecipes, onSelect: selectRecipe)
+            RecipeShelf("Popular recipes", recipes: store.popularRecipes, onSelect: selectRecipe)
             RecipeCategoryGridSection(onSelectRecipe: selectRecipe)
 
             if store.recipes.isEmpty {
@@ -126,9 +97,9 @@ struct RecipePickerSheet: View {
                     "No recipes yet",
                     message: "Type the name of what you cooked to create your first recipe."
                 )
-                .padding(.horizontal, DS.Spacing.gutter)
             }
         }
+        .padding(.horizontal, DS.Spacing.gutter)
         .padding(.top, DS.Spacing.screenTop)
         .padding(.bottom, DS.Spacing.screenBottom)
     }
