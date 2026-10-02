@@ -15,40 +15,29 @@ extension View {
             .navigationBarTitleDisplayMode(displayMode)
     }
 
-    /// Standard top-bar trailing toolbar for primary root tabs (Meals, Parties, Recipes).
-    /// Houses the shared `SettingsDropdownMenu`, ensuring identical icon sizing, font weights, inter-item spacing, and edge insets.
-    func mainTabToolbar() -> some View {
+    /// Standard top bar for the root tabs (Meals, Parties, Recipes): no title (the body
+    /// carries the PageHeader / DetailHeader) and the `PageMenu` on the trailing side.
+    /// `addAccessibilityLabel` + `onAdd` put an icon-only "+" before the menu (Recipes).
+    func mainTabToolbar(
+        addAccessibilityLabel: String? = nil,
+        onAdd: (() -> Void)? = nil
+    ) -> some View {
         self
             .navigationTitle("")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
+                if let onAdd {
+                    ToolbarItem(placement: .topBarTrailing) {
+                        Button(action: onAdd) {
+                            Image(systemName: "plus")
+                                .fontWeight(DS.TextStyle.Weight.semibold.fontWeight)
+                        }
+                        .accessibilityLabel(addAccessibilityLabel ?? "Add")
+                    }
+                }
                 ToolbarItem(placement: .topBarTrailing) {
-                    HStack(spacing: DS.Spacing.s3) {
-                        NotificationBellButton()
-                        SettingsDropdownMenu()
-                    }
+                    PageMenu()
                 }
             }
-    }
-
-    /// Overload for custom single action button where needed.
-    func mainTabToolbar(
-        actionAccessibilityLabel: String,
-        onAction: @escaping () -> Void
-    ) -> some View {
-        toolbar {
-            ToolbarItem(placement: .topBarTrailing) {
-                HStack(spacing: DS.Spacing.s3) {
-                    NotificationBellButton()
-                    SettingsDropdownMenu()
-
-                    Button(action: onAction) {
-                        Image(systemName: "plus")
-                            .fontWeight(DS.TextStyle.Weight.semibold.fontWeight)
-                    }
-                    .accessibilityLabel(actionAccessibilityLabel)
-                }
-            }
-        }
     }
 }

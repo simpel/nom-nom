@@ -2,7 +2,8 @@ import SwiftUI
 
 /// Standard environment and navigation wrapper for Xcode SwiftUI `#Preview`s.
 ///
-/// Automatically injects mock `FoodStore`, `AuthController`, and `NotificationManager`
+/// Automatically injects mock `FoodStore`, `AuthController`, `NotificationManager`,
+/// `EntitlementStore` and `AppNavigator`
 /// so any view or component can be previewed immediately in the Canvas without running the simulator.
 @MainActor
 struct NomNomPreview<Content: View>: View {
@@ -11,6 +12,7 @@ struct NomNomPreview<Content: View>: View {
     var auth: AuthController
     var inNavigationStack: Bool
     @ViewBuilder var content: (FoodStore) -> Content
+    @State private var navigator = AppNavigator()
 
     @MainActor
     init(
@@ -51,5 +53,7 @@ struct NomNomPreview<Content: View>: View {
         .environment(store)
         .environment(auth)
         .environment(NotificationManager.shared)
+        .environment(EntitlementStore.shared)
+        .environment(navigator)
     }
 }

@@ -28,6 +28,8 @@ import SwiftUI
 struct ListRow: View {
     var title: String
     var meta: String?
+    /// A coloured run after `meta` ("Fridays · " + "Waiting on 2" in `warning-text`).
+    var metaAccent: ListRowMetaAccent?
     var value: String?
     var leading: ListRowLeading
     var trailing: ListRowTrailing?
@@ -47,6 +49,7 @@ struct ListRow: View {
     init(
         _ title: String,
         meta: String? = nil,
+        metaAccent: ListRowMetaAccent? = nil,
         value: String? = nil,
         leading: ListRowLeading = .none,
         trailing: ListRowTrailing? = nil,
@@ -60,6 +63,7 @@ struct ListRow: View {
     ) {
         self.title = title
         self.meta = meta
+        self.metaAccent = metaAccent
         self.value = value
         self.leading = leading
         self.trailing = trailing
@@ -134,8 +138,8 @@ struct ListRow: View {
             ListRowLeadingView(slot: leading)
             VStack(alignment: .leading, spacing: DS.Spacing.s0_5) {
                 titleView
-                if let meta, !meta.isEmpty {
-                    Text(meta).textStyle(.sansSm, tone: .secondary, lines: 1)
+                if let metaText {
+                    metaText.textStyle(.sansSm, tone: .secondary, lines: 1)
                 }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
@@ -146,6 +150,13 @@ struct ListRow: View {
                     .layoutPriority(1)
             }
         }
+    }
+
+    private var metaText: Text? {
+        let base = meta.flatMap { $0.isEmpty ? nil : Text($0) }
+        guard let metaAccent else { return base }
+        let accent = Text(metaAccent.text).foregroundStyle(metaAccent.color)
+        return base.map { $0 + Text(" \u{00B7} ") + accent } ?? accent
     }
 
     @ViewBuilder

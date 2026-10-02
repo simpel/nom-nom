@@ -125,3 +125,10 @@ struct ListRowLeadingView: View {
         }
     }
 }
+
+/// A coloured run appended to a row's meta line (DS-GAPS.md, "ListRow meta"): the
+/// "Nom Nom iOS" canvas tones "Waiting on 2" `warning-text` after the party name.
+struct ListRowMetaAccent {
+    let text: String
+    var color: Color = DS.Color.warningText
+}

@@ -38,11 +38,8 @@ final class FoodStore {
     var currentParty: Party? {
         didSet {
             let key = "selectedParty_\(userID.uuidString)"
-            if let id = currentParty?.id {
-                UserDefaults.standard.set(id.uuidString, forKey: key)
-            } else {
-                UserDefaults.standard.removeObject(forKey: key)
-            }
+            // nil is "Just me" (the page menu's first choice), remembered as such.
+            UserDefaults.standard.set(currentParty?.id.uuidString ?? Self.soloPartySelection, forKey: key)
         }
     }
 
@@ -65,6 +62,8 @@ final class FoodStore {
     var partyByID: [UUID: Party] = [:]
 
     static let log = Logger(subsystem: "NomNom", category: "store")
+    /// The saved party selection meaning "Just me".
+    static let soloPartySelection = "solo"
 
     init(userID: UUID) {
         self.userID = userID

@@ -2,7 +2,7 @@
 import SwiftUI
 
 // The one copy of the sign-out and delete-account confirmations (native alerts),
-// shared by AccountActionsSection and SettingsDropdownMenu.
+// used by AccountActionsSection.
 
 extension View {
     /// "Sign out?" alert; confirming unregisters this device and signs out.

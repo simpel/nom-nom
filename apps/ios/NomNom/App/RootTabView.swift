@@ -3,7 +3,7 @@ import SwiftUI
 struct RootTabView: View {
     @Environment(FoodStore.self) private var store
     @Environment(NotificationManager.self) private var notifications
-    @State private var selection = 0
+    @State private var navigator = AppNavigator()
     @State private var didApplyLaunchArguments = false
     @State private var activeRateMealID: UUID?
     @State private var activeViewMealID: UUID?
@@ -81,37 +81,35 @@ struct RootTabView: View {
         } message: {
             Text(store.errorMessage ?? "")
         }
+        // Last, so the sheets above inherit it too.
+        .environment(navigator)
         #if DEBUG
         .task { await applyLaunchArguments() }
         #endif
     }
     
-    private var partyTabTitle: String {
-        store.currentParty?.name ?? "Parties"
-    }
-
     @available(iOS 18.0, *)
     @ViewBuilder
     private var modernTabView: some View {
-        let tabView = TabView(selection: $selection) {
-            Tab("Meals", systemImage: "fork.knife", value: 0) {
+        let tabView = TabView(selection: $navigator.tab) {
+            Tab("Meals", systemImage: "fork.knife", value: AppTab.meals) {
                 MealsView()
             }
             .badge(store.awaitingMyRating.count)
 
-            Tab(partyTabTitle, systemImage: "person.2", value: 1) {
+            Tab("Parties", systemImage: "person.2", value: AppTab.parties) {
                 DinnerPartiesView()
             }
 
-            Tab("Recipes", systemImage: "book.pages", value: 2) {
+            Tab("Recipes", systemImage: "book.pages", value: AppTab.recipes) {
                 RecipesView()
             }
             
-            Tab("Insights", systemImage: "chart.bar", value: 3) {
+            Tab("Insights", systemImage: "chart.bar", value: AppTab.insights) {
                 InsightsTabView()
             }
 
-            Tab(value: 4, role: .search) {
+            Tab(value: AppTab.search, role: .search) {
                 RecipeSearchView()
             }
         }
@@ -125,34 +123,34 @@ struct RootTabView: View {
 
     @ViewBuilder
     private var legacyTabView: some View {
-        TabView(selection: $selection) {
+        TabView(selection: $navigator.tab) {
             MealsView()
-                .tag(0)
+                .tag(AppTab.meals)
                 .tabItem {
                     Label("Meals", systemImage: "fork.knife")
                 }
                 .badge(store.awaitingMyRating.count)
 
             DinnerPartiesView()
-                .tag(1)
+                .tag(AppTab.parties)
                 .tabItem {
-                    Label(partyTabTitle, systemImage: "person.2")
+                    Label("Parties", systemImage: "person.2")
                 }
 
             RecipesView()
-                .tag(2)
+                .tag(AppTab.recipes)
                 .tabItem {
                     Label("Recipes", systemImage: "book.pages")
                 }
                 
             InsightsTabView()
-                .tag(3)
+                .tag(AppTab.insights)
                 .tabItem {
                     Label("Insights", systemImage: "chart.bar")
                 }
 
             RecipeSearchView()
-                .tag(4)
+                .tag(AppTab.search)
                 .tabItem {
                     Label("Search", systemImage: "magnifyingglass")
                 }
@@ -161,7 +159,7 @@ struct RootTabView: View {
 
     private func handleIncomingURL(_ url: URL) {
         guard let link = DeepLink(url: url) else { return }
-        selection = link.tab
+        navigator.tab = AppTab(rawValue: link.tab) ?? .meals
         switch link {
         case .party(let id): activePartyID = id
         case .rateMeal(let id): activeRateMealID = id
@@ -179,8 +177,8 @@ struct RootTabView: View {
         didApplyLaunchArguments = true
 
         let config = LaunchArgumentsParser.parse()
-        if let tab = config.initialTab {
-            selection = tab
+        if let tab = config.initialTab.flatMap(AppTab.init(rawValue:)) {
+            navigator.tab = tab
         }
         if config.seedSampleData {
             await SampleData.populate(store)

@@ -37,11 +37,7 @@ struct ProGate<Content: View>: View {
         self.content = content
     }
 
-    // TODO: remove — temporarily disables the Pro lock so every screen is reachable while
-    // they're still being built. Flip back to `false` (or delete) once done.
-    private let paywallDisabled = true
-
-    private var isUnlocked: Bool { entitlements.isPro || paywallDisabled }
+    private var isUnlocked: Bool { entitlements.hasProAccess }
 
     /// No blur token exists; the content blurs by `shadow-lg`'s blur, the system's
     /// largest everyday blur (DS-GAPS.md, "core").

@@ -219,7 +219,7 @@ To prevent duplication and ensure high consistency:
 
 4. **A pattern the DS lacks goes in `Core/Components/Interim/` + `DS-GAPS.md`; never hand-roll it**:
    - Build the interim component only from DS primitives and tokens, start the file with a `// DS-GAP: pending design system` header, and add an entry to `Core/Design/DS-GAPS.md` (section "Open gaps").
-   - Today: `TrendChart`, `MediaViewerSheet`, `NameFieldsCard`, `PartyFormFields`, `VisibilityToggleCard`, `AccountActionsSection`.
+   - Today: `TrendChart`, `MediaViewerSheet`, `NameFieldsCard`, `PartyFormFields`, `VisibilityToggleCard`, `AccountActionsSection`, `PageMenu`, `ProSection` / `ProLinkCard`, `PersonHeaderRow`.
 
 ---
 
