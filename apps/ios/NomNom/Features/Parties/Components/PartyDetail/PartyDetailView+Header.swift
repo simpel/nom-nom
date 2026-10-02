@@ -78,21 +78,7 @@ extension PartyDetailView {
     }
 
     @ToolbarContentBuilder
-    var closeToolbarItem: some ToolbarContent {
-        if showCloseButton {
-            ToolbarItem(placement: .topBarLeading) {
-                Button { dismiss() } label: {
-                    Image(systemName: "xmark").fontWeight(.semibold)
-                }
-                .accessibilityLabel("Close")
-            }
-        }
-    }
-
-    @ToolbarContentBuilder
     func toolbarContent(for party: Party) -> some ToolbarContent {
-        closeToolbarItem
-
         if store.isMember(of: party.id) {
             ToolbarItem(placement: .topBarTrailing) {
                 Menu {
@@ -117,6 +103,19 @@ extension PartyDetailView {
                 }
                 .accessibilityLabel("Party options")
             }
+        }
+    }
+}
+
+/// The leading sheet close (`sheetCloseToolbar`) when the screen is presented modally.
+struct PartyDetailCloseToolbar: ViewModifier {
+    let isShown: Bool
+
+    func body(content: Content) -> some View {
+        if isShown {
+            content.sheetCloseToolbar()
+        } else {
+            content
         }
     }
 }

@@ -1,57 +1,46 @@
 import SwiftUI
 
-/// Section displaying pending invitations to join dinner parties.
+/// Invitations to join dinner parties: a DSSection over a `Card(layout: .list)` of
+/// ListRows (Subject shape): the party's Avatar, its name, "Invited by …", Accept
+/// (`primary solid sm`) and a `secondary ghost` ✕ to decline (ListRow README: "One
+/// trailing element, or two where the second is a `ghost` icon button").
 struct PendingPartyInvitesSection: View {
     @Environment(FoodStore.self) private var store
 
     var body: some View {
         if !store.pendingPartyInvites.isEmpty {
-            SectionCard("Pending Invitations") {
-                VStack(spacing: 12) {
+            DSSection("Pending invitations", trailing: "\(store.pendingPartyInvites.count)", trailingTone: .primary) {
+                Card(layout: .list) {
                     ForEach(store.pendingPartyInvites) { invite in
-                        let party = store.party(invite.partyID)
-                        HStack(spacing: 12) {
-                            if let party {
-                                PartyAvatar(party: party, size: 40)
-                            } else {
-                                PartyAvatar(name: "Dinner Party", size: 40)
-                            }
-
-                            VStack(alignment: .leading, spacing: 4) {
-                                Text(party?.name ?? "Dinner Party")
-                                    .font(.body.weight(.medium))
-                                    .foregroundStyle(DS.Color.textPrimary)
-
-                                let inviter = store.label(for: .account(invite.inviterID))
-                                Text("Invited by \(inviter.name)")
-                                    .font(.caption)
-                                    .foregroundStyle(DS.Color.textSecondary)
-                            }
-
-                            Spacer()
-
-                            AppButton("Accept", variant: .primary, style: .normal, size: .sm) {
-                                Task { await store.acceptPartyInvite(invite) }
-                            }
-
-                            AppButton("Decline", variant: .neutral, style: .outlined, size: .sm) {
-                                Task { await store.declinePartyInvite(invite) }
-                            }
-                        }
-
-                        if invite.id != store.pendingPartyInvites.last?.id {
-                            Divider()
-                        }
+                        row(invite)
                     }
                 }
             }
         }
+    }
+
+    private func row(_ invite: PartyInvite) -> some View {
+        let party = store.party(invite.partyID)
+        let name = party?.name ?? "Dinner Party"
+        let inviter = store.label(for: .account(invite.inviterID))
+        return ListRow(
+            name,
+            meta: "Invited by \(inviter.name)",
+            leading: .avatar(party.map { Avatar(party: $0, size: .sm, decorative: true) }
+                ?? Avatar(name: name, size: .sm, decorative: true)),
+            trailing: .button(AppButton("Accept", size: .sm) {
+                Task { await store.acceptPartyInvite(invite) }
+            }),
+            trailingAction: ListRowIconAction(icon: "xmark", accessibilityLabel: "Decline invite to \(name)", variant: .secondary) {
+                Task { await store.declinePartyInvite(invite) }
+            }
+        )
     }
 }
 
 #Preview {
     NomNomPreview { _ in
         PendingPartyInvitesSection()
-            .padding()
+            .padding(DS.Spacing.gutter)
     }
 }

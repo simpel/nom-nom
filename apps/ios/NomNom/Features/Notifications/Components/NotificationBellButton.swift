@@ -1,6 +1,8 @@
 import SwiftUI
 
-/// Toolbar button showing a notification bell with an optional unread counter badge.
+/// Toolbar button showing a notification bell with an unread dot.
+/// The dot is ListRow's unread mark (bundle.css `.nn-row[data-unread]::before`:
+/// a `spacing-2` `primary` dot), the one unread signal the DS defines.
 struct NotificationBellButton: View {
     @Environment(FoodStore.self) private var store
 
@@ -10,18 +12,16 @@ struct NotificationBellButton: View {
         Button {
             showingInbox = true
         } label: {
-            ZStack(alignment: .topTrailing) {
-                Image(systemName: "bell")
-                    .fontWeight(.semibold)
-                    .frame(width: 24, height: 24)
-
-                if store.unreadCount > 0 {
-                    Circle()
-                        .fill(Color.orange)
-                        .frame(width: 8, height: 8)
-                        .offset(x: 2, y: -2)
+            Image(systemName: "bell")
+                .fontWeight(.semibold)
+                .overlay(alignment: .topTrailing) {
+                    if store.unreadCount > 0 {
+                        Circle()
+                            .fill(DS.Color.primary)
+                            .frame(width: DS.Spacing.s2, height: DS.Spacing.s2)
+                            .offset(x: DS.Spacing.s0_5, y: -DS.Spacing.s0_5)
+                    }
                 }
-            }
         }
         .accessibilityLabel(store.unreadCount > 0 ? "\(store.unreadCount) unread notifications" : "Inbox")
         .sheet(isPresented: $showingInbox) {

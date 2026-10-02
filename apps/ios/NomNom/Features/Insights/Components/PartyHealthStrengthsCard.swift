@@ -1,59 +1,41 @@
 import SwiftUI
 
+/// The nutritional patterns behind a set of meals: a SectionCard each for the top
+/// strengths and the watch-outs, one `sans-md` line per item. Draws nothing when both
+/// lists are empty.
 struct PartyHealthStrengthsCard: View {
     let topStrengths: [String]
     let topConsiderations: [String]
-    
+
     var body: some View {
-        VStack(alignment: .leading, spacing: DS.Spacing.md) {
-            Text("Nutritional Patterns")
-                .font(.headline)
-                .foregroundStyle(DS.Color.textPrimary)
-            
-            if !topStrengths.isEmpty {
-                VStack(alignment: .leading, spacing: DS.Spacing.sm) {
-                    Text("Top Strengths")
-                        .font(.subheadline.weight(.semibold))
-                        .foregroundStyle(DS.Color.textSecondary)
-                    
-                    ForEach(topStrengths, id: \.self) { strength in
-                        HStack(alignment: .top, spacing: DS.Spacing.xs) {
-                            Image(systemName: "checkmark.circle.fill")
-                                .foregroundStyle(DS.Color.Pine.pine600)
-                                .font(.footnote)
-                                .padding(.top, 2)
-                            Text(strength)
-                                .font(.subheadline)
-                                .foregroundStyle(DS.Color.textPrimary)
-                        }
-                    }
+        if !topStrengths.isEmpty || !topConsiderations.isEmpty {
+            VStack(alignment: .leading, spacing: DS.Spacing.s4) {
+                if !topStrengths.isEmpty {
+                    list("Strengths", items: topStrengths)
                 }
-            }
-            
-            if !topConsiderations.isEmpty {
-                VStack(alignment: .leading, spacing: DS.Spacing.sm) {
-                    Text("Watch-outs")
-                        .font(.subheadline.weight(.semibold))
-                        .foregroundStyle(DS.Color.textSecondary)
-                    
-                    ForEach(topConsiderations, id: \.self) { consideration in
-                        HStack(alignment: .top, spacing: DS.Spacing.xs) {
-                            Image(systemName: "exclamationmark.triangle.fill")
-                                .foregroundStyle(DS.Color.warningText)
-                                .font(.footnote)
-                                .padding(.top, 2)
-                            Text(consideration)
-                                .font(.subheadline)
-                                .foregroundStyle(DS.Color.textPrimary)
-                        }
-                    }
+                if !topConsiderations.isEmpty {
+                    list("Watch-outs", items: topConsiderations)
                 }
-                .padding(.top, topStrengths.isEmpty ? 0 : DS.Spacing.xs)
             }
         }
-        .padding(DS.Spacing.md)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(DS.Color.sunken)
-        .clipShape(RoundedRectangle(cornerRadius: AppRadius.card, style: .continuous))
     }
+
+    private func list(_ title: String, items: [String]) -> some View {
+        SectionCard(title) {
+            ForEach(items, id: \.self) { item in
+                Text(item)
+                    .textStyle(.sansMd)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+        }
+    }
+}
+
+#Preview {
+    PartyHealthStrengthsCard(
+        topStrengths: ["Plenty of vegetables", "Lean proteins"],
+        topConsiderations: ["High sodium on pizza nights"]
+    )
+    .padding(DS.Spacing.gutter)
+    .background(DS.Color.bg)
 }

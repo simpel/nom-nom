@@ -45,7 +45,7 @@ struct PartyDetailView: View {
                 .padding(.horizontal, DS.Spacing.gutter)
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .background(DS.Color.bg)
-                .toolbar { closeToolbarItem }
+                .modifier(PartyDetailCloseToolbar(isShown: showCloseButton))
             }
         }
         .task(id: partyID) {
@@ -90,6 +90,7 @@ struct PartyDetailView: View {
         .background(DS.Color.bg)
         .screenTitle(party.name, displayMode: .inline)
         .toolbar { toolbarContent(for: party) }
+        .modifier(PartyDetailCloseToolbar(isShown: showCloseButton))
         .alert("Leave Party?", isPresented: $confirmLeave) {
             Button("Cancel", role: .cancel) {}
             Button("Leave Party", role: .destructive) { leave(party) }
