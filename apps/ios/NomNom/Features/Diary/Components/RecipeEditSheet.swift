@@ -19,7 +19,7 @@ struct RecipeEditSheet: View {
     var body: some View {
         NavigationStack {
             ScrollView {
-                VStack(spacing: DS.Spacing.section) {
+                VStack(spacing: DS.Spacing.block) {
                     if recipe != nil {
                         if isOwner {
                             RecipeBasicsForm(
@@ -39,11 +39,11 @@ struct RecipeEditSheet: View {
                         EmptyState("Recipe is gone", message: "It was deleted.", layout: .screen)
                     }
                 }
-                .padding(.horizontal, DS.Spacing.screenHorizontal)
-                .padding(.top, DS.Spacing.screenTop)
-                .padding(.bottom, DS.Spacing.screenBottom)
+                .padding(.horizontal, DS.Spacing.gutter)
+                .padding(.top, DS.Spacing.s5)
+                .padding(.bottom, DS.Spacing.s11)
             }
-            .background(DS.Color.bg)
+            .background(DS.Color.sheet)
             .screenTitle("Edit Recipe", displayMode: .inline)
             .sheetNextToolbar(canProceed: !name.trimmedName.isEmpty && isOwner) {
                 navigateToDetails = true
@@ -59,6 +59,7 @@ struct RecipeEditSheet: View {
             }
             .onAppear(perform: populate)
         }
+        .dsSheet()
     }
 
     private func populate() {

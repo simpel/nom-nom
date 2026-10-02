@@ -18,14 +18,13 @@ struct RecipeHealthDetailsButton: View {
 
     var body: some View {
         AppButton(
-            icon: .system("info.circle"),
-            variant: .neutral,
-            style: .ghost,
-            size: .sm
+            icon: "info.circle",
+            accessibilityLabel: "Health score details",
+            variant: .secondary,
+            appearance: .ghost
         ) {
             presentedPayload = RecipeHealthSheetPayload(recipe: recipe, healthIndex: healthIndex)
         }
-        .accessibilityLabel("Health score details")
         .sheet(item: $presentedPayload) { payload in
             RecipeHealthRationaleSheet(recipe: payload.recipe, healthIndex: payload.healthIndex)
         }

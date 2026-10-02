@@ -7,10 +7,7 @@ extension RecipeDetailView {
     var toolbarContent: some ToolbarContent {
         if showCloseButton {
             ToolbarItem(placement: .topBarLeading) {
-                Button { dismiss() } label: {
-                    Image(systemName: "xmark").fontWeight(.semibold)
-                }
-                .accessibilityLabel("Close")
+                SheetCloseButton { dismiss() }
             }
         }
 

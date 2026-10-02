@@ -1,7 +1,11 @@
 import SwiftUI
 import PhotosUI
 
-/// Photo picker and preview section for the meal editor form.
+/// One-photo picker and preview for the meal editor: a PhotoCard `lg` landscape
+/// filling the width (the no-photo tile opens the camera or library), then Camera,
+/// Library and remove buttons.
+///
+/// No caller yet: the meal editor uses `MealPhotosPickerSection` (PhotoStripEditor).
 struct MealEditorPhotoSection: View {
     @Binding var pickedData: Data?
     @Binding var didRemovePhoto: Bool
@@ -15,87 +19,62 @@ struct MealEditorPhotoSection: View {
         return existingPath != nil && !didRemovePhoto
     }
 
+    private var source: PhotoCardSource {
+        if let pickedData { return .data(pickedData) }
+        if let existingPath, !didRemovePhoto { return .remote(path: existingPath) }
+        return .none()
+    }
+
     var body: some View {
-        Section {
-            VStack(spacing: 12) {
-                photoPreview
-                    .frame(height: 220)
-                    .frame(maxWidth: .infinity)
-                    .overlay {
-                        if loadingPhoto { ProgressView() }
-                    }
+        VStack(spacing: DS.Spacing.s3) {
+            photoPreview
+                .overlay {
+                    if loadingPhoto { ProgressView() }
+                }
 
-                HStack(spacing: 10) {
-                    if CameraPicker.isAvailable {
-                        AppButton(
-                            "Camera",
-                            systemImage: "camera.fill",
-                            variant: .neutral,
-                            style: .outlined,
-                            size: .md,
-                            isFullWidth: true
-                        ) {
-                            showCamera = true
-                        }
+            HStack(spacing: DS.Spacing.s2_5) {
+                if CameraPicker.isAvailable {
+                    AppButton("Camera", icon: "camera.fill", variant: .secondary, appearance: .outline, fullWidth: true) {
+                        showCamera = true
                     }
+                }
 
-                    PhotosPicker(selection: $pickerItem, matching: .images, photoLibrary: .shared()) {
-                        HStack(spacing: 8) {
-                            Image(systemName: "photo.on.rectangle")
-                                .font(.callout.weight(.semibold))
-                            Text("Library")
-                                .font(.callout)
-                                .fontWeight(.semibold)
-                        }
-                        .frame(maxWidth: .infinity)
-                        .frame(height: 42)
-                        .padding(.horizontal, 16)
-                        .foregroundStyle(DS.Color.textPrimary)
-                        .background(Color.clear)
-                        .clipShape(Capsule())
-                        .overlay {
-                            Capsule().strokeBorder(DS.Color.lineStrong, lineWidth: 1.5)
-                        }
-                    }
+                PhotosPicker(selection: $pickerItem, matching: .images, photoLibrary: .shared()) {
+                    AppButtonLabel("Library", icon: "photo.on.rectangle", variant: .secondary, appearance: .outline, fullWidth: true)
+                }
+                .buttonStyle(AppPressableButtonStyle())
 
-                    if hasPhoto {
-                        AppButton(
-                            systemImage: "trash",
-                            variant: .destructive,
-                            style: .outlined,
-                            size: .md
-                        ) {
-                            pickedData = nil
-                            pickerItem = nil
-                            didRemovePhoto = true
-                        }
+                if hasPhoto {
+                    AppButton(icon: "trash", accessibilityLabel: "Remove photo", variant: .destructive, appearance: .outline) {
+                        pickedData = nil
+                        pickerItem = nil
+                        didRemovePhoto = true
                     }
                 }
             }
-            .padding(.vertical, 4)
         }
+    }
+
+    private var card: some View {
+        PhotoCard(source, size: .lg, format: .landscape, fillsWidth: true)
     }
 
     @ViewBuilder
     private var photoPreview: some View {
-        if let pickedData {
-            MealPhoto(data: pickedData, cornerRadius: AppRadius.photo)
-        } else if let existingPath, !didRemovePhoto {
-            RemoteMealPhoto(path: existingPath, cornerRadius: AppRadius.photo)
-        } else {
-            if CameraPicker.isAvailable {
-                Button {
-                    showCamera = true
-                } label: {
-                    MealPhoto(data: nil, cornerRadius: AppRadius.photo)
-                }
-                .buttonStyle(.plain)
-            } else {
-                PhotosPicker(selection: $pickerItem, matching: .images, photoLibrary: .shared()) {
-                    MealPhoto(data: nil, cornerRadius: AppRadius.photo)
-                }
-                .buttonStyle(.plain)
+        if hasPhoto {
+            card
+        } else if CameraPicker.isAvailable {
+            Button {
+                showCamera = true
+            } label: {
+                card
             }
+            .buttonStyle(AppPressableButtonStyle())
+        } else {
+            PhotosPicker(selection: $pickerItem, matching: .images, photoLibrary: .shared()) {
+                card
+            }
+            .buttonStyle(AppPressableButtonStyle())
         }
     }
 }

@@ -14,9 +14,9 @@ struct DishRecipeEditSheet: View {
     var body: some View {
         NavigationStack {
             ScrollView {
-                VStack(spacing: 16) {
+                VStack(spacing: DS.Spacing.block) {
                     SectionCard("Recipe Name") {
-                        Input("Recipe name", text: $dishName, style: .cardRow)
+                        Input("Recipe name", text: $dishName)
                             .autocorrectionDisabled()
                     }
 
@@ -24,10 +24,11 @@ struct DishRecipeEditSheet: View {
 
                     MealEditorCookingTimeSection(effort: $recipeDraft.effort)
                 }
-                .padding(.horizontal, 16)
-                .padding(.vertical, 14)
+                .padding(.horizontal, DS.Spacing.gutter)
+                .padding(.top, DS.Spacing.s5)
+                .padding(.bottom, DS.Spacing.s11)
             }
-            .background(DS.Color.bg)
+            .background(DS.Color.sheet)
             .screenTitle("Edit Recipe", displayMode: .inline)
             .sheetCommitToolbar(
                 canSave: !dishName.trimmedName.isEmpty,
@@ -48,5 +49,6 @@ struct DishRecipeEditSheet: View {
                 }
             }
         }
+        .dsSheet()
     }
 }

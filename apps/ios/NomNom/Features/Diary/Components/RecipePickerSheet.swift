@@ -57,21 +57,12 @@ struct RecipePickerSheet: View {
                     searchContent
                 }
             }
-            .background(DS.Color.bg)
+            .background(DS.Color.sheet)
             .screenTitle("Pick a Recipe")
             .searchable(text: $searchText, prompt: "Search or type new recipe")
-            .sheetCancelToolbar()
-            .toolbar {
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button {
-                        showingCreateRecipeSheet = true
-                    } label: {
-                        Image(systemName: "plus")
-                            .fontWeight(.semibold)
-                    }
-                    .accessibilityLabel("Create Recipe")
-                }
-            }
+            .sheetOverviewToolbar(primarySystemImage: "plus", onPrimaryAction: {
+                showingCreateRecipeSheet = true
+            })
             .sheet(isPresented: $showingCreateRecipeSheet) {
                 CreateRecipeSheet(initialName: trimmedSearch) { newRecipe in
                     onSelectExistingRecipe(newRecipe)
@@ -79,6 +70,7 @@ struct RecipePickerSheet: View {
                 }
             }
         }
+        .dsSheet()
     }
 
     // MARK: - Idle Mode Content
@@ -100,14 +92,14 @@ struct RecipePickerSheet: View {
             }
         }
         .padding(.horizontal, DS.Spacing.gutter)
-        .padding(.top, DS.Spacing.screenTop)
-        .padding(.bottom, DS.Spacing.screenBottom)
+        .padding(.top, DS.Spacing.s5)
+        .padding(.bottom, DS.Spacing.s11)
     }
 
     // MARK: - Search Mode Content
 
     private var searchContent: some View {
-        VStack(alignment: .leading, spacing: DS.Spacing.section) {
+        VStack(alignment: .leading, spacing: DS.Spacing.block) {
             if !exactMatchExists {
                 Card(layout: .list) {
                     ListRow("Add \u{201C}\(trimmedSearch)\u{201D}", meta: "Create as a new recipe", leading: .icon("plus")) {
@@ -120,7 +112,8 @@ struct RecipePickerSheet: View {
 
             if !matchingRecipes.isEmpty {
                 VStack(alignment: .leading, spacing: DS.Spacing.s2_5) {
-                    SectionHeader("Matching Recipes", trailingText: "\(matchingRecipes.count) found")
+                    SectionHeader(title: "Matching Recipes", trailing: "\(matchingRecipes.count) found")
+                        .padding(.horizontal, DS.Spacing.gutter)
                     MinimalRecipeGrid(recipes: matchingRecipes, onSelect: selectRecipe)
                 }
             } else if exactMatchExists {
@@ -132,8 +125,8 @@ struct RecipePickerSheet: View {
                 .padding(.horizontal, DS.Spacing.gutter)
             }
         }
-        .padding(.top, DS.Spacing.screenTop)
-        .padding(.bottom, DS.Spacing.screenBottom)
+        .padding(.top, DS.Spacing.s5)
+        .padding(.bottom, DS.Spacing.s11)
     }
 
     private func selectRecipe(_ recipe: Recipe) {

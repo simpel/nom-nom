@@ -63,7 +63,7 @@ struct MealDetailContent: View {
             }
             .padding(.horizontal, DS.Spacing.gutter)
             .padding(.top, topInset)
-            .padding(.bottom, DS.Spacing.screenBottom)
+            .padding(.bottom, DS.Spacing.s11)
         }
         .background(DS.Color.bg)
     }

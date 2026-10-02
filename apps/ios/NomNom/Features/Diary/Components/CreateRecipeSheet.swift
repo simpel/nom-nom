@@ -18,14 +18,13 @@ struct CreateRecipeSheet: View {
     var body: some View {
         NavigationStack {
             ScrollView {
-                VStack(spacing: DS.Spacing.section) {
+                VStack(spacing: DS.Spacing.block) {
                     AppButton(
                         "Scan Photos or Cookbook",
-                        systemImage: "camera.viewfinder",
-                        variant: .secondary,
-                        style: .outlined,
-                        size: .md,
-                        isFullWidth: true
+                        icon: "camera.viewfinder",
+                        variant: .primary,
+                        appearance: .outline,
+                        fullWidth: true
                     ) {
                         showingScanner = true
                     }
@@ -37,11 +36,11 @@ struct CreateRecipeSheet: View {
                         cuisine: $recipeDraft.cuisine
                     )
                 }
-                .padding(.horizontal, DS.Spacing.screenHorizontal)
-                .padding(.top, DS.Spacing.screenTop)
-                .padding(.bottom, DS.Spacing.screenBottom)
+                .padding(.horizontal, DS.Spacing.gutter)
+                .padding(.top, DS.Spacing.s5)
+                .padding(.bottom, DS.Spacing.s11)
             }
-            .background(DS.Color.bg)
+            .background(DS.Color.sheet)
             .screenTitle("New Recipe", displayMode: .inline)
             .sheetNextToolbar(canProceed: !name.trimmedName.isEmpty) {
                 navigateToDetails = true
@@ -69,6 +68,7 @@ struct CreateRecipeSheet: View {
                 }
             }
         }
+        .dsSheet()
     }
 
     private func applyParsedRecipe(_ result: ParsedRecipeResult, photos: [Data]) {

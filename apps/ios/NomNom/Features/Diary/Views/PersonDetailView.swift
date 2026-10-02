@@ -92,7 +92,7 @@ struct PersonDetailView: View {
 
     var body: some View {
         ScrollView {
-            VStack(spacing: DS.Spacing.section) {
+            VStack(spacing: DS.Spacing.block) {
                 ProfileHeaderCard(
                     name: personName,
                     subtitle: subtitle,
@@ -116,9 +116,9 @@ struct PersonDetailView: View {
                     raterRef: raterRef
                 )
             }
-            .padding(.horizontal, DS.Spacing.screenHorizontal)
-            .padding(.top, DS.Spacing.screenTop)
-            .padding(.bottom, DS.Spacing.screenBottom)
+            .padding(.horizontal, DS.Spacing.gutter)
+            .padding(.top, DS.Spacing.s5)
+            .padding(.bottom, DS.Spacing.s11)
         }
         .background(DS.Color.bg)
         .screenTitle("", displayMode: .inline)
@@ -136,28 +136,23 @@ private struct SheetToolbarConditional: ViewModifier {
     let isCurrentUser: Bool
     let onEdit: () -> Void
 
+    @ViewBuilder
     func body(content: Content) -> some View {
         if isSheet {
-            content
-                .sheetCloseToolbar()
-                .toolbar {
-                    if isCurrentUser {
-                        ToolbarItem(placement: .topBarTrailing) {
-                            Button("Edit", action: onEdit)
-                                .font(.subheadline.weight(.medium))
-                        }
-                    }
-                }
+            editable(content.sheetCloseToolbar())
         } else {
-            content
-                .toolbar {
-                    if isCurrentUser {
-                        ToolbarItem(placement: .topBarTrailing) {
-                            Button("Edit", action: onEdit)
-                                .font(.subheadline.weight(.medium))
-                        }
-                    }
+            editable(content)
+        }
+    }
+
+    private func editable(_ view: some View) -> some View {
+        view.toolbar {
+            if isCurrentUser {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button("Edit", action: onEdit)
+                        .textStyle(.sansMd, tone: nil, weight: .semibold)
                 }
+            }
         }
     }
 }
