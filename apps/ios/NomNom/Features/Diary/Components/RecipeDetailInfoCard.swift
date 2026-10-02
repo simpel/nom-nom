@@ -1,6 +1,7 @@
 import SwiftUI
 
-/// Clean key-value details table for a recipe: Created by, Cooking Time, Cuisine, Tags.
+/// Key-value details for a recipe: who created it, servings and dish kind. Cuisine,
+/// cooking time and method live in the DetailHeader (eyebrow and fact Badges).
 struct RecipeDetailInfoCard: View {
     let recipe: Recipe
 
@@ -17,91 +18,21 @@ struct RecipeDetailInfoCard: View {
     }
 
     var body: some View {
-        SectionCard(title: "Details") {
-            VStack(spacing: 12) {
-                // Created by (clickable to view user profile)
-                HStack {
-                    Text("Created by")
-                        .font(.subheadline)
-                        .foregroundStyle(DS.Color.textSecondary)
-                    Spacer()
-                    NavigationLink {
-                        PersonDetailView(raterRef: .account(recipe.ownerID))
-                    } label: {
-                        HStack(spacing: 6) {
-                            Text(creatorName)
-                                .font(.subheadline.weight(.medium))
-                                .foregroundStyle(DS.Color.textPrimary)
-                            Image(systemName: "chevron.right")
-                                .font(.caption2)
-                                .foregroundStyle(DS.Color.textTertiary)
-                        }
-                    }
-                    .buttonStyle(.plain)
+        DSSection("Details") {
+            Card(layout: .list) {
+                NavigationLink {
+                    PersonDetailView(raterRef: .account(recipe.ownerID))
+                } label: {
+                    ListRow("Created by", trailing: .value(creatorName), .chevron)
                 }
+                .buttonStyle(AppPressableButtonStyle())
 
-                // Cooking Time / Effort
-                if let effort = recipe.effort {
-                    Divider().overlay(DS.Color.line.opacity(0.3))
-                    HStack {
-                        Text("Cooking Time")
-                            .font(.subheadline)
-                            .foregroundStyle(DS.Color.textSecondary)
-                        Spacer()
-                        BurnerMeter(effort: effort, showLabel: true)
-                    }
-                }
-
-                // Cuisine
-                if let cuisineName = Cuisine.formatDisplayName(recipe.cuisine) {
-                    Divider().overlay(DS.Color.line.opacity(0.3))
-                    HStack {
-                        Text("Cuisine")
-                            .font(.subheadline)
-                            .foregroundStyle(DS.Color.textSecondary)
-                        Spacer()
-                        Text(cuisineName)
-                            .font(.subheadline.weight(.medium))
-                            .foregroundStyle(DS.Color.textPrimary)
-                    }
-                }
-
-                // Servings
                 if let serves = recipe.serves {
-                    Divider().overlay(DS.Color.line.opacity(0.3))
-                    HStack {
-                        Text("Servings")
-                            .font(.subheadline)
-                            .foregroundStyle(DS.Color.textSecondary)
-                        Spacer()
-                        Text(serves == 1 ? "1 serving" : "\(serves) servings")
-                            .font(.subheadline.weight(.medium))
-                            .foregroundStyle(DS.Color.textPrimary)
-                    }
+                    ListRow("Servings", trailing: .value(serves == 1 ? "1 serving" : "\(serves) servings"))
                 }
 
-                // Dish Kind
                 if let kind = store.dishKind(for: recipe) {
-                    Divider().overlay(DS.Color.line.opacity(0.3))
-                    HStack {
-                        Text("Dish Kind")
-                            .font(.subheadline)
-                            .foregroundStyle(DS.Color.textSecondary)
-                        Spacer()
-                        Chip(text: kind.name, tint: DS.Color.textSecondary)
-                    }
-                }
-
-                // Cooking Method
-                if let method = store.cookingMethod(for: recipe) {
-                    Divider().overlay(DS.Color.line.opacity(0.3))
-                    HStack {
-                        Text("Cooking Method")
-                            .font(.subheadline)
-                            .foregroundStyle(DS.Color.textSecondary)
-                        Spacer()
-                        Chip(text: method.name, tint: DS.Color.textSecondary)
-                    }
+                    ListRow("Dish kind", trailing: .badge(Badge(kind.name, variant: .secondary, size: .sm)))
                 }
             }
         }

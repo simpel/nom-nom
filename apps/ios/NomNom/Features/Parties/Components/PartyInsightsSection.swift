@@ -31,13 +31,9 @@ struct PartyInsightsSection: View {
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: DS.Spacing.section) {
-            Text("Insights")
-                .font(.headline)
-                .foregroundStyle(DS.Color.textPrimary)
-
+        DSSection("Insights") {
             ProGate {
-                VStack(alignment: .leading, spacing: DS.Spacing.section) {
+                VStack(alignment: .leading, spacing: DS.Spacing.block) {
                     TrendChart(
                         total: trendData.map { TrendPoint(date: $0.date, value: $0.averageScore / 100) },
                         series: memberSeries,
@@ -49,7 +45,7 @@ struct PartyInsightsSection: View {
                     }
 
                     if let health = healthInsights {
-                        VStack(alignment: .leading, spacing: DS.Spacing.md) {
+                        VStack(alignment: .leading, spacing: DS.Spacing.s4) {
                             PartyHealthDistributionCard(distribution: health.healthTierDistribution)
 
                             PartyHealthStrengthsCard(

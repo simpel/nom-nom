@@ -1,7 +1,7 @@
 import SwiftUI
 
-/// Section displaying the meals logged for a dinner party ("What they're eating")
-/// in a 2-column grid putting focus on recipe imagery.
+/// "What they're eating": the party's meals as a two-column grid of PhotoCard `md`
+/// tiles with their verdict Badge, dish name and date. Empty, an in-card EmptyState.
 struct PartyMealsSection: View {
     let party: Party
 
@@ -12,76 +12,55 @@ struct PartyMealsSection: View {
     }
 
     private let columns = [
-        GridItem(.flexible(), spacing: 14),
-        GridItem(.flexible(), spacing: 14)
+        GridItem(.flexible(), spacing: DS.Spacing.s3, alignment: .top),
+        GridItem(.flexible(), spacing: DS.Spacing.s3, alignment: .top),
     ]
 
-    var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            SectionHeader("What They're Eating", horizontalPadding: 0)
+    private var countText: String? {
+        guard !partyMeals.isEmpty else { return nil }
+        return partyMeals.count == 1 ? "1 meal" : "\(partyMeals.count) meals"
+    }
 
-            if partyMeals.isEmpty {
-                SectionCard {
-                    Text("No meals logged for this dinner party yet.")
-                        .font(.subheadline)
-                        .foregroundStyle(DS.Color.textTertiary)
-                        .padding(.vertical, 8)
-                        .frame(maxWidth: .infinity, alignment: .center)
-                }
-            } else {
-                LazyVGrid(columns: columns, spacing: 16) {
+    var body: some View {
+        if partyMeals.isEmpty {
+            SectionCard("What they\u{2019}re eating") {
+                EmptyState("No meals logged yet", alignment: .leading, style: .inCard)
+            }
+        } else {
+            DSSection("What they\u{2019}re eating", trailing: countText) {
+                LazyVGrid(columns: columns, spacing: DS.Spacing.s4) {
                     ForEach(partyMeals) { meal in
                         NavigationLink {
                             MealDetailView(mealID: meal.id)
                         } label: {
-                            mealGridCard(meal: meal)
+                            tile(for: meal)
                         }
-                        .buttonStyle(.plain)
+                        .buttonStyle(AppPressableButtonStyle())
                     }
                 }
             }
         }
     }
 
-    private func mealGridCard(meal: Meal) -> some View {
-        let recipe = store.dish(meal.dishID)
-
-        return VStack(alignment: .leading, spacing: 6) {
-            RecipeImageView(
-                recipe: recipe,
-                photoPath: meal.photoPath,
-                cuisine: recipe?.cuisine,
-                cornerRadius: AppRadius.photo
+    private func tile(for meal: Meal) -> some View {
+        VStack(alignment: .leading, spacing: DS.Spacing.s2) {
+            PhotoCard(
+                .meal(meal),
+                size: .md,
+                fillsWidth: true,
+                badge: store.averageScore(forMeal: meal.id).map { .score($0) }
             )
-            .aspectRatio(1, contentMode: .fill)
-            .frame(minWidth: 0, maxWidth: .infinity)
 
-            VStack(alignment: .leading, spacing: 2) {
+            VStack(alignment: .leading, spacing: DS.Spacing.s0_5) {
                 Text(store.dishName(forMeal: meal))
-                    .font(.subheadline.weight(.medium))
-                    .foregroundStyle(DS.Color.textPrimary)
+                    .textStyle(.sansMd, weight: .semibold)
                     .lineLimit(2)
                     .multilineTextAlignment(.leading)
-                    .frame(maxWidth: .infinity, minHeight: 38, maxHeight: 38, alignment: .topLeading)
-
-                HStack(spacing: 4) {
-                    Text(meal.eatenOn.formatted(.dateTime.day().month(.abbreviated)))
-                        .font(.caption2)
-                        .foregroundStyle(DS.Color.textSecondary)
-
-                    if let avg = store.averageReaction(forMeal: meal.id) {
-                        Text("•")
-                            .font(.caption2)
-                            .foregroundStyle(DS.Color.textTertiary)
-
-                        Text(avg.shortLabel)
-                            .font(.caption2.weight(.semibold))
-                            .foregroundStyle(avg.text)
-                    }
-                }
-                .lineLimit(1)
+                Text(meal.eatenOn.formatted(.dateTime.day().month(.abbreviated)))
+                    .textStyle(.sansSm, tone: .tertiary)
+                    .lineLimit(1)
             }
-            .frame(maxWidth: .infinity, alignment: .topLeading)
+            .padding(.horizontal, DS.Spacing.s1)
         }
         .frame(maxWidth: .infinity, alignment: .topLeading)
         .contentShape(Rectangle())
@@ -94,7 +73,7 @@ struct PartyMealsSection: View {
             NavigationStack {
                 ScrollView {
                     PartyMealsSection(party: party)
-                        .padding()
+                        .padding(DS.Spacing.gutter)
                 }
             }
         }
