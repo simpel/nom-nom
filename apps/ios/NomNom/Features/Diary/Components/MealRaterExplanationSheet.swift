@@ -1,103 +1,66 @@
 import SwiftUI
 
-/// Explains why a rater likely scored a meal the way they did, based on their historical
-/// pattern across dish kinds, ingredients, cuisines, and their personal baseline.
+/// Why a rater likely scored a meal the way they did, from their own history across
+/// dish kinds, methods, ingredients, cuisines and their baseline. A DS BottomSheet:
+/// SheetHero (their score vs their usual) over a SheetCard of reasons. Pro only.
 struct MealRaterExplanationSheet: View {
-    let raterName: String
-    let affinities: [RaterTagAffinity]
+    let target: MealExplanationTarget
 
     var body: some View {
         NavigationStack {
             ScrollView {
                 ProGate {
-                    VStack(alignment: .leading, spacing: DS.Spacing.section) {
-                        headerSection
-
-                        VStack(alignment: .leading, spacing: DS.Spacing.sectionCompact) {
-                            ForEach(affinities) { affinity in
-                                SectionCard(heading(for: affinity)) {
-                                    VStack(alignment: .leading, spacing: 8) {
-                                        Text(affinity.sentence(name: raterName))
-                                            .font(.body)
-                                            .foregroundStyle(DS.Color.textSecondary)
-                                            .lineSpacing(4)
-                                            .fixedSize(horizontal: false, vertical: true)
-
-                                        statComparisonRow(affinity)
-                                    }
-                                }
+                    VStack(alignment: .leading, spacing: DS.Spacing.s6) {
+                        SheetHero(score: target.score, lead: lead.text, emphasis: lead.emphasis)
+                        SheetCard(
+                            "Why \(target.raterName) scored it this way",
+                            provenance: provenance,
+                            reasons: target.affinities.map { affinity in
+                                SheetReason(
+                                    id: affinity.id,
+                                    title: heading(for: affinity),
+                                    text: affinity.sentence(name: target.raterName)
+                                )
                             }
-                        }
+                        )
                     }
                 }
-                .padding(.horizontal, DS.Spacing.screenHorizontal)
-                .padding(.top, DS.Spacing.screenTop)
-                .padding(.bottom, DS.Spacing.screenBottom)
+                .padding(.horizontal, DS.Spacing.s5)
+                .padding(.top, DS.Spacing.s2)
+                .padding(.bottom, DS.Spacing.s10)
             }
-            .background(DS.Color.bg)
-            .screenTitle("Score Insights", displayMode: .inline)
-            .sheetCancelToolbar()
-            .presentationDetents([.fraction(0.55), .large])
-            .presentationDragIndicator(.visible)
+            .screenTitle("\(target.raterName)\u{2019}s score", displayMode: .inline)
+            .sheetCloseToolbar()
         }
+        .dsSheet(detents: [.medium, .large])
     }
 
-    private var headerSection: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            Text(raterName)
-                .font(Font.newsreader(.title2, weight: .semibold))
-                .foregroundStyle(DS.Color.textPrimary)
+    private var provenance: String? {
+        guard target.ratingCount > 0 else { return nil }
+        let count = target.ratingCount == 1 ? "1 rating" : "\(target.ratingCount) ratings"
+        return "Based on \(target.raterName)\u{2019}s \(count)"
+    }
 
-            Text("Historical rating tendencies relevant to this meal.")
-                .font(.subheadline)
-                .foregroundStyle(DS.Color.textSecondary)
+    private var lead: (text: String?, emphasis: String?) {
+        guard let score = target.score else { return (nil, nil) }
+        guard let usual = target.usualScore else {
+            return ("\(target.raterName)\u{2019}s first rating.", nil)
         }
+        let usualPoints = Int((usual * 100).rounded())
+        let delta = Int(((score - usual) * 100).rounded())
+        let owner = "\(target.raterName)\u{2019}s usual of \(usualPoints)"
+        if delta == 0 { return ("Right on \(owner).", nil) }
+        let emphasis = "\(abs(delta)) \(delta > 0 ? "above" : "below")"
+        return ("\(emphasis) \(owner).", emphasis)
     }
 
     private func heading(for affinity: RaterTagAffinity) -> String {
         switch affinity.kind {
-        case .dishKind(let name):
-            return "Dish Kind: \(name)"
-        case .cookingMethod(let name):
-            return "Cooking Method: \(name.capitalized)"
-        case .ingredient(let name):
-            return "Ingredient: \(name.capitalized)"
-        case .cuisine(let name):
-            return "Cuisine: \(name.capitalized)"
-        case .baseline:
-            return "Overall Baseline"
+        case .dishKind(let name): return "Dish kind: \(name)"
+        case .cookingMethod(let name): return "Cooking method: \(name.capitalized)"
+        case .ingredient(let name): return "Ingredient: \(name.capitalized)"
+        case .cuisine(let name): return "Cuisine: \(name.capitalized)"
+        case .baseline: return "Overall baseline"
         }
-    }
-
-    private func statComparisonRow(_ affinity: RaterTagAffinity) -> some View {
-        HStack(spacing: 16) {
-            VStack(alignment: .leading, spacing: 2) {
-                Text("Category Avg")
-                    .font(.caption2.weight(.medium))
-                    .foregroundStyle(DS.Color.textTertiary)
-                Text("\(Int((affinity.raterAverage * 100).rounded()))/100")
-                    .font(Font.newsreader(.subheadline, weight: .semibold))
-                    .foregroundStyle(affinity.delta < 0 ? DS.Color.warningText : DS.Color.primaryText)
-            }
-
-            VStack(alignment: .leading, spacing: 2) {
-                Text("Overall Avg")
-                    .font(.caption2.weight(.medium))
-                    .foregroundStyle(DS.Color.textTertiary)
-                Text("\(Int((affinity.raterOverallAverage * 100).rounded()))/100")
-                    .font(Font.newsreader(.subheadline, weight: .medium))
-                    .foregroundStyle(DS.Color.textSecondary)
-            }
-
-            VStack(alignment: .leading, spacing: 2) {
-                Text("Occasions")
-                    .font(.caption2.weight(.medium))
-                    .foregroundStyle(DS.Color.textTertiary)
-                Text("\(affinity.sampleCount)")
-                    .font(Font.newsreader(.subheadline, weight: .medium))
-                    .foregroundStyle(DS.Color.textSecondary)
-            }
-        }
-        .padding(.top, 4)
     }
 }

@@ -1,60 +1,46 @@
 import SwiftUI
 
-/// Infographic card presenting historical scores when the dinner party had this meal before.
-/// Displays lifetime average score, trend comparison, and chronological history rows.
+/// How this group scored the dish before: a compact ScoreCard with the historical
+/// average (delta = this meal vs that average), then the latest past servings as
+/// ListRows in a list Card. A first serving gets a short note instead.
 struct MealHistoricalScoresCard: View {
     let currentMeal: Meal
+    /// Other servings by the same group, newest first (`FoodStore.partyHistory(for:)`).
     let history: [Meal]
 
     @Environment(FoodStore.self) private var store
 
-    private var scoredPastMeals: [(meal: Meal, score: Double, reaction: Reaction)] {
-        history.compactMap { past in
-            guard let avg = store.averageScore(forMeal: past.id),
-                  let reaction = store.averageReaction(forMeal: past.id) else {
-                return nil
-            }
-            return (past, avg * 100, reaction)
-        }
-    }
-
-    private var historicalAverageScore: Double? {
-        guard !scoredPastMeals.isEmpty else { return nil }
-        let total = scoredPastMeals.map(\.score).reduce(0, +)
-        return total / Double(scoredPastMeals.count)
+    private var trailing: String {
+        if history.isEmpty { return "First time" }
+        return history.count == 1 ? "1 past time" : "\(history.count) past times"
     }
 
     var body: some View {
-        SectionCard(
-            "Historical Scores",
-            caption: history.isEmpty ? "First time" : "\(history.count) past \(history.count == 1 ? "time" : "times")"
-        ) {
-            if history.isEmpty {
-                VStack(alignment: .leading, spacing: 6) {
-                    Text("First time with this recipe")
-                        .font(.subheadline.weight(.semibold))
-                        .foregroundStyle(DS.Color.textPrimary)
-
-                    Text("This is the first time your dinner party has logged this meal. Historical comparisons will appear on future occasions.")
-                        .font(.footnote)
-                        .foregroundStyle(DS.Color.textSecondary)
-                }
-                .padding(.vertical, 4)
-            } else {
-                VStack(alignment: .leading, spacing: DS.Spacing.md) {
-                    // Summary row comparing current with historical average
-                    if let historicalAverageScore {
-                        historicalSummaryHeader(historicalAverage: historicalAverageScore)
+        if history.isEmpty {
+            SectionCard("Historical scores", trailing: trailing) {
+                Text("First time with this recipe").textStyle(.sansMd, weight: .semibold)
+                Text("This is the first time your dinner party has logged this meal. Comparisons will appear on future occasions.")
+                    .textStyle(.sansSm, tone: .secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+        } else {
+            DSSection("Historical scores", trailing: trailing) {
+                VStack(spacing: DS.Spacing.s3) {
+                    if let average = store.averageScore(across: history) {
+                        ScoreCard(
+                            score: average,
+                            layout: .compact,
+                            title: "Historical average",
+                            delta: deltaVsAverage(average)
+                        )
                     }
-
-                    // Chronological past servings
-                    VStack(spacing: 8) {
+                    Card(layout: .list) {
                         ForEach(history.prefix(6)) { past in
-                            pastMealRow(past)
-
-                            if past.id != history.prefix(6).last?.id {
-                                Divider().overlay(DS.Color.line.opacity(0.3))
-                            }
+                            ListRow(
+                                past.eatenOn.formatted(.dateTime.day().month(.abbreviated).year()),
+                                meta: cookLine(for: past),
+                                trailing: .score(store.averageScore(forMeal: past.id))
+                            )
                         }
                     }
                 }
@@ -62,90 +48,13 @@ struct MealHistoricalScoresCard: View {
         }
     }
 
-    private func historicalSummaryHeader(historicalAverage: Double) -> some View {
-        HStack(spacing: 12) {
-            VStack(alignment: .leading, spacing: 2) {
-                Text("HISTORICAL AVERAGE")
-                    .font(.caption2.weight(.bold))
-                    .tracking(0.5)
-                    .foregroundStyle(DS.Color.textSecondary)
-
-                HStack(alignment: .firstTextBaseline, spacing: 2) {
-                    Text(String(format: "%.1f", historicalAverage))
-                        .font(Font.newsreader(.title3, weight: .semibold))
-                        .foregroundStyle(DS.Color.textPrimary)
-                    Text("/100")
-                        .font(Font.newsreader(.caption, weight: .medium))
-                        .foregroundStyle(DS.Color.textSecondary)
-                }
-            }
-
-            Spacer()
-
-            if let currentScore = store.averageScore(forMeal: currentMeal.id) {
-                let currentPercent = currentScore * 100
-                let delta = Int((currentPercent - historicalAverage).rounded())
-
-                HStack(spacing: 4) {
-                    Image(systemName: delta >= 0 ? "arrow.up.right" : "arrow.down.right")
-                        .font(.caption.weight(.bold))
-                    Text(delta >= 0 ? "+\(delta) vs avg" : "\(delta) vs avg")
-                        .font(.caption.weight(.semibold))
-                }
-                .foregroundStyle(delta >= 0 ? DS.Color.primaryText : DS.Color.warningText)
-                .padding(.horizontal, 8)
-                .padding(.vertical, 4)
-                .background {
-                    Capsule()
-                        .fill(delta >= 0 ? DS.Color.primarySoft : DS.Color.warningSoft)
-                }
-            }
-        }
-        .padding(.vertical, 4)
+    private func deltaVsAverage(_ average: Double) -> Int? {
+        guard let current = store.averageScore(forMeal: currentMeal.id) else { return nil }
+        return Int(((current - average) * 100).rounded())
     }
 
-    private func pastMealRow(_ past: Meal) -> some View {
-        HStack(spacing: 10) {
-            VStack(alignment: .leading, spacing: 2) {
-                Text(past.eatenOn, format: .dateTime.day().month(.abbreviated).year())
-                    .font(.subheadline.weight(.medium))
-                    .foregroundStyle(DS.Color.textPrimary)
-
-                Text(past.createdBy == store.userID ? "Cooked by you" : "Cooked by \(store.label(for: .account(past.createdBy)).name)")
-                    .font(.caption)
-                    .foregroundStyle(DS.Color.textSecondary)
-            }
-
-            Spacer()
-
-            if let score = store.averageScore(forMeal: past.id),
-               let reaction = store.averageReaction(forMeal: past.id) {
-                let formattedPercent = String(format: "%.1f", score * 100)
-
-                HStack(alignment: .firstTextBaseline, spacing: 2) {
-                    Text(formattedPercent)
-                        .font(Font.newsreader(.subheadline, weight: .semibold))
-                        .foregroundStyle(reaction.text)
-                    Text("/100")
-                        .font(Font.newsreader(.caption2, weight: .medium))
-                        .foregroundStyle(reaction.text.opacity(0.6))
-                }
-                .padding(.horizontal, 8)
-                .padding(.vertical, 3)
-                .background {
-                    RoundedRectangle(cornerRadius: AppRadius.small, style: .continuous)
-                        .fill(DS.Color.panel)
-                        .overlay {
-                            RoundedRectangle(cornerRadius: AppRadius.small, style: .continuous)
-                                .strokeBorder(DS.Color.line.opacity(0.3), lineWidth: 0.5)
-                        }
-                }
-            } else {
-                Text("Unrated")
-                    .font(.caption)
-                    .foregroundStyle(DS.Color.textTertiary)
-            }
-        }
-        .padding(.vertical, 2)
+    private func cookLine(for meal: Meal) -> String {
+        if meal.createdBy == store.userID { return "Cooked by you" }
+        return "Cooked by \(store.label(for: .account(meal.createdBy)).name)"
     }
 }
