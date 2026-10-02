@@ -56,6 +56,9 @@ The rule when the spec disagrees with itself: the component README wins over old
 - **AppButton `reaction solid`.** Neither README says how it looks ("A solid fill never carries text"). Only `soft` is used; `solid` inks `reaction-text` on the fill, as bundle.css does.
 - **Semibold serif.** Only Newsreader Regular is bundled, so `weight: .semibold` has no effect on serif steps.
 - **TextArea over `maxLength`.** The README doesn't say whether the hint turns `destructive-text`. Today only the border and the counter change.
+- **Empty score.** The unrated rater sheet draws a dashed placeholder before the em dash: a `spacing-11` `sunken` circle with a `border-thick` dashed `line-control` ring (the canvas draws 44, which is `spacing-11`). ScoreValue has no empty-state glyph of its own.
+- **Taste match verdicts.** The member sheet's Taste match ScoreCard shows a verdict word the DS doesn't define: Close (85+), Near (65–84), Apart (below 65). The DS should name these.
+- **Labelled row buttons.** PendingPartyInvitesSection (Accept / Decline) and PartyInviteRow (Resend / Revoke) follow the new ListRow rule. PartyMembersSheet's remove and SearchHistorySection's clear still use an icon-only ✕ and need labels.
 - **PhotoStrip add tile title ink.** The README gives "'Add photo' `sans-sm` semibold" and no ink. It is drawn in `text-primary`.
 - **Timeline rail.** bundle.css draws the 2px rail at `top: spacing-2.5` (centre 11), one point below the dot's centre (10). iOS centres the rail on the dot.
 

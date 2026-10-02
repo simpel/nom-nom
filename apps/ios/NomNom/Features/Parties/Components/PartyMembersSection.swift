@@ -1,52 +1,67 @@
 import SwiftUI
 
-/// The party's members as ListRows (Avatar, name, You / Creator, their average score)
-/// in a swipeable list card. Members can swipe another member's row to remove them.
+/// The party's members ("Nom Nom iOS" canvas): a "Members" section over one swipeable
+/// list card. Members see an "Add members" row first (opens the invite sheet); each
+/// member row (Avatar, name, "You · 20 rated here", their average score) opens the
+/// member sheet. Members can swipe another member's row to remove them.
 struct PartyMembersSection: View {
     let party: Party
+    let onAddMembers: () -> Void
 
     @Environment(FoodStore.self) private var store
     @State private var memberToRemove: Profile?
+    @State private var selectedMember: MemberSheetTarget?
 
-    private var members: [Profile] {
-        store.members(of: party.id)
+    private enum Item: Identifiable {
+        case add
+        case member(Profile)
+
+        var id: String {
+            switch self {
+            case .add: return "add"
+            case .member(let profile): return profile.id.uuidString
+            }
+        }
+    }
+
+    private struct MemberSheetTarget: Identifiable {
+        let id: UUID
+    }
+
+    private var members: [Profile] { store.members(of: party.id) }
+    private var isMember: Bool { store.isMember(of: party.id) }
+
+    private var items: [Item] {
+        (isMember ? [.add] : []) + members.map(Item.member)
     }
 
     var body: some View {
-        // SwipeableListCard draws the section header, the list Card and the row padding.
         SwipeableListCard(
             title: "Members",
-            data: members,
-            leadingIcon: { canRemove(member: $0) ? "trash.fill" : nil },
-            leadingColor: { canRemove(member: $0) ? DS.Color.destructive : nil },
-            onLeadingAction: { member in
-                if canRemove(member: member) {
-                    memberToRemove = member
-                }
-            }
-        ) { member in
-            NavigationLink {
-                PersonDetailView(raterRef: .account(member.id))
-            } label: {
+            caption: "\(members.count)",
+            data: items,
+            leadingIcon: { item in removable(item) != nil ? "trash.fill" : nil },
+            leadingColor: { item in removable(item) != nil ? DS.Color.destructive : nil },
+            onLeadingAction: { item in memberToRemove = removable(item) }
+        ) { item in
+            switch item {
+            case .add:
+                ListRow("Add members", meta: "Share the invite link", leading: .icon("plus"), chevron: false, action: onAddMembers)
+            case .member(let member):
                 row(for: member)
             }
-            .buttonStyle(ListRowButtonStyle())
+        }
+        .sheet(item: $selectedMember) { target in
+            PartyMemberInsightSheet(memberRef: .account(target.id), partyID: party.id)
         }
         .alert(
             "Remove Member?",
-            isPresented: Binding(
-                get: { memberToRemove != nil },
-                set: { if !$0 { memberToRemove = nil } }
-            )
+            isPresented: Binding(get: { memberToRemove != nil }, set: { if !$0 { memberToRemove = nil } })
         ) {
-            Button("Cancel", role: .cancel) {
-                memberToRemove = nil
-            }
+            Button("Cancel", role: .cancel) { memberToRemove = nil }
             if let member = memberToRemove {
                 Button("Remove \(member.shownName)", role: .destructive) {
-                    Task {
-                        await store.removeMember(user: member.id, from: party)
-                    }
+                    Task { await store.removeMember(user: member.id, from: party) }
                 }
             }
         } message: {
@@ -56,33 +71,22 @@ struct PartyMembersSection: View {
         }
     }
 
-    private func canRemove(member: Profile) -> Bool {
-        store.isMember(of: party.id) && member.id != store.userID
-    }
-
-    private func role(of member: Profile) -> String? {
-        if member.id == store.userID { return "You" }
-        if member.id == party.createdBy { return "Creator" }
-        return nil
+    private func removable(_ item: Item) -> Profile? {
+        guard case .member(let member) = item, isMember, member.id != store.userID else { return nil }
+        return member
     }
 
     private func row(for member: Profile) -> ListRow {
-        let stats = store.partyAverageScore(partyID: party.id, for: .account(member.id), limit: 20)
+        let stats = store.partyAverageScore(partyID: party.id, for: .account(member.id), limit: .max)
+        let rated = stats.map { "\($0.count) rated here" }
+        let you = member.id == store.userID ? "You" : nil
         return ListRow(
-            member.shownName,
-            meta: role(of: member),
-            leading: .avatar(Avatar(profile: member, size: .sm)),
+            member.firstName.isEmpty ? member.shownName : member.firstName,
+            meta: [you, rated].compactMap { $0 }.joined(separator: " \u{00B7} "),
+            leading: .avatar(Avatar(profile: member, size: .sm, decorative: true)),
             trailing: stats.map { .score($0.score) },
-            chevron: true
+            chevron: true,
+            action: { selectedMember = MemberSheetTarget(id: member.id) }
         )
-    }
-}
-
-#Preview {
-    NomNomPreview { store in
-        if let party = store.parties.first {
-            PartyMembersSection(party: party)
-                .padding(DS.Spacing.gutter)
-        }
     }
 }

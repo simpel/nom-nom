@@ -1,49 +1,81 @@
 import SwiftUI
 
-/// A member's taste insights for one dinner party, as a BottomSheet: their name and the
-/// AI tip, recipes they will love, then their highest and lowest rated dinners here.
+/// One member of a dinner party ("Nom Nom iOS" canvas, MemberSheet), as a BottomSheet:
+/// the PersonHeaderRow ("Member since Mar 2026 · 18 meals rated here"), two compact
+/// ScoreCards (their average here, their taste match), a ProSection "Cooking for Anna"
+/// with the AI tip and recipes they will love, then their highest and lowest here.
 struct PartyMemberInsightSheet: View {
-    let member: MemberTasteMatch
+    let memberRef: RaterRef
     let partyID: UUID
 
     @Environment(FoodStore.self) private var store
+    @State private var showProfile = false
 
-    private var tipSegments: [GuestNoteSegment] {
-        store.nextDinnerTipSegments(for: member.ref, partyID: partyID)
+    init(memberRef: RaterRef, partyID: UUID) {
+        self.memberRef = memberRef
+        self.partyID = partyID
     }
 
-    private var recommendations: [PartyMemberRecipeRecommendation] {
-        store.memberPartyRecommendations(for: member.ref, partyID: partyID)
+    init(member: MemberTasteMatch, partyID: UUID) {
+        self.init(memberRef: member.ref, partyID: partyID)
+    }
+
+    private var name: String { store.firstName(for: memberRef) }
+
+    private var tasteMatch: MemberTasteMatch? {
+        store.memberTasteMatches(forParty: partyID).first { $0.ref == memberRef }
+    }
+
+    private var average: FoodStore.PartyScoreStats? {
+        store.partyAverageScore(partyID: partyID, for: memberRef, limit: .max)
     }
 
     private var history: (highest: [PartyMemberMealRecord], lowest: [PartyMemberMealRecord]) {
-        store.memberPartyDinnerHistory(for: member.ref, partyID: partyID)
+        store.memberPartyDinnerHistory(for: memberRef, partyID: partyID)
     }
 
     var body: some View {
         NavigationStack {
             SheetBody {
-                // PageHeader spacing: `spacing-2` between the parts.
-                VStack(alignment: .leading, spacing: DS.Spacing.s2) {
-                    Text(member.name)
-                        .textStyle(.serifLg)
-                        .accessibilityAddTraits(.isHeader)
-                    EditorialTextView(segments: tipSegments)
+                PartyMemberHeaderRow(memberRef: memberRef, partyID: partyID, ratedCount: average?.count ?? 0) {
+                    showProfile = true
                 }
 
-                RecipeShelf("Recipes \(member.name) will love", recipes: recommendations.map(\.recipe)) {
-                    RecipeDetailView(recipe: $0)
+                HStack(alignment: .top, spacing: DS.Spacing.s3) {
+                    ScoreCard(score: average?.score, layout: .compact, title: "Average here")
+                    ScoreCard(
+                        score: tasteMatch.map { Double($0.matchScore) / 100 },
+                        verdict: tasteMatch.map { Self.matchVerdict($0.matchScore) },
+                        layout: .compact,
+                        title: "Taste match",
+                        delta: tasteMatch?.trendDelta
+                    )
                 }
+
+                PartyMemberCookingForSection(memberRef: memberRef, name: name, partyID: partyID)
 
                 PartyMemberPartyRatingsSection(
-                    memberRef: member.ref,
-                    memberName: member.name,
+                    memberRef: memberRef,
+                    memberName: name,
                     highest: history.highest,
                     lowest: history.lowest
                 )
             }
+            .screenTitle(name, displayMode: .inline)
             .sheetCloseToolbar()
+            .navigationDestination(isPresented: $showProfile) {
+                PersonDetailView(raterRef: memberRef)
+            }
         }
         .dsSheet()
+    }
+
+    /// How close their taste runs to the party's (DS-GAPS.md, "Taste match verdicts").
+    static func matchVerdict(_ score: Int) -> String {
+        switch score {
+        case 85...: return "Close"
+        case 65..<85: return "Near"
+        default: return "Apart"
+        }
     }
 }

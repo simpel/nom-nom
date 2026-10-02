@@ -27,6 +27,7 @@ struct PartyCoverStrip: View {
         if coverPath != nil || canAdd {
             PhotoStrip(
                 photos: coverPath.map { [.remote(path: $0, bucket: SupabaseConfig.partyBucket)] } ?? [],
+                format: .landscape,
                 onAddPhoto: canAdd ? addPhoto : nil,
                 onSelect: onSelect
             )

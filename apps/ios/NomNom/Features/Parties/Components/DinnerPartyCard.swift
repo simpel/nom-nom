@@ -12,12 +12,9 @@ struct DinnerPartyCard: View {
     private var isMember: Bool { store.isMember(of: party.id) }
     private var meals: [Meal] { store.meals(forParty: party.id) }
 
-    private var mealCountText: String {
-        meals.count == 1 ? "1 meal" : "\(meals.count) meals"
-    }
-
+    /// Newest first (PartyCard README: a Timeline `mini`).
     private var recentMeals: [PartyCardMeal] {
-        meals.map { PartyCardMeal(id: $0.id, source: .meal($0), title: store.dishName(forMeal: $0), date: $0.eatenOn) }
+        meals.sorted { $0.eatenOn > $1.eatenOn }.prefix(8).map { PartyCardMeal(id: $0.id, source: .meal($0), title: store.dishName(forMeal: $0), date: $0.eatenOn) }
     }
 
     var body: some View {
@@ -25,8 +22,7 @@ struct DinnerPartyCard: View {
             party: party,
             mode: isMember ? .mine : .discover,
             score: store.partyAverageScore(partyID: party.id)?.score,
-            memberCount: store.members(of: party.id).count,
-            meta: mealCountText,
+            memberCount: isMember ? nil : store.members(of: party.id).count,
             recentMeals: recentMeals
         ) {
             PartyDetailView(partyID: party.id)

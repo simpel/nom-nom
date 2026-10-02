@@ -2,8 +2,8 @@ import SwiftUI
 
 // PartyDetailView's DetailHeader, toolbar and actions.
 extension PartyDetailView {
-    /// The README's Dinner party recipe: centred, avatar `xl`, name, meta, about and
-    /// the actions (members: Log a meal + Invite; others: Follow, when public).
+    /// Centred, avatar `xl`, name, meta, about and the action (members: Add meal, with
+    /// inviting in the Members list; others: Follow, when public).
     func header(for party: Party) -> some View {
         DetailHeader(
             title: party.name,
@@ -30,11 +30,7 @@ extension PartyDetailView {
 
     private func actions(for party: Party) -> [DetailHeaderAction] {
         if store.isMember(of: party.id) {
-            return [
-                DetailHeaderAction(title: "Log a meal") { showingCreateMeal = true },
-                // README Dinner party recipe: "Log a meal" + `secondary soft` "Invite".
-                DetailHeaderAction(title: "Invite", variant: .secondary, appearance: .soft) { showingInvite = true },
-            ]
+            return [DetailHeaderAction(title: "Add meal", icon: "plus") { showingCreateMeal = true }]
         }
         guard party.isPublic else { return [] }
         let isFollowing = store.isFollowing(partyID: party.id)
@@ -79,29 +75,24 @@ extension PartyDetailView {
 
     @ToolbarContentBuilder
     func toolbarContent(for party: Party) -> some ToolbarContent {
-        if store.isMember(of: party.id) {
-            ToolbarItem(placement: .topBarTrailing) {
-                Menu {
-                    Button { showingSettings = true } label: {
-                        Label("Edit", systemImage: "pencil")
+        ToolbarItem(placement: .topBarTrailing) {
+            PageMenu {
+                if store.isMember(of: party.id) {
+                    Section {
+                        Button("Edit party", systemImage: "pencil") { showingSettings = true }
+                        Button("Edit members", systemImage: "person.2") { showingMembersSheet = true }
+                        ShareLink(
+                            item: party.webInviteURL,
+                            subject: Text("Join \(party.name) on Nom Nom"),
+                            message: Text(party.shareMessage)
+                        ) {
+                            Label("Share invite link", systemImage: "square.and.arrow.up")
+                        }
+                        Button("Leave party", systemImage: "rectangle.portrait.and.arrow.right", role: .destructive) {
+                            confirmLeave = true
+                        }
                     }
-                    Button { showingMembersSheet = true } label: {
-                        Label("Edit members", systemImage: "person.2")
-                    }
-                    ShareLink(
-                        item: party.webInviteURL,
-                        subject: Text("Join \(party.name) on Nom Nom"),
-                        message: Text(party.shareMessage)
-                    ) {
-                        Label("Share invite link", systemImage: "square.and.arrow.up")
-                    }
-                    Button(role: .destructive) { confirmLeave = true } label: {
-                        Label("Leave party", systemImage: "rectangle.portrait.and.arrow.right")
-                    }
-                } label: {
-                    Image(systemName: "ellipsis").fontWeight(.semibold)
                 }
-                .accessibilityLabel("Party options")
             }
         }
     }

@@ -30,15 +30,16 @@ struct PartyInviteRow: View {
                 email,
                 meta: meta,
                 leading: .avatar(Avatar(name: email, size: .sm, decorative: true)),
-                trailing: .button(
-                    AppButton("Resend", variant: .secondary, appearance: .ghost, size: .sm,
-                              isLoading: phase == .resending) { run(.resending) }
-                ),
-                trailingAction: ListRowIconAction(
-                    icon: "xmark",
-                    accessibilityLabel: "Revoke invite to \(email)",
-                    isLoading: phase == .revoking
-                ) { run(.revoking) },
+                // ListRow README: Resend (`primary solid sm`) + Revoke (`secondary soft sm`),
+                // both labelled — never an unlabelled ✕ in a row.
+                trailing: .view {
+                    HStack(spacing: DS.Spacing.s2) {
+                        AppButton("Resend", size: .sm, isLoading: phase == .resending) { run(.resending) }
+                        AppButton("Revoke", variant: .secondary, appearance: .soft, size: .sm,
+                                  isLoading: phase == .revoking) { run(.revoking) }
+                            .accessibilityLabel("Revoke invite to \(email)")
+                    }
+                },
                 chevron: false
             )
             .disabled(phase != .idle)

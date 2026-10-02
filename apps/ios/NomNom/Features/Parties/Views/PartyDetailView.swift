@@ -1,10 +1,10 @@
 import SwiftUI
 
-/// A dinner party's detail screen on `bg`: cover PhotoStrip, a centred DetailHeader
-/// (avatar, name, members · followers · Private, about, Log a meal + Invite for
-/// members or Follow for others), a pending-invite banner, the average rating,
-/// insights, members and meals. Members get Edit / members / share / leave in the
-/// toolbar menu.
+/// A dinner party's detail screen ("Nom Nom iOS" canvas) on `bg`: a centred
+/// DetailHeader (avatar, name, members · followers · Private, about, Add meal for
+/// members or Follow for others), the landscape cover PhotoStrip, a pending-invite
+/// banner, the average rating, the Pro "See insights" card, members and meals.
+/// Members get Edit / members / share / leave in the page menu.
 struct PartyDetailView: View {
     let partyID: UUID
     var showCloseButton: Bool = false
@@ -63,9 +63,9 @@ struct PartyDetailView: View {
 
         return ScrollView {
             VStack(alignment: .leading, spacing: DS.Spacing.block) {
-                PartyCoverStrip(party: party) { selectedPhotoIndex = $0 }
-
                 header(for: party)
+
+                PartyCoverStrip(party: party) { selectedPhotoIndex = $0 }
 
                 if !isMember, let pendingInvite {
                     PartyJoinBanner(party: party, invite: pendingInvite) { actionError = $0 }
@@ -73,14 +73,19 @@ struct PartyDetailView: View {
 
                 PartyAverageRatingCard(party: party)
 
-                PartyInsightsSection(partyID: party.id)
+                NavigationLink {
+                    PartyInsightsView(party: party)
+                } label: {
+                    ProLinkCard(title: "See insights", subtitle: "Ratings over time, taste match, health and flavours")
+                }
+                .buttonStyle(AppPressableButtonStyle())
 
                 if isMember {
-                    PartyMembersSection(party: party)
+                    PartyMembersSection(party: party) { showingInvite = true }
                     PartyMealsSection(party: party)
                 } else {
                     PartyMealsSection(party: party)
-                    PartyMembersSection(party: party)
+                    PartyMembersSection(party: party) { showingInvite = true }
                 }
             }
             .padding(.horizontal, DS.Spacing.gutter)
@@ -88,7 +93,7 @@ struct PartyDetailView: View {
             .padding(.bottom, DS.Spacing.s12)
         }
         .background(DS.Color.bg)
-        .screenTitle(party.name, displayMode: .inline)
+        .screenTitle(showCloseButton ? party.name : "", displayMode: .inline)
         .toolbar { toolbarContent(for: party) }
         .modifier(PartyDetailCloseToolbar(isShown: showCloseButton))
         .alert("Leave Party?", isPresented: $confirmLeave) {

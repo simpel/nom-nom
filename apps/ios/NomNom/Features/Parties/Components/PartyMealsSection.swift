@@ -1,81 +1,50 @@
 import SwiftUI
 
-/// "What they're eating": the party's meals as a two-column grid of PhotoCard `md`
-/// tiles with their verdict Badge, dish name and date. Empty, an EmptyState `card`.
+/// "What they're eating" ("Nom Nom iOS" canvas): the party's five latest meals as
+/// MealRows (photo, dish, date, score) in a list Card, then "See all N meals", which
+/// switches to the Meals tab with this party selected. Empty, an EmptyState `card`.
 struct PartyMealsSection: View {
     let party: Party
 
     @Environment(FoodStore.self) private var store
+    @Environment(AppNavigator.self) private var navigator
+    @Environment(\.dismiss) private var dismiss
+
+    private static let previewCount = 5
 
     private var partyMeals: [Meal] {
-        store.meals(forParty: party.id)
-    }
-
-    private let columns = [
-        GridItem(.flexible(), spacing: DS.Spacing.s3, alignment: .top),
-        GridItem(.flexible(), spacing: DS.Spacing.s3, alignment: .top),
-    ]
-
-    private var countText: String? {
-        guard !partyMeals.isEmpty else { return nil }
-        return partyMeals.count == 1 ? "1 meal" : "\(partyMeals.count) meals"
+        store.meals(forParty: party.id).sorted { $0.eatenOn > $1.eatenOn }
     }
 
     var body: some View {
-        if partyMeals.isEmpty {
+        let meals = partyMeals
+        if meals.isEmpty {
             DSSection("What they\u{2019}re eating") {
                 EmptyState("No meals yet", message: "Meals served to this party will show up here.")
             }
         } else {
-            DSSection("What they\u{2019}re eating", trailing: countText) {
-                LazyVGrid(columns: columns, spacing: DS.Spacing.s4) {
-                    ForEach(partyMeals) { meal in
+            DSSection("What they\u{2019}re eating", trailing: meals.count == 1 ? "1 meal" : "\(meals.count) meals") {
+                Card(layout: .list) {
+                    ForEach(meals.prefix(Self.previewCount)) { meal in
                         NavigationLink {
                             MealDetailView(mealID: meal.id)
                         } label: {
-                            tile(for: meal)
+                            MealRow(meal: meal, metaStyle: .date)
                         }
-                        .buttonStyle(AppPressableButtonStyle())
+                        .buttonStyle(ListRowButtonStyle())
+                    }
+                    if meals.count > Self.previewCount, store.isMember(of: party.id) {
+                        ListRow("See all \(meals.count) meals", size: .sm, action: seeAll)
                     }
                 }
             }
         }
     }
 
-    private func tile(for meal: Meal) -> some View {
-        VStack(alignment: .leading, spacing: DS.Spacing.s2) {
-            PhotoCard(
-                .meal(meal),
-                size: .md,
-                fillsWidth: true,
-                badge: store.averageScore(forMeal: meal.id).map { .score($0) }
-            )
-
-            VStack(alignment: .leading, spacing: DS.Spacing.s0_5) {
-                Text(store.dishName(forMeal: meal))
-                    .textStyle(.sansMd, weight: .semibold)
-                    .lineLimit(2)
-                    .multilineTextAlignment(.leading)
-                Text(meal.eatenOn.formatted(.dateTime.day().month(.abbreviated)))
-                    .textStyle(.sansSm, tone: .tertiary)
-                    .lineLimit(1)
-            }
-            .padding(.horizontal, DS.Spacing.s1)
-        }
-        .frame(maxWidth: .infinity, alignment: .topLeading)
-        .contentShape(Rectangle())
-    }
-}
-
-#Preview {
-    NomNomPreview { store in
-        if let party = store.parties.first {
-            NavigationStack {
-                ScrollView {
-                    PartyMealsSection(party: party)
-                        .padding(DS.Spacing.gutter)
-                }
-            }
-        }
+    /// The Meals tab lists the selected party's meals, so select this one and go there.
+    private func seeAll() {
+        store.currentParty = party
+        navigator.tab = .meals
+        dismiss()
     }
 }

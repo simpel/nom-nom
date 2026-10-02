@@ -1,8 +1,8 @@
 import SwiftUI
 
-/// Main Tab — Dinner Parties.
-/// Pending invites, the viewer's parties, followed parties and public parties to
-/// follow, `spacing-7` apart (README "Layout": `spacing-7` between blocks).
+/// Main Tab — Dinner Parties ("Nom Nom iOS" canvas): the PageHeader with "New party",
+/// pending invitations, "Your parties" and a "Find parties" row leading to followed
+/// and public parties, `spacing-7` apart.
 struct DinnerPartiesView: View {
     var isSheet: Bool = false
 
@@ -13,11 +13,12 @@ struct DinnerPartiesView: View {
     var body: some View {
         NavigationStack {
             ScrollView {
-                VStack(spacing: DS.Spacing.block) {
+                VStack(alignment: .leading, spacing: DS.Spacing.block) {
                     if !isSheet {
-                        PageHeader("Parties", actions: [
-                            EmptyStateAction("New party", icon: "plus") { showingCreateSheet = true }
-                        ])
+                        HStack(alignment: .bottom, spacing: DS.Spacing.s3) {
+                            PageHeader("Parties", eyebrow: store.currentParty?.name)
+                            AppButton("New party", icon: "plus") { showingCreateSheet = true }
+                        }
                     }
 
                     PendingPartyInvitesSection()
@@ -30,14 +31,21 @@ struct DinnerPartiesView: View {
                             action: EmptyStateAction("New party") { showingCreateSheet = true }
                         )
                     } else {
-                        VStack(spacing: DS.Spacing.s4) {
-                            ForEach(store.myParties) { DinnerPartyCard(party: $0) }
+                        DSSection("Your parties", trailing: "\(store.myParties.count)") {
+                            VStack(spacing: DS.Spacing.s4) {
+                                ForEach(store.myParties) { DinnerPartyCard(party: $0) }
+                            }
                         }
                     }
 
-                    FollowedPartiesSection()
-
-                    DiscoverPartiesSection()
+                    Card(layout: .list) {
+                        NavigationLink {
+                            FindPartiesView()
+                        } label: {
+                            ListRow("Find parties", meta: "Public parties to follow", leading: .icon("magnifyingglass"), chevron: true)
+                        }
+                        .buttonStyle(ListRowButtonStyle())
+                    }
                 }
                 .padding(.horizontal, DS.Spacing.gutter)
                 .padding(.top, DS.Spacing.s5)
@@ -56,7 +64,7 @@ struct DinnerPartiesView: View {
 }
 
 /// As a sheet: "Dinner Parties" with the overview toolbar (close + create). As a tab
-/// root: the shared main-tab toolbar (inbox bell + settings).
+/// root: the shared main-tab toolbar (the page menu).
 private struct DinnerPartiesToolbar: ViewModifier {
     let isSheet: Bool
     let onCreate: () -> Void
