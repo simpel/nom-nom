@@ -1,12 +1,12 @@
 import SwiftUI
 
-/// One meal on the design system's detail layout (see MealDetailContent): photos,
-/// the table's verdict, the score vs last time, the recipe, who rated, the cook's
-/// note and every time this group had the dish.
+/// One meal on the design system's detail layout (see MealDetailContent): the dish
+/// and the table's verdict, photos, the score vs last time, the recipe, who rated, the
+/// cook's note and every time this group had the dish.
 ///
-/// Pushed, the navigation bar is hidden and an elevated back button (plus the cook's
-/// options menu) floats over the content; presented modally (`showCloseButton`) it
-/// keeps the sheet close toolbar.
+/// The native navigation bar carries the back button (or, presented modally with
+/// `showCloseButton`, the sheet close button) and the PageMenu with this meal's
+/// Edit / Share / Delete group.
 struct MealDetailView: View {
     let mealID: UUID
     var showCloseButton: Bool = false
@@ -97,37 +97,41 @@ struct MealDetailView: View {
         }
     }
 
-    /// Room for the floating top bar when pushed; a small inset under the sheet toolbar.
-    private var topInset: CGFloat {
-        showCloseButton ? DS.Spacing.s2 : AppButtonSize.md.height + DS.Spacing.s2 + DS.Spacing.s3
-    }
+    /// A small inset under the navigation bar.
+    private var topInset: CGFloat { DS.Spacing.s2 }
 
     @ViewBuilder
     private func chrome<Content: View>(@ViewBuilder _ content: () -> Content) -> some View {
+        let page = content()
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    PageMenu { mealMenu }
+                }
+            }
         if showCloseButton {
-            content()
+            page
                 .screenTitle(meal.map { store.dishName(forMeal: $0) } ?? "Meal", displayMode: .inline)
                 .sheetCloseToolbar()
-                .toolbar {
-                    if canEdit {
-                        ToolbarItem(placement: .topBarTrailing) {
-                            MealDetailOptionsMenu(onEdit: { showEditor = true }, onDelete: { confirmDeleteMeal = true }) {
-                                Image(systemName: "ellipsis").fontWeight(.semibold)
-                            }
-                        }
-                    }
-                }
         } else {
-            content()
-                .toolbar(.hidden, for: .navigationBar)
-                .overlay(alignment: .top) {
-                    MealDetailTopBar(
-                        canEdit: canEdit,
-                        onBack: { dismiss() },
-                        onEdit: { showEditor = true },
-                        onDelete: { confirmDeleteMeal = true }
-                    )
+            page.screenTitle("", displayMode: .inline)
+        }
+    }
+
+    /// The page menu's "This meal" group: Edit and Delete for the cook, Share for all.
+    @ViewBuilder
+    private var mealMenu: some View {
+        if let meal {
+            Section {
+                if canEdit {
+                    Button("Edit meal", systemImage: "pencil") { showEditor = true }
                 }
+                ShareLink(item: meal.shareURL, subject: Text(store.dishName(forMeal: meal))) {
+                    Label("Share meal", systemImage: "square.and.arrow.up")
+                }
+                if canEdit {
+                    Button("Delete meal", systemImage: "trash", role: .destructive) { confirmDeleteMeal = true }
+                }
+            }
         }
     }
 

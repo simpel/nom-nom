@@ -11,9 +11,9 @@ struct MealDetailActions {
     let onOpenMeal: (UUID) -> Void
 }
 
-/// Meal Detail's scrolling body on `bg`, gutter `s4`, `s7` between blocks:
-/// PhotoStrip · DetailHeader · ScoreCard · RecipeLinkCard · RatingList · the cook's
-/// note · cook and party · Timeline.
+/// Meal Detail's scrolling body on `bg`, gutter `s4`, `s7` between blocks ("Nom Nom
+/// iOS" canvas): DetailHeader · PhotoStrip · ScoreCard + ratings split · RecipeLinkCard
+/// · Who rated · the cook's note · cook, party and cooking time · Timeline.
 struct MealDetailContent: View {
     let meal: Meal
     var topInset: CGFloat = 0
@@ -27,6 +27,8 @@ struct MealDetailContent: View {
 
         ScrollView {
             VStack(alignment: .leading, spacing: DS.Spacing.block) {
+                MealDetailHeader(meal: meal, onRate: actions.onRate)
+
                 PhotoStrip(
                     photos: photos,
                     onAddPhoto: actions.onAddPhoto,
@@ -35,15 +37,17 @@ struct MealDetailContent: View {
                     }
                 )
 
-                MealDetailHeader(meal: meal, onRate: actions.onRate)
-
-                ScoreCard(
-                    score: store.averageScore(forMeal: meal.id),
-                    delta: change?.delta,
-                    deltaText: change.map { _ in "from last time this group had it" },
-                    deltaReference: change.map(Self.reference),
-                    action: actions.onOpenScore
-                )
+                VStack(alignment: .leading, spacing: DS.Spacing.s3) {
+                    ScoreCard(
+                        score: store.averageScore(forMeal: meal.id),
+                        delta: change?.delta,
+                        deltaText: change.map { _ in "from last time \(groupName) had it" },
+                        deltaReference: change.map(Self.reference),
+                        caption: ratedCaption,
+                        action: actions.onOpenScore
+                    )
+                    MealRatingSplitCard(ratings: store.ratings(forMeal: meal.id))
+                }
 
                 if let recipe = store.recipe(meal.recipeID) {
                     RecipeLinkCard(recipe: recipe, meta: recipeMeta(recipe), action: actions.onOpenRecipe)
@@ -66,6 +70,19 @@ struct MealDetailContent: View {
             .padding(.bottom, DS.Spacing.s11)
         }
         .background(DS.Color.bg)
+    }
+
+    private var groupName: String {
+        let party = store.partyDisplayName(forMeal: meal)
+        return party == "You" ? "you" : party
+    }
+
+    /// "3 of 5 rated so far", until everyone has.
+    private var ratedCaption: String? {
+        let raters = store.raters(forMeal: meal)
+        let rated = raters.filter { $0.rating != nil }.count
+        guard rated > 0, rated < raters.count else { return nil }
+        return "\(rated) of \(raters.count) rated so far"
     }
 
     private var hasPhotos: Bool {

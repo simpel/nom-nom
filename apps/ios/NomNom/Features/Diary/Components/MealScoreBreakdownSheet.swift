@@ -7,7 +7,7 @@ struct MealScoreBreakdownSheet: View {
     let meal: Meal
 
     @Environment(FoodStore.self) private var store
-    @State private var selectedExplanation: MealExplanationTarget?
+    @State private var selectedRater: MealRaterTarget?
 
     private var ratings: [MealRating] { store.ratings(forMeal: meal.id) }
 
@@ -24,8 +24,8 @@ struct MealScoreBreakdownSheet: View {
             }
             .screenTitle(store.dishName(forMeal: meal), displayMode: .inline)
             .sheetCloseToolbar()
-            .sheet(item: $selectedExplanation) { target in
-                MealRaterExplanationSheet(target: target)
+            .sheet(item: $selectedRater) { target in
+                RaterScoreSheet(meal: meal, rater: target.ref)
             }
         }
         .dsSheet(detents: [.fraction(0.85), .large])
@@ -39,8 +39,8 @@ struct MealScoreBreakdownSheet: View {
                 Card(layout: .list) {
                     ForEach(details) { detail in
                         let target = MealExplanationTarget(rater: detail.ref, name: detail.name, meal: meal, store: store)
-                        MealMemberScoreRow(detail: detail, affinities: target?.affinities ?? []) {
-                            selectedExplanation = target
+                        MealMemberScoreRow(detail: detail, affinities: target.affinities) {
+                            selectedRater = MealRaterTarget(ref: detail.ref, hasRated: true)
                         }
                     }
                 }

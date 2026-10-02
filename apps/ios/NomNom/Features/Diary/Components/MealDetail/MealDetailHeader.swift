@@ -1,9 +1,8 @@
 import SwiftUI
 
-/// Meal Detail's DetailHeader: "date · party" meta, the table's verdict as a
-/// sentence, the dish and its cook as the summary, effort / kind / method as a
-/// facts line, the rotation goal as a status Badge, and "Rate this meal" (or
-/// "You rated 90").
+/// Meal Detail's DetailHeader ("Nom Nom iOS" canvas): "date · party" meta, the dish
+/// as the title, "Cooked by Anna. The table loved it." as the summary, and "Rate this
+/// meal" (or "You rated 90", soft).
 struct MealDetailHeader: View {
     let meal: Meal
     let onRate: () -> Void
@@ -12,11 +11,9 @@ struct MealDetailHeader: View {
 
     var body: some View {
         DetailHeader(
-            title: Self.verdictSentence(for: store.averageReaction(forMeal: meal.id)),
+            title: store.dishName(forMeal: meal),
             meta: meta,
             summary: summary,
-            facts: facts,
-            badges: badges,
             actions: [action]
         )
     }
@@ -34,30 +31,15 @@ struct MealDetailHeader: View {
     }
 
     private var meta: String {
-        let date = meal.eatenOn.formatted(.dateTime.day().month(.abbreviated).year())
+        let date = meal.eatenOn.formatted(.dateTime.weekday(.abbreviated).day().month(.abbreviated).year())
         let party = store.partyDisplayName(forMeal: meal)
         return party == "You" ? date : "\(date) \u{00B7} \(party)"
     }
 
     private var summary: String {
-        let dish = store.dishName(forMeal: meal)
         let cook = meal.createdBy == store.userID ? "you" : store.firstName(for: .account(meal.createdBy))
-        return "\(dish), cooked by \(cook)."
-    }
-
-    /// Facts about the dish (DetailHeader README: "Facts are not badges").
-    private var facts: [String] {
-        let recipe = store.dish(meal.dishID)
-        return [
-            (meal.effort ?? recipe?.effort)?.label,
-            recipe.flatMap { store.dishKind(for: $0) }?.name,
-            recipe.flatMap { store.cookingMethod(for: $0) }?.name,
-        ].compactMap { $0 }
-    }
-
-    /// The rotation goal is a status, so it is a Badge.
-    private var badges: [Badge] {
-        store.averageRotation(forMeal: meal.id).map { [.rotation($0)] } ?? []
+        let verdict = Self.verdictSentence(for: store.averageReaction(forMeal: meal.id))
+        return "Cooked by \(cook). \(verdict)"
     }
 
     private var action: DetailHeaderAction {
