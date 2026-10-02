@@ -107,14 +107,15 @@ struct FoodCalendarView: View {
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .padding(.vertical, 4)
                 } else {
-                    ForEach(selectedDayMeals) { meal in
-                        NavigationLink {
-                            MealDetailView(mealID: meal.id)
-                        } label: {
-                            MealRow(meal: meal)
-                                .padding(.vertical, 4)
+                    Card(layout: .list) {
+                        ForEach(selectedDayMeals) { meal in
+                            NavigationLink {
+                                MealDetailView(mealID: meal.id)
+                            } label: {
+                                MealRow(meal: meal)
+                            }
+                            .buttonStyle(.plain)
                         }
-                        .buttonStyle(.plain)
                     }
                 }
 

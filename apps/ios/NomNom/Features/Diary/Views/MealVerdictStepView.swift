@@ -24,66 +24,37 @@ struct MealVerdictStepView: View {
         draft.recipe?.cuisine ?? matchedRecipe?.cuisine
     }
 
-    private var mealPhotos: [HeroPhotoItem] {
+    private var mealPhotos: [PhotoCardSource] {
         draft.photos.items.map { item in
             switch item {
             case .existing(let path):
-                return .remote(path: path, bucket: SupabaseConfig.photoBucket)
-            case .added(let id, let data):
-                return .local(id: id.uuidString, data: data)
+                return .remote(path: path, cuisine: resolvedCuisine)
+            case .added(_, let data):
+                return .data(data, cuisine: resolvedCuisine)
             }
         }
     }
 
-    private var recipePhotos: [HeroPhotoItem] {
-        var items: [HeroPhotoItem] = []
-        if let matchedRecipe {
-            for p in matchedRecipe.recipePhotoPaths {
-                if !items.contains(where: { $0.id == "\(SupabaseConfig.recipeBucket):\(p)" }) {
-                    items.append(.remote(path: p, bucket: SupabaseConfig.recipeBucket))
-                }
-            }
-            for p in matchedRecipe.photoPaths {
-                if !items.contains(where: { $0.id == "\(SupabaseConfig.recipeBucket):\(p)" }) {
-                    items.append(.remote(path: p, bucket: SupabaseConfig.recipeBucket))
-                }
-            }
+    /// The matched recipe's photos (these open in the viewer). Without a matched recipe,
+    /// a new recipe draft's photos show read-only.
+    private var recipePhotos: [PhotoCardSource] {
+        if let matchedRecipe { return matchedRecipe.ratingHeaderPhotos }
+        guard let recipeDraft = draft.recipe else { return [] }
+        let stored: [PhotoCardSource] = recipeDraft.existingPhotoPaths.map {
+            .remote(path: $0, bucket: SupabaseConfig.recipeBucket, cuisine: resolvedCuisine)
         }
-        if let recipeDraft = draft.recipe {
-            for p in recipeDraft.existingPhotoPaths {
-                if !items.contains(where: { $0.id == "\(SupabaseConfig.recipeBucket):\(p)" }) {
-                    items.append(.remote(path: p, bucket: SupabaseConfig.recipeBucket))
-                }
-            }
-            for (idx, data) in recipeDraft.addedPhotoData.enumerated() {
-                let alreadyInItems = items.contains { item in
-                    if case .local(_, let existingData) = item {
-                        return existingData == data
-                    }
-                    return false
-                }
-                if !alreadyInItems {
-                    items.append(.local(id: "recipe-added-\(idx)", data: data))
-                }
-            }
-        }
-        if items.isEmpty, (matchedRecipe != nil || draft.recipe != nil || resolvedCuisine != nil) {
-            items.append(.fallback(cuisine: resolvedCuisine))
-        }
-        return items
+        return stored + recipeDraft.addedPhotoData.map { .data($0, cuisine: resolvedCuisine) }
     }
 
     var body: some View {
         ScrollView {
             VStack(spacing: DS.Spacing.section) {
-                // Top Hero Section: Harmonized Dual Arc Hero Header
-                ArcHeroHeaderView(
-                    items: mealPhotos,
-                    recipeItems: recipePhotos,
+                MealRatingPhotoHeader(
+                    mealPhotos: mealPhotos,
+                    recipePhotos: recipePhotos,
                     cuisine: resolvedCuisine,
                     title: draft.dishName.isEmpty ? "Rate Meal" : draft.dishName,
                     date: draft.eatenOn,
-                    alignment: .center,
                     onSelectMealPhoto: { index in
                         selectedPhotoIndex = index
                     },
@@ -113,12 +84,8 @@ struct MealVerdictStepView: View {
             get: { selectedRecipePhotoIndex.map { PhotoIndexWrapper(index: $0) } },
             set: { selectedRecipePhotoIndex = $0?.index }
         )) { wrapper in
-            if let matchedRecipe {
-                let paths = matchedRecipe.recipePhotoPaths.isEmpty ? matchedRecipe.photoPaths : matchedRecipe.recipePhotoPaths
-                let bucket = SupabaseConfig.recipeBucket
-                if !paths.isEmpty {
-                    MediaViewerSheet(.paths(paths, bucket: bucket), startIndex: wrapper.index, title: "Recipe")
-                }
+            if let paths = matchedRecipe?.ratingHeaderPhotoPaths, !paths.isEmpty {
+                MediaViewerSheet(.paths(paths, bucket: SupabaseConfig.recipeBucket), startIndex: wrapper.index, title: "Recipe")
             }
         }
         .onAppear {

@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// Section listing meal history on a user profile: shows image, name, rating, and date.
+/// Section listing meal history on a user profile: thumbnail, name, date and verdict.
 struct ProfileMealHistorySection: View {
     let meals: [Meal]
     let raterRef: RaterRef
@@ -8,63 +8,39 @@ struct ProfileMealHistorySection: View {
     @Environment(FoodStore.self) private var store
 
     var body: some View {
-        SectionCard("Meal History (\(meals.count))") {
-            if meals.isEmpty {
-                Text("No meals logged yet.")
-                    .font(.subheadline)
-                    .foregroundStyle(DS.Color.textSecondary)
-                    .padding(.vertical, DS.Spacing.sm)
-            } else {
-                VStack(spacing: 0) {
-                    ForEach(Array(meals.enumerated()), id: \.element.id) { index, meal in
+        if meals.isEmpty {
+            SectionCard("Meal History", trailing: "\(meals.count)") {
+                EmptyState("No meals logged yet", alignment: .leading, style: .inCard)
+            }
+        } else {
+            DSSection("Meal History", trailing: "\(meals.count)") {
+                Card(layout: .list) {
+                    ForEach(meals) { meal in
                         NavigationLink {
                             MealDetailView(mealID: meal.id)
                         } label: {
-                            mealRow(for: meal)
+                            row(for: meal)
                         }
                         .buttonStyle(.plain)
-
-                        if index < meals.count - 1 {
-                            Divider()
-                        }
                     }
                 }
             }
         }
     }
 
-    private func mealRow(for meal: Meal) -> some View {
-        HStack(alignment: .center, spacing: 12) {
-            mealThumbnail(for: meal)
-
-            VStack(alignment: .leading, spacing: 4) {
-                Text(store.dishName(forMeal: meal))
-                    .font(.body.weight(.semibold))
-                    .foregroundStyle(DS.Color.textPrimary)
-                    .lineLimit(1)
-
-                HStack(spacing: 6) {
-                    Text(meal.eatenOn, format: .dateTime.day().month(.abbreviated).year())
-                        .font(.caption)
-                        .foregroundStyle(DS.Color.textSecondary)
-
-                    if let rating = userRating(for: meal) {
-                        Text("•")
-                            .font(.caption2)
-                            .foregroundStyle(DS.Color.textTertiary)
-
-                        ScoreBadge(reaction: rating, format: .verdictOnly, size: .sm)
-                    }
-                }
-            }
-            .frame(maxWidth: .infinity, alignment: .leading)
-
-            Image(systemName: "chevron.right")
-                .font(.caption2.weight(.semibold))
-                .foregroundStyle(DS.Color.textTertiary)
+    private func row(for meal: Meal) -> ListRow {
+        var row = ListRow(
+            store.dishName(forMeal: meal),
+            meta: meal.eatenOn.formatted(.dateTime.day().month(.abbreviated).year()),
+            leading: .photo(.meal(meal))
+        )
+        var trailing: [ListRowTrailing] = []
+        if let rating = userRating(for: meal) {
+            trailing.append(.badge(.verdict(rating, size: .sm)))
         }
-        .padding(.vertical, DS.Spacing.sm)
-        .contentShape(Rectangle())
+        trailing.append(.chevron)
+        row.trailing = trailing
+        return row
     }
 
     private func userRating(for meal: Meal) -> Reaction? {
@@ -72,56 +48,6 @@ struct ProfileMealHistorySection: View {
             return direct.reaction
         }
         return store.averageReaction(forMeal: meal.id)
-    }
-
-    @ViewBuilder
-    private func mealThumbnail(for meal: Meal) -> some View {
-        if meal.photoPaths.count > 1 {
-            MiniPhotoArcDeck(
-                photoPaths: meal.photoPaths,
-                cardWidth: 42,
-                cardHeight: 52
-            )
-        } else if let primaryPhoto = meal.photoPaths.first {
-            RemoteMealPhoto(
-                path: primaryPhoto,
-                cornerRadius: AppRadius.photo,
-                bucket: SupabaseConfig.photoBucket
-            )
-            .frame(width: 44, height: 54)
-            .clipped()
-            .clipShape(RoundedRectangle(cornerRadius: AppRadius.photo, style: .continuous))
-            .overlay(
-                RoundedRectangle(cornerRadius: AppRadius.photo, style: .continuous)
-                    .strokeBorder(DS.Color.line.opacity(0.35), lineWidth: 0.5)
-            )
-        } else if let cuisine = store.dish(meal.dishID)?.cuisine,
-                  let cuisineAsset = Cuisine.assetImageName(for: cuisine) {
-            Image(cuisineAsset)
-                .resizable()
-                .scaledToFill()
-                .frame(width: 44, height: 54)
-                .clipped()
-                .clipShape(RoundedRectangle(cornerRadius: AppRadius.photo, style: .continuous))
-                .overlay(
-                    RoundedRectangle(cornerRadius: AppRadius.photo, style: .continuous)
-                        .strokeBorder(DS.Color.line.opacity(0.35), lineWidth: 0.5)
-                )
-        } else {
-            Rectangle()
-                .fill(DS.Color.sunken)
-                .frame(width: 44, height: 54)
-                .clipShape(RoundedRectangle(cornerRadius: AppRadius.photo, style: .continuous))
-                .overlay(
-                    RoundedRectangle(cornerRadius: AppRadius.photo, style: .continuous)
-                        .strokeBorder(DS.Color.line.opacity(0.35), lineWidth: 0.5)
-                )
-                .overlay {
-                    Image(systemName: "fork.knife")
-                        .font(.caption)
-                        .foregroundStyle(DS.Color.textTertiary)
-                }
-        }
     }
 }
 
@@ -131,6 +57,6 @@ struct ProfileMealHistorySection: View {
             meals: store.meals,
             raterRef: .account(store.userID)
         )
-        .padding()
+        .padding(DS.Spacing.gutter)
     }
 }

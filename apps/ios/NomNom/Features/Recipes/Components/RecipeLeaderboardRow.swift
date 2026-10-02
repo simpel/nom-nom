@@ -1,7 +1,8 @@
 import SwiftUI
 
-/// Clean, dedicated row component for the Global Leaderboard displaying rank, photo,
-/// recipe name & metadata, reaction-colored score, and disclosure chevron.
+/// One recipe on the leaderboard: a ListRow with its rank numeral, PhotoCard thumbnail,
+/// cuisine, effort and times cooked, its score and a chevron. Place it in a
+/// `Card(layout: .list)`. The highlighted recipe gets a semibold title.
 struct RecipeLeaderboardRow: View {
     let rank: Int
     let recipe: Recipe
@@ -11,160 +12,35 @@ struct RecipeLeaderboardRow: View {
 
     @Environment(FoodStore.self) private var store
 
-    private var photos: [String] {
-        store.photos(for: recipe)
-    }
-
-    private var servings: [Meal] {
-        store.servings(of: recipe.id)
-    }
-
-    private var cuisineName: String? {
-        Cuisine.formatDisplayName(recipe.cuisine)
+    private var meta: String {
+        let cooked = store.servings(of: recipe.id).count
+        return [
+            Cuisine.formatDisplayName(recipe.cuisine),
+            recipe.effort?.label,
+            cooked > 0 ? "\(cooked)\u{00D7} cooked" : nil
+        ]
+        .compactMap { $0 }
+        .joined(separator: " \u{00B7} ")
     }
 
     var body: some View {
-        HStack(alignment: .center, spacing: DS.Spacing.sm) {
-            rankView
+        ListRow(
+            recipe.name,
+            meta: meta,
+            emphasized: isHighlighted,
+            leading: .rank(rank),
+            trailing: .score(score), .chevron
+        )
+    }
+}
 
-            thumbnailView
-
-            recipeDetails
-
-            Spacer(minLength: 4)
-
-            Image(systemName: "chevron.right")
-                .font(.caption2.weight(.semibold))
-                .foregroundStyle(DS.Color.textTertiary)
-        }
-        .padding(.vertical, DS.Spacing.sm)
-        .padding(.horizontal, 10)
-        .background {
-            if isHighlighted {
-                RoundedRectangle(cornerRadius: AppRadius.card - 4, style: .continuous)
-                    .fill(DS.Color.sunken)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: AppRadius.card - 4, style: .continuous)
-                            .strokeBorder(DS.Color.line, lineWidth: 1)
-                    )
+#Preview {
+    NomNomPreview { store in
+        Card(layout: .list) {
+            ForEach(Array(store.myDishes.prefix(4).enumerated()), id: \.element.id) { index, recipe in
+                RecipeLeaderboardRow(rank: index + 1, recipe: recipe, score: 0.8, reaction: .great, isHighlighted: index == 1)
             }
         }
-        .contentShape(Rectangle())
-    }
-
-    // MARK: - Subviews
-
-    @ViewBuilder
-    private var rankView: some View {
-        Text("\(rank)")
-            .font(rankFont)
-            .foregroundStyle(rankColor)
-            .monospacedDigit()
-            .frame(width: 24, alignment: .leading)
-    }
-
-    @ViewBuilder
-    private var thumbnailView: some View {
-        if !photos.isEmpty {
-            MiniPhotoArcDeck(
-                photoPaths: photos,
-                cardWidth: 38,
-                cardHeight: 48,
-                cornerRadius: AppRadius.photo
-            )
-        } else if let cuisineImage = Cuisine.assetImageName(for: recipe.cuisine) {
-            Image(cuisineImage)
-                .resizable()
-                .scaledToFill()
-                .frame(width: 38, height: 48)
-                .clipped()
-                .clipShape(RoundedRectangle(cornerRadius: AppRadius.photo, style: .continuous))
-                .overlay(
-                    RoundedRectangle(cornerRadius: AppRadius.photo, style: .continuous)
-                        .strokeBorder(DS.Color.line, lineWidth: 0.5)
-                )
-        } else {
-            RoundedRectangle(cornerRadius: AppRadius.photo, style: .continuous)
-                .fill(DS.Color.sunken)
-                .frame(width: 38, height: 48)
-                .overlay {
-                    Image(systemName: "fork.knife")
-                        .font(.caption2)
-                        .foregroundStyle(DS.Color.textTertiary)
-                }
-        }
-    }
-
-    @ViewBuilder
-    private var recipeDetails: some View {
-        VStack(alignment: .leading, spacing: 3) {
-            HStack(alignment: .firstTextBaseline, spacing: 4) {
-                Text(recipe.name)
-                    .font(.body.weight(.semibold))
-                    .foregroundStyle(DS.Color.textPrimary)
-                    .lineLimit(1)
-                    .truncationMode(.tail)
-
-                if store.isFavorite(recipe: recipe) {
-                    Image(systemName: "heart.fill")
-                        .font(.caption2)
-                        .foregroundStyle(DS.Color.accent)
-                }
-            }
-
-            HStack(spacing: 6) {
-                if let cuisineName {
-                    Text(cuisineName)
-                        .font(.caption.weight(.medium))
-                        .foregroundStyle(DS.Color.accentText)
-                }
-
-                if let effort = recipe.effort {
-                    if cuisineName != nil {
-                        Text("•")
-                            .font(.caption2)
-                            .foregroundStyle(DS.Color.textTertiary)
-                    }
-                    Text(effort.label)
-                        .font(.caption)
-                        .foregroundStyle(DS.Color.textSecondary)
-                }
-
-                if servings.count > 0 {
-                    if cuisineName != nil || recipe.effort != nil {
-                        Text("•")
-                            .font(.caption2)
-                            .foregroundStyle(DS.Color.textTertiary)
-                    }
-                    Text("\(servings.count)× cooked")
-                        .font(.caption)
-                        .monospacedDigit()
-                        .foregroundStyle(DS.Color.textSecondary)
-                }
-            }
-            .lineLimit(1)
-        }
-    }
-
-    // MARK: - Rank Styling
-
-    private var rankFont: Font {
-        switch rank {
-        case 1:
-            return Font.newsreader(.title3, weight: .bold)
-        case 2, 3:
-            return Font.newsreader(.headline, weight: .semibold)
-        default:
-            return Font.subheadline
-        }
-    }
-
-    private var rankColor: Color {
-        switch rank {
-        case 1, 2, 3:
-            return DS.Color.textPrimary
-        default:
-            return DS.Color.textTertiary
-        }
+        .padding(DS.Spacing.gutter)
     }
 }

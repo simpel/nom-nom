@@ -44,76 +44,57 @@ struct MealEditorRecipeSection: View {
         self.onRemoveRecipe = onRemoveDish
     }
 
-    private var recipePhotos: [String] {
-        guard let recipe = existingMatchedRecipe else { return [] }
-        return store.photos(for: recipe)
-    }
-
     private var isCreator: Bool {
         guard let recipe = existingMatchedRecipe else { return true }
         return recipe.ownerID == store.userID
     }
 
-    private var displayPhotoItems: [HeroPhotoItem] {
+    /// The recipe's own pages, its cover photos, then photos from meals made with it.
+    private var recipePhotos: [PhotoCardSource] {
         guard let recipe = existingMatchedRecipe else { return [] }
-        var items: [HeroPhotoItem] = []
-        var paths: [String] = []
-        for p in recipe.recipePhotoPaths where !paths.contains(p) {
-            paths.append(p)
-            items.append(.remote(path: p, bucket: SupabaseConfig.recipeBucket))
+        var seen: Set<String> = []
+        var sources: [PhotoCardSource] = []
+        let buckets = [
+            (recipe.recipePhotoPaths, SupabaseConfig.recipeBucket),
+            (recipe.photoPaths, SupabaseConfig.photoBucket),
+            (store.photos(for: recipe), SupabaseConfig.photoBucket)
+        ]
+        for (paths, bucket) in buckets {
+            for path in paths where seen.insert(path).inserted {
+                sources.append(.remote(path: path, bucket: bucket, cuisine: recipe.cuisine))
+            }
         }
-        for p in recipe.photoPaths where !paths.contains(p) {
-            paths.append(p)
-            items.append(.remote(path: p, bucket: SupabaseConfig.photoBucket))
-        }
-        for p in store.photos(for: recipe) where !paths.contains(p) {
-            paths.append(p)
-            items.append(.remote(path: p, bucket: SupabaseConfig.photoBucket))
-        }
-        return Array(items.prefix(FoodStore.PhotosDraft.maxCount))
+        let capped = Array(sources.prefix(FoodStore.PhotosDraft.maxCount))
+        return capped.isEmpty ? [.none(cuisine: recipe.cuisine)] : capped
     }
 
     var body: some View {
-        if title.trimmedName.isEmpty {
-            emptyRecipeDeckView
-        } else {
-            heroRecipeSelectedView
+        Group {
+            if title.trimmedName.isEmpty {
+                EmptyState(
+                    "No recipe yet",
+                    message: "Choose what you cooked from your recipes, or start a new one.",
+                    action: EmptyStateAction(title: "Pick a recipe", appearance: .solid, perform: onPickRecipe)
+                )
+            } else {
+                selectedRecipe
+            }
         }
+        .padding(.bottom, DS.Spacing.block)
     }
 
-    private var emptyRecipeDeckView: some View {
-        EmptyRecipeDeckHeroView(onTap: onPickRecipe)
-            .frame(height: 228)
-            .frame(maxWidth: .infinity)
-            .padding(.vertical, 4)
-            .padding(.bottom, 36)
-    }
+    private var selectedRecipe: some View {
+        VStack(alignment: .leading, spacing: DS.Spacing.s5) {
+            PhotoStrip(photos: recipePhotos.isEmpty ? [.none()] : recipePhotos, onSelect: { _ in })
 
-    private var heroRecipeSelectedView: some View {
-        VStack(spacing: DS.Spacing.heroInner) {
-            HeroPhotoDeckView(
-                items: displayPhotoItems,
-                cuisine: existingMatchedRecipe?.cuisine,
-                cardWidth: 144,
-                cardHeight: 192
-            )
-            .frame(height: 228)
-            .frame(maxWidth: .infinity)
-            .padding(.vertical, 4)
-
-            VStack(spacing: 14) {
-                VStack(spacing: 4) {
+            VStack(alignment: .leading, spacing: DS.Spacing.s3) {
+                VStack(alignment: .leading, spacing: DS.Spacing.s1) {
                     if let cuisineName = Cuisine.formatDisplayName(existingMatchedRecipe?.cuisine) {
-                        Text(cuisineName)
-                            .font(.subheadline.weight(.medium))
-                            .foregroundStyle(DS.Color.accentText)
+                        Text(cuisineName).textStyle(.sansSm, tone: .accent, weight: .semibold)
                     }
-
                     Text(title)
-                        .font(DS.TextStyle.serifLg.font)
-                        .foregroundStyle(DS.Color.textPrimary)
-                        .multilineTextAlignment(.center)
-                        .padding(.horizontal, 20)
+                        .textStyle(.serifSm)
+                        .accessibilityAddTraits(.isHeader)
                 }
 
                 Menu {
@@ -131,13 +112,17 @@ struct MealEditorRecipeSection: View {
                         Label("Remove", systemImage: "trash")
                     }
                 } label: {
-                    SubtleCapsuleLabel(title: "Change recipe", systemImage: "arrow.triangle.2.circlepath")
+                    AppButtonLabel(
+                        "Change recipe",
+                        variant: .secondary,
+                        appearance: .soft,
+                        size: .sm
+                    )
                 }
                 .buttonStyle(.plain)
             }
         }
-        .frame(maxWidth: .infinity)
-        .padding(.bottom, 36)
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 }
 

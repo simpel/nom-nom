@@ -37,7 +37,7 @@ struct MealsView: View {
                                 SwipeableListCard(
                                     title: section.title,
                                     data: section.meals,
-                                    dividerPadding: 74,
+                                    dividerPadding: 0,
                                     leadingIcon: { _ in "trash.fill" },
                                     leadingColor: { _ in .red },
                                     onLeadingAction: { meal in
@@ -48,8 +48,6 @@ struct MealsView: View {
                                         MealDetailView(mealID: meal.id)
                                     } label: {
                                         MealRow(meal: meal, isMinimal: true)
-                                            .padding(.horizontal, 14)
-                                            .padding(.vertical, 8)
                                     }
                                     .buttonStyle(.plain)
                                     .contextMenu {

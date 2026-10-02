@@ -7,39 +7,13 @@ struct MyRecipesSection: View {
 
     var body: some View {
         if recipes.isEmpty {
-            VStack(spacing: DS.Spacing.section) {
-                Spacer(minLength: 20)
-
-                CategoryPhotoArcView()
-                    .padding(.vertical, DS.Spacing.sm)
-
-                VStack(spacing: 0) {
-                    Text("Create your first recipe")
-                        .font(DS.TextStyle.serifSm.font)
-                        .foregroundStyle(DS.Color.textPrimary)
-
-                    Text("Recipes you create will appear here.")
-                        .font(DS.TextStyle.sansMd.font)
-                        .foregroundStyle(DS.Color.textSecondary)
-                        .multilineTextAlignment(.center)
-                        .lineSpacing(3)
-                        .padding(.horizontal, 28)
-                }
-
-                AppButton(
-                    "Create Recipe",
-                    variant: .primary,
-                    style: .normal,
-                    size: .xl,
-                    isFullWidth: true,
-                    action: { onCreateRecipe?() }
-                )
-                .frame(maxWidth: 320)
-                .padding(.horizontal, 24)
-                .padding(.top, 4)
-
-                Spacer(minLength: 40)
-            }
+            EmptyState(
+                "Create your first recipe",
+                message: "Recipes you create will appear here.",
+                action: EmptyStateAction(title: "Create recipe", appearance: .solid) { onCreateRecipe?() }
+            )
+            .padding(.horizontal, DS.Spacing.gutter)
+            .padding(.top, DS.Spacing.s5)
         } else {
             VStack(alignment: .leading, spacing: DS.Spacing.md) {
                 HStack {
