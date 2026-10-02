@@ -48,11 +48,12 @@ struct AppButton: View {
         variant: DSVariant = .primary,
         appearance: DSAppearance = .solid,
         isLoading: Bool = false,
+        iconColor: Color? = nil,
         action: @escaping () -> Void
     ) {
         self.label = AppButtonLabel(
             icon: icon, accessibilityLabel: accessibilityLabel, variant: variant,
-            appearance: appearance, isLoading: isLoading
+            appearance: appearance, isLoading: isLoading, iconColor: iconColor
         )
         self.isLoading = isLoading
         self.isDisabled = false

@@ -16,6 +16,9 @@ struct AppButtonLabel: View {
     /// Icon-only diameter. Always `AppButtonSize.iconOnlyDiameter` (44) except for the
     /// deprecated sized icon-only API, which keeps `lg` at 48 until its callers migrate.
     private let iconOnlyDiameter: CGFloat
+    /// Overrides the icon's ink only (PhotoCard's favourite heart: `destructive-text`
+    /// when on, components/PhotoCard/README.md). Nil inks it like the label.
+    private let iconColor: Color?
 
     @Environment(\.isEnabled) private var isEnabled
 
@@ -41,10 +44,12 @@ struct AppButtonLabel: View {
         accessibilityLabel: String,
         variant: DSVariant = .primary,
         appearance: DSAppearance = .solid,
-        isLoading: Bool = false
+        isLoading: Bool = false,
+        iconColor: Color? = nil
     ) {
         self.init(title: nil, icon: icon, iconPosition: .start, variant: variant, appearance: appearance,
-                  size: .md, fullWidth: false, isLoading: isLoading, accessibilityLabel: accessibilityLabel)
+                  size: .md, fullWidth: false, isLoading: isLoading, accessibilityLabel: accessibilityLabel,
+                  iconColor: iconColor)
     }
 
     /// Pre-v3 API: `title: nil` drew an icon-only circle sized by `size`.
@@ -76,8 +81,10 @@ struct AppButtonLabel: View {
         fullWidth: Bool,
         isLoading: Bool,
         accessibilityLabel: String?,
-        iconOnlyDiameter: CGFloat = AppButtonSize.iconOnlyDiameter
+        iconOnlyDiameter: CGFloat = AppButtonSize.iconOnlyDiameter,
+        iconColor: Color? = nil
     ) {
+        self.iconColor = iconColor
         self.title = title
         self.icon = icon
         self.iconPosition = iconPosition
@@ -97,9 +104,9 @@ struct AppButtonLabel: View {
         HStack(spacing: size.gap) {
             if iconPosition == .end {
                 titleText
-                iconSlot
+                tintedIconSlot
             } else {
-                iconSlot
+                tintedIconSlot
                 titleText
             }
         }
@@ -132,6 +139,10 @@ struct AppButtonLabel: View {
         if let title, !title.isEmpty {
             Text(title)
         }
+    }
+
+    private var tintedIconSlot: some View {
+        iconSlot.foregroundStyle(iconColor ?? paint.foreground)
     }
 
     /// "Pending: a spinner replaces the button icon."

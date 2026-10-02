@@ -5,7 +5,7 @@ import SwiftUI
 enum ListRowLeading {
     /// A person or party: pass a configured Avatar (usually `.sm`).
     case avatar(Avatar)
-    /// A meal or recipe thumbnail: PhotoCard `.thumb` (`s12` square).
+    /// A meal or recipe thumbnail: PhotoCard `xs` (ListRow README: "PhotoCard `xs`").
     case photo(PhotoCardSource)
     /// A leaderboard position as a serif numeral; the top three ink `text-primary`.
     case rank(Int)
@@ -74,7 +74,7 @@ struct ListRowLeadingView: View {
         case .avatar(let avatar):
             avatar
         case .photo(let source):
-            PhotoCard(source, size: .thumb)
+            PhotoCard(source, size: .xs)
                 .accessibilityHidden(true)
         case .rank(let rank):
             Text("\(rank)")

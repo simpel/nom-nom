@@ -1,8 +1,9 @@
 import SwiftUI
 
 /// RecipeDetailView's DetailHeader (the README's Recipe recipe): cuisine eyebrow, the
-/// dish as title, "Last cooked 28 Aug 2026 · 6 times" (or "Never cooked"), time /
-/// method / rotation fact Badges and the one solid action, "Use in a meal".
+/// dish as title, "Last cooked 28 Aug 2026 · 6 times" (or "Never cooked"), time and
+/// method as facts, the rotation goal as a status Badge and the one solid action,
+/// "Use in a meal".
 struct RecipeDetailHeader: View {
     let recipe: Recipe
     /// Servings, newest first.
@@ -17,18 +18,14 @@ struct RecipeDetailHeader: View {
         return "Last cooked \(last.formatted(.dateTime.day().month(.abbreviated).year())) \u{00B7} \(times)"
     }
 
-    private var facts: [Badge] {
-        var badges: [Badge] = []
-        if let effort = recipe.effort {
-            badges.append(Badge(effort.label, icon: "clock", variant: .secondary, size: .sm))
-        }
-        if let method = store.cookingMethod(for: recipe) {
-            badges.append(Badge(method.name, variant: .secondary, size: .sm))
-        }
-        if let rotation = store.averageRotation(forDish: recipe.id) {
-            badges.append(.rotation(rotation))
-        }
-        return badges
+    /// README Recipe recipe: "facts (time, method)".
+    private var facts: [String] {
+        [recipe.effort?.label, store.cookingMethod(for: recipe)?.name].compactMap { $0 }
+    }
+
+    /// README Recipe recipe: "badges (the rotation goal, when it is a status)".
+    private var badges: [Badge] {
+        store.averageRotation(forDish: recipe.id).map { [.rotation($0)] } ?? []
     }
 
     var body: some View {
@@ -37,6 +34,7 @@ struct RecipeDetailHeader: View {
             eyebrow: Cuisine.formatDisplayName(recipe.cuisine),
             meta: meta,
             facts: facts,
+            badges: badges,
             actions: [DetailHeaderAction(title: "Use in a meal", icon: "plus", action: onUseInMeal)]
         )
     }

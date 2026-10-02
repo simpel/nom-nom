@@ -3,7 +3,9 @@ import SwiftUI
 
 // PhotoStripEditor bound to the app's photo draft models.
 
-private let photoDraftAnimation = Animation.spring(response: 0.42, dampingFraction: 0.76)
+/// Tiles moving or resizing: `duration-layout` ease-out (tokens.json: "Every transition
+/// in the system uses one of these"). Replaces an invented 0.42s spring.
+private let photoDraftAnimation = DS.Motion.layout
 
 extension PhotoStripEditor {
     /// A meal, cover or avatar photo set (`PhotosDraft`): add, remove and reorder.

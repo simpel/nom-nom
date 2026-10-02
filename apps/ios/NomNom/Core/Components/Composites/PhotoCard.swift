@@ -5,20 +5,29 @@ import UIKit
 /// a rounded, centre-cropped photo (or the no-photo tile) with an optional verdict
 /// Badge bottom-right, a favourite heart top-right and a `selected` ring.
 ///
+/// `size` is the long edge (xs 80 · sm/md 192 · lg 288) and `format` the shape (square,
+/// or 3:4 portrait/landscape); `format` defaults per size (PhotoCardSize.defaultFormat).
+///
 /// Fallback chain (every source): photo → cuisine category photo → `sunken` tile with
 /// a fork-and-knife glyph ("No photo yet" on `sm`/`lg`). The badge shows either way.
 ///
+/// The heart shows whenever `onToggleFavorite` is given (outlined until a favourite);
+/// `isFavorite` alone shows it as a read-only marker. Put it on `md` and `lg` tiles.
+///
 /// ```swift
 /// PhotoCard(.meal(meal), size: .xs)
-/// PhotoCard(.recipe(recipe), size: .md, fillsWidth: true, badge: .score(0.82), isFavorite: true)
+/// PhotoCard(.recipe(recipe), size: .md, fillsWidth: true, badge: .score(0.82),
+///           isFavorite: true, onToggleFavorite: { toggle() })
 /// ```
 struct PhotoCard<Overlay: View>: View {
     let source: PhotoCardSource
     var size: PhotoCardSize
-    /// Fill the proposed width at the size's aspect ratio (a grid column) instead of its fixed frame.
+    var format: PhotoCardFormat
+    /// Fill the proposed width at the format's aspect ratio (a grid column) instead of its fixed frame.
     var fillsWidth: Bool
     var badge: PhotoCardBadge?
     var isFavorite: Bool
+    var onToggleFavorite: (() -> Void)?
     /// 2pt `primary` ring (the current meal in a Timeline).
     var isSelected: Bool
     /// What the photo shows; defaults to "Photo" / "No photo yet".
@@ -32,18 +41,22 @@ struct PhotoCard<Overlay: View>: View {
     init(
         _ source: PhotoCardSource,
         size: PhotoCardSize = .md,
+        format: PhotoCardFormat? = nil,
         fillsWidth: Bool = false,
         badge: PhotoCardBadge? = nil,
         isFavorite: Bool = false,
+        onToggleFavorite: (() -> Void)? = nil,
         isSelected: Bool = false,
         accessibilityLabel: String? = nil,
         @ViewBuilder overlay: () -> Overlay
     ) {
         self.source = source
         self.size = size
+        self.format = format ?? size.defaultFormat
         self.fillsWidth = fillsWidth
         self.badge = badge
         self.isFavorite = isFavorite
+        self.onToggleFavorite = onToggleFavorite
         self.isSelected = isSelected
         self.accessibilityLabel = accessibilityLabel
         self.overlayContent = overlay()
@@ -53,6 +66,8 @@ struct PhotoCard<Overlay: View>: View {
         RoundedRectangle(cornerRadius: size.radius, style: .continuous)
     }
 
+    private var showsHeart: Bool { onToggleFavorite != nil || isFavorite }
+
     var body: some View {
         let resolved = source.resolved(in: store)
         frameBase
@@ -61,11 +76,8 @@ struct PhotoCard<Overlay: View>: View {
             .dsHairline(radius: size.radius)
             .overlay {
                 if isSelected {
-                    shape.strokeBorder(DS.Color.primary, lineWidth: DS.Spacing.s0_5)
+                    shape.strokeBorder(DS.Color.primary, lineWidth: DS.BorderWidth.thick)
                 }
-            }
-            .overlay(alignment: .topTrailing) {
-                if isFavorite { favoriteHeart }
             }
             .overlay(alignment: .bottomTrailing) {
                 if size.showsBadge, let badge {
@@ -77,6 +89,12 @@ struct PhotoCard<Overlay: View>: View {
             .accessibilityLabel(accessibilityText(resolved))
             .accessibilityAddTraits(.isImage)
             .overlay { overlayContent }
+            .overlay(alignment: .topTrailing) {
+                if showsHeart {
+                    PhotoCardFavorite(isFavorite: isFavorite, onToggle: onToggleFavorite)
+                        .padding(size.favoriteInset)
+                }
+            }
             .task(id: resolved.loadKey) { await load(resolved) }
     }
 
@@ -84,10 +102,13 @@ struct PhotoCard<Overlay: View>: View {
     private var frameBase: some View {
         if fillsWidth {
             Color.clear
-                .aspectRatio(size.aspectRatio, contentMode: .fit)
+                .aspectRatio(format.aspectRatio, contentMode: .fit)
                 .frame(maxWidth: .infinity)
         } else {
-            Color.clear.frame(width: size.width, height: size.height)
+            Color.clear.frame(
+                width: format.width(longEdge: size.longEdge),
+                height: format.height(longEdge: size.longEdge)
+            )
         }
     }
 
@@ -105,33 +126,25 @@ struct PhotoCard<Overlay: View>: View {
         }
     }
 
+    /// README: "No photo: `sunken` tile, fork-and-knife glyph in `text-tertiary`, 'No
+    /// photo yet' (sm, lg)". Glyph `text-xl`, gap `spacing-1` (bundle.css `__none`).
     private var noPhotoTile: some View {
         ZStack {
             DS.Color.sunken
-            VStack(spacing: DS.Spacing.s1_5) {
-                Image(systemName: "fork.knife").textStyle(size.glyphStyle, tone: .tertiary)
+            VStack(spacing: DS.Spacing.s1) {
+                Image(systemName: "fork.knife").textStyle(.sansXl, tone: .tertiary)
                 if size.showsCaption {
                     Text("No photo yet").textStyle(.sansSm, tone: .tertiary)
                 }
             }
-            .padding(DS.Spacing.s2)
         }
-    }
-
-    private var favoriteHeart: some View {
-        Image(systemName: "heart.fill")
-            .textStyle(.sansXs, tone: nil, weight: .semibold)
-            .foregroundStyle(DS.Color.destructiveText)
-            .frame(width: DS.Spacing.s6, height: DS.Spacing.s6)
-            .background(DS.Color.panel, in: Circle())
-            .padding(DS.Spacing.s2)
     }
 
     private func accessibilityText(_ resolved: PhotoCardResolvedSource) -> String {
         let hasPhoto = resolved.image != nil || resolved.path != nil || resolved.cuisineAsset != nil
         var parts = [accessibilityLabel ?? (hasPhoto ? "Photo" : "No photo yet")]
         if size.showsBadge, let badge { parts.append(badge.badge.accessibilityLabel ?? badge.badge.text) }
-        if isFavorite { parts.append("Favourite") }
+        if isFavorite, onToggleFavorite == nil { parts.append("Favourite") }
         return parts.joined(separator: ", ")
     }
 
@@ -153,42 +166,17 @@ extension PhotoCard where Overlay == EmptyView {
     init(
         _ source: PhotoCardSource,
         size: PhotoCardSize = .md,
+        format: PhotoCardFormat? = nil,
         fillsWidth: Bool = false,
         badge: PhotoCardBadge? = nil,
         isFavorite: Bool = false,
+        onToggleFavorite: (() -> Void)? = nil,
         isSelected: Bool = false,
         accessibilityLabel: String? = nil
     ) {
         self.init(
-            source, size: size, fillsWidth: fillsWidth, badge: badge, isFavorite: isFavorite,
-            isSelected: isSelected, accessibilityLabel: accessibilityLabel
+            source, size: size, format: format, fillsWidth: fillsWidth, badge: badge, isFavorite: isFavorite,
+            onToggleFavorite: onToggleFavorite, isSelected: isSelected, accessibilityLabel: accessibilityLabel
         ) { EmptyView() }
     }
 }
-
-private struct PhotoCardGallery: View {
-    var body: some View {
-        NomNomPreview(inNavigationStack: false) { store in
-            ScrollView {
-                VStack(alignment: .leading, spacing: DS.Spacing.s4) {
-                    HStack(alignment: .top, spacing: DS.Spacing.s3) {
-                        PhotoCard(.none(cuisine: "italian"), size: .xs)
-                        PhotoCard(.none(), size: .xs)
-                        if let meal = store.meals.first { PhotoCard(.meal(meal), size: .xs) }
-                    }
-                    HStack(alignment: .top, spacing: DS.Spacing.s3) {
-                        PhotoCard(.none(cuisine: "mexican"), size: .sm, badge: .score(0.9), isSelected: true)
-                        PhotoCard(.none(), size: .sm, badge: .reaction(.meh))
-                    }
-                    PhotoCard(.none(cuisine: "japanese"), size: .md, badge: .score(0.75), isFavorite: true)
-                    PhotoCard(.none(), size: .lg, badge: .custom(Badge("Cover", variant: .secondary, appearance: .elevated, size: .sm)))
-                }
-                .padding(DS.Spacing.gutter)
-            }
-            .background(DS.Color.bg)
-        }
-    }
-}
-
-#Preview("Light") { PhotoCardGallery() }
-#Preview("Dark") { PhotoCardGallery().preferredColorScheme(.dark) }
