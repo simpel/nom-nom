@@ -37,7 +37,7 @@ struct PartyFormFields: View {
         }
 
         SectionCard("About", trailing: "Optional") {
-            TextArea("What is this dinner party about?", text: $about, lineLimit: 3...5)
+            NoteField("What is this dinner party about?", text: $about, title: "About")
         }
     }
 }

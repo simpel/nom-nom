@@ -1,7 +1,7 @@
 import SwiftUI
 
 /// The follow control under a `discover` PartyCard, for a public party the viewer isn't
-/// a member of. Same labels and appearances as the party screen's DetailHeader action:
+/// a member of. Same labels and appearances as the party screen's ScreenHeader action:
 /// "Follow" (`primary solid`) or "Following" (`primary soft`, checkmark), one request
 /// at a time, with a light haptic on change.
 ///

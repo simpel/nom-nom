@@ -14,13 +14,16 @@ extension RecipeDetailView {
         ToolbarItem(placement: .topBarTrailing) {
             if let recipe {
                 let isFavorite = store.isFavorite(recipe: recipe)
-                Button {
+                // Off: `primary-text`, like the toolbar's other glyphs. On: `destructive-text`,
+                // the PhotoCard README's favourite heart, so it matches the recipe cards.
+                AppButton(
+                    icon: isFavorite ? "heart.fill" : "heart",
+                    accessibilityLabel: isFavorite ? "Remove from Favourites" : "Add to Favourites",
+                    variant: isFavorite ? .destructive : .primary,
+                    appearance: .ghost
+                ) {
                     Task { await store.toggleFavorite(recipe: recipe) }
-                } label: {
-                    Image(systemName: isFavorite ? "heart.fill" : "heart")
-                        .foregroundStyle(isFavorite ? DS.Color.primary : DS.Color.textSecondary)
                 }
-                .accessibilityLabel(isFavorite ? "Remove from Favourites" : "Add to Favourites")
             }
         }
 

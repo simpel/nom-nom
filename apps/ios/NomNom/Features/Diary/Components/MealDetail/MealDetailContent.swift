@@ -4,7 +4,8 @@ import SwiftUI
 struct MealDetailActions {
     var onAddPhoto: (() -> Void)?
     let onSelectPhoto: (Int) -> Void
-    let onRate: () -> Void
+    /// Nil when the viewer can't rate this meal (`FoodStore.canRate(meal:)`).
+    let onRate: (() -> Void)?
     let onOpenScore: () -> Void
     let onOpenRecipe: () -> Void
     let onOpenParty: (Party) -> Void
@@ -12,8 +13,9 @@ struct MealDetailActions {
 }
 
 /// Meal Detail's scrolling body on `bg`, gutter `s4`, `s7` between blocks ("Nom Nom
-/// iOS" canvas): DetailHeader · PhotoStrip · ScoreCard + ratings split · RecipeLinkCard
-/// · Who rated · the cook's note · cook, party and cooking time · Timeline.
+/// iOS" canvas): ScreenHeader (the first photo as its avatar) · score + ratings split
+/// (one card) · Who rated · the chef's note · PhotoStrip · cook, party and cooking time ·
+/// RecipeLinkCard · Timeline.
 struct MealDetailContent: View {
     let meal: Meal
     var topInset: CGFloat = 0
@@ -29,6 +31,22 @@ struct MealDetailContent: View {
             VStack(alignment: .leading, spacing: DS.Spacing.block) {
                 MealDetailHeader(meal: meal, onRate: actions.onRate)
 
+                MealScoreCard(
+                    score: store.averageScore(forMeal: meal.id),
+                    ratings: store.ratings(forMeal: meal.id),
+                    delta: change?.delta,
+                    deltaText: change.map { _ in "from last time \(groupName) had it" },
+                    deltaReference: change.map(Self.reference),
+                    caption: ratedCaption,
+                    action: actions.onOpenScore
+                )
+
+                MealDetailRatingsSection(meal: meal, onRate: actions.onRate)
+
+                if let note = note {
+                    SectionCard(note.title, uppercase: false, quote: note.text)
+                }
+
                 PhotoStrip(
                     photos: photos,
                     onAddPhoto: actions.onAddPhoto,
@@ -37,29 +55,11 @@ struct MealDetailContent: View {
                     }
                 )
 
-                VStack(alignment: .leading, spacing: DS.Spacing.s3) {
-                    ScoreCard(
-                        score: store.averageScore(forMeal: meal.id),
-                        delta: change?.delta,
-                        deltaText: change.map { _ in "from last time \(groupName) had it" },
-                        deltaReference: change.map(Self.reference),
-                        caption: ratedCaption,
-                        action: actions.onOpenScore
-                    )
-                    MealRatingSplitCard(ratings: store.ratings(forMeal: meal.id))
-                }
+                MealDetailPeopleCard(meal: meal, onOpenParty: actions.onOpenParty)
 
                 if let recipe = store.recipe(meal.recipeID) {
                     RecipeLinkCard(recipe: recipe, meta: recipeMeta(recipe), action: actions.onOpenRecipe)
                 }
-
-                MealDetailRatingsSection(meal: meal, onRate: actions.onRate)
-
-                if let note = note {
-                    SectionCard(note.title, uppercase: false, quote: note.text)
-                }
-
-                MealDetailPeopleCard(meal: meal, onOpenParty: actions.onOpenParty)
 
                 if !history.isEmpty {
                     MealDetailTimeline(meal: meal, history: history, onOpenMeal: actions.onOpenMeal)
@@ -97,12 +97,11 @@ struct MealDetailContent: View {
         return stored
     }
 
-    /// The cook's note, titled "Joel’s note" (or "Your note").
+    /// The cook's note, titled "Chef’s note".
     private var note: (title: String, text: String)? {
         let text = meal.notes.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !text.isEmpty else { return nil }
-        if meal.createdBy == store.userID { return ("Your note", text) }
-        return ("\(store.firstName(for: .account(meal.createdBy)))\u{2019}s note", text)
+        return ("Chef\u{2019}s note", text)
     }
 
     private func recipeMeta(_ recipe: Recipe) -> [String] {

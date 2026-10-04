@@ -36,8 +36,10 @@ enum Reaction: Int, Codable, CaseIterable, Identifiable, Hashable, Comparable, T
         lhs.rawValue < rhs.rawValue
     }
 
-    /// Normalised 0...1 score used by the suggestion engine.
-    var score: Double {
+    /// The verdict's own 0...1 value, before again, plate and tags move it. A rating's
+    /// score is `MealRating.score`; read this only where there is no rating (a verdict
+    /// on its own, a preview).
+    var verdictScore: Double {
         switch self {
         case .inedible: return 0.0
         case .bad: return 0.2

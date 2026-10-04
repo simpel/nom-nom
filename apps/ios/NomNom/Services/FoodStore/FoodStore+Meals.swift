@@ -224,7 +224,6 @@ extension FoodStore {
         var photos: PhotosDraft = PhotosDraft()
         var effort: EffortLevel? = nil
         var repeatDesire: RotationGoal? = nil
-        var verdicts: [RaterRef: Reaction]
         var servedParties: Set<UUID>? = nil
         var recipe: RecipeDraft? = nil
     }
@@ -273,7 +272,6 @@ extension FoodStore {
             upsertLocal(meal: meal)
 
             try await applyPhotos(draft.photos, to: meal)
-            try await applyVerdicts(draft.verdicts, to: meal)
             if let servedParties = draft.servedParties {
                 try await applyMealParties(servedParties, to: meal.id)
             }
@@ -358,51 +356,6 @@ extension FoodStore {
             _ = try await supabase.storage.from(SupabaseConfig.photoBucket).remove(paths: [path])
         } catch {
             Self.log.error("could not remove \(path, privacy: .public): \(error.localizedDescription, privacy: .public)")
-        }
-    }
-
-    func applyVerdicts(_ verdicts: [RaterRef: Reaction], to meal: Meal) async throws {
-        let mineToManage = Set(myEaters.map(\.id))
-        let existing = ratings(forMeal: meal.id).filter { rating in
-            switch rating.source {
-            case .eater(let id): return mineToManage.contains(id)
-            case .account(let id): return id == userID
-            }
-        }
-
-        var byRef = Dictionary(existing.map { ($0.source, $0) }, uniquingKeysWith: { first, _ in first })
-
-        for (ref, reaction) in verdicts {
-            if let current = byRef.removeValue(forKey: ref) {
-                guard current.reaction != reaction else { continue }
-                let updated: MealRating = try await supabase
-                    .from("meal_ratings")
-                    .update(RatingPatch(reaction: reaction.rawValue))
-                    .eq("id", value: current.id.uuidString)
-                    .select()
-                    .single()
-                    .execute()
-                    .value
-                upsertLocal(rating: updated)
-            } else {
-                let created: MealRating = try await supabase
-                    .from("meal_ratings")
-                    .insert(NewRating(mealID: meal.id, source: ref, reaction: reaction))
-                    .select()
-                    .single()
-                    .execute()
-                    .value
-                upsertLocal(rating: created)
-            }
-        }
-
-        for stale in byRef.values {
-            try await supabase
-                .from("meal_ratings")
-                .delete()
-                .eq("id", value: stale.id.uuidString)
-                .execute()
-            ratings.removeAll { $0.id == stale.id }
         }
     }
 

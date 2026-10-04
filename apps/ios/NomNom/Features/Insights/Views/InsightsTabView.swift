@@ -42,7 +42,7 @@ struct InsightsTabView: View {
                     )
                 }
             }
-            .screenTitle(selectedParty?.name ?? "Insights", displayMode: .inline)
+            .screenTitle("Insights", displayMode: .inline)
             .navigationDestination(for: InsightsRoute.self) { route in
                 switch route {
                 case .dish(let dishID):
@@ -53,6 +53,7 @@ struct InsightsTabView: View {
                 await loadInsights()
             }
             .toolbar {
+                PartyNameToolbarItem()
                 ToolbarItem(placement: .topBarTrailing) {
                     if !store.myParties.isEmpty {
                         Menu {

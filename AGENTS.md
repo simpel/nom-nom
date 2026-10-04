@@ -70,8 +70,8 @@ apps/
 │   │   │   ├── Foundations/ # Axes and paint (DSAxes), preview host, camera/photo plumbing
 │   │   │   ├── Primitives/  # AppButton, AppButtonLabel, Badge, Avatar, Bar, ScoreValue,
 │   │   │   │                  SectionHeader, AppToggle, Input, TextArea
-│   │   │   ├── Layout/      # Card, DSSection, SectionCard, PageHeader, SwipeableListCard
-│   │   │   ├── Composites/  # ListRow, EmptyState, DetailHeader, ScoreCard, PhotoCard, PhotoStrip,
+│   │   │   ├── Layout/      # Card, DSSection, SectionCard, ScreenHeader, SwipeableListCard
+│   │   │   ├── Composites/  # ListRow, EmptyState, Facts, ScoreCard, PhotoCard, PhotoStrip,
 │   │   │   │                  RatingList, Timeline, RecipeCard, RecipeLinkCard, RecipeShelf,
 │   │   │   │                  PartyCard, SegmentedBar, ValueStepper, LabeledPhotoCard,
 │   │   │   │                  TasteScoreSelector, ProMark/ProCard/ProGate/ProView (Pro),
@@ -158,10 +158,12 @@ Every modal sheet is a design-system **BottomSheet** (`design-system/components/
 
 | Sheet Type | Purpose & Examples | Leading Action (`.topBarLeading`) | Trailing Action (`.topBarTrailing`) | Modifier |
 | :--- | :--- | :--- | :--- | :--- |
-| **Commit / Form / Editor** | Inputs, edits, ratings, filters (`MealEditorView`, `MealRatingSheet`, `RecipeEditSheet`, `ProfileSheetView`, `RecipeFilterSheet`) | Close (discards the draft) | Checkmark, or a spinner while saving | `.sheetCommitToolbar` |
+| **Commit / Form / Editor** | Inputs, edits, ratings, filters (`MealEditorView`, `RecipeEditSheet`, `ProfileSheetView`, `RecipeFilterSheet`) | Close (discards the draft) | Checkmark, or a spinner while saving | `.sheetCommitToolbar` |
 | **Multi-step, first step** | `CreateRecipeSheet`, `RecipeEditSheet`, `CreatePartySheet` | Close | "Next", disabled until the step is valid | `.sheetNextToolbar` |
-| **Multi-step, later step** | Pushed steps (`MealVerdictStepView`, `RecipeDetailsStepView`, `PartySetupStepView`) | System back button | Checkmark or spinner; interactive dismiss disabled while saving | `.stepCommitToolbar` |
+| **Multi-step, middle step** | Pushed one-question steps (`RateStepView` in `RateMealSheet`); optional steps pin a `secondary ghost` "Skip" to the bottom | System back button | "Next" | `.stepNextToolbar` |
+| **Multi-step, later step** | Pushed last steps (`RateReviewStep`, `MealDetailsStepView`, `RecipeDetailsStepView`, `PartySetupStepView`) | System back button | Checkmark or spinner; interactive dismiss disabled while saving | `.stepCommitToolbar` |
 | **Media / Photo Viewer** | Full-screen photos with no state changes (`MediaViewerSheet`) | Close | *None* | `.mediaViewerStyle()` |
+| **Note editor** | Full-height edit of one multi-line note, opened by `NoteField` (`NoteEditorSheet`) | Close (discards the draft) | Checkmark | `.sheetCommitToolbar` |
 | **Read-only sheet** | Explanations, insight sheets (`PartyMemberInsightSheet`) | Close | *None* | `.sheetCloseToolbar()` |
 | **Selection / Picker** | Choosing an item dismisses (`RecipePickerSheet`, `CuisinePickerSheet`) | Close | Optional primary action | `.sheetCancelToolbar()` |
 | **Management / Overview** | Modal list overview (`PartyMembersSheet`) | Close | Optional primary action (`plus`) | `.sheetOverviewToolbar` |
@@ -181,6 +183,7 @@ NavigationStack {
 .dsSheet()                                   // or .dsSheet(detents: [.medium, .large])
 
 .sheetNextToolbar(canProceed: isValid) { path.append(.details) }
+.stepNextToolbar(canProceed: isValid) { path.append(.next) }
 .stepCommitToolbar(isSaving: isSaving, canSave: canSave) { save() }
 .sheetCloseToolbar()                         // read-only sheets
 .sheetCancelToolbar()                        // pickers
@@ -207,20 +210,23 @@ To prevent duplication and ensure high consistency:
 
 2. **Centralized Screen Navigation & Headers**:
    - Always use `.screenTitle(_ title: String, displayMode: NavigationBarItem.TitleDisplayMode = .large)` for screen/sheet titles.
-   - Use `PageHeader(_:subtitle:eyebrow:align:size:actions:)` for tab-root and in-body titles, and `DetailHeader` for the hero of a detail screen (meal, recipe, party, profile).
+   - Every screen and sheet opens with **one** `ScreenHeader(_:eyebrow:date:summary:avatar:role:actions:)` (`design-system/components/ScreenHeader/README.md`). It is centred only by an `avatar`, `role: .tabRoot` (Meals, Recipes, Parties, which also carry a one-sentence summary) or `role: .moment` (sign-in, onboarding, the Pro paywall); otherwise leading. The eyebrow is ONE item (a category or the parent it lives in, never a date, product or flow name); dates go in `date:`; actions are at most two `ScreenHeaderAction`s, `md`, label only, on one row. There is no meta, facts, badges, align or size.
+   - Small facts about the subject (time, method, servings, rotation) are `Facts(_:layout:)` (`.grid` / `.strip`), `text-primary` only; wrap it in a `Card` where the screen wants a surface.
+   - **Screen anatomy** (root README): chrome · ScreenHeader · PhotoStrip · Facts · primary content · sections · destructive and account actions, `DS.Spacing.block` apart. Photos never sit above the header.
    - Text is set only with `.textStyle(_:tone:weight:italic:numeric:lines:align:)` (`serifXs…serifXl`, `sansXs…sansXl`; weight `.semibold` is opt-in). Never `.font(.system(size:))`, a font name or a raw size.
 
 3. **Compose from `Core/Components`, in layers**:
    - **Foundations**: `DSAxes` (`DSVariant` primary/secondary/destructive/pro/warning/reaction, `DSAppearance` solid/soft/outline/ghost/elevated, `DSPaint`), `NomNomPreview`, photo plumbing.
    - **Primitives**: `AppButton` / `AppButtonLabel`, `Badge` (`.verdict`, `.delta`, `.rotation`, `.pro`, `.dishSummary`, `.rank`), `Avatar`, `Bar`, `ScoreValue`, `SectionHeader`, `AppToggle`, `Input`, `TextArea`.
-   - **Layout**: `Card` (`layout: .block/.list`, `size`, `variant: .primary`, optional `action`), `DSSection` (label above content), `SectionCard` (label inside a card), `PageHeader`, `SwipeableListCard`.
-   - **Composites**: `ListRow` (the one row: leading Avatar / PhotoCard `xs` / icon / rank, meta, value, trailing Badge / ScoreValue / AppButton / Toggle, chevron, unread), `EmptyState` (`screen` / `card` / `plain` / `row`), `DetailHeader`, `ScoreCard`, `PhotoCard` (owns the photo → cuisine → no-photo fallback), `PhotoStrip`, `RatingList`, `Timeline`, `RecipeCard`, `RecipeLinkCard`, `RecipeShelf`, `PartyCard`, `SegmentedBar`, `ValueStepper`, `LabeledPhotoCard`, `TasteScoreSelector`, the Pro language (`ProMark`, `ProCard`, `ProGate`, `.proView()`: a locked Pro block in a free view is a ProCard, a Pro-only screen is a ProView behind a ProGate), and the BottomSheet parts `SheetBody` / `SheetCard` / `SheetHero`.
+   - **Layout**: `Card` (`layout: .block/.list`, `size`, `variant: .primary`, optional `action`), `DSSection` (label above content), `SectionCard` (label inside a card), `ScreenHeader`, `SwipeableListCard`.
+   - **Composites**: `ListRow` (the one row: leading Avatar / PhotoCard `xs` / icon / rank, meta, value, trailing Badge / ScoreValue / AppButton / Toggle, chevron, unread), `EmptyState` (`screen` / `card` / `plain` / `row`), `Facts`, `ScoreCard`, `PhotoCard` (owns the photo → cuisine → no-photo fallback), `PhotoStrip`, `RatingList`, `Timeline`, `RecipeCard`, `RecipeLinkCard`, `RecipeShelf`, `PartyCard`, `SegmentedBar`, `ValueStepper`, `LabeledPhotoCard`, `TasteScoreSelector`, the Pro language (`ProMark`, `ProCard`, `ProGate`, `.proView()`: a locked Pro block in a free view is a ProCard, a Pro-only screen is a ProView behind a ProGate), and the BottomSheet parts `SheetBody` / `SheetCard` / `SheetHero`.
    - Every list is `Card(layout: .list)` of `ListRow`s; never hand-draw dividers, capsules, avatars or thumbnails.
    - Each component follows its README in `design-system/components/<Name>/README.md`. Read it before changing the component.
 
 4. **A pattern the DS lacks goes in `Core/Components/Interim/` + `DS-GAPS.md`; never hand-roll it**:
    - Build the interim component only from DS primitives and tokens, start the file with a `// DS-GAP: pending design system` header, and add an entry to `Core/Design/DS-GAPS.md` (section "Open gaps").
-   - Today: `TrendChart`, `MediaViewerSheet`, `NameFieldsCard`, `PartyFormFields`, `VisibilityToggleCard`, `AccountActionsSection`, `PageMenu`, `ProLinkCard`, `PersonHeaderRow`.
+   - Today: `TrendChart`, `MediaViewerSheet`, `NameFieldsCard`, `PartyFormFields`, `VisibilityToggleCard`, `AccountActionsSection`, `PageMenu`, `ProLinkCard`, `PersonHeaderRow`, `NoteField` / `NoteEditorSheet`.
+   - **Multi-line text in a form is always `NoteField`** (a row that opens `NoteEditorSheet`, like Apple Maps' "Add a Note"); never an inline `TextArea`. Fields have no border: `soft` (borderless fill) standalone, `plain` inside a card.
 
 ---
 
@@ -299,7 +305,7 @@ Only these specific system-level APIs are exempt from `AppButton`:
 - [ ] Are repeated UI structures or modifiers extrapolated into reusable composables?
 - [ ] Is `NomNom/Domain/` kept clean of UI code and SwiftUI imports (unless raw type conformances require it)?
 - [ ] Are store methods placed in the corresponding `FoodStore+<Domain>.swift` extension?
-- [ ] Do screens use `.screenTitle(...)` and `PageHeader` / `DetailHeader` rather than ad-hoc navigation/header modifiers?
+- [ ] Does every screen and sheet open with one `ScreenHeader` (no hand-built title stacks), follow the screen anatomy order (header before photos), and use `.screenTitle(...)` for navigation titles?
 - [ ] Did you read `design-system/components/<Name>/README.md` for every component you touched or composed?
 - [ ] Does every value come from a `DS.*` token or `.textStyle(...)`, and is `scripts/ds-lint.sh` clean?
 - [ ] Is `scripts/ds-coverage.sh` clean? Is every new pattern with no DS equivalent in `DS-GAPS.md`, and did you name it to the user?

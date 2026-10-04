@@ -143,8 +143,8 @@ struct ScoreCard: View {
 }
 
 /// Hero delta line (bundle.css `__delta`): Badge `md`, then the sentence and its
-/// reference, `spacing-2.5` apart.
-private struct ScoreCardDeltaLine: View {
+/// reference, `spacing-2.5` apart. Also used by Meal Detail's merged score card.
+struct ScoreCardDeltaLine: View {
     let delta: Int
     let text: String?
     let reference: String?

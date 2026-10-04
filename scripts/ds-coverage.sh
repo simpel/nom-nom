@@ -25,7 +25,7 @@ COMPONENTS=()
 while IFS= read -r d; do COMPONENTS+=("$(basename "$d")"); done < <(find "$DS_DIR" -mindepth 1 -maxdepth 1 -type d | sort)
 
 # The Swift calls that count as "composes the design system" in a feature view.
-DS_CALLS="AppButton|AppButtonLabel|Card|SectionCard|DSSection|ListRow|EmptyState|Badge|Avatar|Bar|ScoreValue|SectionHeader|AppToggle|Input|TextArea|PageHeader|DetailHeader|ScoreCard|PhotoCard|PhotoStrip|PhotoStripEditor|RatingList|Timeline|RecipeCard|RecipeLinkCard|RecipeShelf|PartyCard|SegmentedBar|ValueStepper|LabeledPhotoCard|TasteScoreSelector|SheetBody|SheetCard|SheetHero|SwipeableListCard|TrendChart|MediaViewerSheet|NameFieldsCard|PartyFormFields|VisibilityToggleCard|AccountActionsSection"
+DS_CALLS="AppButton|AppButtonLabel|Card|SectionCard|DSSection|ListRow|EmptyState|Badge|Avatar|Bar|ScoreValue|SectionHeader|AppToggle|Input|TextArea|ScreenHeader|Facts|ScoreCard|PhotoCard|PhotoStrip|PhotoStripEditor|RatingList|Timeline|RecipeCard|RecipeLinkCard|RecipeShelf|PartyCard|SegmentedBar|ValueStepper|LabeledPhotoCard|TasteScoreSelector|SheetBody|SheetCard|SheetHero|SwipeableListCard|TrendChart|MediaViewerSheet|NameFieldsCard|PartyFormFields|VisibilityToggleCard|AccountActionsSection|ChoiceTile|TagToggle"
 
 in_gaps() { grep -qw "$1" "$GAPS"; }
 

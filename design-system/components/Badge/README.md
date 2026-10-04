@@ -30,14 +30,14 @@ A badge is a **label the thing carries**: it could change, and you would want to
 
 | | |
 | --- | --- |
-| badge | a verdict (Great), a rotation goal (Staple), Pro, Archived, New, a signed change (+4) |
-| not a badge | a duration, a method, a cuisine, a servings count, a date, a rating count — these are a `sans-sm` `text-tertiary` line joined with " · " |
+| badge | a verdict (Great), Pro, Archived, New, a signed change (+4) |
+| not a badge | a duration, a method, a servings count, the rotation goal — these are Facts; a cuisine is a ScreenHeader eyebrow; a date is the ScreenHeader date |
 
 Two tests, and it has to pass both: would you scan a list for it, and could it be different tomorrow? "30–60 min" fails the first; "Baking" fails both.
 
 The signed change (`deltaBadge`) stays a badge on purpose, even though it is a number: its colour is the message — `primary` up, `warning` down, `secondary` flat — and that only works in a capsule. A number whose colour means nothing belongs in text.
 
-Audited uses, all current: PhotoCard's verdict, DetailHeader's `badges`, RatingList's "New" and delta. DetailHeader's `facts` used to be badges and are now a text line; SegmentedBar's legend keys used to be reaction badges and are now a swatch and a label, because a key names a slice of a chart rather than labelling the row it sits in.
+Audited uses, all current: PhotoCard's verdict, RatingList's "New" and delta. The old header's `facts` and rotation badge are now the Facts component; SegmentedBar's legend keys used to be reaction badges and are now a swatch and a label, because a key names a slice of a chart rather than labelling the row it sits in.
 
 ## Recipes (what the old badges become)
 
@@ -46,7 +46,7 @@ Audited uses, all current: PhotoCard's verdict, DetailHeader's `badges`, RatingL
 | Metadata chip (diet, time, method) | `secondary` or `primary` · `soft` · `sm`, optional icon |
 | Fact over a photo or hero (date, duration) | `secondary` · `elevated` · icon start |
 | Nom Nom Pro | `pro` · `soft` · sparkles icon · "Pro" |
-| Rotation goal | `sm`: One & done `secondary soft`, Sometimes `primary soft`, Staple `primary solid` + repeat icon — the order reads as weight |
+| Rotation goal | not a badge: a Facts item ("Rotation · Staple"), plain `text-primary` |
 | Verdict | `reaction` + `reactionForScore(score)` · label = the word only (≥85 Amazing, ≥70 Great, ≥50 Good, ≥30 Meh, ≥15 Bad, else Can't eat); on a photo `elevated sm` (RecipeCard) |
 | Score | the numeral sits in type (ScoreCard, RatingList, Timeline), not in a badge |
 | Dish summary | ≥60% Great/Amazing and no negatives: effort 0–15 → "Quick win" (`primary`, bolt) · staple → "Household favorite" (`reaction` amazing, star) · over 60 → "Showstopper" (`primary`, sparkles) · else "Crowd pleaser" (`reaction` great, thumbs-up). Otherwise staple → "Household staple", 0–15 → "Fast & easy", over 60 → "Weekend project" (`primary`) · only negatives → "Needs revision" (`secondary`, wrench) · any ratings → "Solid dish" (`primary`) |

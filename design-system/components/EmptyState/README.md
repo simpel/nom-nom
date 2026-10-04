@@ -22,7 +22,7 @@ Replaces every `ContentUnavailableView`, the "No … yet" cards and the arc empt
 | `plain` | inside a Card or sheet that already draws the surface | `serif-sm`, left | `primary soft sm`, left |
 | `row` | one line inside `Card layout="list"` | `sans-sm tertiary`, left, no message | `sm`, pushed right |
 
-Title and message use the same type steps as the card titles and body copy beside them, so an empty block reads at the same weight as a full one. `screen` matches PageHeader `size="sm"`.
+Title and message use the same type steps as the card titles and body copy beside them, so an empty block reads at the same weight as a full one.
 
 ## Every empty state in the app
 

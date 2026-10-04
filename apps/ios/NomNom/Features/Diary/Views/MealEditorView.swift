@@ -17,7 +17,6 @@ struct MealEditorView: View {
     @State private var notes = ""
     @State private var effort: EffortLevel?
     @State private var repeatDesire: RotationGoal?
-    @State private var verdicts: [RaterRef: Reaction] = [:]
     @State private var selectedParties: Set<UUID> = []
 
     @State private var photosDraft = FoodStore.PhotosDraft()
@@ -28,6 +27,7 @@ struct MealEditorView: View {
 
     @State private var showDishPickerSheet = false
     @State private var showRecipeEditorSheet = false
+    @State private var showCreateRecipeSheet = false
     @State private var navigateToDetailsStep = false
 
     private var meal: Meal? { mealID.flatMap { store.meal($0) } }
@@ -54,7 +54,6 @@ struct MealEditorView: View {
                                    photos: photosDraft,
                                    effort: effort,
                                    repeatDesire: repeatDesire,
-                                   verdicts: verdicts,
                                    servedParties: selectedParties,
                                    recipe: recipeDraft)
     }
@@ -70,7 +69,6 @@ struct MealEditorView: View {
                 notes = updated.notes
                 effort = updated.effort
                 repeatDesire = updated.repeatDesire
-                verdicts = updated.verdicts
             }
         )
     }
@@ -84,6 +82,7 @@ struct MealEditorView: View {
                         existingMatchedRecipe: existingMatchedDish,
                         isExistingRecipe: isExistingDish,
                         onPickRecipe: { showDishPickerSheet = true },
+                        onCreateRecipe: { showCreateRecipeSheet = true },
                         onEditRecipe: { showRecipeEditorSheet = true },
                         onRemoveRecipe: removeSelectedDish
                     )
@@ -103,6 +102,13 @@ struct MealEditorView: View {
             .sheet(isPresented: $showRecipeEditorSheet) {
                 DishRecipeEditSheet(dishName: $title,
                                     recipeDraft: $recipeDraft)
+            }
+            .sheet(isPresented: $showCreateRecipeSheet) {
+                CreateRecipeSheet(initialName: title.trimmedName) { recipe in
+                    title = recipe.name
+                    linkedDishID = recipe.id
+                    loadRecipe(from: recipe)
+                }
             }
             .sheet(isPresented: $showDishPickerSheet) {
                 RecipePickerSheet(
@@ -199,20 +205,6 @@ struct MealEditorView: View {
         if let dish {
             loadRecipe(from: dish)
         }
-
-        let mine = Set(store.myEaters.map(\.id))
-        var loaded: [RaterRef: Reaction] = [:]
-        for rating in store.ratings(forMeal: meal.id) {
-            switch rating.source {
-            case .eater(let id) where mine.contains(id):
-                loaded[.eater(id)] = rating.reaction
-            case .account(let id) where id == store.userID:
-                loaded[.account(id)] = rating.reaction
-            default:
-                continue
-            }
-        }
-        verdicts = loaded
     }
 }
 

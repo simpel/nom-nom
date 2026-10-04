@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// Section displaying meals waiting for the current user's rating: one
+/// Section displaying meals waiting for the current user's rating (own and invited): one
 /// PendingRatingRow per meal in a list Card under a "Waiting for your rating" header
 /// with the count in `primary-text`.
 struct MealsToRateSection: View {

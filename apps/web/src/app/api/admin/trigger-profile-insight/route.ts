@@ -76,22 +76,12 @@ export async function POST(request: Request) {
         const { data: ratedMeals } = await adminSupabase
             .from('meal_ratings')
             .select(`
-                reaction,
+                score,
                 meals ( eaten_on, dishes ( name, cuisine, tags, ingredients ) )
             `)
             .eq('rater_id', profile_id)
             .order('created_at', { ascending: false })
             .limit(40);
-
-        const normalizeReaction = (react: number | null) => {
-            if (react === -1) return 0.0;
-            if (react === 1) return 0.2;
-            if (react === 2) return 0.4;
-            if (react === 3) return 0.6;
-            if (react === 4) return 0.8;
-            if (react === 5) return 1.0;
-            return null;
-        };
 
         const recentMeals = [
             ...(loggedMeals || []).map((row: any) => ({
@@ -106,7 +96,7 @@ export async function POST(request: Request) {
                 cuisine: row.meals?.dishes?.cuisine,
                 tags: row.meals?.dishes?.tags,
                 ingredients: row.meals?.dishes?.ingredients?.map((i: any) => i.ingredient),
-                user_score: normalizeReaction(row.reaction)
+                user_score: row.score == null ? null : Number(row.score)
             }))
         ].filter(m => m.name != null);
 

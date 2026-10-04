@@ -21,7 +21,7 @@ struct PartyInviteLinkCard: View {
                 ListRow("Invite code", value: code)
             }
 
-            // PageHeader / EmptyState action rows sit `spacing-2` apart.
+            // ScreenHeader / EmptyState action rows sit `spacing-2` apart.
             HStack(spacing: DS.Spacing.s2) {
                 ShareLink(
                     item: party.webInviteURL,

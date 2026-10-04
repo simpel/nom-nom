@@ -5,7 +5,6 @@ struct RootTabView: View {
     @Environment(NotificationManager.self) private var notifications
     @State private var navigator = AppNavigator()
     @State private var didApplyLaunchArguments = false
-    @State private var activeRateMealID: UUID?
     @State private var activeViewMealID: UUID?
     @State private var activePartyID: UUID?
     @State private var showingInbox = false
@@ -20,12 +19,6 @@ struct RootTabView: View {
         }
         // README "Colour": `primary` is "the main action, active tab, focused field".
         .tint(DS.Color.primary)
-        .sheet(item: Binding(
-            get: { activeRateMealID.map { RateMealSheetTarget(id: $0) } },
-            set: { activeRateMealID = $0?.id }
-        )) { target in
-            MealRatingSheet(mealID: target.id)
-        }
         .sheet(item: Binding(
             get: { activeViewMealID.map { RateMealSheetTarget(id: $0) } },
             set: { activeViewMealID = $0?.id }
@@ -51,12 +44,6 @@ struct RootTabView: View {
                 notifications.pendingURL = nil
             }
         }
-        .onChange(of: notifications.pendingRateMealID) { _, newID in
-            if let newID {
-                activeRateMealID = newID
-                notifications.pendingRateMealID = nil
-            }
-        }
         .onChange(of: notifications.pendingViewMealID) { _, newID in
             if let newID {
                 activeViewMealID = newID
@@ -72,10 +59,6 @@ struct RootTabView: View {
             if let pending = notifications.pendingURL {
                 handleIncomingURL(pending)
                 notifications.pendingURL = nil
-            }
-            if let pending = notifications.pendingRateMealID {
-                activeRateMealID = pending
-                notifications.pendingRateMealID = nil
             }
             if let pending = notifications.pendingViewMealID {
                 activeViewMealID = pending
@@ -172,7 +155,6 @@ struct RootTabView: View {
         switch link {
         case .party(let id): activePartyID = id
         case .partyInvite(let id): openInvite(toParty: id)
-        case .rateMeal(let id): activeRateMealID = id
         case .viewMeal(let id): activeViewMealID = id
         }
     }

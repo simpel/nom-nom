@@ -9,13 +9,16 @@ import SwiftUI
 /// at `spacing-28`, and "Unlock with Pro" (`pro solid lg`, full width, sparkles). Locked
 /// never means empty. The blurred copy is hidden from VoiceOver.
 ///
+/// `teaser` is optional: a screen whose title already says what the block holds can
+/// leave it out (DS-GAPS B, "ProCard without a teaser").
+///
 /// `mark: false` drops the ProMark; use it inside a ProView, which is already marked.
 /// A RecipeShelf inside runs edge to edge: pass `contentBleed: DS.Spacing.s5` and give the
 /// shelf the same `bleed`.
 struct ProCard<Content: View>: View {
     let title: String
     var sub: String?
-    var teaser: String
+    var teaser: String?
     var mark: Bool
     var contentBleed: CGFloat
     @ViewBuilder let content: () -> Content
@@ -26,7 +29,7 @@ struct ProCard<Content: View>: View {
     init(
         _ title: String,
         sub: String? = nil,
-        teaser: String,
+        teaser: String? = nil,
         mark: Bool = true,
         contentBleed: CGFloat = 0,
         @ViewBuilder content: @escaping () -> Content
@@ -67,7 +70,9 @@ struct ProCard<Content: View>: View {
 
     private var locked: some View {
         VStack(alignment: .leading, spacing: DS.Spacing.s4) {
-            Text(teaser).textStyle(.sansMd, tone: .secondary)
+            if let teaser {
+                Text(teaser).textStyle(.sansMd, tone: .secondary)
+            }
             content()
                 .padding(.horizontal, -contentBleed)
                 .frame(maxHeight: DS.Spacing.s28, alignment: .top)

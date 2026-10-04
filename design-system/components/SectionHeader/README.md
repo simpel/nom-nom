@@ -1,6 +1,6 @@
 The one small label, the same wherever it sits: a `sans-xs` title in `text-tertiary`, uppercase by default, optionally with an icon before it and a figure on the right. Both the title and the figure are Text — the component sets no type of its own, only the casing, the tracking and the layout. It is both the heading above a list and the eyebrow inside a card.
 
-**It is a Text, an optional glyph and an optional Text — nothing else.** It draws no ground, no border and no card. It also reserves no space around itself: both the surface and the spacing belong to whatever places it — a Section, a Card, a SectionCard, a DetailHeader.
+**It is a Text, an optional glyph and an optional Text — nothing else.** It draws no ground, no border and no card. It also reserves no space around itself: both the surface and the spacing belong to whatever places it — a Section, a Card, a SectionCard, a ScreenHeader.
 
 **Built from:** Text (the title and the figure), Icon.
 
@@ -46,7 +46,7 @@ Plus `title`, an optional `icon` before it, and `as` (the title element — `h2`
 
 ## Where each appears
 - Above content, via Section: RatingList ("Who rated · 5 of 6"), Timeline ("This recipe over time · 3 times"), SegmentedBar, any list.
-- Inside a surface, as `span`: DetailHeader ("ITALIAN"), RecipeCard (category, "by Anna" trailing), RecipeLinkCard ("RECIPE"), ScoreCard title (with icon; `primary` when featured), SectionCard ("Joel's note", `uppercase: false`), PageHeader.
+- Inside a surface, as `span`: ScreenHeader's eyebrow ("ITALIAN"), Facts labels ("SERVES"), RecipeCard (category, "by Anna" trailing), RecipeLinkCard ("RECIPE"), ScoreCard title (with icon; `primary` when featured), SectionCard ("Joel's note", `uppercase: false`).
 
 ## Use
 `NomNom.SectionHeader` — props are `SectionHeaderProps` in `components/index.d.ts`. Markup: `.nn-section-header` (+ `data-case="normal"`, `data-variant`; `.nn-section__head` when a Section places it) > `.nn-text.__title` (`.nn-icon` + text), `.nn-text.__trailing`.

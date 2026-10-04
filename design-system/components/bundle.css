@@ -294,15 +294,6 @@
 .nn-photo-strip__empty .nn-icon { font-size: var(--text-xl); color: var(--primary-text); }
 .nn-photo-strip__empty-text { display: flex; flex-direction: column; }
 
-/* ---------- DetailHeader: avatar, eyebrow or meta, serif title, summary, facts, actions */
-.nn-detail-header { display: flex; flex-direction: column; align-items: flex-start; gap: var(--spacing-2); padding: 0 var(--spacing-2); }
-.nn-detail-header[data-align="center"] { align-items: center; text-align: center; }
-.nn-detail-header > .nn-avatar { margin-bottom: var(--spacing-2); }
-/* Facts are a sentence of metadata, not chips. Badges are for the few things that are a status. */
-.nn-detail-header__badges { display: flex; flex-wrap: wrap; gap: var(--spacing-1\.5); }
-.nn-detail-header[data-align="center"] .nn-detail-header__badges { justify-content: center; }
-.nn-detail-header__actions { align-self: stretch; display: flex; gap: var(--spacing-2\.5); margin-top: var(--spacing-2\.5); }
-.nn-detail-header__actions > .nn-button { flex: 1 1 0; min-width: 0; width: auto; }
 
 /* ---------- ScoreCard: Card + SectionHeader + ScoreValue + delta Badge + Progress */
 .nn-score-card { --nn-gap: var(--spacing-3\.5); }
@@ -448,12 +439,23 @@
 .nn-stepper__value { min-width: var(--spacing-10); text-align: center; }
 .nn-stepper[data-size="sm"] .nn-stepper__value { min-width: var(--spacing-8); }
 
-/* ---------- PageHeader */
-.nn-pagehead { display: flex; flex-direction: column; gap: var(--spacing-2); }
-.nn-pagehead[data-align="center"] { align-items: center; text-align: center; }
-.nn-pagehead > p { max-width: var(--container-sm); }
-.nn-pagehead__actions { display: flex; flex-wrap: wrap; gap: var(--spacing-2); width: 100%; margin-top: var(--spacing-4); }
-.nn-pagehead[data-align="center"] .nn-pagehead__actions { flex-direction: column; max-width: var(--container-sm); }
+/* ---------- ScreenHeader: avatar, eyebrow, serif title, date, one sentence, actions */
+.nn-screen-header { display: flex; flex-direction: column; align-items: flex-start; gap: var(--spacing-2); }
+.nn-screen-header[data-align="center"] { align-items: center; text-align: center; }
+.nn-screen-header > .nn-avatar { margin-bottom: var(--spacing-2); }
+.nn-screen-header > h1, .nn-screen-header > p { margin: 0; }
+.nn-screen-header__summary { max-width: var(--container-sm); }
+/* Actions hug their label: one row, never wrapped, never stretched. */
+.nn-screen-header__actions { display: flex; flex-wrap: nowrap; gap: var(--spacing-2); margin-top: var(--spacing-2); }
+
+/* ---------- Facts: label over value, no surface */
+.nn-facts { margin: 0; }
+.nn-facts[data-layout="grid"] { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--spacing-5) var(--spacing-4); }
+.nn-facts[data-layout="strip"] { display: flex; gap: var(--spacing-4); overflow-x: auto; }
+.nn-facts[data-layout="strip"] > .nn-facts__item { flex: none; }
+.nn-facts[data-layout="strip"] > .nn-facts__item + .nn-facts__item { border-left: 1px solid var(--line); padding-left: var(--spacing-4); }
+.nn-facts__item { display: flex; flex-direction: column; gap: var(--spacing-1); min-width: 0; }
+.nn-facts__item > dt, .nn-facts__item > dd { margin: 0; }
 
 .nn-i-alert{--nn-i:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22%3E%3Ccircle stroke=%22black%22 stroke-width=%222%22 fill=%22none%22 cx=%2212%22 cy=%2212%22 r=%229%22/%3E%3Cpath stroke=%22black%22 stroke-width=%222%22 stroke-linecap=%22round%22 fill=%22none%22 d=%22M12 7.5v5.5M12 16.2v.1%22/%3E%3C/svg%3E")}
 .nn-i-minus{--nn-i:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22%3E%3Cpath stroke=%22black%22 stroke-width=%222%22 stroke-linecap=%22round%22 fill=%22none%22 d=%22M5 12h14%22/%3E%3C/svg%3E")}

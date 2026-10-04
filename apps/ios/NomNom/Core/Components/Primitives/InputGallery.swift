@@ -1,6 +1,7 @@
 import SwiftUI
 
-// Previews for Input and TextArea: every state the README lists.
+// Previews for Input, TextArea and NoteField. Forms use NoteField; TextArea is the
+// editor inside NoteEditorSheet.
 
 private struct InputGallery: View {
     @State private var name = "Carbonara"
@@ -18,11 +19,14 @@ private struct InputGallery: View {
                 Input("Household", label: "Household", text: $name, readOnly: true)
                 Input("Disabled", text: $name, disabled: true)
                 Card(layout: .list) { Input(label: "First name", placeholder: "Anna", text: $empty, appearance: .plain) }
-                TextArea("Describe your dinner party\u{2026}", text: $empty)
+                SectionCard("Notes") {
+                    NoteField("Add any adjustments\u{2026}", text: $empty, title: "Notes")
+                }
+                SectionCard("Notes") {
+                    NoteField("Add any adjustments\u{2026}", text: $notes, title: "Notes", maxLength: 40)
+                }
                 TextArea("Add any adjustments\u{2026}", label: "Notes", text: $notes, maxLength: 40)
                 TextArea("Error", text: $notes, error: "Keep it under a paragraph.")
-                TextArea("Read-only", text: $notes, readOnly: true)
-                TextArea("Disabled", text: $notes, disabled: true)
             }
             .padding(DS.Spacing.gutter)
         }

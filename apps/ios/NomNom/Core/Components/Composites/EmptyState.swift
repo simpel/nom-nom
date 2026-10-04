@@ -12,7 +12,7 @@ enum EmptyStateLayout: Equatable {
     case row
 }
 
-/// An AppButton an EmptyState (or PageHeader) builds. `variant` overrides the role the
+/// An AppButton an EmptyState builds. `variant` overrides the role the
 /// layout picks: `.pro` for an upgrade, `.secondary` to soften.
 struct EmptyStateAction {
     let label: String

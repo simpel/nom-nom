@@ -146,6 +146,35 @@ export async function backfillHealthScoresAction() {
   return { success: true, updated: data.updated ?? 0, failed: data.failed ?? 0, message: data.message }
 }
 
+export async function linkTaxonomyAction() {
+  const host = (await headers()).get('host') || 'localhost:3000'
+  const protocol = host.includes('localhost') ? 'http' : 'https'
+  const baseUrl = `${protocol}://${host}`
+
+  const cookieHeader = (await headers()).get('cookie')
+
+  const res = await fetch(`${baseUrl}/api/admin/generate-health-score`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      ...(cookieHeader ? { cookie: cookieHeader } : {})
+    },
+    body: JSON.stringify({ mode: 'missing_taxonomy' })
+  })
+
+  if (!res.ok) {
+    const errorData = await res.text().catch(() => '')
+    throw new Error(`Failed to link taxonomy: ${errorData}`)
+  }
+
+  const data = await res.json().catch(() => ({}))
+
+  revalidatePath('/admin/recipes')
+  revalidatePath('/admin/rating-model', 'layout')
+
+  return { success: true, updated: data.updated ?? 0, failed: data.failed ?? 0, message: data.message }
+}
+
 export async function generateRecipeHealthScoreAction(recipeId: string) {
   const host = (await headers()).get('host') || 'localhost:3000'
   const protocol = host.includes('localhost') ? 'http' : 'https'

@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// Main Tab — Dinner Parties ("Nom Nom iOS" canvas): the PageHeader with "New party",
+/// Main Tab — Dinner Parties ("Nom Nom iOS" canvas): the ScreenHeader with "New party",
 /// pending invitations, "Your parties" and a "Find parties" row leading to followed
 /// and public parties, `spacing-7` apart.
 struct DinnerPartiesView: View {
@@ -15,10 +15,12 @@ struct DinnerPartiesView: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: DS.Spacing.block) {
                     if !isSheet {
-                        HStack(alignment: .bottom, spacing: DS.Spacing.s3) {
-                            PageHeader("Parties", eyebrow: store.currentParty?.name)
-                            AppButton("New party", icon: "plus") { showingCreateSheet = true }
-                        }
+                        ScreenHeader(
+                            "Your dinner parties",
+                            summary: "The people you cook for and eat with.",
+                            role: .tabRoot,
+                            actions: [ScreenHeaderAction(title: "New party") { showingCreateSheet = true }]
+                        )
                     }
 
                     PendingPartyInvitesSection()

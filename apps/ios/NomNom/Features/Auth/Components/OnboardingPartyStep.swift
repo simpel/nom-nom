@@ -6,7 +6,7 @@ enum OnboardingPartyChoice {
     case join
 }
 
-/// Onboarding step that puts every account in a dinner party: a centred PageHeader,
+/// Onboarding step that puts every account in a dinner party: a centred ScreenHeader,
 /// then the party name (start one) or the invite code (join one), and a `secondary
 /// ghost` AppButton to switch between the two.
 struct OnboardingPartyStep: View {
@@ -19,20 +19,20 @@ struct OnboardingPartyStep: View {
         VStack(spacing: DS.Spacing.block) {
             switch choice {
             case .create:
-                PageHeader(
+                ScreenHeader(
                     "Start your dinner party",
-                    subtitle: "The people you cook for and eat with. You can invite them once you're in.",
-                    align: .center
+                    summary: "The people you cook for and eat with. You can invite them once you're in.",
+                    role: .moment
                 )
                 Input(label: "Party name", placeholder: "The Friday Feast Club", text: $partyName)
                 AppButton("I have an invite", variant: .secondary, appearance: .ghost) {
                     withAnimation(DS.Motion.layout) { choice = .join }
                 }
             case .join:
-                PageHeader(
+                ScreenHeader(
                     "Join your dinner party",
-                    subtitle: "Paste the invite code or link someone sent you.",
-                    align: .center
+                    summary: "Paste the invite code or link someone sent you.",
+                    role: .moment
                 )
                 Input(
                     label: "Invite code",

@@ -25,14 +25,14 @@ extension FoodStore {
         let raterRatings = ratings(for: rater)
         guard raterRatings.count >= minAffinitySampleSize else { return [] }
 
-        let overallAverage = raterRatings.map(\.reaction.score).reduce(0, +) / Double(raterRatings.count)
+        let overallAverage = raterRatings.map(\.score).reduce(0, +) / Double(raterRatings.count)
 
         var scoresByKindID: [UUID: [Double]] = [:]
         for rating in raterRatings {
             guard let meal = meal(rating.mealID),
                   let recipe = recipe(meal.dishID),
                   let kindID = recipe.dishKindID else { continue }
-            scoresByKindID[kindID, default: []].append(rating.reaction.score)
+            scoresByKindID[kindID, default: []].append(rating.score)
         }
 
         return scoresByKindID.compactMap { kindID, scores in
@@ -57,14 +57,14 @@ extension FoodStore {
         let raterRatings = ratings(for: rater)
         guard raterRatings.count >= minAffinitySampleSize else { return [] }
 
-        let overallAverage = raterRatings.map(\.reaction.score).reduce(0, +) / Double(raterRatings.count)
+        let overallAverage = raterRatings.map(\.score).reduce(0, +) / Double(raterRatings.count)
 
         var scoresByMethodID: [UUID: [Double]] = [:]
         for rating in raterRatings {
             guard let meal = meal(rating.mealID),
                   let recipe = recipe(meal.dishID),
                   let methodID = recipe.cookingMethodID else { continue }
-            scoresByMethodID[methodID, default: []].append(rating.reaction.score)
+            scoresByMethodID[methodID, default: []].append(rating.score)
         }
 
         return scoresByMethodID.compactMap { methodID, scores in
@@ -89,13 +89,13 @@ extension FoodStore {
         let raterRatings = ratings(for: rater)
         guard raterRatings.count >= minAffinitySampleSize else { return [] }
 
-        let overallAverage = raterRatings.map(\.reaction.score).reduce(0, +) / Double(raterRatings.count)
+        let overallAverage = raterRatings.map(\.score).reduce(0, +) / Double(raterRatings.count)
 
         var scoresByIngredient: [String: [Double]] = [:]
         for rating in raterRatings {
             guard let meal = meal(rating.mealID), let recipe = recipe(meal.dishID) else { continue }
             for ing in canonicalIngredients(for: recipe) {
-                scoresByIngredient[ing, default: []].append(rating.reaction.score)
+                scoresByIngredient[ing, default: []].append(rating.score)
             }
         }
 
@@ -119,7 +119,7 @@ extension FoodStore {
         let raterRatings = ratings(for: rater)
         guard raterRatings.count >= minAffinitySampleSize else { return [] }
 
-        let overallAverage = raterRatings.map(\.reaction.score).reduce(0, +) / Double(raterRatings.count)
+        let overallAverage = raterRatings.map(\.score).reduce(0, +) / Double(raterRatings.count)
 
         var scoresByCuisine: [String: [Double]] = [:]
         for rating in raterRatings {
@@ -127,7 +127,7 @@ extension FoodStore {
                   let recipe = recipe(meal.dishID),
                   let cuisine = recipe.cuisine, !cuisine.isEmpty else { continue }
             for part in Cuisine.parseMultiple(from: cuisine) {
-                scoresByCuisine[part.lowercased(), default: []].append(rating.reaction.score)
+                scoresByCuisine[part.lowercased(), default: []].append(rating.score)
             }
         }
 
@@ -187,13 +187,13 @@ extension FoodStore {
         if let rating = rating(for: rater, on: meal.id) {
             let raterRatings = ratings(for: rater)
             if raterRatings.count >= 2 {
-                let overallAvg = raterRatings.map(\.reaction.score).reduce(0, +) / Double(raterRatings.count)
-                let delta = rating.reaction.score - overallAvg
+                let overallAvg = raterRatings.map(\.score).reduce(0, +) / Double(raterRatings.count)
+                let delta = rating.score - overallAvg
                 if abs(delta) >= minAffinityDelta {
                     let baselineAffinity = RaterTagAffinity(
                         kind: .baseline,
                         tag: "baseline",
-                        raterAverage: rating.reaction.score,
+                        raterAverage: rating.score,
                         raterOverallAverage: overallAvg,
                         sampleCount: raterRatings.count
                     )

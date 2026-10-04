@@ -65,7 +65,7 @@ struct MealDetailView: View {
             Text(deleteError ?? "")
         }
         .sheet(isPresented: $showEditor) { MealEditorView(mealID: mealID) }
-        .sheet(isPresented: $showRatingSheet) { MealRatingSheet(mealID: mealID) }
+        .sheet(isPresented: $showRatingSheet) { RateMealSheet(mealID: mealID) }
         .sheet(isPresented: $showScoreSheet) {
             if let meal { MealScoreBreakdownSheet(meal: meal) }
         }
@@ -146,7 +146,7 @@ struct MealDetailView: View {
                     selectedRecipePhotoIndex = index - mealPhotoCount
                 }
             },
-            onRate: { showRatingSheet = true },
+            onRate: store.canRate(meal: meal) ? { showRatingSheet = true } : nil,
             onOpenScore: { showScoreSheet = true },
             onOpenRecipe: { showRecipeSheet = true },
             onOpenParty: { selectedPartyForSheet = $0 },

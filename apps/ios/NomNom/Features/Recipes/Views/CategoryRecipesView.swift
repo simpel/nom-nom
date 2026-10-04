@@ -1,6 +1,7 @@
 import SwiftUI
 
-/// Category drill-down screen displaying recipes in an ultra-minimalist 2-column grid.
+/// Category drill-down: a ScreenHeader with the category photo as its avatar and "Add
+/// recipe" as the one action, then the recipes in a two-column grid.
 struct CategoryRecipesView: View {
     let categoryName: String
     let displayName: String
@@ -55,9 +56,8 @@ struct CategoryRecipesView: View {
     var body: some View {
         Group {
             if rawRecipes.isEmpty {
-                VStack(spacing: DS.Spacing.s4) {
-                    heroCover(count: 0)
-                        .padding(.top, DS.Spacing.s3)
+                VStack(spacing: DS.Spacing.block) {
+                    header.padding(.top, DS.Spacing.s5)
 
                     EmptyState(
                         "No \(displayName) recipes yet",
@@ -68,9 +68,8 @@ struct CategoryRecipesView: View {
                     Spacer(minLength: 0)
                 }
             } else if displayedRecipes.isEmpty {
-                VStack(spacing: DS.Spacing.s4) {
-                    heroCover(count: rawRecipes.count)
-                        .padding(.top, DS.Spacing.s3)
+                VStack(spacing: DS.Spacing.block) {
+                    header.padding(.top, DS.Spacing.s5)
 
                     // README case "Filters found nothing".
                     EmptyState(
@@ -86,49 +85,27 @@ struct CategoryRecipesView: View {
             } else {
                 ScrollView {
                     VStack(alignment: .leading, spacing: DS.Spacing.block) {
-                        heroCover(count: rawRecipes.count)
+                        header
                         MinimalRecipeGrid(recipes: displayedRecipes, title: "Recipes", onSelect: onSelectRecipe)
                     }
-                    .padding(.top, DS.Spacing.s3)
+                    .padding(.top, DS.Spacing.s5)
                     .padding(.bottom, DS.Spacing.s11)
                 }
             }
         }
         .background(DS.Color.bg)
-        .screenTitle(displayName)
+        .screenTitle("", displayMode: .inline)
         .toolbar {
             // Navigation toolbars use system buttons (AppButton README "Rules").
-            ToolbarItemGroup(placement: .topBarTrailing) {
-                Button("Add recipe", systemImage: "plus") {
-                    showingCreateSheet = true
-                }
-
-                if !rawRecipes.isEmpty {
+            if !rawRecipes.isEmpty {
+                ToolbarItem(placement: .topBarTrailing) {
                     RecipeFilterToolbarButton(isFiltered: !filterCriteria.isDefault) {
                         showingFilterSheet = true
                     }
                 }
-
-                if isCustomCategory, categoryRecord != nil {
-                    Menu {
-                        Button {
-                            if let record = categoryRecord {
-                                newCategoryName = record.name
-                                showingRenameAlert = true
-                            }
-                        } label: {
-                            Label("Rename category", systemImage: "pencil")
-                        }
-
-                        Button(role: .destructive) {
-                            showingDeleteConfirm = true
-                        } label: {
-                            Label("Delete category", systemImage: "trash")
-                        }
-                    } label: {
-                        Label("Category options", systemImage: "ellipsis.circle")
-                    }
-                }
+            }
+            ToolbarItem(placement: .topBarTrailing) {
+                PageMenu { categoryMenu }
             }
         }
         .alert("Rename category", isPresented: $showingRenameAlert) {
@@ -171,16 +148,30 @@ struct CategoryRecipesView: View {
         }
     }
 
-    /// The category's cover: a LabeledPhotoCard `lg` `landscape` across the gutter
-    /// (LabeledPhotoCard README: "Replaces … CategoryHeroCoverCard"; see DS-GAPS.md).
-    private func heroCover(count: Int) -> some View {
-        LabeledPhotoCard(
-            .category(currentCategoryItem),
-            label: displayName,
-            meta: CategoryItem.recipeCountText(count),
-            size: .lg,
-            format: .landscape,
-            fillsWidth: true
+    /// The page menu's category group: Rename and Delete, for custom categories only.
+    @ViewBuilder
+    private var categoryMenu: some View {
+        if isCustomCategory, let record = categoryRecord {
+            Section {
+                Button("Rename category", systemImage: "pencil") {
+                    newCategoryName = record.name
+                    showingRenameAlert = true
+                }
+                Button("Delete category", systemImage: "trash", role: .destructive) {
+                    showingDeleteConfirm = true
+                }
+            }
+        }
+    }
+
+    /// The screen's one header: the category photo as the `xl` avatar, "Add recipe" as the action.
+    private var header: some View {
+        ScreenHeader(
+            displayName,
+            eyebrow: "Recipes",
+            avatar: Avatar(category: currentCategoryItem, size: .xl, decorative: true),
+            // An empty category's EmptyState already carries "Add recipe".
+            actions: rawRecipes.isEmpty ? [] : [ScreenHeaderAction(title: "Add recipe") { showingCreateSheet = true }]
         )
         .padding(.horizontal, DS.Spacing.gutter)
     }

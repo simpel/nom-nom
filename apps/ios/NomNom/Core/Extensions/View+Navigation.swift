@@ -15,29 +15,47 @@ extension View {
             .navigationBarTitleDisplayMode(displayMode)
     }
 
-    /// Standard top bar for the root tabs (Meals, Parties, Recipes): no title (the body
-    /// carries the PageHeader / DetailHeader) and the `PageMenu` on the trailing side.
-    /// `addAccessibilityLabel` + `onAdd` put an icon-only "+" before the menu (Recipes).
-    func mainTabToolbar(
-        addAccessibilityLabel: String? = nil,
-        onAdd: (() -> Void)? = nil
-    ) -> some View {
+    /// Standard top bar for the root tabs (Meals, Parties, Recipes): no title and no party
+    /// name (the body's ScreenHeader names the party), the `PageMenu` on the trailing side.
+    func mainTabToolbar() -> some View {
+        mainTabToolbar { EmptyView() }
+    }
+
+    /// `mainTabToolbar()` with the tab's own actions as the PageMenu's first group
+    /// (Recipes: "New recipe").
+    func mainTabToolbar<Context: View>(@ViewBuilder menu: @escaping () -> Context) -> some View {
         self
             .navigationTitle("")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                if let onAdd {
-                    ToolbarItem(placement: .topBarTrailing) {
-                        Button(action: onAdd) {
-                            Image(systemName: "plus")
-                                .fontWeight(DS.TextStyle.Weight.semibold.fontWeight)
-                        }
-                        .accessibilityLabel(addAccessibilityLabel ?? "Add")
-                    }
-                }
                 ToolbarItem(placement: .topBarTrailing) {
-                    PageMenu()
+                    PageMenu(context: menu)
                 }
             }
+    }
+}
+
+/// The current dinner party's name, left aligned in the top bar of every root tab.
+struct PartyNameToolbarItem: ToolbarContent {
+    var body: some ToolbarContent {
+        if #available(iOS 26.0, *) {
+            ToolbarItem(placement: .topBarLeading) { PartyNameLabel() }
+                .sharedBackgroundVisibility(.hidden)
+        } else {
+            ToolbarItem(placement: .topBarLeading) { PartyNameLabel() }
+        }
+    }
+}
+
+private struct PartyNameLabel: View {
+    @Environment(FoodStore.self) private var store
+
+    var body: some View {
+        if let name = store.currentParty?.name {
+            Text(name)
+                .textStyle(.sansMd, tone: .secondary, weight: .semibold, lines: 1)
+                .fixedSize(horizontal: true, vertical: false)
+                .accessibilityAddTraits(.isHeader)
+        }
     }
 }

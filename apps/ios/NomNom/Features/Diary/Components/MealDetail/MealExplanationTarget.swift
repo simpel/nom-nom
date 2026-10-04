@@ -17,7 +17,7 @@ struct MealExplanationTarget: Identifiable {
     init(rater: RaterRef, name: String, meal: Meal, store: FoodStore) {
         self.raterName = name
         self.affinities = store.raterExplanation(for: rater, meal: meal)
-        self.score = store.rating(for: rater, on: meal.id)?.reaction.score
+        self.score = store.rating(for: rater, on: meal.id)?.score
         self.usualScore = store.usualScore(for: rater, excluding: meal.id)
         self.ratingCount = store.ratings(for: rater).count
     }

@@ -1,7 +1,7 @@
 import SwiftUI
 
 /// Key-value details for a recipe: who created it, servings and dish kind. Cuisine,
-/// cooking time and method live in the DetailHeader (eyebrow and fact Badges).
+/// cooking time and method live in the ScreenHeader eyebrow and RecipeDetailFacts.
 struct RecipeDetailInfoCard: View {
     let recipe: Recipe
 

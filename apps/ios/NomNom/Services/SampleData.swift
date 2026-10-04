@@ -117,10 +117,9 @@ enum SampleData {
         var newRatings: [NewRating] = []
         for entry in provenance {
             guard let mealID = mealLookup[pairKey(entry.dishKey, entry.day)] else { continue }
-            for (index, reaction) in entry.verdicts.enumerated() where index < kids.count {
-                newRatings.append(NewRating(mealID: mealID,
-                                            source: .eater(kids[index].id),
-                                            reaction: reaction))
+            // Only the cook's own verdict: nobody rates for anybody else (RLS).
+            if let reaction = entry.verdicts.first {
+                newRatings.append(NewRating(mealID: mealID, raterID: store.userID, reaction: reaction))
             }
         }
 

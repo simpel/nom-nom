@@ -31,6 +31,8 @@ struct Avatar: View {
     var photoPath: String?
     var text: String?
     var bucket: String
+    /// A bundled photo shown when `photoPath` has none (a cuisine's category photograph).
+    var assetName: String?
     var size: AvatarSize
     var decorative: Bool
 
@@ -47,6 +49,7 @@ struct Avatar: View {
         photoPath: String? = nil,
         text: String? = nil,
         bucket: String = SupabaseConfig.profileBucket,
+        assetName: String? = nil,
         size: AvatarSize = .md,
         decorative: Bool = false
     ) {
@@ -54,6 +57,7 @@ struct Avatar: View {
         self.photoPath = photoPath
         self.text = text
         self.bucket = bucket
+        self.assetName = assetName
         self.size = size
         self.decorative = decorative
     }
@@ -66,6 +70,13 @@ struct Avatar: View {
     init(party: Party, size: AvatarSize = .md, decorative: Bool = false) {
         self.init(name: party.name, photoPath: party.photoPath, bucket: SupabaseConfig.partyBucket,
                   size: size, decorative: decorative)
+    }
+
+    /// A category's photo: its generated cover, else the cuisine's photograph, else initials
+    /// (the same order as `PhotoCardSource.category`).
+    init(category: CategoryItem, size: AvatarSize = .md, decorative: Bool = false) {
+        self.init(name: category.displayName, photoPath: category.photoPath, bucket: SupabaseConfig.categoryBucket,
+                  assetName: category.assetImageName, size: size, decorative: decorative)
     }
 
     private var initials: String {
@@ -82,6 +93,10 @@ struct Avatar: View {
         ZStack {
             if let imageData, let image = UIImage(data: imageData) {
                 Image(uiImage: image)
+                    .resizable()
+                    .scaledToFill()
+            } else if let assetName {
+                Image(assetName)
                     .resizable()
                     .scaledToFill()
             } else {

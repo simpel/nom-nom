@@ -44,7 +44,7 @@ extension FoodStore {
         let slice = candidateRatings.prefix(limit)
         guard !slice.isEmpty else { return nil }
 
-        let scores = slice.map(\.rating.reaction.score)
+        let scores = slice.map(\.rating.score)
         let avg = scores.reduce(0.0, +) / Double(scores.count)
 
         return PartyScoreStats(score: avg, count: slice.count, reaction: Reaction(score: avg))

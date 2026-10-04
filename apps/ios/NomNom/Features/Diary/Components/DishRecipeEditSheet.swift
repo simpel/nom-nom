@@ -16,7 +16,7 @@ struct DishRecipeEditSheet: View {
             ScrollView {
                 VStack(spacing: DS.Spacing.block) {
                     SectionCard("Recipe Name") {
-                        Input("Recipe name", text: $dishName)
+                        Input("Recipe name", text: $dishName, appearance: .plain)
                             .autocorrectionDisabled()
                     }
 

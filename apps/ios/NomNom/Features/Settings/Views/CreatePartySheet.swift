@@ -21,7 +21,7 @@ struct CreatePartySheet: View {
     var body: some View {
         NavigationStack {
             SheetBody {
-                PageHeader("New dinner party", size: .sm)
+                ScreenHeader("New dinner party")
 
                 PartyFormFields(photoDraft: $photoDraft, name: $name, about: $about) {
                     if canProceed { navigateToSetup = true }

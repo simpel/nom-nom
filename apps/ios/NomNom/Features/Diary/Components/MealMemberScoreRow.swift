@@ -21,9 +21,9 @@ struct MealMemberScoreRow: View {
         ListRow(
             detail.name,
             meta: insight,
-            value: detail.reaction == nil ? "Pending" : nil,
+            value: detail.score == nil ? "Pending" : nil,
             leading: .avatar(Avatar(name: detail.name, size: .sm)),
-            trailing: detail.reaction.map { .score($0.score) },
+            trailing: detail.score.map { .score($0) },
             action: canExplain ? onTapExplain : nil
         )
     }

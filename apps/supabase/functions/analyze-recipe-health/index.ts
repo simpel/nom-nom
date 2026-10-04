@@ -115,7 +115,7 @@ Return a single JSON object matching this schema:
   "cuisine": "string or null (wide umbrella culinary tradition)"
 }
 
-Return ONLY valid JSON without conversational text or markdown code fence blocks outside JSON.\`;
+Return ONLY valid JSON without conversational text or markdown code fence blocks outside JSON.`;
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {

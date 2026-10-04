@@ -6,6 +6,7 @@ struct MealEditorRecipeSection: View {
     let existingMatchedRecipe: Recipe?
     let isExistingRecipe: Bool
     let onPickRecipe: () -> Void
+    let onCreateRecipe: () -> Void
     let onEditRecipe: () -> Void
     let onRemoveRecipe: () -> Void
 
@@ -16,6 +17,7 @@ struct MealEditorRecipeSection: View {
         existingMatchedRecipe: Recipe?,
         isExistingRecipe: Bool,
         onPickRecipe: @escaping () -> Void,
+        onCreateRecipe: @escaping () -> Void,
         onEditRecipe: @escaping () -> Void,
         onRemoveRecipe: @escaping () -> Void
     ) {
@@ -23,6 +25,7 @@ struct MealEditorRecipeSection: View {
         self.existingMatchedRecipe = existingMatchedRecipe
         self.isExistingRecipe = isExistingRecipe
         self.onPickRecipe = onPickRecipe
+        self.onCreateRecipe = onCreateRecipe
         self.onEditRecipe = onEditRecipe
         self.onRemoveRecipe = onRemoveRecipe
     }
@@ -56,8 +59,9 @@ struct MealEditorRecipeSection: View {
             if title.trimmedName.isEmpty {
                 EmptyState(
                     "No recipe yet",
-                    message: "Choose what you cooked from your recipes, or start a new one.",
-                    action: EmptyStateAction("Pick a recipe", perform: onPickRecipe)
+                    message: "Pick what you cooked from your recipes, or create a new one.",
+                    action: EmptyStateAction("Pick recipe", perform: onPickRecipe),
+                    secondaryAction: EmptyStateAction("Create recipe", variant: .secondary, perform: onCreateRecipe)
                 )
             } else {
                 selectedRecipe

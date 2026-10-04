@@ -10,7 +10,6 @@ final class NotificationManager: NSObject, UNUserNotificationCenterDelegate {
 
     var authorizationStatus: UNAuthorizationStatus = .notDetermined
     var deviceToken: String?
-    var pendingRateMealID: UUID?
     var pendingViewMealID: UUID?
     /// A URL (invite link, deep link) opened before `RootTabView` existed yet —
     /// e.g. while the sign-in screen was showing. Replayed once the tab view appears.
@@ -109,14 +108,10 @@ final class NotificationManager: NSObject, UNUserNotificationCenterDelegate {
     ) {
         let userInfo = response.notification.request.content.userInfo
         let mealIdString = (userInfo["mealId"] as? String) ?? (userInfo["meal_id"] as? String)
-        let kind = (userInfo["kind"] as? String) ?? ""
         if let mealIdString, let id = UUID(uuidString: mealIdString) {
             Task { @MainActor in
-                if kind == "rating_request" {
-                    NotificationManager.shared.pendingRateMealID = id
-                } else {
-                    NotificationManager.shared.pendingViewMealID = id
-                }
+                // Every meal notification, a rating request too, opens the meal page.
+                NotificationManager.shared.pendingViewMealID = id
             }
         }
         completionHandler()

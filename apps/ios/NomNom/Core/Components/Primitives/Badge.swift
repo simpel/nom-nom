@@ -145,9 +145,6 @@ private struct BadgeGallery: View {
                 Badge("New", size: .sm)
             }
             HStack(spacing: DS.Spacing.s2) {
-                ForEach(RotationGoal.allCases) { Badge.rotation($0) }
-            }
-            HStack(spacing: DS.Spacing.s2) {
                 ForEach(Reaction.allCases) { Badge.verdict($0, size: .sm) }
             }
             HStack(spacing: DS.Spacing.s2) {

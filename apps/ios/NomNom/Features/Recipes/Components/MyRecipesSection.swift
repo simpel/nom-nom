@@ -1,6 +1,7 @@
 import SwiftUI
 
-/// The user's own recipes as a titled two-column grid, or an EmptyState card.
+/// The user's own recipes as a two-column grid (MyRecipesView's ScreenHeader names it),
+/// or an EmptyState card.
 struct MyRecipesSection: View {
     let recipes: [Recipe]
     var onCreateRecipe: (() -> Void)? = nil
@@ -13,9 +14,8 @@ struct MyRecipesSection: View {
                 action: EmptyStateAction("Add recipe") { onCreateRecipe?() }
             )
             .padding(.horizontal, DS.Spacing.gutter)
-            .padding(.top, DS.Spacing.s5)
         } else {
-            MinimalRecipeGrid(recipes: recipes, title: "My recipes")
+            MinimalRecipeGrid(recipes: recipes)
         }
     }
 }

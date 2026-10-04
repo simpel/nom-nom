@@ -1,43 +1,27 @@
 import SwiftUI
 
-// PartyDetailView's DetailHeader, toolbar and actions.
+// PartyDetailView's ScreenHeader, toolbar and actions.
 extension PartyDetailView {
-    /// Centred, avatar `xl`, name, meta, about and the action (members: Add meal, with
+    /// Centred by its avatar: name, about and the action (members: Add meal, with
     /// inviting in the Members list; others: Follow, when public).
     func header(for party: Party) -> some View {
-        DetailHeader(
-            title: party.name,
-            align: .center,
-            meta: meta(for: party),
+        ScreenHeader(
+            party.name,
             summary: party.about,
             avatar: Avatar(party: party),
             actions: actions(for: party)
         )
     }
 
-    private func meta(for party: Party) -> String {
-        let memberCount = store.members(of: party.id).count
-        let followerCount = store.followers(of: party.id).count
-        var parts = ["\(memberCount) \(memberCount == 1 ? "member" : "members")"]
-        if followerCount > 0 {
-            parts.append("\(followerCount) \(followerCount == 1 ? "follower" : "followers")")
-        }
-        if !party.isPublic {
-            parts.append("Private")
-        }
-        return parts.joined(separator: " \u{00B7} ")
-    }
-
-    private func actions(for party: Party) -> [DetailHeaderAction] {
+    private func actions(for party: Party) -> [ScreenHeaderAction] {
         if store.isMember(of: party.id) {
-            return [DetailHeaderAction(title: "Add meal", icon: "plus") { showingCreateMeal = true }]
+            return [ScreenHeaderAction(title: "Add meal") { showingCreateMeal = true }]
         }
         guard party.isPublic else { return [] }
         let isFollowing = store.isFollowing(partyID: party.id)
         return [
-            DetailHeaderAction(
+            ScreenHeaderAction(
                 title: isFollowing ? "Following" : "Follow",
-                icon: isFollowing ? "checkmark" : nil,
                 appearance: isFollowing ? .soft : .solid,
                 isLoading: isFollowProcessing
             ) { toggleFollow(party) },

@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// "See insights" from Party detail: a DetailHeader with the party's name, then the
+/// "See insights" from Party detail: a ScreenHeader with the party's name, then the
 /// party's insights (AI summary, ratings over time, taste match, health, flavours,
 /// recipe ideas) on their own screen: a ProView behind a ProGate. PartyInsightsSection owns the
 /// gutter so its chart can run edge to edge.
@@ -24,7 +24,7 @@ struct PartyInsightsView: View {
                 VStack(alignment: .leading, spacing: DS.Spacing.block) {
                     VStack(alignment: .leading, spacing: DS.Spacing.s2) {
                         ProMark()
-                        DetailHeader(title: party.name)
+                        ScreenHeader(party.name)
                     }
                     .padding(.horizontal, DS.Spacing.gutter)
 

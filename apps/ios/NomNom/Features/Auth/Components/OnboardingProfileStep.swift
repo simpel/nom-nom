@@ -8,10 +8,10 @@ struct OnboardingProfileStep: View {
 
     var body: some View {
         VStack(spacing: DS.Spacing.s8) {
-            PageHeader(
+            ScreenHeader(
                 "Your seat at the table",
-                subtitle: "Introduce yourself so the people you eat with recognise you.",
-                align: .center
+                summary: "Introduce yourself so the people you eat with recognise you.",
+                role: .moment
             )
 
             AssetPhotosPickerSection(

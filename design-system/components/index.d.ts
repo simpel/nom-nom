@@ -307,26 +307,6 @@ export interface PhotoStripProps extends BaseProps {
   collapsed?: boolean;
 }
 
-export interface DetailHeaderProps extends BaseProps {
-  title: string;
-  /** Uppercase category above the title (recipes). */
-  eyebrow?: string;
-  /** Above the title; below it when there is an eyebrow or avatar. */
-  meta?: string;
-  summary?: string;
-  /** Rendered at size 'xl' unless given. */
-  avatar?: AvatarProps;
-  /** Badges, variant 'secondary' by default. */
-  /** Metadata about the subject — time, method, servings. Joined with " · " into one tertiary line, not chips. */
-  facts?: string[];
-  /** The few things that are a status rather than a fact: Staple, Pro, Archived. Badge props. */
-  badges?: BadgeProps[];
-  /** Up to two; rendered lg, sharing the row. One solid action per header. */
-  actions?: AppButtonProps[];
-  /** @default 'start' */
-  align?: 'start' | 'center';
-}
-
 export interface RecipeLinkCardProps extends BaseProps {
   /** Alt text for the thumbnail. */
   alt?: string;
@@ -517,20 +497,34 @@ export interface ValueStepperProps extends BaseProps {
   label?: string;
 }
 
-/** The title block of a screen with no subject: sign-in, onboarding, paywall.
- *  A fixed composition of SectionHeader, Text and AppButton — it owns the type steps, the measure and the single h1,
- *  the way Section and SectionCard own theirs. */
-export interface PageHeaderProps extends BaseProps {
-  title: unknown;
-  subtitle?: unknown;
-  /** An uppercase eyebrow above the title (a SectionHeader). */
+/** The top of every screen and sheet: avatar, eyebrow, serif title, date, one sentence and up to two actions.
+ *  Centred when there is an avatar or `role` is 'tabRoot' or 'moment'; otherwise start. No align, size, meta, facts or badges. */
+export interface ScreenHeaderProps extends BaseProps {
+  /** serif-lg, the screen's only h1. */
+  title: string;
+  /** ONE item: a category ("Italian") or the context it lives in ("The Friday Feast Club"). Never two joined, never a date, product or flow name, status, count, person or verb. */
   eyebrow?: string;
-  /** AppButtons the header builds: the first solid, the rest ghost. Full width when centred. */
-  actions?: EmptyStateAction[];
-  /** 'sm' drops the title to serif-md and the actions to md. @default 'md' */
-  size?: 'sm' | 'md';
-  align?: 'start' | 'center';
-  children?: unknown;
+  /** A date only. A Date is formatted "Sunday 4 October" (year only when it isn't this year). */
+  date?: Date | string;
+  /** One sentence, sans-md secondary, capped at container-sm. */
+  summary?: string;
+  /** Always size 'xl'. Centres the header. */
+  avatar?: AvatarProps;
+  /** The kind of screen. 'standard' = detail screens and sheets (start); 'tabRoot' = Meals, Recipes, Parties (centred, with a summary);
+   *  'moment' = a full-screen flow outside the tab bar: sign-in, onboarding, the Pro paywall (centred). @default 'standard' */
+  role?: 'standard' | 'tabRoot' | 'moment';
+  /** Up to two AppButtons, md, label only (icon, fullWidth and size are ignored). At most one solid. One row. */
+  actions?: AppButtonProps[];
+}
+
+/** One fact: a label over a value. */
+export interface Fact { label: string; value: string; }
+
+/** Small read-only facts about the subject (time, method, servings, rotation). Draws no surface. */
+export interface FactsProps extends BaseProps {
+  items: Fact[];
+  /** 'grid' = 3 equal columns, wraps, max 6 · 'strip' = one row with hairlines, scrolls sideways. @default 'grid' */
+  layout?: 'grid' | 'strip';
 }
 
 /** One glyph. `label` gives it a name; without one it is decorative and hidden. */

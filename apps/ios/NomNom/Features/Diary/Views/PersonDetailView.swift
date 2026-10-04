@@ -47,20 +47,6 @@ struct PersonDetailView: View {
         }
     }
 
-    private var subtitle: String {
-        let count = parties.count
-        let partyWord = count == 1 ? "party" : "parties"
-        switch raterRef {
-        case .account(let id):
-            if id == store.userID {
-                return count == 0 ? "Personal Profile" : "Member of \(count) \(partyWord)"
-            }
-            return count == 0 ? "Dinner party guest" : "Member of \(count) \(partyWord)"
-        case .eater:
-            return "Household member"
-        }
-    }
-
     private var createdRecipes: [Recipe] {
         guard case .account(let id) = raterRef else { return [] }
         return store.recipes.filter { $0.ownerID == id }.sorted { $0.createdAt > $1.createdAt }
@@ -95,7 +81,6 @@ struct PersonDetailView: View {
             VStack(spacing: DS.Spacing.block) {
                 ProfileHeaderCard(
                     name: personName,
-                    subtitle: subtitle,
                     photoPath: photoPath,
                     isCurrentUser: isCurrentUser,
                     onEdit: { showingEditProfile = true }

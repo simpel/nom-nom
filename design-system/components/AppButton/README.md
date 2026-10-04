@@ -42,6 +42,7 @@ Each variant supplies four role tokens — `{role}`, `{role}-soft`, `{role}-text
 - Label always semibold, sentence case; shape always `radius-full`.
 - Pressed `opacity-70` (120ms ease-out), no scale: a button never changes size on press. Focus 2px `focus-ring`, 2px offset. States are never appearances.
 - Icons only where they remove ambiguity (camera, trash, plus, back, close, forward arrow). Never emoji.
+- **In a ScreenHeader:** `md`, label only (never an icon), hugging its label; one or two on one row, never full width, never wrapped.
 - Native alerts, confirmation dialogs, swipe actions, context menus and sheet toolbars use system buttons.
 - Contrast: `on-primary` on dark-theme `primary` is 2.98:1 and `on-destructive` on `destructive` ~3.5:1 — known misses kept from the source; `destructive-text` (outline/ghost/soft) passes.
 

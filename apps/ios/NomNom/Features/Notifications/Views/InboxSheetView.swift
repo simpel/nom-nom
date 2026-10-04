@@ -1,18 +1,16 @@
 import SwiftUI
 
-/// Modal sheet displaying the in-app activity notifications inbox: a PageHeader, then
+/// Modal sheet displaying the in-app activity notifications inbox: a ScreenHeader, then
 /// "Unread" and "Read" DSSections over `Card(layout: .list)`s of NotificationRows, or a
 /// screen EmptyState when there is nothing.
 struct InboxSheetView: View {
     @Environment(FoodStore.self) private var store
 
     private enum InboxSheetDestination: Identifiable {
-        case rate(UUID)
         case viewMeal(UUID)
 
         var id: String {
             switch self {
-            case .rate(let id): return "rate-\(id)"
             case .viewMeal(let id): return "view-\(id)"
             }
         }
@@ -32,7 +30,7 @@ struct InboxSheetView: View {
                         layout: .screen
                     )
                 } else {
-                    PageHeader("Inbox", subtitle: headerSubtitle)
+                    ScreenHeader("Inbox", summary: headerSubtitle)
                     if !unreadNotifications.isEmpty {
                         notificationSection("Unread", trailing: "\(unreadNotifications.count)", items: unreadNotifications)
                     }
@@ -61,8 +59,6 @@ struct InboxSheetView: View {
             }
             .sheet(item: $activeDestination) { destination in
                 switch destination {
-                case .rate(let mealID):
-                    MealRatingSheet(mealID: mealID)
                 case .viewMeal(let mealID):
                     NavigationStack {
                         MealDetailView(mealID: mealID, showCloseButton: true)
@@ -134,11 +130,8 @@ struct InboxSheetView: View {
         }
 
         if let mealID = notification.mealID {
-            if notification.kind == .ratingRequest {
-                activeDestination = .rate(mealID)
-            } else {
-                activeDestination = .viewMeal(mealID)
-            }
+            // A rating request opens the meal too: rating happens on the meal page.
+            activeDestination = .viewMeal(mealID)
         }
     }
 }

@@ -1,7 +1,7 @@
 import SwiftUI
 import PhotosUI
 
-/// The party's photos as a PhotoStrip above its DetailHeader, cover first. Tap
+/// The party's photos as a PhotoStrip below its ScreenHeader, cover first. Tap
 /// opens the viewer. Members get PhotoStrip's Add photo tile while the party has
 /// fewer than `PhotosDraft.maxCount` photos; it asks camera or library (several
 /// picks at once) and appends them. Non-members with no photos see nothing.

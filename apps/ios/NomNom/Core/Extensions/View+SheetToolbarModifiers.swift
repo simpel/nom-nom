@@ -118,6 +118,23 @@ struct SheetNextToolbarModifier: ViewModifier {
     }
 }
 
+struct StepNextToolbarModifier: ViewModifier {
+    let title: String
+    let canProceed: Bool
+    let onNext: () -> Void
+
+    func body(content: Content) -> some View {
+        content
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button(title, action: onNext)
+                        .disabled(!canProceed)
+                        .fontWeight(.semibold)
+                }
+            }
+    }
+}
+
 struct StepCommitToolbarModifier: ViewModifier {
     let isSaving: Bool
     let canSave: Bool

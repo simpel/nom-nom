@@ -60,8 +60,7 @@ enum DevSelfCheck {
             linkedDishID: nil,
             eatenOn: .now,
             notes: "written by the self check",
-            photos: FoodStore.PhotosDraft(addedData: [swatch()]),
-            verdicts: store.activeEaters.first.map { [$0.raterRef: .amazing] } ?? [:]
+            photos: FoodStore.PhotosDraft(addedData: [swatch()])
         ))
         check("save a new meal with a photo", created, store.errorMessage ?? "")
 
@@ -79,8 +78,17 @@ enum DevSelfCheck {
             check("the photo downloads back out of the private bucket",
                   (downloaded?.count ?? 0) > 0)
         }
-        check("the verdict was recorded",
-              store.activeEaters.isEmpty || !store.ratings(forMeal: meal.id).isEmpty)
+        var answers = RatingAnswers()
+        answers.reaction = .amazing
+        answers.tags = ["bestYet"]
+        answers.again = .never
+        let rated = await store.saveMyRating(mealID: meal.id, answers: answers)
+        check("the cook rates their own meal", rated && store.myRating(forMeal: meal.id) == .amazing,
+              store.errorMessage ?? "")
+        // Amazing 1.0, not again −.05, one good tag +.02: the server scores it.
+        let myScore = store.ratings(forMeal: meal.id).first { $0.raterID == store.userID }?.score
+        check("the server scores the rating from every answer", myScore == 0.97,
+              String(describing: myScore))
 
         // 2. Invite an address that already has an account. The trigger should
         //    resolve it, which is what makes the invite visible to them at all.
@@ -91,28 +99,19 @@ enum DevSelfCheck {
         check("the invite resolved to an account", invite?.inviteeID != nil,
               String(describing: invite?.inviteeEmail))
 
-        // 3. Change a verdict, which is the update-not-insert branch of the diff.
-        if let eater = store.activeEaters.first {
-            let changed = await store.save(FoodStore.MealDraft(
-                mealID: meal.id,
-                dishName: "Selfcheck Stew",
-                linkedDishID: meal.dishID,
-                eatenOn: meal.eatenOn,
-                notes: meal.notes,
-                photos: FoodStore.PhotosDraft(existingPaths: meal.photoPaths),
-                verdicts: [eater.raterRef: .bad]
-            ))
-            check("edit an existing verdict", changed, store.errorMessage ?? "")
-            check("the verdict actually changed",
-                  store.ratings(forMeal: meal.id).first { $0.eaterID == eater.id }?.reaction == .bad)
-            check("one verdict per person, not a duplicate",
-                  store.ratings(forMeal: meal.id).filter { $0.eaterID == eater.id }.count == 1)
-        }
+        // 3. Change the verdict, which is the update-not-insert branch.
+        answers.reaction = .bad
+        let changed = await store.saveMyRating(mealID: meal.id, answers: answers)
+        check("edit my own verdict", changed && store.myRating(forMeal: meal.id) == .bad, store.errorMessage ?? "")
+        check("one verdict per person, not a duplicate",
+              store.ratings(forMeal: meal.id).filter { $0.raterID == store.userID }.count == 1)
 
         // 4. Rate a meal somebody else invited me to.
         if let theirs = store.awaitingMyRating.first {
             let before = store.myRating(forMeal: theirs.id)
-            await store.rate(mealID: theirs.id, as: .good)
+            var mine = RatingAnswers()
+            mine.reaction = .good
+            await store.saveMyRating(mealID: theirs.id, answers: mine)
             check("rate a meal I was invited to",
                   store.myRating(forMeal: theirs.id) == .good,
                   "was \(String(describing: before)); \(store.errorMessage ?? "")")
@@ -139,12 +138,10 @@ enum DevSelfCheck {
             linkedDishID: meal.dishID,
             eatenOn: meal.eatenOn,
             notes: meal.notes,
-            photos: FoodStore.PhotosDraft(removedPaths: meal.photoPaths),
-            verdicts: [:]
+            photos: FoodStore.PhotosDraft(removedPaths: meal.photoPaths)
         ))
         check("remove a photo", cleared, store.errorMessage ?? "")
         check("the path was cleared", store.meal(meal.id)?.photoPath == nil)
-        check("clearing the verdicts deleted them", store.ratings(forMeal: meal.id).isEmpty)
         if oldPath != nil {
             // Listed rather than downloaded, and not asked of PhotoCache.
             //

@@ -1,52 +1,49 @@
 import SwiftUI
 
-/// Meal Detail's DetailHeader ("Nom Nom iOS" canvas): "date · party" meta, the dish
-/// as the title, "Cooked by Anna. The table loved it." as the summary, and "Rate this
-/// meal" (or "You rated 90", soft).
+/// Meal Detail's ScreenHeader, centred on the meal's first photo as its Avatar (the
+/// cuisine photo when it has none): the party as the eyebrow (none for a meal of your
+/// own), the dish as the title, the date, and "Rate this meal" (or "Change your
+/// rating", soft, once you have rated).
 struct MealDetailHeader: View {
     let meal: Meal
-    let onRate: () -> Void
+    /// Nil when the viewer can't rate this meal: the header then has no action.
+    let onRate: (() -> Void)?
 
     @Environment(FoodStore.self) private var store
 
     var body: some View {
-        DetailHeader(
-            title: store.dishName(forMeal: meal),
-            meta: meta,
-            summary: summary,
-            actions: [action]
+        ScreenHeader(
+            store.dishName(forMeal: meal),
+            eyebrow: party,
+            date: meal.eatenOn,
+            avatar: avatar,
+            actions: action.map { [$0] } ?? []
         )
     }
 
-    /// The table's verdict as a sentence.
-    static func verdictSentence(for reaction: Reaction?) -> String {
-        switch reaction {
-        case .amazing, .great: return "The table loved it."
-        case .good: return "The table liked it."
-        case .meh: return "The table was lukewarm."
-        case .bad: return "The table wasn\u{2019}t keen."
-        case .inedible: return "The table couldn\u{2019}t eat it."
-        case nil: return "Waiting on the table\u{2019}s verdict."
+    private var avatar: Avatar {
+        Avatar(
+            name: store.dishName(forMeal: meal),
+            photoPath: meal.photoPath,
+            bucket: SupabaseConfig.photoBucket,
+            assetName: Cuisine.assetImageName(for: store.recipe(meal.recipeID)?.cuisine),
+            decorative: true
+        )
+    }
+
+    /// The context the meal lives in; a meal of your own has none.
+    private var party: String? {
+        let name = store.partyDisplayName(forMeal: meal)
+        return name == "You" ? nil : name
+    }
+
+    /// The score is already in the ScoreCard below, so the action names the task, not
+    /// a number (DS-GAPS.md B, "Meal header action once rated").
+    private var action: ScreenHeaderAction? {
+        guard let onRate else { return nil }
+        if store.myRating(forMeal: meal.id) != nil {
+            return ScreenHeaderAction(title: "Change your rating", appearance: .soft, action: onRate)
         }
-    }
-
-    private var meta: String {
-        let date = meal.eatenOn.formatted(.dateTime.weekday(.abbreviated).day().month(.abbreviated).year())
-        let party = store.partyDisplayName(forMeal: meal)
-        return party == "You" ? date : "\(date) \u{00B7} \(party)"
-    }
-
-    private var summary: String {
-        let cook = meal.createdBy == store.userID ? "you" : store.firstName(for: .account(meal.createdBy))
-        let verdict = Self.verdictSentence(for: store.averageReaction(forMeal: meal.id))
-        return "Cooked by \(cook). \(verdict)"
-    }
-
-    private var action: DetailHeaderAction {
-        if let mine = store.myRating(forMeal: meal.id) {
-            let points = Int((mine.score * 100).rounded())
-            return DetailHeaderAction(title: "You rated \(points)", appearance: .soft, action: onRate)
-        }
-        return DetailHeaderAction(title: "Rate this meal", action: onRate)
+        return ScreenHeaderAction(title: "Rate this meal", action: onRate)
     }
 }

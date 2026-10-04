@@ -1,16 +1,13 @@
 import SwiftUI
 
-/// Step 2 of logging a meal: Photos, cooking time / effort, and dinner parties.
+/// Step 2 (last) of logging a meal: Photos, cooking time / effort, and dinner parties.
 struct MealDetailsStepView: View {
     @Binding var draft: FoodStore.MealDraft
     var onDismiss: () -> Void
 
     @Environment(FoodStore.self) private var store
 
-    @State private var navigateToVerdict = false
     @State private var isSaving = false
-
-    private var isEditing: Bool { draft.mealID != nil }
 
     var body: some View {
         ScrollView {
@@ -46,23 +43,15 @@ struct MealDetailsStepView: View {
             ToolbarItem(placement: .topBarTrailing) {
                 if isSaving {
                     ProgressView().controlSize(.small)
-                } else if isEditing {
+                } else {
                     Button {
                         save()
                     } label: {
                         Image(systemName: "checkmark")
                             .fontWeight(.semibold)
                     }
-                } else {
-                    Button("Next") {
-                        navigateToVerdict = true
-                    }
-                    .fontWeight(.semibold)
                 }
             }
-        }
-        .navigationDestination(isPresented: $navigateToVerdict) {
-            MealVerdictStepView(draft: draft, onDismiss: onDismiss)
         }
         .interactiveDismissDisabled(isSaving)
         .simultaneousGesture(

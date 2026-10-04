@@ -28,18 +28,6 @@ extension Badge {
         return Badge("\u{00B1}0", variant: .secondary, size: size, accessibilityLabel: "No change")
     }
 
-    /// Rotation goal, `sm`; the order reads as weight. Staple carries the repeat icon.
-    static func rotation(_ goal: RotationGoal) -> Badge {
-        switch goal {
-        case .oneAndDone:
-            return Badge("One & done", variant: .secondary, size: .sm)
-        case .sometimes:
-            return Badge("Sometimes", variant: .primary, size: .sm)
-        case .staple:
-            return Badge("Staple", icon: "repeat", variant: .primary, appearance: .solid, size: .sm)
-        }
-    }
-
     /// Nom Nom Pro.
     static var pro: Badge {
         Badge("Pro", icon: "sparkles", variant: .pro)

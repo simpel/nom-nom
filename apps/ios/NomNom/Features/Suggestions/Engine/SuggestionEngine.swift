@@ -130,7 +130,7 @@ struct SuggestionEngine {
                    servings: servings.map { meal in
                        ServingRecord(date: meal.eatenOn,
                                      reactions: (ratingsByMeal[meal.id] ?? []).map {
-                                         (eater: Optional($0.source), score: $0.reaction.score)
+                                         (eater: Optional($0.source), score: $0.score)
                                      })
                    })
     }

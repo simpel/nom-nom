@@ -23,15 +23,14 @@ struct RecipeInstructionsEditorSection: View {
     }
 
     private func stepRow(at index: Int) -> some View {
-        HStack(alignment: .top, spacing: DS.Spacing.s2) {
+        HStack(alignment: .center, spacing: DS.Spacing.s2) {
             Text("\(index + 1)")
                 .textStyle(.sansXs, tone: .secondary, weight: .semibold, numeric: true)
                 .frame(width: DS.Spacing.s6, height: DS.Spacing.s6)
                 .background(DS.Color.sunken, in: Circle())
-                .padding(.top, DS.Spacing.s2_5)
                 .accessibilityLabel("Step \(index + 1)")
 
-            TextArea("Step description...", text: $instructions[index], lineLimit: 2...8)
+            NoteField("Describe this step", text: $instructions[index], title: "Step \(index + 1)")
 
             AppButton(
                 icon: "minus.circle",

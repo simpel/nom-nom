@@ -73,7 +73,7 @@ extension FoodStore {
     func usualScore(for rater: RaterRef, excluding mealID: UUID) -> Double? {
         let scores = ratings(for: rater)
             .filter { $0.mealID != mealID }
-            .map(\.reaction.score)
+            .map(\.score)
         guard !scores.isEmpty else { return nil }
         return scores.reduce(0, +) / Double(scores.count)
     }
@@ -83,6 +83,6 @@ extension FoodStore {
     func changeVsUsual(for rater: RaterRef, on mealID: UUID) -> Int? {
         guard let rating = rating(for: rater, on: mealID),
               let usual = usualScore(for: rater, excluding: mealID) else { return nil }
-        return Int(((rating.reaction.score - usual) * 100).rounded())
+        return Int(((rating.score - usual) * 100).rounded())
     }
 }

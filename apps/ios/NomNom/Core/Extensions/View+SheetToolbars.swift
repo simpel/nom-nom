@@ -63,6 +63,17 @@ extension View {
         modifier(StepCommitToolbarModifier(isSaving: isSaving, canSave: canSave, onSave: onSave))
     }
 
+    /// A pushed middle step of a multi-step sheet (it keeps the navigation back
+    /// button): a trailing text action ("Next"), disabled until `canProceed`.
+    /// DS-GAP: the multi-step toolbar convention is pending (DS-GAPS.md).
+    func stepNextToolbar(
+        title: String = "Next",
+        canProceed: Bool = true,
+        onNext: @escaping () -> Void
+    ) -> some View {
+        modifier(StepNextToolbarModifier(title: title, canProceed: canProceed, onNext: onNext))
+    }
+
     /// Media viewers, photo lightboxes and read-only sheets: a leading close.
     func sheetCloseToolbar(
         onClose: (() -> Void)? = nil

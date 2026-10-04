@@ -22,10 +22,9 @@ struct RecipeScannerSheet: View {
             ZStack {
                 ScrollView {
                     VStack(spacing: DS.Spacing.block) {
-                        PageHeader(
+                        ScreenHeader(
                             "Cookbook & Card Scanner",
-                            subtitle: "Take or select up to \(maxPhotos) photos covering the title, ingredients, and cooking steps.",
-                            size: .sm
+                            summary: "Take or select up to \(maxPhotos) photos covering the title, ingredients, and cooking steps."
                         )
 
                         captureActions

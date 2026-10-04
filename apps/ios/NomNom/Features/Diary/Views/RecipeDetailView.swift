@@ -1,8 +1,7 @@
 import SwiftUI
 
-/// A recipe's detail screen ("Nom Nom iOS" canvas), top to bottom on `bg`: DetailHeader
-/// (cuisine, name, last cooked, facts, "Start cooking" / "Use in a meal"), PhotoStrip,
-/// the party and health ScoreCards, ingredients with servings, steps, cooking history,
+/// A recipe's detail screen ("Nom Nom iOS" canvas), top to bottom on `bg`: ScreenHeader
+/// (cuisine, name, "Start cooking" / "Use in a meal"), PhotoStrip, the Facts card, the party and health ScoreCards, ingredients with servings, steps, cooking history,
 /// recipe pages and details. The toolbar has the favourite heart and the PageMenu,
 /// whose recipe group gives the owner Generate photo / Edit / Delete.
 struct RecipeDetailView: View {
@@ -127,7 +126,6 @@ struct RecipeDetailView: View {
             VStack(alignment: .leading, spacing: DS.Spacing.block) {
                 RecipeDetailHeader(
                     recipe: recipe,
-                    history: history,
                     onStartCooking: { showCookMode = true },
                     onUseInMeal: { showMealEditor = true }
                 )
@@ -137,6 +135,8 @@ struct RecipeDetailView: View {
                     onAddPhoto: isOwner ? { showEditSheet = true } : nil,
                     onSelect: { selectedPhotoIndex = $0 }
                 )
+
+                RecipeDetailFacts(recipe: recipe)
 
                 RecipeScoreCards(
                     recipe: recipe,

@@ -5,14 +5,9 @@ import UserDetailClient from './UserDetailClient'
 
 const DAY_MS = 1000 * 60 * 60 * 24
 
-function normalizeReaction(react: number | null | undefined) {
-  if (react === -1) return 0.0
-  if (react === 1) return 0.2
-  if (react === 2) return 0.4
-  if (react === 3) return 0.6
-  if (react === 4) return 0.8
-  if (react === 5) return 1.0
-  return null
+// meal_ratings.score: 0..1 from every answer the rater gave.
+function ratingScore(score: number | string | null | undefined) {
+  return score == null ? null : Number(score)
 }
 
 export default async function UserDetailPage({ params }: { params: Promise<{ id: string }> }) {
@@ -49,7 +44,7 @@ export default async function UserDetailPage({ params }: { params: Promise<{ id:
 
   const { data: myRatings } = await adminSupabase
     .from('meal_ratings')
-    .select('meal_id, reaction, created_at, meals ( eaten_on, dishes ( name, cuisine, effort, ingredients, health_score ) )')
+    .select('meal_id, score, created_at, meals ( eaten_on, dishes ( name, cuisine, effort, ingredients, health_score ) )')
     .eq('rater_id', id)
     .order('created_at', { ascending: false })
 
@@ -58,7 +53,7 @@ export default async function UserDetailPage({ params }: { params: Promise<{ id:
   const { data: allRatingsOnThoseMeals } = ratedMealIds.length > 0
     ? await adminSupabase
         .from('meal_ratings')
-        .select('meal_id, reaction')
+        .select('meal_id, score')
         .in('meal_id', ratedMealIds)
     : { data: [] }
 
@@ -112,7 +107,7 @@ export default async function UserDetailPage({ params }: { params: Promise<{ id:
   // --- Taste profile & pickiness ---
   const consensusByMeal = new Map<string, number[]>()
   for (const r of allRatingsOnThoseMeals || []) {
-    const norm = normalizeReaction(r.reaction)
+    const norm = ratingScore(r.score)
     if (norm === null) continue
     const arr = consensusByMeal.get(r.meal_id) || []
     arr.push(norm)
@@ -124,7 +119,7 @@ export default async function UserDetailPage({ params }: { params: Promise<{ id:
   const matchDiffs: number[] = []
 
   for (const r of myRatings || []) {
-    const userScore = normalizeReaction(r.reaction)
+    const userScore = ratingScore(r.score)
     if (userScore === null) continue
     const dish = (r as any).meals?.dishes
     if (!dish) continue

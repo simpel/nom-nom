@@ -56,7 +56,7 @@ extension DS {
     /// Container widths (`container-*`), aliased from `DSTokens.Container`.
     enum Container {
         /// `container-sm` (384): the measure for a sentence under a title
-        /// (PageHeader subtitle, EmptyState message).
+        /// (ScreenHeader summary, EmptyState message).
         static let sm = DSTokens.Container.sm
     }
 }

@@ -6,7 +6,7 @@ import SwiftUI
 /// viewer's own unrated row opens the rating sheet.
 struct MealDetailRatingsSection: View {
     let meal: Meal
-    let onRate: () -> Void
+    let onRate: (() -> Void)?
 
     @Environment(FoodStore.self) private var store
     @State private var target: MealRaterTarget?
@@ -50,7 +50,7 @@ struct MealDetailRatingsSection: View {
 
     private func open(_ rater: FoodStore.MealRater) {
         if rater.isViewer && rater.rating == nil {
-            onRate()
+            onRate?()
         } else {
             target = MealRaterTarget(ref: rater.ref, hasRated: rater.rating != nil)
         }

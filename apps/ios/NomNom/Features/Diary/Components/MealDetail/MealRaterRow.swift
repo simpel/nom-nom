@@ -14,7 +14,7 @@ struct MealRaterRow: View {
     @Environment(FoodStore.self) private var store
 
     private var name: String { rater.isViewer ? "You" : store.firstName(for: rater.ref) }
-    private var score: Double? { rater.rating?.reaction.score }
+    private var score: Double? { rater.rating?.score }
     private var isNew: Bool { score != nil && store.usualScore(for: rater.ref, excluding: meal.id) == nil }
 
     private var meta: String? {

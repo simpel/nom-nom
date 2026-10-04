@@ -41,7 +41,7 @@ extension FoodStore {
             let ratings = ratingsByMeal[meal.id] ?? []
             if ratings.isEmpty { continue }
 
-            let totalScore = ratings.reduce(0.0) { $0 + $1.reaction.score }
+            let totalScore = ratings.reduce(0.0) { $0 + $1.score }
             let avgScore = (totalScore / Double(ratings.count)) * 100.0
             trend.append((meal.eatenOn, avgScore))
         }
@@ -65,7 +65,7 @@ extension FoodStore {
         var pointsByRater: [RaterRef: [(date: Date, score: Double)]] = [:]
         for meal in meals {
             for rating in ratingsByMeal[meal.id] ?? [] {
-                pointsByRater[rating.source, default: []].append((meal.eatenOn, rating.reaction.score * 100.0))
+                pointsByRater[rating.source, default: []].append((meal.eatenOn, rating.score * 100.0))
             }
         }
 
@@ -186,7 +186,7 @@ extension FoodStore {
 
             let mealAvg: Double?
             if ratings.count >= 2 {
-                let totalScore = ratings.reduce(0.0) { $0 + $1.reaction.score }
+                let totalScore = ratings.reduce(0.0) { $0 + $1.score }
                 mealAvg = totalScore / Double(ratings.count)
             } else {
                 mealAvg = averageScore(forDish: meal.dishID)
@@ -196,7 +196,7 @@ extension FoodStore {
 
             for rating in ratings {
                 raterMealRecords[rating.source, default: []].append(
-                    (date: meal.eatenOn, userScore: rating.reaction.score, mealAvgScore: consensus)
+                    (date: meal.eatenOn, userScore: rating.score, mealAvgScore: consensus)
                 )
             }
         }

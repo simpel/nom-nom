@@ -135,10 +135,10 @@
     "Photography"
   ],
   "lastChange": {
-    "at": "2026-10-02T11:05:00Z",
+    "at": "2026-10-04T21:20:00Z",
     "by": "Joel Sandén",
-    "via": "Claude (Cowork, iOS canvas)",
-    "note": "Pro design language: new ProMark, ProCard (locked/unlocked), ProView (immersive pro-soft ground) and ProGate (locked view) with README and preview (components/Pro); README Colour section documents the three levels. bundle.css now defines the shadow-* variables (tokens.css was missing them, so every shadow rendered as none)."
+    "via": "Claude (Claude Code)",
+    "note": "ScreenHeader: role (standard · tabRoot · moment) replaces moment; tab roots are centred with a one-sentence summary and a contextual title that names the current party (\"Meals at The Friday Feast Club\")."
   },
   "layout": "files",
   "libraries": [

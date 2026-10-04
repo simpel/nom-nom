@@ -169,20 +169,28 @@ enum RaterRef: Hashable {
     }
 }
 
-/// A single verdict on a single meal.
+/// A single verdict on a single meal, with what that rater said about it.
 struct MealRating: Identifiable, Hashable, Decodable {
     let id: UUID
     var mealID: UUID
     var raterID: UUID?
     var eaterID: UUID?
     var reaction: Reaction
+    /// `rating_tags` ids.
+    var tags: [String]
+    var plate: PlateCleared?
+    var again: WantAgain?
+    var note: String?
+    /// This eater's score, 0…1: the verdict moved by again, plate and tags. Set by the
+    /// `meal_ratings_set_score` trigger, the one place the formula lives.
+    var score: Double
 
     enum CodingKeys: String, CodingKey {
         case id
         case mealID = "meal_id"
         case raterID = "rater_id"
         case eaterID = "eater_id"
-        case reaction
+        case reaction, tags, plate, again, note, score
     }
 
     init(from decoder: Decoder) throws {
@@ -193,6 +201,11 @@ struct MealRating: Identifiable, Hashable, Decodable {
         eaterID = try container.decodeIfPresent(UUID.self, forKey: .eaterID)
         let raw = try container.decode(Int.self, forKey: .reaction)
         reaction = Reaction(rawValue: raw) ?? .good
+        tags = try container.decodeIfPresent([String].self, forKey: .tags) ?? []
+        plate = try container.decodeIfPresent(Int.self, forKey: .plate).flatMap(PlateCleared.init(rawValue:))
+        again = try container.decodeIfPresent(Int.self, forKey: .again).flatMap(WantAgain.init(rawValue:))
+        note = try container.decodeIfPresent(String.self, forKey: .note)
+        score = try container.decodeIfPresent(Double.self, forKey: .score) ?? reaction.verdictScore
     }
 
     init(
@@ -200,14 +213,30 @@ struct MealRating: Identifiable, Hashable, Decodable {
         mealID: UUID,
         raterID: UUID? = nil,
         eaterID: UUID? = nil,
-        reaction: Reaction
+        reaction: Reaction,
+        tags: [String] = [],
+        plate: PlateCleared? = nil,
+        again: WantAgain? = nil,
+        note: String? = nil,
+        score: Double? = nil
     ) {
         self.id = id
         self.mealID = mealID
         self.raterID = raterID
         self.eaterID = eaterID
         self.reaction = reaction
+        self.tags = tags
+        self.plate = plate
+        self.again = again
+        self.note = note
+        // Previews only: a saved rating always carries the server's score.
+        self.score = score ?? reaction.verdictScore
     }
+
+    /// The verdict word this rating's score reads as. Can differ from `reaction` (a
+    /// Great with seconds and "soon" scores 90, Amazing): group by this wherever ratings
+    /// are counted beside a score, so the split and the numeral agree.
+    var tier: Reaction { Reaction(score: score) }
 
     /// The check constraint guarantees one of the two is set, so the fallback is
     /// unreachable in practice — but a decode of a hand-edited row shouldn't crash.
@@ -218,26 +247,55 @@ struct MealRating: Identifiable, Hashable, Decodable {
     }
 }
 
+/// The viewer's own rating row. RLS only accepts `rater_id = auth.uid()`: nobody
+/// rates for anybody else.
 struct NewRating: Encodable {
     let meal_id: UUID
-    let rater_id: UUID?
-    let eater_id: UUID?
+    let rater_id: UUID
     let reaction: Int
+    let tags: [String]
+    let plate: Int?
+    let again: Int?
+    let note: String?
 
-    init(mealID: UUID, source: RaterRef, reaction: Reaction) {
+    init(mealID: UUID, raterID: UUID, reaction: Reaction, answers: RatingAnswers = RatingAnswers()) {
         self.meal_id = mealID
-        switch source {
-        case .eater(let id):
-            self.eater_id = id
-            self.rater_id = nil
-        case .account(let id):
-            self.rater_id = id
-            self.eater_id = nil
-        }
+        self.rater_id = raterID
         self.reaction = reaction.rawValue
+        self.tags = answers.tags.sorted()
+        self.plate = answers.plate?.rawValue
+        self.again = answers.again?.rawValue
+        let note = answers.note.trimmingCharacters(in: .whitespacesAndNewlines)
+        self.note = note.isEmpty ? nil : note
     }
 }
 
+/// Every column of the viewer's own rating, so clearing an answer clears it in the row.
 struct RatingPatch: Encodable {
     let reaction: Int
+    let tags: [String]
+    let plate: Int?
+    let again: Int?
+    let note: String?
+
+    init(reaction: Reaction, answers: RatingAnswers) {
+        let row = NewRating(mealID: UUID(), raterID: UUID(), reaction: reaction, answers: answers)
+        self.reaction = row.reaction
+        self.tags = row.tags
+        self.plate = row.plate
+        self.again = row.again
+        self.note = row.note
+    }
+
+    func encode(to encoder: Encoder) throws {
+        var c = encoder.container(keyedBy: CodingKeys.self)
+        try c.encode(reaction, forKey: .reaction)
+        try c.encode(tags, forKey: .tags)
+        // Explicit nulls: a cleared answer must clear the column.
+        try c.encode(plate, forKey: .plate)
+        try c.encode(again, forKey: .again)
+        try c.encode(note, forKey: .note)
+    }
+
+    enum CodingKeys: String, CodingKey { case reaction, tags, plate, again, note }
 }

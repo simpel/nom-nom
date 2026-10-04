@@ -40,12 +40,12 @@ struct EmailSignInView: View {
     // MARK: - Header
 
     private var header: some View {
-        PageHeader(
+        ScreenHeader(
             auth.step == .email ? "Sign in with email" : "Check your inbox",
-            subtitle: auth.step == .email
+            summary: auth.step == .email
                 ? "Enter your email and we'll send you a six-digit verification code."
                 : "Enter the code we mailed to complete sign in.",
-            align: .center
+            role: .moment
         )
         .padding(.top, DS.Spacing.s5)
     }

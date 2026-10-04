@@ -15,10 +15,10 @@ struct SignInView: View {
 
                     // The sign-in buttons stay at the bottom: Sign in with Apple is
                     // Apple's own control, not an AppButton the header could build.
-                    PageHeader(
+                    ScreenHeader(
                         "Nom Nom",
-                        subtitle: "Keep track of what you cooked, whether the kids ate it, and what to cook next.",
-                        align: .center
+                        summary: "Keep track of what you cooked, whether the kids ate it, and what to cook next.",
+                        role: .moment
                     )
                 }
 

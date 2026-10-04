@@ -10,7 +10,8 @@ export type GenerationType =
   | "recipe_parse"
   | "dish_embed"
   | "ingredient_canonicalize"
-  | "recipe_steps";
+  | "recipe_steps"
+  | "party_recommendation";
 
 export interface StartLogOptions {
   type: GenerationType;

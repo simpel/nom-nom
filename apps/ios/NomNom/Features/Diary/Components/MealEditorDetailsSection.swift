@@ -14,7 +14,7 @@ struct MealEditorDetailsSection: View {
             }
 
             SectionCard("Notes", trailing: "Optional") {
-                TextArea("Add any adjustments, substitutions, or memories...", text: $notes, lineLimit: 3...6)
+                NoteField("Add any adjustments, substitutions, or memories…", text: $notes, title: "Notes")
             }
         }
     }

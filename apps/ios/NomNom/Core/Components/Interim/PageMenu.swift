@@ -78,7 +78,9 @@ struct PageMenu<Context: View>: View {
         Binding(
             get: { store.currentParty?.id },
             set: { id in
-                if let party = id.flatMap({ store.party($0) }) { store.currentParty = party }
+                if let party = id.flatMap({ store.party($0) }), store.currentParty?.id != party.id {
+                    store.currentParty = party
+                }
             }
         )
     }

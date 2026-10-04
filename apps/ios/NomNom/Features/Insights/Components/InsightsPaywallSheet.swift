@@ -1,7 +1,7 @@
 import SwiftUI
 import RevenueCat
 
-/// The Nom Nom Pro paywall, as a BottomSheet: a centred PageHeader, the Pro features as
+/// The Nom Nom Pro paywall, as a BottomSheet: a centred ScreenHeader, the Pro features as
 /// ListRows, the plans (PaywallPackageCard) and a pinned footer with Subscribe
 /// (`pro solid lg`) and Restore purchases (`secondary ghost sm`).
 struct InsightsPaywallSheet: View {
@@ -24,12 +24,11 @@ struct InsightsPaywallSheet: View {
     var body: some View {
         NavigationStack {
             SheetBody {
-                // PageHeader README: one sentence, centred for the paywall.
-                PageHeader(
+                // ScreenHeader README: the paywall is a moment (centred); no eyebrow, the title does the job.
+                ScreenHeader(
                     "Know what your table loves",
-                    subtitle: "Taste profiles for your group and meal suggestions they will eat.",
-                    eyebrow: "Nom Nom Pro",
-                    align: .center
+                    summary: "Taste profiles for your group and meal suggestions they will eat.",
+                    role: .moment
                 )
 
                 Card(layout: .list) {

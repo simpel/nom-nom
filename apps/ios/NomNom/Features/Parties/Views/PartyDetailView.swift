@@ -1,8 +1,7 @@
 import SwiftUI
 
-/// A dinner party's detail screen ("Nom Nom iOS" canvas) on `bg`: a centred
-/// DetailHeader (avatar, name, members · followers · Private, about, Add meal for
-/// members or Follow for others), the landscape cover PhotoStrip, a pending-invite
+/// A dinner party's detail screen on `bg`: a ScreenHeader centred by the party's avatar
+/// (name, about, Add meal for members or Follow for others), the landscape cover PhotoStrip, a pending-invite
 /// banner, the average rating, the Pro "See insights" card, members and meals.
 /// Members get Edit / members / share / leave in the page menu.
 struct PartyDetailView: View {

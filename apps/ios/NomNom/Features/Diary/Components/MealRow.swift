@@ -25,17 +25,11 @@ struct MealRow: View {
 
     @Environment(FoodStore.self) private var store
 
+    /// The meal's verdict word, read from its score so word and numeral agree. A row
+    /// about one eater shows their number only: no word.
     private var ratingSummaryText: String? {
-        if let raterRef, let rating = store.rating(for: raterRef, on: meal.id) {
-            return rating.reaction.shortLabel
-        }
-        let ratings = store.ratings(forMeal: meal.id)
-        if ratings.count == 1 {
-            return ratings.first?.reaction.shortLabel
-        } else if ratings.count > 1 {
-            return store.averageReaction(forMeal: meal.id)?.shortLabel
-        }
-        return nil
+        guard raterRef == nil else { return nil }
+        return store.averageReaction(forMeal: meal.id)?.shortLabel
     }
 
     private var partyNames: String {
@@ -44,7 +38,7 @@ struct MealRow: View {
 
     private var score: Double? {
         if let raterRef, let rating = store.rating(for: raterRef, on: meal.id) {
-            return rating.reaction.score
+            return rating.score
         }
         return store.averageScore(forMeal: meal.id)
     }

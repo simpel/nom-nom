@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// Onboarding step for notification preferences: a centred PageHeader and the two
+/// Onboarding step for notification preferences: a centred ScreenHeader and the two
 /// settings as ListRow Toggle rows.
 struct OnboardingMealsStep: View {
     @Binding var enablePush: Bool
@@ -8,10 +8,10 @@ struct OnboardingMealsStep: View {
 
     var body: some View {
         VStack(spacing: DS.Spacing.block) {
-            PageHeader(
+            ScreenHeader(
                 "Stay in the loop",
-                subtitle: "Turn these on so you never miss an invite, a menu change or a meal to rate.",
-                align: .center
+                summary: "Turn these on so you never miss an invite, a menu change or a meal to rate.",
+                role: .moment
             )
 
             Card(layout: .list) {

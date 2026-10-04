@@ -1,16 +1,18 @@
 import SwiftUI
 
 /// How a text field (Input, TextArea) is painted. There is one style, `soft`.
+/// No field draws a border at rest: like iOS, a standalone field is a borderless fill
+/// and a field inside a card is a plain row (DS-GAPS B: field borders).
 enum InputAppearance: Equatable {
-    /// `sunken` ground + 1pt `line-control` border. The default, everywhere.
+    /// `sunken` ground (the `tertiarySystemFill` role), no border. Standalone fields.
     case soft
     /// No ground, border or side padding: only inside a `Card(layout: .list)` row,
     /// where the row already draws all three.
     case plain
 }
 
-/// The state a field draws. The ground never changes: the border carries every state.
-/// Loudest wins: disabled, then read-only, then error, then focus.
+/// The state a field draws. The ground never changes. Focus is the label and leading
+/// icon turning `primary`; only an error draws an edge. Loudest wins: disabled, then read-only, then error, then focus.
 enum InputState: Equatable {
     case rest, focused, error, readOnly, disabled
 
@@ -51,16 +53,11 @@ enum InputMetrics {
         appearance == .soft ? DS.Color.sunken : .clear
     }
 
-    /// Border colour and width, or nil for none (`plain`, read-only).
+    /// Border colour and width, or nil for none. Only a `soft` field in error draws one:
+    /// iOS fields have no border at rest and no focus ring (DS-GAPS B: field borders).
     static func border(_ appearance: InputAppearance, state: InputState) -> (color: Color, width: CGFloat)? {
-        guard appearance != .plain else { return nil }
-        switch state {
-        case .rest: return (DS.Color.lineControl, DS.BorderWidth.hairline)
-        case .focused: return (DS.Color.primary, DS.BorderWidth.thick)
-        case .error: return (DS.Color.destructive, DS.BorderWidth.thick)
-        case .readOnly: return nil
-        case .disabled: return (DS.Color.line, DS.BorderWidth.hairline)
-        }
+        guard appearance != .plain, state == .error else { return nil }
+        return (DS.Color.destructive, DS.BorderWidth.thick)
     }
 
     static func text(_ state: InputState) -> Color {

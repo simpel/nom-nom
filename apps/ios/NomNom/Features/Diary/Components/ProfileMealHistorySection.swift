@@ -33,16 +33,14 @@ struct ProfileMealHistorySection: View {
             store.dishName(forMeal: meal),
             meta: meal.eatenOn.formatted(.dateTime.day().month(.abbreviated).year()),
             leading: .photo(.meal(meal)),
-            trailing: userRating(for: meal).map { .badge(.verdict($0, size: .sm)) },
+            trailing: userScore(for: meal).map { .score($0) },
             chevron: true
         )
     }
 
-    private func userRating(for meal: Meal) -> Reaction? {
-        if let direct = store.rating(for: raterRef, on: meal.id) {
-            return direct.reaction
-        }
-        return store.averageReaction(forMeal: meal.id)
+    /// This person's score for the meal, number only; the meal's when they didn't rate.
+    private func userScore(for meal: Meal) -> Double? {
+        store.rating(for: raterRef, on: meal.id)?.score ?? store.averageScore(forMeal: meal.id)
     }
 }
 

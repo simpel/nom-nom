@@ -1,42 +1,27 @@
 import SwiftUI
 
-/// The top of a person's profile. A screen about someone, so it is a DetailHeader
-/// (PageHeader README: "A screen about something … uses DetailHeader"): centred
-/// avatar, name and membership line.
+/// The top of a person's profile: a ScreenHeader centred by the person's avatar, their
+/// name and, on your own profile, "Edit profile" (secondary soft).
 struct ProfileHeaderCard: View {
     let name: String
-    let subtitle: String
     var photoPath: String? = nil
     let isCurrentUser: Bool
     var onEdit: (() -> Void)? = nil
 
     var body: some View {
-        DetailHeader(
-            title: name,
-            align: .center,
-            meta: subtitle.isEmpty ? nil : subtitle,
+        ScreenHeader(
+            name,
             avatar: Avatar(name: name, photoPath: photoPath, decorative: true),
             actions: (isCurrentUser && onEdit != nil) ? [
-                DetailHeaderAction(
-                    title: "Edit profile",
-                    variant: .secondary,
-                    appearance: .soft
-                ) {
-                    onEdit?()
-                }
+                ScreenHeaderAction(title: "Edit profile", variant: .secondary, appearance: .soft) { onEdit?() },
             ] : []
         )
-        .frame(maxWidth: .infinity)
     }
 }
 
 #Preview {
     NomNomPreview { _ in
-        ProfileHeaderCard(
-            name: "Joel Sandén",
-            subtitle: "Member of 2 dinner parties",
-            isCurrentUser: true
-        )
-        .padding(DS.Spacing.gutter)
+        ProfileHeaderCard(name: "Joel Sandén", isCurrentUser: true, onEdit: {})
+            .padding(DS.Spacing.gutter)
     }
 }

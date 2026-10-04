@@ -6,7 +6,7 @@ struct MealRatingDistributionCard: View {
     let ratings: [MealRating]
 
     private var counts: [Reaction: Int] {
-        Dictionary(grouping: ratings, by: \.reaction).mapValues(\.count)
+        Dictionary(grouping: ratings, by: \.tier).mapValues(\.count)
     }
 
     private var trailing: String {

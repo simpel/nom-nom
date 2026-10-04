@@ -4,7 +4,7 @@ Nom Nom is a dinner diary for a household: what you cooked, whether everyone ate
 
 - **Plain, household voice.** Talk like the person who cooked: "Log a meal", "Email me a code", "Use a different address", "No photo yet", "Everyone finished their plate." Second person when you address the cook; the app never says "we".
 - **Verdicts are fixed words.** The scale is −1 Can't eat · 1 Bad · 2 Meh · 3 Good · 4 Great · 5 Amazing. Use these labels (short form "Can't eat") and their numerals; never invent synonyms.
-- **Casing.** Sentence case for buttons, badges and titles ("Log a meal", "Crowd pleaser", "Pro"). UPPERCASE only for section headers and category eyebrows ("POPULAR RECIPES", "ITALIAN").
+- **Casing.** Sentence case for buttons, badges and titles ("Log a meal", "Crowd pleaser", "Pro"). UPPERCASE only for section headers, ScreenHeader eyebrows and Facts labels ("POPULAR RECIPES", "ITALIAN", "SERVES").
 - **No emoji. Anywhere.** Not in UI, reactions, verdicts, member badges, food items or status. The reaction scale is carried by numerals, words and colour.
 - **Numbers are data.** Scores are 0–100 integers without "%"; counts read "12 meals"; durations "25 min". Every number that stacks in a column uses tabular figures. A badge holds a number or words, never both.
 
@@ -98,7 +98,7 @@ The px values in the scale above are the sizes at the default setting. Fixed com
 
 ## Layout, radius, elevation
 
-- Detail screens: `spacing-4` side gutters, `spacing-7` between blocks (photos, header, score, sections), `spacing-5` inside content cards, `spacing-2` inset for section headers, list rows at least `spacing-14` (`sm` rows `spacing-11`).
+- Detail screens: `spacing-4` side gutters, `spacing-7` between blocks (header, photos, facts, score, sections), `spacing-5` inside content cards, `spacing-2` inset for section headers, list rows at least `spacing-14` (`sm` rows `spacing-11`).
 - Controls: **no button is drawn under `spacing-11` (44)**. `xs`, `sm` and `md` are all 44 tall and differ in type and padding; `lg` is `spacing-12` (48). The only control below the floor is Toggle, which is a switch rather than a capsule and carries a 44px hit area inside its ListRow. Web: `container-5xl` page, `container-3xl` prose.
 - Corners are continuous. `radius-full` for every button, chip, pill, badge and avatar; `radius-3xl` for cards and hero photos; `radius-2xl` for timeline tiles; `radius-xl` for inputs, thumbnails and photo chips; `radius-4xl` for sheet tops; `radius-lg` for compact score boxes and picker cells.
 - **No borders, no shadows on cards**: a white `panel` card on the grey `bg` is the separation. Only things that float get a shadow: `shadow-xs` for `elevated` buttons and badges over content, `shadow-sm` for raised tiles, `shadow-lg` for popovers and dragged cards.
@@ -172,8 +172,8 @@ Every component is made of the ones below it; none writes its own font, surface,
 | --- | --- | --- |
 | Foundations | Text, Icon | every piece of copy (type scale + tone); every glyph |
 | Primitives | AppButton, Badge, Avatar, SectionHeader, ScoreValue, Bar, PhotoCard, Card, Input, TextArea, Toggle | actions; labels; people; **one small label, the same wherever it sits**; numeral + verdict; **every bar — one fill or several blocks**; photo tiles + verdict badge; the panel surface + press + chevron; fields; one on/off switch |
-| Layout | Section, SectionCard, PageHeader | a SectionHeader over content; a Card whose label sits inside it; the title block of a screen with no subject |
-| Composites | ScoreCard, RatingList, Timeline, RecipeCard, RecipeLinkCard, PhotoStrip, DetailHeader, TasteScoreSelector, BottomSheet, ListRow, EmptyState, SegmentedBar, ValueStepper | screen blocks, each listing what it is built from in its README |
+| Layout | Section, SectionCard, ScreenHeader | a SectionHeader over content; a Card whose label sits inside it; the top of every screen and sheet |
+| Composites | ScoreCard, RatingList, Timeline, RecipeCard, RecipeLinkCard, PhotoStrip, Facts, TasteScoreSelector, BottomSheet, ListRow, EmptyState, SegmentedBar, ValueStepper | screen blocks, each listing what it is built from in its README |
 
 | composite | built from |
 | --- | --- |
@@ -183,7 +183,7 @@ Every component is made of the ones below it; none writes its own font, surface,
 | RecipeCard | PhotoCard `md` · SectionHeader · Text |
 | RecipeLinkCard | Card `sm` (pressable) · PhotoCard `xs` · SectionHeader · Text |
 | PhotoStrip | PhotoCard `lg` · AppButton · Text |
-| DetailHeader | Avatar · SectionHeader · Text (meta, facts) · Badge (statuses) · AppButton |
+| Facts | SectionHeader (label) · Text (value) |
 | TasteScoreSelector | AppButton `lg` × 6 · Text |
 | SectionCard | Card · SectionHeader · Text |
 | BottomSheet | AppButton · Text · ScoreValue · Bar · Card (SheetCard) |
@@ -193,17 +193,26 @@ Every component is made of the ones below it; none writes its own font, surface,
 | SegmentedBar | Bar · Section · SectionHeader · Badge `reaction sm` · Text · RatingList (legend="rows") |
 | ValueStepper | AppButton `iconOnly` × 2 · Text |
 | Toggle | AppButton `secondary ghost`, restyled as a track; the knob is its label |
-| PageHeader | SectionHeader (eyebrow) · Text (h1, sentence) · AppButton (actions) |
+| ScreenHeader | Avatar · SectionHeader (eyebrow) · Text (h1, date, sentence) · AppButton (actions) |
 
 - **Horizontal scrollers** are one thing everywhere: `.nn-scroller`. Tiles snap, overscroll is contained, and the bar is a thin `line-control` thumb that fades in on hover or focus — hidden on touch, where the platform draws its own. A row that bleeds off the right edge still needs a scrollbar on a pointer device; it is the only sign there is more to see.
-- **A fact is not a status.** Metadata about a thing — a duration, a method, a count — is a line of `sans-sm` `text-tertiary` text joined with " · ", never a row of chips. Badge is for the few labels a thing carries that could change and that you would want to spot at a glance: Staple, Pro, Archived, a verdict. A chart's legend key is neither — it is a swatch in the series colour and a label.
+- **A fact is not a status.** Facts about the subject — a duration, a method, servings, the rotation goal — are the Facts component: a label over a value, all in `text-primary`, never a row of chips and never coloured. Badge is for the few labels a thing carries in a list that could change and that you would want to spot at a glance: Pro, Archived, a verdict. A chart's legend key is neither — it is a swatch in the series colour and a label.
 - **Lists** are one shape everywhere: `Card layout="list"` holding ListRow. The row's leading and trailing slots are what differ — an Avatar and a ScoreValue in a leaderboard, a Toggle in settings, Resend and a revoke ✕ on an invite. A list that has nothing to show is replaced by EmptyState, never by an empty Card.
-- **Detail screens** (from the Meal Detail Redesign) compose top to bottom on `bg` with `spacing-7` between blocks: back button (AppButton `elevated iconOnly`) · PhotoStrip (Add photo on the first screen) · DetailHeader · ScoreCard · RecipeLinkCard · RatingList · note (SectionCard `inset`) · Timeline. DetailHeader heads meal, recipe and dinner-party screens.
+- **Screen anatomy.** Every screen and sheet composes in this order, top to bottom, on `bg` (or `sheet`) with a `spacing-4` gutter and `spacing-7` between blocks. A slot a screen doesn't need is skipped; the order never changes.
+  1. **Chrome** — back and more (AppButton `elevated iconOnly`), or a sheet's close and confirm. Never part of the header, never inside content.
+  2. **ScreenHeader** — the one header (avatar, eyebrow, title, date, sentence, actions). Nothing sits above it but chrome.
+  3. **Photos** — PhotoStrip. Always below the header, never above it.
+  4. **Facts** — the subject's small facts, in a Card when the screen wants a surface.
+  5. **Primary content** — the reason the screen exists: ScoreCard, TasteScoreSelector, the list on a tab root.
+  6. **Sections** — Section, SectionCard, RecipeLinkCard, RatingList, Timeline, other lists.
+  7. **Destructive and account actions** — delete, leave, sign out. Always last.
+
+  The meal screen reads: back · ScreenHeader · PhotoStrip · ScoreCard · RecipeLinkCard · RatingList · note · Timeline. The recipe screen: back · ScreenHeader · PhotoStrip · Facts in a Card · sections.
 - Helpers on `window.NomNom`: `Icon`, `SheetCard`, `Reason`, `REACTIONS`, `reactionForScore(score)`, `verdictForScore(score)`.
 
 ## Not synced
 
-- Components not included: BurnerMeter, TactileOptionPicker, TactileTasteSelector, CookingTimeSelector, RotationGoalSelector, HeroPhotoDeck / HeroPhotoCard / ArcHeroHeader / MiniPhotoArcDeck / CategoryPhotoArc, EmptyPhotoDeckHero, SwipeActionRow / SwipeableListCard, ProGate, LabeledWrappingRow, CreateDropdownMenu, AssetPhotosPickerSection, photo and camera helpers (`apps/ios/NomNom/Core/Components/`). The included components are React renditions, not the SwiftUI code; Chip, SubtleCapsuleLabel, ProBadge, RotationPill, RecipeVerdictBadge, ScoreBadge, VerdictStrip, DeltaChip and IconButton were folded into Badge and AppButton; ProgressBar into Bar; DividedScoreCard into ScoreCard (`layout="compact"`); UserAvatar and PartyAvatar into Avatar; MealHeader became DetailHeader; NoteCard into SectionCard. ReactionPicker is not used and was removed. MealRow, the profile / recipe / meal-history rows, the leaderboard row, member rows, party rows, the notification row and settings navigation and info rows were folded into ListRow; the four invite-row copies into ListRow's Invite shape; every `ContentUnavailableView` and "No … yet" card into EmptyState; the four hand-built segmented bars into SegmentedBar; the recipe servings control into ValueStepper; PageHeader and PageHeading into PageHeader.
+- Components not included: BurnerMeter, TactileOptionPicker, TactileTasteSelector, CookingTimeSelector, RotationGoalSelector, HeroPhotoDeck / HeroPhotoCard / ArcHeroHeader / MiniPhotoArcDeck / CategoryPhotoArc, EmptyPhotoDeckHero, SwipeActionRow / SwipeableListCard, ProGate, LabeledWrappingRow, CreateDropdownMenu, AssetPhotosPickerSection, photo and camera helpers (`apps/ios/NomNom/Core/Components/`). The included components are React renditions, not the SwiftUI code; Chip, SubtleCapsuleLabel, ProBadge, RotationPill, RecipeVerdictBadge, ScoreBadge, VerdictStrip, DeltaChip and IconButton were folded into Badge and AppButton; ProgressBar into Bar; DividedScoreCard into ScoreCard (`layout="compact"`); UserAvatar and PartyAvatar into Avatar; MealHeader became DetailHeader, and DetailHeader and PageHeader became ScreenHeader (their facts and rotation badge became Facts); NoteCard into SectionCard. ReactionPicker is not used and was removed. MealRow, the profile / recipe / meal-history rows, the leaderboard row, member rows, party rows, the notification row and settings navigation and info rows were folded into ListRow; the four invite-row copies into ListRow's Invite shape; every `ContentUnavailableView` and "No … yet" card into EmptyState; the four hand-built segmented bars into SegmentedBar; the recipe servings control into ValueStepper; PageHeader and PageHeading into PageHeader, now ScreenHeader.
 
 ### Still to design
 

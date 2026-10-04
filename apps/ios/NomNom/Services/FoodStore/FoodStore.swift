@@ -23,6 +23,8 @@ final class FoodStore {
     var categories: [CategoryRecord] = []
     var categoryPhotoPaths: [String: String] = [:]
     var taxonomyTerms: [UUID: TaxonomyTermRecord] = [:]
+    /// The "what stood out" catalogue (`rating_tags`), in picker order.
+    var ratingTags: [RatingTagOption] = []
 
     // Dinner Parties
     var parties: [Party] = []
@@ -31,6 +33,8 @@ final class FoodStore {
     var partyFollowers: [PartyFollower] = []
     var mealParties: [MealParty] = []
     var recipeFavorites: [RecipeFavorite] = []
+    /// AI picks per party (`recommend-party-recipes`), in rank order. Empty means fall back to safe bets.
+    var partyRecommendations: [UUID: [PartyRecommendation]]
     var favoriteRecipeIDs: Set<UUID> = []
     var favoriteRecipes: [Recipe] {
         recipes.filter { favoriteRecipeIDs.contains($0.id) }
@@ -64,6 +68,7 @@ final class FoodStore {
 
     init(userID: UUID) {
         self.userID = userID
+        self.partyRecommendations = [:]
     }
 
     // MARK: - Slices the views want
@@ -189,10 +194,14 @@ final class FoodStore {
         return meals.filter { mine.contains($0.id) && $0.createdBy != userID }
     }
 
+    /// Meals without my rating: ones I'm invited to and ones I logged myself, newest first.
     var awaitingMyRating: [Meal] {
-        invitedMeals.filter { meal in
+        func isUnrated(_ meal: Meal) -> Bool {
             !(ratingsByMeal[meal.id] ?? []).contains { $0.raterID == userID }
         }
+        let own = meals.filter { $0.createdBy == userID && isUnrated($0) }
+        let invited = invitedMeals.filter(isUnrated)
+        return (own + invited).sorted { ($0.eatenOn, $0.createdAt) > ($1.eatenOn, $1.createdAt) }
     }
 
     func dish(_ id: UUID) -> Recipe? { dishByID[id] }
@@ -241,7 +250,7 @@ final class FoodStore {
     }
 
     func averageScore(forMeal mealID: UUID) -> Double? {
-        let scores = ratings(forMeal: mealID).map(\.reaction.score)
+        let scores = ratings(forMeal: mealID).map(\.score)
         guard !scores.isEmpty else { return nil }
         return scores.reduce(0, +) / Double(scores.count)
     }
@@ -262,6 +271,8 @@ final class FoodStore {
         let ref: RaterRef
         let name: String
         let reaction: Reaction?
+        /// Their score from every answer (`MealRating.score`), nil until they rate.
+        let score: Double?
 
         var id: String {
             switch ref {
@@ -287,7 +298,8 @@ final class FoodStore {
             }
         }
         return sorted.map { rating in
-            VerdictDetail(ref: rating.source, name: label(for: rating.source).name, reaction: rating.reaction)
+            VerdictDetail(ref: rating.source, name: label(for: rating.source).name,
+                          reaction: rating.reaction, score: rating.score)
         }
     }
 
