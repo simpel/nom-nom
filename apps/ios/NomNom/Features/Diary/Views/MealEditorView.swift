@@ -15,6 +15,7 @@ struct MealEditorView: View {
     @State private var linkedDishID: UUID?
     @State private var date = Date.now
     @State private var notes = ""
+    @State private var mealTitle = ""
     @State private var effort: EffortLevel?
     @State private var repeatDesire: RotationGoal?
     @State private var selectedParties: Set<UUID> = []
@@ -48,6 +49,7 @@ struct MealEditorView: View {
 
         return FoodStore.MealDraft(mealID: mealID,
                                    dishName: name,
+                                   mealTitle: mealTitle,
                                    linkedDishID: linkedDishID ?? existingMatchedDish?.id,
                                    eatenOn: date,
                                    notes: notes,
@@ -67,6 +69,7 @@ struct MealEditorView: View {
                 date = updated.eatenOn
                 recipeDraft = updated.recipe ?? recipeDraft
                 notes = updated.notes
+                mealTitle = updated.mealTitle
                 effort = updated.effort
                 repeatDesire = updated.repeatDesire
             }
@@ -197,6 +200,7 @@ struct MealEditorView: View {
         linkedDishID = dish?.id
         date = meal.eatenOn
         notes = meal.notes
+        mealTitle = meal.title ?? ""
         effort = meal.effort
         repeatDesire = meal.repeatDesire
         photosDraft = FoodStore.PhotosDraft(existingPaths: meal.photoPaths)

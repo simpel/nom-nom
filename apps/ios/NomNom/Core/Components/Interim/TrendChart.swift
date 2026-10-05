@@ -11,6 +11,8 @@ import Charts
 ///   (Card + `shadow-lg`) listing every series' value on that day.
 /// - `visibleDays` makes the x axis scroll, starting at the latest data.
 /// - `framed: false` drops the Card so the chart can run edge to edge on a screen.
+/// - `showsPoints` marks every `total` value with a `primary` dot (a few discrete
+///   events, such as each time a recipe was cooked, rather than a daily trend).
 ///
 /// ```swift
 /// TrendChart(total: points)
@@ -23,6 +25,7 @@ struct TrendChart: View {
     var visibleDays: Int?
     var emptyMessage: String
     var framed: Bool
+    var showsPoints: Bool
 
     @State private var rawSelection: Date?
     @State private var scrollPosition: Date = .now
@@ -33,7 +36,8 @@ struct TrendChart: View {
         series: [TrendSeries] = [],
         visibleDays: Int? = nil,
         emptyMessage: String = "Not enough data to show a trend yet",
-        framed: Bool = true
+        framed: Bool = true,
+        showsPoints: Bool = false
     ) {
         self.total = total.sorted { $0.date < $1.date }
         self.totalName = totalName
@@ -41,6 +45,7 @@ struct TrendChart: View {
         self.visibleDays = visibleDays
         self.emptyMessage = emptyMessage
         self.framed = framed
+        self.showsPoints = showsPoints
     }
 
     private static let height = DS.Spacing.s48
@@ -121,6 +126,12 @@ struct TrendChart: View {
                 .foregroundStyle(DS.Color.primary)
                 .lineStyle(Self.totalStroke)
                 .interpolationMethod(.monotone)
+
+                if showsPoints {
+                    PointMark(x: .value("Date", point.date), y: .value("Score", point.value))
+                        .foregroundStyle(DS.Color.primary)
+                        .symbolSize(DS.Spacing.s10)
+                }
             }
 
             if let selectedDate {

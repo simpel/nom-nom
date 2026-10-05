@@ -3,14 +3,30 @@ import SwiftUI
 // PartyDetailView's ScreenHeader, toolbar and actions.
 extension PartyDetailView {
     /// Centred by its avatar: name, about and the action (members: Add meal, with
-    /// inviting in the Members list; others: Follow, when public).
+    /// inviting in the Members list; others: Follow, when public). Any member can
+    /// change the party photo from the avatar's pen.
     func header(for party: Party) -> some View {
         ScreenHeader(
             party.name,
             summary: party.about,
             avatar: Avatar(party: party),
+            avatarEdit: store.isMember(of: party.id) ? ScreenHeaderAvatarEdit(
+                hasPhoto: !party.photoPaths.isEmpty,
+                onPick: { setCover($0, for: party) },
+                onRemove: { setCover(nil, for: party) }
+            ) : nil,
             actions: actions(for: party)
         )
+    }
+
+    private func setCover(_ data: Data?, for party: Party) {
+        Task {
+            await store.setPartyCover(data, for: party)
+            if let message = store.errorMessage {
+                actionError = message
+                store.errorMessage = nil
+            }
+        }
     }
 
     private func actions(for party: Party) -> [ScreenHeaderAction] {

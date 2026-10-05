@@ -4,13 +4,16 @@ import SwiftUI
 /// count, over a list Card. When the recipe says how many it serves, the first row is
 /// "Servings" with a ValueStepper `sm`, and every amount scales with it
 /// (QuantityScaler; free-text amounts stay as written). Each ingredient is a ListRow
-/// `sm`: the name and the amount as its tabular value.
+/// `sm`: the name (it wraps) and the amount, semibold, as its tabular value. The
+/// "Imperial units" toggle is the person's `UnitSystem` (saved on their profile); amounts go through
+/// MeasurementConverter.
 struct RecipeIngredientsCard: View {
     let ingredients: [RecipeIngredient]
     /// The recipe's own servings; nil hides the stepper and shows amounts as written.
     var serves: Int?
 
     @State private var servings: Int
+    @Environment(FoodStore.self) private var store
 
     init(ingredients: [RecipeIngredient], serves: Int? = nil) {
         self.ingredients = ingredients
@@ -31,6 +34,7 @@ struct RecipeIngredientsCard: View {
         if !validIngredients.isEmpty {
             DSSection("Ingredients", trailing: "\(validIngredients.count)") {
                 Card(layout: .list) {
+                    ListRow("Imperial units", trailing: .toggle(Binding(get: { store.unitSystem.isImperial }, set: { on in Task { await store.setUnitSystem(on ? .imperial : .metric) } })))
                     if serves != nil {
                         ListRow(
                             "Servings",
@@ -40,15 +44,12 @@ struct RecipeIngredientsCard: View {
                         )
                     }
                     ForEach(validIngredients) { item in
-                        ListRow(item.trimmedIngredient, value: amount(item), size: .sm)
+                        ListRow(item.trimmedIngredient, value: item.displayAmount(scaledBy: factor, in: store.unitSystem), size: .sm)
+                            .titleLines(nil)
+                            .valueSemibold()
                     }
                 }
             }
         }
-    }
-
-    private func amount(_ item: RecipeIngredient) -> String {
-        let quantity = QuantityScaler.scale(item.trimmedQuantity, by: factor)
-        return [quantity, item.trimmedMeasurement].filter { !$0.isEmpty }.joined(separator: " ")
     }
 }

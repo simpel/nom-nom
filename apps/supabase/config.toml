@@ -468,3 +468,7 @@ verify_jwt = false
 # Called by a signed-in user to get AI recipe recommendations tailored to a dinner party.
 [functions.recommend-party-recipes]
 verify_jwt = true
+
+# Called by a signed-in Pro user for "make it land next time" tips on a party meal.
+[functions.suggest-recipe-tweaks]
+verify_jwt = true

@@ -7,6 +7,8 @@ struct MealDetailActions {
     /// Nil when the viewer can't rate this meal (`FoodStore.canRate(meal:)`).
     let onRate: (() -> Void)?
     let onOpenScore: () -> Void
+    /// Opens RemindRatersSheet from the unrated score card.
+    let onRemind: () -> Void
     let onOpenRecipe: () -> Void
     let onOpenParty: (Party) -> Void
     let onOpenMeal: (UUID) -> Void
@@ -14,7 +16,7 @@ struct MealDetailActions {
 
 /// Meal Detail's scrolling body on `bg`, gutter `s4`, `s7` between blocks ("Nom Nom
 /// iOS" canvas): ScreenHeader (the first photo as its avatar) · score + ratings split
-/// (one card) · Who rated · the chef's note · PhotoStrip · cook, party and cooking time ·
+/// (one card; its unrated state until the first rating) · Who rated · the chef's note · PhotoStrip · cook, party and cooking time ·
 /// RecipeLinkCard · Timeline.
 struct MealDetailContent: View {
     let meal: Meal
@@ -29,11 +31,17 @@ struct MealDetailContent: View {
 
         ScrollView {
             VStack(alignment: .leading, spacing: DS.Spacing.block) {
-                MealDetailHeader(meal: meal, onRate: actions.onRate)
+                MealDetailHeader(
+                    meal: meal,
+                    onRate: actions.onRate,
+                    onViewRecipe: store.recipe(meal.recipeID) != nil ? actions.onOpenRecipe : nil
+                )
 
                 MealScoreCard(
                     score: store.averageScore(forMeal: meal.id),
                     ratings: store.ratings(forMeal: meal.id),
+                    raterCount: store.raters(forMeal: meal).count,
+                    onRemind: store.canRemindAnyone(forMeal: meal) ? actions.onRemind : nil,
                     delta: change?.delta,
                     deltaText: change.map { _ in "from last time \(groupName) had it" },
                     deltaReference: change.map(Self.reference),

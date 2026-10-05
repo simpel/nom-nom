@@ -16,6 +16,8 @@ extension DS {
         static let durationPress = T.durationPress
         static let durationState = T.durationState
         static let durationLayout = T.durationLayout
+        /// One sweep of a Skeleton's shimmer; the only motion that loops.
+        static let durationShimmer = T.durationShimmer
         static let scalePress = T.scalePress
         static let scalePressRow = T.scalePressRow
         static let scaleKnob = T.scaleKnob
@@ -33,6 +35,8 @@ extension DS {
         static var press: Animation { standard(durationPress) }
         static var state: Animation { standard(durationState) }
         static var layout: Animation { standard(durationLayout) }
+        /// The Skeleton sweep, forever.
+        static var shimmer: Animation { standard(durationShimmer).repeatForever(autoreverses: false) }
     }
 
     /// Letter spacing (`tracking-*`), in em; multiply by the font size for points.

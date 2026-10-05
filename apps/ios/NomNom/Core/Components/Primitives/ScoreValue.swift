@@ -31,6 +31,15 @@ enum ScoreValueSize: Equatable, CaseIterable {
     }
 }
 
+/// What inks the numeral. `accent` (`primary-text`) everywhere except the sheet hero,
+/// which takes its reaction step's `-text` ink (DS-GAPS B, "SheetHero reaction ink").
+enum ScoreValueInk: Equatable {
+    case accent
+    case reaction
+    /// `pro-text`: the health score, a Pro feature (DS-GAPS A, "ProScoreCard").
+    case pro
+}
+
 /// A score as type: the numeral in `primary-text` (tabular) and its verdict word,
 /// baseline-aligned. Never in a Badge and never on a photo.
 struct ScoreValue: View {
@@ -39,12 +48,20 @@ struct ScoreValue: View {
     var verdict: String?
     var size: ScoreValueSize
     var showVerdict: Bool
+    var ink: ScoreValueInk
 
-    init(score: Double?, verdict: String? = nil, size: ScoreValueSize = .lg, showVerdict: Bool = true) {
+    init(
+        score: Double?,
+        verdict: String? = nil,
+        size: ScoreValueSize = .lg,
+        showVerdict: Bool = true,
+        ink: ScoreValueInk = .accent
+    ) {
         self.score = score
         self.verdict = verdict
         self.size = size
         self.showVerdict = showVerdict
+        self.ink = ink
     }
 
     private var numeralText: String {
@@ -61,8 +78,7 @@ struct ScoreValue: View {
 
     var body: some View {
         HStack(alignment: .firstTextBaseline, spacing: size.gap) {
-            Text(numeralText)
-                .textStyle(size.numeral, tone: score == nil ? .tertiary : .accent, numeric: true)
+            numeral
             if showsVerdict {
                 Text(verdictText)
                     .textStyle(size.verdict, tone: score == nil ? .tertiary : .primary)
@@ -71,6 +87,21 @@ struct ScoreValue: View {
         .lineLimit(1)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(accessibilityText)
+    }
+
+    @ViewBuilder private var numeral: some View {
+        if let score, ink == .reaction {
+            Text(numeralText)
+                .textStyle(size.numeral, tone: nil, numeric: true)
+                .foregroundStyle(Reaction(score: score).text)
+        } else if score != nil, ink == .pro {
+            Text(numeralText)
+                .textStyle(size.numeral, tone: nil, numeric: true)
+                .foregroundStyle(DS.Color.proText)
+        } else {
+            Text(numeralText)
+                .textStyle(size.numeral, tone: score == nil ? .tertiary : .accent, numeric: true)
+        }
     }
 
     private var accessibilityText: String {

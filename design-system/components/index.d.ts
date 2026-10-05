@@ -460,6 +460,27 @@ export interface EmptyStateProps extends BaseProps {
   secondaryAction?: EmptyStateAction;
 }
 
+/** The shape of content that is still on its way: shimmering bones in the layout the content will take. */
+export interface SkeletonProps extends BaseProps {
+  /** list = a <Card layout="list"> of ListRow-shaped rows · card = a Card with a heading and lines ·
+   *  text = lines of body copy on the ground they sit on · row = one ListRow-shaped line. @default 'list' */
+  layout?: 'list' | 'card' | 'text' | 'row';
+  /** Rows in a list: as many as the content usually has, so nothing jumps when it lands. @default 3 */
+  rows?: number;
+  /** Lines in text and card. @default 3 */
+  lines?: number;
+  /** A row's leading bone, matching the ListRow it stands in for. */
+  leading?: 'avatar' | 'photo';
+  /** A row's trailing bone (a Badge, ScoreValue or button). */
+  trailing?: boolean;
+  /** false drops a row's second line. @default true */
+  meta?: boolean;
+  /** One sentence under the bones for work that takes seconds ("Working out what to change"). Doubles as the accessible name. */
+  caption?: string;
+  /** The region's accessible name when there is no caption. @default 'Loading' */
+  label?: string;
+}
+
 /** A distribution as one bar: reaction tiers, macros, health tiers. */
 export interface SegmentedBarProps extends BaseProps {
   /** Widths are each value's share of the sum. `reaction` paints the step's fill and gives the key a reaction Badge;

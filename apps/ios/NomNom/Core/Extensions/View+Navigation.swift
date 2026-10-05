@@ -15,6 +15,13 @@ extension View {
             .navigationBarTitleDisplayMode(displayMode)
     }
 
+    /// Every top-bar control (close, back, Next, checkmark, "…", filter): a `text-primary`
+    /// glyph on the system's white glass circle, never the app's `primary` tint
+    /// (DS-GAPS.md, "Top-bar controls").
+    func barItemStyle() -> some View {
+        tint(DS.Color.textPrimary)
+    }
+
     /// Standard top bar for the root tabs (Meals, Parties, Recipes): no title and no party
     /// name (the body's ScreenHeader names the party), the `PageMenu` on the trailing side.
     func mainTabToolbar() -> some View {

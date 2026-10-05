@@ -16,41 +16,22 @@ struct SheetGrabber: View {
     }
 }
 
-/// The in-sheet close: AppButton `secondary soft` icon-only xmark (44pt circle).
-struct SheetCloseButton: View {
-    var accessibilityLabel: String = "Close"
-    let action: () -> Void
-
-    var body: some View {
-        AppButton(
-            icon: "xmark",
-            accessibilityLabel: accessibilityLabel,
-            variant: .secondary,
-            appearance: .soft,
-            action: action
-        )
-    }
-}
-
-/// `.topBarLeading` close item. On iOS 26 the bar's shared glass is hidden so the
-/// AppButton capsule is the only ground.
-private struct SheetLeadingCloseItem: ToolbarContent {
+/// `.topBarLeading` close item: a system xmark on the bar's white glass circle, in
+/// `text-primary` like every other top-bar control (`barItemStyle()`).
+struct SheetLeadingCloseItem: ToolbarContent {
     let accessibilityLabel: String
     var isDisabled: Bool = false
     let action: () -> Void
 
     var body: some ToolbarContent {
-        if #available(iOS 26.0, *) {
-            ToolbarItem(placement: .topBarLeading) { button }
-                .sharedBackgroundVisibility(.hidden)
-        } else {
-            ToolbarItem(placement: .topBarLeading) { button }
-        }
-    }
-
-    private var button: some View {
-        SheetCloseButton(accessibilityLabel: accessibilityLabel, action: action)
+        ToolbarItem(placement: .topBarLeading) {
+            Button(action: action) {
+                Image(systemName: "xmark").fontWeight(.semibold)
+            }
+            .accessibilityLabel(accessibilityLabel)
             .disabled(isDisabled)
+            .barItemStyle()
+        }
     }
 }
 
@@ -70,6 +51,7 @@ private struct SheetSaveItem: ToolbarContent {
                 }
                 .disabled(!canSave)
                 .accessibilityLabel("Save")
+                .barItemStyle()
             }
         }
     }
@@ -113,6 +95,7 @@ struct SheetNextToolbarModifier: ViewModifier {
                     Button(title, action: onNext)
                         .disabled(!canProceed)
                         .fontWeight(.semibold)
+                        .barItemStyle()
                 }
             }
     }
@@ -130,6 +113,7 @@ struct StepNextToolbarModifier: ViewModifier {
                     Button(title, action: onNext)
                         .disabled(!canProceed)
                         .fontWeight(.semibold)
+                        .barItemStyle()
                 }
             }
     }
@@ -184,6 +168,7 @@ struct SheetOverviewToolbarModifier: ViewModifier {
                             Image(systemName: primarySystemImage).fontWeight(.semibold)
                         }
                         .accessibilityLabel("Action")
+                        .barItemStyle()
                     }
                 }
             }

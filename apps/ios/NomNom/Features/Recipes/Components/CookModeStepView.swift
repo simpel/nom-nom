@@ -5,8 +5,11 @@ import SwiftUI
 /// something, and "For this step" — the ingredients it uses as ListRows `sm`.
 struct CookModeStepView: View {
     let recipe: Recipe
+    @Environment(FoodStore.self) private var store
     let index: Int
     let detail: RecipeStepDetail?
+    /// The step's timer and ingredients are still on their way (`analyze-recipe-steps`).
+    var isLoadingDetail: Bool = false
     let timer: CookModeTimer
 
     private var stepIngredients: [RecipeIngredient] {
@@ -23,11 +26,17 @@ struct CookModeStepView: View {
                 timerButton(minutes: minutes)
             }
 
-            if !stepIngredients.isEmpty {
+            if isLoadingDetail {
+                DSSection("For this step") {
+                    Skeleton(rows: 2, trailing: true, meta: false, label: "Loading this step")
+                }
+            } else if !stepIngredients.isEmpty {
                 DSSection("For this step") {
                     Card(layout: .list) {
                         ForEach(stepIngredients) { item in
-                            ListRow(item.trimmedIngredient, value: item.formattedAmount, size: .sm)
+                            ListRow(item.trimmedIngredient, value: item.displayAmount(in: store.unitSystem), size: .sm)
+                                .titleLines(nil)
+                                .valueSemibold()
                         }
                     }
                 }

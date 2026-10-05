@@ -39,6 +39,8 @@ struct ScoreCard: View {
     var count: String?
     var caption: String?
     var isLoading: Bool
+    /// A household score's bar split by rater: blocks sum to the score (DS-GAPS A).
+    var barSegments: [BarSegment]?
     var action: (() -> Void)?
 
     init(
@@ -54,6 +56,7 @@ struct ScoreCard: View {
         count: String? = nil,
         caption: String? = nil,
         isLoading: Bool = false,
+        barSegments: [BarSegment]? = nil,
         action: (() -> Void)? = nil
     ) {
         self.score = score
@@ -68,6 +71,7 @@ struct ScoreCard: View {
         self.count = count
         self.caption = caption
         self.isLoading = isLoading
+        self.barSegments = barSegments
         self.action = action
     }
 
@@ -97,7 +101,7 @@ struct ScoreCard: View {
             }
 
             // Bar README: "Ground is `track`" (no featured tint, DS-GAPS.md R1b).
-            Bar(value: isLoading ? nil : score.map { $0 * 100 }, size: isFeatured ? .lg : .md)
+            scoreBar
                 // ScoreValue already speaks the score.
                 .accessibilityHidden(true)
 
@@ -110,6 +114,14 @@ struct ScoreCard: View {
         .accessibilityElement(children: .combine)
     }
 
+    @ViewBuilder private var scoreBar: some View {
+        if let barSegments, !isLoading, score != nil {
+            Bar(segments: barSegments, max: 100, size: isFeatured ? .lg : .md, label: "Score by rater")
+        } else {
+            Bar(value: isLoading ? nil : score.map { $0 * 100 }, size: isFeatured ? .lg : .md)
+        }
+    }
+
     /// bundle.css `__head` (`spacing-3`) with `__aside` (count + compact delta,
     /// `spacing-2`, pushed to the end, `align-self: center`). The numeral and verdict
     /// baseline-align inside ScoreValue; the aside is centred on the row.
@@ -117,9 +129,13 @@ struct ScoreCard: View {
         HStack(alignment: .center, spacing: DS.Spacing.s3) {
             Group {
                 if isLoading {
-                    ScoreValue(score: 0.88, verdict: "Loading", size: scoreSize)
-                        .redacted(reason: .placeholder)
-                        .accessibilityLabel("Loading score")
+                    // Skeleton bones the size of the numeral and verdict.
+                    HStack(spacing: DS.Spacing.s3) {
+                        SkeletonBone(width: isHero ? DS.Spacing.s20 : DS.Spacing.s12, height: isHero ? DS.Spacing.s12 : DS.Spacing.s8)
+                        SkeletonBone(width: DS.Spacing.s20, height: DS.Spacing.s6)
+                    }
+                    .accessibilityElement(children: .ignore)
+                    .accessibilityLabel("Loading score")
                 } else {
                     ScoreValue(score: score, verdict: verdict, size: scoreSize)
                 }

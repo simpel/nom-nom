@@ -12,6 +12,10 @@ import SwiftUI
 /// `teaser` is optional: a screen whose title already says what the block holds can
 /// leave it out (DS-GAPS B, "ProCard without a teaser").
 ///
+/// `action` (unlocked only) makes the whole card pressable, ProLinkCard style: a `pro-text`
+/// chevron on the title row and `opacity-70` on press (DS-GAPS B, "Pressable ProCard").
+/// Locked, the card ignores it and "Unlock with Pro" stays the one button.
+///
 /// `mark: false` drops the ProMark; use it inside a ProView, which is already marked.
 /// A RecipeShelf inside runs edge to edge: pass `contentBleed: DS.Spacing.s5` and give the
 /// shelf the same `bleed`.
@@ -21,6 +25,7 @@ struct ProCard<Content: View>: View {
     var teaser: String?
     var mark: Bool
     var contentBleed: CGFloat
+    var action: (() -> Void)?
     @ViewBuilder let content: () -> Content
 
     @Environment(EntitlementStore.self) private var entitlements
@@ -32,6 +37,7 @@ struct ProCard<Content: View>: View {
         teaser: String? = nil,
         mark: Bool = true,
         contentBleed: CGFloat = 0,
+        action: (() -> Void)? = nil,
         @ViewBuilder content: @escaping () -> Content
     ) {
         self.title = title
@@ -39,6 +45,7 @@ struct ProCard<Content: View>: View {
         self.teaser = teaser
         self.mark = mark
         self.contentBleed = contentBleed
+        self.action = action
         self.content = content
     }
 
@@ -47,12 +54,33 @@ struct ProCard<Content: View>: View {
     }
 
     var body: some View {
+        if let action, entitlements.hasProAccess {
+            Button(action: action) { card(pressable: true) }
+                .buttonStyle(AppPressableButtonStyle())
+                .accessibilityElement(children: .combine)
+                .accessibilityAddTraits(.isButton)
+        } else {
+            card(pressable: false)
+        }
+    }
+
+    private func card(pressable: Bool) -> some View {
         VStack(alignment: .leading, spacing: DS.Spacing.s4) {
-            VStack(alignment: .leading, spacing: DS.Spacing.s1) {
-                if mark { ProMark() }
-                Text(title).textStyle(.serifSm).accessibilityAddTraits(.isHeader)
-                if let sub {
-                    Text(sub).textStyle(.sansXs, tone: .tertiary)
+            HStack(alignment: .center, spacing: DS.Spacing.s3) {
+                VStack(alignment: .leading, spacing: DS.Spacing.s1) {
+                    if mark { ProMark() }
+                    Text(title).textStyle(.serifSm).accessibilityAddTraits(.isHeader)
+                    if let sub {
+                        Text(sub).textStyle(.sansXs, tone: .tertiary)
+                    }
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                if pressable {
+                    // ProLinkCard's chevron: `sans-lg` semibold `pro-text`.
+                    Image(systemName: "chevron.right")
+                        .textStyle(.sansLg, weight: .semibold)
+                        .foregroundStyle(DS.Color.proText)
+                        .accessibilityHidden(true)
                 }
             }
             if entitlements.hasProAccess {

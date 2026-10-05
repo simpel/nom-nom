@@ -74,7 +74,8 @@ private struct SignedInView: View {
 }
 
 /// The launch screen while the session and store load: the name set in type
-/// (README "Logo": "the name is set in type: 'Nom Nom' in Newsreader") over a spinner.
+/// (README "Logo": "the name is set in type: 'Nom Nom' in Newsreader") over one
+/// shimmering bone (Skeleton README: never a lone spinner).
 struct LaunchPlaceholder: View {
     init(caption: String? = nil) {}
 
@@ -82,8 +83,8 @@ struct LaunchPlaceholder: View {
         VStack(spacing: DS.Spacing.s4) {
             Text("Nom Nom")
                 .textStyle(.serifLg)
-            ProgressView()
-                .tint(DS.Color.textTertiary)
+            SkeletonBone(width: DS.Spacing.s36, height: DS.Spacing.s1_5)
+                .accessibilityLabel("Loading")
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(DS.Color.bg)

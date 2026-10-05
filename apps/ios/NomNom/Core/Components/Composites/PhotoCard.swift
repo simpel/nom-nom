@@ -117,8 +117,9 @@ struct PhotoCard<Overlay: View>: View {
         if let image = resolved.image ?? (loadedKey == resolved.loadKey ? loadedImage : nil) {
             Image(uiImage: image).resizable().scaledToFill()
         } else if resolved.path != nil, loadedKey != resolved.loadKey {
-            // Still loading: a quiet ground, so the cuisine photo doesn't flash first.
-            DS.Color.sunken
+            // Still loading: the Skeleton ground and sweep, so the cuisine photo doesn't
+            // flash first (Skeleton README).
+            DS.Color.sunken.skeletonShimmer()
         } else if let asset = resolved.cuisineAsset {
             Image(asset).resizable().scaledToFill()
         } else {

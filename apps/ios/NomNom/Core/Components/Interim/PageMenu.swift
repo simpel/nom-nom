@@ -36,25 +36,23 @@ struct PageMenu<Context: View>: View {
                     }
                     .pickerStyle(.inline)
                 }
-                Button("Manage parties") { navigator.tab = .parties }
+                Button("Manage parties", systemImage: "person.2") { navigator.tab = .parties }
             }
             Section {
                 Button { sheet = .inbox } label: {
-                    Text("Inbox")
+                    Label("Inbox", systemImage: "tray")
                     if store.unreadCount > 0 {
                         Text(store.unreadCount == 1 ? "1 unread" : "\(store.unreadCount) unread")
                     }
                 }
-                Button("My profile") { sheet = .profile }
-                Button("Settings") { sheet = .settings }
+                Button("My profile", systemImage: "person.crop.circle") { sheet = .profile }
+                Button("Settings", systemImage: "gearshape") { sheet = .settings }
             }
             Section {
                 if !entitlements.isPro {
-                    Button { sheet = .paywall } label: {
-                        Label("Get Nom Nom Pro", systemImage: "sparkles")
-                    }
+                    Button("Get Nom Nom Pro", systemImage: "sparkles") { sheet = .paywall }
                 }
-                Button("Help & feedback") { openURL(Self.helpURL) }
+                Button("Help & feedback", systemImage: "questionmark.circle") { openURL(Self.helpURL) }
             }
         } label: {
             Image(systemName: "ellipsis")
@@ -69,6 +67,7 @@ struct PageMenu<Context: View>: View {
                 }
         }
         .accessibilityLabel(store.unreadCount > 0 ? "Page menu, \(store.unreadCount) unread" : "Page menu")
+        .barItemStyle()
         .sheet(item: $sheet) { sheet in
             PageMenuSheetContent(sheet: sheet)
         }

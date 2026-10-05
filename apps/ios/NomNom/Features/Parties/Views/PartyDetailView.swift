@@ -30,8 +30,7 @@ struct PartyDetailView: View {
             if let party {
                 content(for: party)
             } else if !didAttemptFetch {
-                ProgressView()
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                ScreenSkeleton(label: "Loading dinner party")
             } else {
                 EmptyState(
                     "Party not found",

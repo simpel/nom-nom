@@ -1,8 +1,9 @@
 import SwiftUI
 
-/// How the table scored a meal, as a DS BottomSheet: SheetHero (the average and what
-/// changed since last time), the reaction distribution, each rater's score, and how
-/// this group scored the dish before.
+/// How the table scored a meal, as a DS BottomSheet ("Nom Nom iOS" score canvas, board 1):
+/// SheetHero (the average and what changed since last time), the Pro "Why it landed at"
+/// card, and each rater's score. The distribution and the dish's history live in the Pro
+/// breakdown (`MealScoreInsightsSheet`).
 struct MealScoreBreakdownSheet: View {
     let meal: Meal
 
@@ -12,15 +13,13 @@ struct MealScoreBreakdownSheet: View {
     private var ratings: [MealRating] { store.ratings(forMeal: meal.id) }
 
     var body: some View {
-        let history = store.partyHistory(for: meal)
         let lead = leadText
 
         NavigationStack {
             SheetBody {
                 SheetHero(score: store.averageScore(forMeal: meal.id), lead: lead.text, emphasis: lead.emphasis)
-                MealRatingDistributionCard(ratings: ratings)
+                MealScoreInsightsCard(meal: meal)
                 memberScores
-                MealHistoricalScoresCard(currentMeal: meal, history: history)
             }
             .screenTitle(store.dishName(forMeal: meal), displayMode: .inline)
             .sheetCloseToolbar()

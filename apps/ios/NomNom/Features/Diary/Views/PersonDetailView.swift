@@ -8,6 +8,7 @@ struct PersonDetailView: View {
 
     @Environment(FoodStore.self) private var store
     @State private var showingEditProfile = false
+    @State private var photoError: String?
 
     private var personName: String {
         switch raterRef {
@@ -83,7 +84,12 @@ struct PersonDetailView: View {
                     name: personName,
                     photoPath: photoPath,
                     isCurrentUser: isCurrentUser,
-                    onEdit: { showingEditProfile = true }
+                    onEdit: { showingEditProfile = true },
+                    avatarEdit: ScreenHeaderAvatarEdit(
+                        hasPhoto: photoPath?.isEmpty == false,
+                        onPick: { savePhoto($0) },
+                        onRemove: { savePhoto(nil) }
+                    )
                 )
 
                 ProfileInsightsSection(raterRef: raterRef)
@@ -118,6 +124,27 @@ struct PersonDetailView: View {
                     .sheetCloseToolbar()
             }
             .dsSheet()
+        }
+        .alert("Couldn't Save Photo", isPresented: Binding(
+            get: { photoError != nil },
+            set: { if !$0 { photoError = nil } }
+        )) {
+            Button("OK") { photoError = nil }
+        } message: {
+            Text(photoError ?? "")
+        }
+    }
+
+    /// Your own avatar, from the header's pen: `nil` removes the photo.
+    private func savePhoto(_ data: Data?) {
+        guard let profile = store.myProfile else { return }
+        Task {
+            await store.updateProfile(firstName: profile.firstName, lastName: profile.lastName,
+                                      newPhotoData: data, removePhoto: data == nil)
+            if let message = store.errorMessage {
+                photoError = message
+                store.errorMessage = nil
+            }
         }
     }
 }

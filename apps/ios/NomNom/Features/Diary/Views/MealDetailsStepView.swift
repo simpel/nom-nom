@@ -12,6 +12,16 @@ struct MealDetailsStepView: View {
     var body: some View {
         ScrollView {
             VStack(spacing: DS.Spacing.block) {
+                Input(
+                    "Name this meal",
+                    label: "Name (optional)",
+                    text: Binding(
+                        get: { draft.mealTitle },
+                        set: { draft.mealTitle = $0 }
+                    ),
+                    hint: "Leave blank to use \(draft.dishName)."
+                )
+
                 AssetPhotosPickerSection(
                     draft: Binding(
                         get: { draft.photos },
@@ -50,6 +60,7 @@ struct MealDetailsStepView: View {
                         Image(systemName: "checkmark")
                             .fontWeight(.semibold)
                     }
+                    .barItemStyle()
                 }
             }
         }

@@ -1,7 +1,6 @@
 import SwiftUI
 
-/// Meal Detail's "Who rated" ("Nom Nom iOS" canvas): "3 of 5" in `primary-text`, the
-/// rated / total Bar `xs`, a Card of everyone who has rated (the viewer last), then
+/// Meal Detail's "Who rated" ("Nom Nom iOS" canvas): "3 of 5" in `primary-text`, a Card of everyone who has rated (the viewer last), then
 /// "Not yet" over a Card of everyone who hasn't. Every row opens a rater sheet; the
 /// viewer's own unrated row opens the rating sheet.
 struct MealDetailRatingsSection: View {
@@ -18,8 +17,6 @@ struct MealDetailRatingsSection: View {
 
         DSSection("Who rated", trailing: "\(rated.count) of \(raters.count)", trailingTone: .primary) {
             VStack(alignment: .leading, spacing: DS.Spacing.s3) {
-                RatingListMeter(rated: rated.count, total: raters.count)
-                    .padding(.horizontal, DS.Spacing.sectionInset)
                 if !rated.isEmpty {
                     Card(layout: .list) {
                         ForEach(rated) { rater in

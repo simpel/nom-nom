@@ -35,33 +35,24 @@ struct MealEditorRecipeSection: View {
         return recipe.ownerID == store.userID
     }
 
-    /// The recipe's own pages, its cover photos, then photos from meals made with it.
-    private var recipePhotos: [PhotoCardSource] {
-        guard let recipe = existingMatchedRecipe else { return [] }
-        var seen: Set<String> = []
-        var sources: [PhotoCardSource] = []
-        let buckets = [
-            (recipe.recipePhotoPaths, SupabaseConfig.recipeBucket),
-            (recipe.photoPaths, SupabaseConfig.photoBucket),
-            (store.photos(for: recipe), SupabaseConfig.photoBucket)
-        ]
-        for (paths, bucket) in buckets {
-            for path in paths where seen.insert(path).inserted {
-                sources.append(.remote(path: path, bucket: bucket, cuisine: recipe.cuisine))
-            }
-        }
-        let capped = Array(sources.prefix(FoodStore.PhotosDraft.maxCount))
-        return capped.isEmpty ? [.none(cuisine: recipe.cuisine)] : capped
+    /// The recipe's photo, resolved as PhotoCard does it: meal photos, recipe photos, then the cuisine's photograph.
+    private var recipeAvatar: Avatar {
+        guard let recipe = existingMatchedRecipe else { return Avatar(name: title) }
+        let photo = PhotoCardSource.recipe(recipe).resolved(in: store)
+        return Avatar(name: recipe.name, photoPath: photo.path, bucket: photo.bucket, assetName: photo.cuisineAsset)
     }
 
     var body: some View {
         Group {
             if title.trimmedName.isEmpty {
-                EmptyState(
-                    "No recipe yet",
-                    message: "Pick what you cooked from your recipes, or create a new one.",
-                    action: EmptyStateAction("Pick recipe", perform: onPickRecipe),
-                    secondaryAction: EmptyStateAction("Create recipe", variant: .secondary, perform: onCreateRecipe)
+                ScreenHeader(
+                    "What did you cook?",
+                    summary: "Pick it from your recipes, or create a new one.",
+                    centered: true,
+                    actions: [
+                        .init(title: "Pick recipe", action: onPickRecipe),
+                        .init(title: "Create recipe", variant: .secondary, appearance: .soft, action: onCreateRecipe)
+                    ]
                 )
             } else {
                 selectedRecipe
@@ -71,44 +62,37 @@ struct MealEditorRecipeSection: View {
     }
 
     private var selectedRecipe: some View {
-        VStack(alignment: .leading, spacing: DS.Spacing.s5) {
-            PhotoStrip(photos: recipePhotos.isEmpty ? [.none()] : recipePhotos, onSelect: { _ in })
+        VStack(spacing: DS.Spacing.s4) {
+            ScreenHeader(
+                title,
+                eyebrow: Cuisine.formatDisplayName(existingMatchedRecipe?.cuisine),
+                avatar: recipeAvatar
+            )
 
-            VStack(alignment: .leading, spacing: DS.Spacing.s3) {
-                VStack(alignment: .leading, spacing: DS.Spacing.s1) {
-                    if let cuisineName = Cuisine.formatDisplayName(existingMatchedRecipe?.cuisine) {
-                        Text(cuisineName).textStyle(.sansSm, tone: .accent, weight: .semibold)
-                    }
-                    Text(title)
-                        .textStyle(.serifSm)
-                        .accessibilityAddTraits(.isHeader)
+            Menu {
+                Button(action: onPickRecipe) {
+                    Label("Change Recipe", systemImage: "arrow.triangle.2.circlepath")
                 }
 
-                Menu {
-                    Button(action: onPickRecipe) {
-                        Label("Change Recipe", systemImage: "arrow.triangle.2.circlepath")
+                if isCreator {
+                    Button(action: onEditRecipe) {
+                        Label("Edit Recipe Details", systemImage: "square.and.pencil")
                     }
-
-                    if isCreator {
-                        Button(action: onEditRecipe) {
-                            Label("Edit Recipe Details", systemImage: "square.and.pencil")
-                        }
-                    }
-
-                    Button(role: .destructive, action: onRemoveRecipe) {
-                        Label("Remove", systemImage: "trash")
-                    }
-                } label: {
-                    AppButtonLabel(
-                        "Change recipe",
-                        variant: .secondary,
-                        appearance: .soft,
-                        size: .sm
-                    )
                 }
-                .buttonStyle(AppPressableButtonStyle())
+
+                Button(role: .destructive, action: onRemoveRecipe) {
+                    Label("Remove", systemImage: "trash")
+                }
+            } label: {
+                AppButtonLabel(
+                    "Change recipe",
+                    variant: .secondary,
+                    appearance: .soft,
+                    size: .md
+                )
             }
+            .buttonStyle(AppPressableButtonStyle())
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
+        .frame(maxWidth: .infinity)
     }
 }

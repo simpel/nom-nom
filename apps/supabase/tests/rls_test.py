@@ -210,6 +210,37 @@ st, r = call("POST", "/rest/v1/meal_ratings", o_tok,
              {"meal_id": meal2_id, "rater_id": o_id, "reaction": 5}, REP)
 check("a public-party follower cannot rate the party's meal", st >= 400, f"{st} {r}")
 
+print("\n== party recipe notes (one per party per recipe) ==")
+st, note = call("POST", "/rest/v1/party_recipe_notes", b_tok,
+                {"party_id": party_id, "dish_id": dish2_id, "body": "Halve the chilli", "updated_by": b_id}, REP)
+check("party member can add the party's note on a recipe", st == 201, f"{st} {note}")
+st, r = call("POST", "/rest/v1/party_recipe_notes", a_tok,
+             {"party_id": party_id, "dish_id": dish2_id, "body": "Second note", "updated_by": a_id}, REP)
+check("a party has at most one note per recipe", st >= 400, f"{st} {r}")
+st, r = call("GET", f"/rest/v1/party_recipe_notes?dish_id=eq.{dish2_id}", a_tok)
+check("other party members can read the note",
+      st == 200 and len(r) == 1 and r[0]["body"] == "Halve the chilli", f"{st} {r}")
+st, r = call("GET", f"/rest/v1/party_recipe_notes?dish_id=eq.{dish2_id}", o_tok)
+check("a follower who is not a member cannot read the note", st == 200 and len(r) == 0, f"{st} {r}")
+st, r = call("POST", "/rest/v1/party_recipe_notes", o_tok,
+             {"party_id": party_id, "dish_id": dish_id, "body": "Sneaky", "updated_by": o_id}, REP)
+check("an outsider cannot write a party's note", st >= 400, f"{st} {r}")
+st, r = call("PATCH", f"/rest/v1/party_recipe_notes?dish_id=eq.{dish2_id}", o_tok, {"body": "Changed"}, REP)
+check("an outsider cannot edit a party's note", st in (200, 204) and not r, f"{st} {r}")
+
+print("\n== meal score tweaks cache (service role writes, members read) ==")
+st, r = call("POST", "/rest/v1/meal_score_tweaks", SERVICE,
+             {"meal_id": meal2_id, "party_id": party_id, "payload": {"headline": "Heat sank it", "summary": "", "tips": []}}, REP)
+check("service role can cache tips", st == 201, f"{st} {r}")
+st, r = call("GET", f"/rest/v1/meal_score_tweaks?meal_id=eq.{meal2_id}", b_tok)
+check("party member can read cached tips", st == 200 and len(r) == 1, f"{st} {r}")
+st, r = call("GET", f"/rest/v1/meal_score_tweaks?meal_id=eq.{meal2_id}", o_tok)
+check("non-member cannot read cached tips", st == 200 and len(r) == 0, f"{st} {r}")
+st, r = call("PATCH", f"/rest/v1/meal_score_tweaks?meal_id=eq.{meal2_id}", b_tok, {"payload": {}}, REP)
+check("party member cannot write the tips cache", st in (200, 204) and not r, f"{st} {r}")
+st, r = call("POST", "/rest/v1/rpc/has_pro", b_tok, {"p_user_id": b_id})
+check("has_pro is not callable by signed-in users", st >= 400, f"{st} {r}")
+
 print("\n== invite unregistered email to party, then sign up ==")
 future_party_email = f"futureparty-{tag}@example.com"
 st, pinv_future = call("POST", "/rest/v1/party_invites", a_tok,

@@ -20,7 +20,9 @@ struct Profile: Identifiable, Hashable, Decodable {
     var notifyViaPush: Bool
     var notifyViaEmail: Bool
     var onboardingCompletedAt: Date?
-    
+    /// How recipe amounts are shown; nil follows the device until chosen.
+    var unitSystem: UnitSystem?
+
     // MARK: - Subscription (Nom Nom Pro)
     var subscriptionStatus: String?
     var subscriptionExpiresAt: Date?
@@ -41,6 +43,7 @@ struct Profile: Identifiable, Hashable, Decodable {
         case notifyViaPush = "notify_via_push"
         case notifyViaEmail = "notify_via_email"
         case onboardingCompletedAt = "onboarding_completed_at"
+        case unitSystem = "unit_system"
         case subscriptionStatus = "subscription_status"
         case subscriptionExpiresAt = "subscription_expires_at"
         case revenuecatAppUserId = "revenuecat_app_user_id"
@@ -62,6 +65,7 @@ struct Profile: Identifiable, Hashable, Decodable {
         notifyViaPush = try container.decodeIfPresent(Bool.self, forKey: .notifyViaPush) ?? true
         notifyViaEmail = try container.decodeIfPresent(Bool.self, forKey: .notifyViaEmail) ?? false
         onboardingCompletedAt = try container.decodeTimestampIfPresent(.onboardingCompletedAt)
+        unitSystem = try container.decodeIfPresent(String.self, forKey: .unitSystem).flatMap(UnitSystem.init(rawValue:))
         subscriptionStatus = try container.decodeIfPresent(String.self, forKey: .subscriptionStatus)
         subscriptionExpiresAt = try container.decodeTimestampIfPresent(.subscriptionExpiresAt)
         revenuecatAppUserId = try container.decodeIfPresent(UUID.self, forKey: .revenuecatAppUserId)
@@ -82,6 +86,7 @@ struct Profile: Identifiable, Hashable, Decodable {
         notifyViaPush: Bool = true,
         notifyViaEmail: Bool = false,
         onboardingCompletedAt: Date? = nil,
+        unitSystem: UnitSystem? = nil,
         subscriptionStatus: String? = nil,
         subscriptionExpiresAt: Date? = nil,
         revenuecatAppUserId: UUID? = nil
@@ -100,6 +105,7 @@ struct Profile: Identifiable, Hashable, Decodable {
         self.notifyViaPush = notifyViaPush
         self.notifyViaEmail = notifyViaEmail
         self.onboardingCompletedAt = onboardingCompletedAt
+        self.unitSystem = unitSystem
         self.subscriptionStatus = subscriptionStatus
         self.subscriptionExpiresAt = subscriptionExpiresAt
         self.revenuecatAppUserId = revenuecatAppUserId
@@ -128,6 +134,10 @@ struct ProfilePatch: Encodable {
     let last_name: String
     let display_name: String
     let photo_path: String?
+}
+
+struct UnitSystemPatch: Encodable {
+    let unit_system: String
 }
 
 struct ProfileNotificationPatch: Encodable {

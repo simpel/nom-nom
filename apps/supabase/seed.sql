@@ -2970,3 +2970,7 @@ on conflict (meal_id, party_id) do nothing;
 
 -- 7. Mark historical notifications as read to avoid inbox clutter
 update public.notifications set read_at = now() where read_at is null;
+
+-- 8. Servings on the seeded recipes (local data only; the column comes from
+-- 20260907210000_add_dish_serves.sql, so no migration is needed)
+update public.dishes set serves = 4 where serves is null;

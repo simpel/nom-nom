@@ -10,8 +10,8 @@ import SwiftUI
 /// - **Toggle**: `title` + `meta`, `trailing: .toggle($on)`, not pressable.
 /// - **Subject**: `leading` Avatar or PhotoCard `xs`, name, date or count as meta,
 ///   `trailing` ScoreValue `xs` or a Badge.
-/// - **Invite**: `leading` Avatar `sm`, the email, "Invited {when}", Resend
-///   (`secondary ghost sm`) + `trailingAction` revoke ✕ (`destructive ghost` icon-only).
+/// - **Invite**: `leading` Avatar `sm`, the name or email, "Invited {when}", one
+///   "Remind" AppButton `sm`, the row `.inactive()` (PartyInviteRow).
 ///
 /// A pressable row with a control in its trailing slot **splits**: only the title
 /// region is the button and the trailing slot is its sibling. A row wrapped in a
@@ -45,6 +45,15 @@ struct ListRow: View {
     var label: String?
     var action: (() -> Void)?
     private var customTitle: AnyView?
+    /// Dims the lead, title and meta at `opacity-50`; the trailing control stays live
+    /// (an invited member who hasn't joined). DS-GAPS.md A, "ListRow inactive".
+    private var isInactive = false
+    /// Meta line limit; 1 unless `.metaLines(_:)` lifts it. DS-GAPS.md A, "ListRow meta lines".
+    private var metaLineLimit: Int? = 1
+    /// Title line limit; 1 unless `.titleLines(_:)` lifts it. DS-GAPS.md A, "ListRow title and value".
+    private var titleLineLimit: Int? = 1
+    /// The value in semibold (an ingredient's amount). DS-GAPS.md A, "ListRow title and value".
+    private var isValueSemibold = false
 
     init(
         _ title: String,
@@ -93,6 +102,34 @@ struct ListRow: View {
         self.customTitle = AnyView(title())
     }
 
+    /// The inactive state: see `isInactive`.
+    func inactive(_ on: Bool = true) -> ListRow {
+        var row = self
+        row.isInactive = on
+        return row
+    }
+
+    /// Lets meta wrap (`nil` = as many lines as it needs) for rows whose meta is the content.
+    func metaLines(_ limit: Int?) -> ListRow {
+        var row = self
+        row.metaLineLimit = limit
+        return row
+    }
+
+    /// Lets the title wrap (`nil` = as many lines as it needs): an ingredient's name.
+    func titleLines(_ limit: Int?) -> ListRow {
+        var row = self
+        row.titleLineLimit = limit
+        return row
+    }
+
+    /// Sets the right-aligned `value` semibold.
+    func valueSemibold(_ on: Bool = true) -> ListRow {
+        var row = self
+        row.isValueSemibold = on
+        return row
+    }
+
     private var isPressable: Bool { action != nil || chevron == true }
     private var showsChevron: Bool { chevron ?? (action != nil) }
     private var isSplit: Bool {
@@ -136,17 +173,19 @@ struct ListRow: View {
     private var main: some View {
         HStack(spacing: DS.Spacing.s3) {
             ListRowLeadingView(slot: leading)
+                .opacity(isInactive ? DS.Opacity.disabled : 1)
             VStack(alignment: .leading, spacing: DS.Spacing.s0_5) {
                 titleView
                 if let metaText {
-                    metaText.textStyle(.sansSm, tone: .secondary, lines: 1)
+                    metaText.textStyle(.sansSm, tone: .secondary, lines: metaLineLimit)
                 }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
+            .opacity(isInactive ? DS.Opacity.disabled : 1)
             if let value {
                 // README: "right-aligned tabular value"; step and ink are unspecified.
                 // RatingList's value rows (also ListRows) set `sans-sm` at full strength.
-                Text(value).textStyle(.sansSm, numeric: true, lines: 1)
+                Text(value).textStyle(.sansSm, weight: isValueSemibold ? .semibold : nil, numeric: true, lines: 1)
                     .layoutPriority(1)
             }
         }
@@ -162,10 +201,10 @@ struct ListRow: View {
     @ViewBuilder
     private var titleView: some View {
         if let customTitle {
-            customTitle.lineLimit(1)
+            customTitle.lineLimit(titleLineLimit)
         } else {
             Text(title)
-                .textStyle(.sansMd, tone: nil, weight: isPressable || unread ? .semibold : nil, lines: 1)
+                .textStyle(.sansMd, tone: nil, weight: isPressable || unread ? .semibold : nil, lines: titleLineLimit)
                 .foregroundStyle(tone == .destructive ? DS.Color.destructiveText : DS.Color.textPrimary)
         }
     }

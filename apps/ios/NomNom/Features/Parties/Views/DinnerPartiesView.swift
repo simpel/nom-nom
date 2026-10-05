@@ -1,8 +1,8 @@
 import SwiftUI
 
 /// Main Tab — Dinner Parties ("Nom Nom iOS" canvas): the ScreenHeader with "New party",
-/// pending invitations, "Your parties" and a "Find parties" row leading to followed
-/// and public parties, `spacing-7` apart.
+/// pending invitations, "Your parties", the parties you follow and a paged list of
+/// suggested public parties, `spacing-7` apart.
 struct DinnerPartiesView: View {
     var isSheet: Bool = false
 
@@ -40,14 +40,8 @@ struct DinnerPartiesView: View {
                         }
                     }
 
-                    Card(layout: .list) {
-                        NavigationLink {
-                            FindPartiesView()
-                        } label: {
-                            ListRow("Find parties", meta: "Public parties to follow", leading: .icon("magnifyingglass"), chevron: true)
-                        }
-                        .buttonStyle(ListRowButtonStyle())
-                    }
+                    FollowedPartiesSection()
+                    SuggestedPartiesSection()
                 }
                 .padding(.horizontal, DS.Spacing.gutter)
                 .padding(.top, DS.Spacing.s5)
@@ -56,6 +50,7 @@ struct DinnerPartiesView: View {
             .background(DS.Color.bg)
             .refreshable {
                 await store.load()
+                await store.loadPartySuggestions(reset: true)
             }
             .modifier(DinnerPartiesToolbar(isSheet: isSheet) { showingCreateSheet = true })
             .sheet(isPresented: $showingCreateSheet) {

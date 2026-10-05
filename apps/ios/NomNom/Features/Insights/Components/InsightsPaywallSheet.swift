@@ -74,8 +74,11 @@ struct InsightsPaywallSheet: View {
                 }
             }
         } else {
-            ProgressView()
-                .frame(maxWidth: .infinity)
+            // The two package cards (Yearly, Monthly), in their own shape.
+            VStack(spacing: DS.Spacing.s3) {
+                Skeleton(layout: .card, lines: 1, label: "Loading plans")
+                Skeleton(layout: .card, lines: 1, label: "Loading plans")
+            }
         }
     }
 

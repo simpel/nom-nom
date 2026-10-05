@@ -16,7 +16,7 @@ struct PartyMembersSheet: View {
     }
 
     private var pendingInvites: [PartyInvite] {
-        store.invites(forParty: party.id).filter { $0.isPending }
+        store.pendingInvites(forParty: party.id)
     }
 
     private var isCreatorOrHost: Bool {
@@ -40,8 +40,6 @@ struct PartyMembersSheet: View {
                         showingInviteSheet = true
                     }
                 }
-
-                PartyInvitesSection(invites: pendingInvites)
 
                 membersSection
             }
@@ -108,6 +106,7 @@ struct PartyMembersSheet: View {
                             : nil
                     )
                 }
+                ForEach(pendingInvites) { PartyInviteRow(invite: $0) }
             }
         }
     }

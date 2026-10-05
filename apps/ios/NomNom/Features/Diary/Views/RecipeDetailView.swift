@@ -1,34 +1,36 @@
 import SwiftUI
 
 /// A recipe's detail screen ("Nom Nom iOS" canvas), top to bottom on `bg`: ScreenHeader
-/// (cuisine, name, "Start cooking" / "Use in a meal"), PhotoStrip, the Facts card, the party and health ScoreCards, ingredients with servings, steps, cooking history,
+/// (cuisine, name, "Start cooking" / "Use in a meal"), PhotoStrip, the Facts card, the party and health ScoreCards, ingredients with servings, steps,
 /// recipe pages and details. The toolbar has the favourite heart and the PageMenu,
 /// whose recipe group gives the owner Generate photo / Edit / Delete.
 struct RecipeDetailView: View {
     let recipeID: UUID
     var showCloseButton: Bool = false
+    /// Scroll to the current party's note once it loads (opened from "View note on recipe").
+    var focusPartyNote: Bool = false
 
     @Environment(FoodStore.self) var store
+    @Environment(EntitlementStore.self) var entitlements
     @Environment(\.dismiss) var dismiss
 
     @State var fallbackRecipe: Recipe?
     @State var isLoadingRemote = false
     @State var showEditSheet = false
     @State var showMealEditor = false
-    @State var selectedMealForDetail: Meal?
     @State var selectedPhotoIndex: Int?
     @State var confirmDeleteRecipe = false
     @State var deleteError: String?
     @State var isAnalyzingHealth = false
     @State var healthAnalysisFailed = false
     @State var showHealthRationale = false
-    @State var showGlobalLeaderboard = false
     @State var isGeneratingPhoto = false
     @State var showCookMode = false
 
-    init(recipeID: UUID, showCloseButton: Bool = false) {
+    init(recipeID: UUID, showCloseButton: Bool = false, focusPartyNote: Bool = false) {
         self.recipeID = recipeID
         self.showCloseButton = showCloseButton
+        self.focusPartyNote = focusPartyNote
         self._fallbackRecipe = State(initialValue: nil)
     }
 
@@ -43,7 +45,6 @@ struct RecipeDetailView: View {
     }
 
     var recipe: Recipe? { store.recipe(recipeID) ?? fallbackRecipe }
-    var history: [Meal] { store.servings(of: recipeID).sorted { $0.eatenOn > $1.eatenOn } }
 
     /// Dish photos, then recipe pages, without duplicates (all in the recipe bucket).
     var allPhotos: [String] {
@@ -60,8 +61,7 @@ struct RecipeDetailView: View {
             if let recipe {
                 content(for: recipe)
             } else if store.isLoading || isLoadingRemote {
-                ProgressView()
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                ScreenSkeleton(label: "Loading recipe")
             } else {
                 EmptyState("Recipe is gone", message: "It was deleted.", layout: .screen)
                     .padding(.horizontal, DS.Spacing.gutter)
@@ -71,6 +71,7 @@ struct RecipeDetailView: View {
         }
         .screenTitle(showCloseButton ? (recipe?.name ?? "Recipe") : "", displayMode: .inline)
         .task { await loadRecipeAndHealth() }
+        .task(id: recipeID) { await store.loadPartyRecipeNotes(dishID: recipeID) }
         .toolbar { toolbarContent }
         .alert("Delete this recipe?", isPresented: $confirmDeleteRecipe) {
             Button("Cancel", role: .cancel) {}
@@ -92,11 +93,6 @@ struct RecipeDetailView: View {
         .sheet(isPresented: $showMealEditor) {
             MealEditorView(mealID: nil, prefilledDishID: recipeID)
         }
-        .sheet(item: $selectedMealForDetail) { meal in
-            NavigationStack {
-                MealDetailView(mealID: meal.id, showCloseButton: true)
-            }
-        }
         .sheet(item: Binding(
             get: { selectedPhotoIndex.map { PhotoIndexWrapper(index: $0) } },
             set: { selectedPhotoIndex = $0?.index }
@@ -110,9 +106,6 @@ struct RecipeDetailView: View {
                 RecipeHealthRationaleSheet(recipe: recipe, healthIndex: healthIndex)
             }
         }
-        .sheet(isPresented: $showGlobalLeaderboard) {
-            RecipeLeaderboardSheet()
-        }
         .fullScreenCover(isPresented: $showCookMode) {
             if let recipe {
                 CookModeView(recipe: recipe) { showMealEditor = true }
@@ -122,7 +115,7 @@ struct RecipeDetailView: View {
 
     private func content(for recipe: Recipe) -> some View {
         let isOwner = recipe.ownerID == store.userID
-        return ScrollView {
+        return ScrollViewReader { proxy in ScrollView {
             VStack(alignment: .leading, spacing: DS.Spacing.block) {
                 RecipeDetailHeader(
                     recipe: recipe,
@@ -142,9 +135,11 @@ struct RecipeDetailView: View {
                     recipe: recipe,
                     isAnalyzingHealth: isAnalyzingHealth,
                     healthAnalysisFailed: healthAnalysisFailed,
-                    onOpenHealth: { showHealthRationale = true },
-                    onOpenLeaderboard: { showGlobalLeaderboard = true }
+                    onOpenHealth: { showHealthRationale = true }
                 )
+
+                PartyRecipeNoteCard(recipeID: recipe.id)
+                    .id(Self.partyNoteAnchor)
 
                 if !recipe.ingredients.isEmpty {
                     RecipeIngredientsCard(ingredients: recipe.ingredients, serves: recipe.serves)
@@ -152,12 +147,6 @@ struct RecipeDetailView: View {
 
                 if !recipe.instructions.isEmpty {
                     RecipeStepsCard(instructions: recipe.instructions)
-                }
-
-                if !history.isEmpty {
-                    RecipeHistorySection(history: history) { meal in
-                        selectedMealForDetail = meal
-                    }
                 }
 
                 if !recipe.recipePhotoPaths.isEmpty {
@@ -171,6 +160,23 @@ struct RecipeDetailView: View {
             .padding(.bottom, DS.Spacing.s12)
         }
         .background(DS.Color.bg)
+        // Runs on appear too, so a note already in memory still gets scrolled to.
+        .task(id: partyNoteLoaded) {
+            guard focusPartyNote, partyNoteLoaded else { return }
+            // Let the sheet finish presenting before scrolling.
+            try? await Task.sleep(for: .milliseconds(Int(DS.Motion.durationLayout * 1000)))
+            withAnimation(DS.Motion.layout) {
+                proxy.scrollTo(Self.partyNoteAnchor, anchor: .top)
+            }
+        }
+        }
+    }
+
+    private static let partyNoteAnchor = "partyNote"
+
+    private var partyNoteLoaded: Bool {
+        guard let party = store.currentParty else { return false }
+        return store.partyRecipeNote(dishID: recipeID, partyID: party.id) != nil
     }
 }
 

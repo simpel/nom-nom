@@ -48,9 +48,10 @@ struct InboxSheetView: View {
                             if isMarkingAllRead {
                                 ProgressView().controlSize(.small)
                             } else {
-                                Text("Mark all read").textStyle(.sansSm, tone: .accent, weight: .semibold)
+                                Text("Mark all read").textStyle(.sansSm, weight: .semibold)
                             }
                         }
+                        .barItemStyle()
                     }
                 }
             }

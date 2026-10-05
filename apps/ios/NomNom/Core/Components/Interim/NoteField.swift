@@ -11,14 +11,18 @@ struct NoteField: View {
     @Binding var text: String
     let title: String
     var maxLength: Int?
+    /// Edit as a bulleted list (`NoteEditorSheet` `bulleted`), shown in full rather than
+    /// clamped to three lines.
+    var bulleted: Bool
 
     @State private var isEditing = false
 
-    init(_ placeholder: String, text: Binding<String>, title: String, maxLength: Int? = nil) {
+    init(_ placeholder: String, text: Binding<String>, title: String, maxLength: Int? = nil, bulleted: Bool = false) {
         self.placeholder = placeholder
         self._text = text
         self.title = title
         self.maxLength = maxLength
+        self.bulleted = bulleted
     }
 
     private var isEmpty: Bool { text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
@@ -33,7 +37,7 @@ struct NoteField: View {
                         .textStyle(.sansMd, tone: .tertiary, lines: 3)
                 } else {
                     Text(text)
-                        .textStyle(.serifXs, italic: true, lines: 3)
+                        .textStyle(.serifXs, italic: !bulleted, lines: bulleted ? nil : 3)
                 }
             }
             .multilineTextAlignment(.leading)
@@ -45,7 +49,7 @@ struct NoteField: View {
         .accessibilityValue(isEmpty ? "Empty" : text)
         .accessibilityHint("Opens the editor")
         .sheet(isPresented: $isEditing) {
-            NoteEditorSheet(title: title, placeholder: placeholder, text: $text, maxLength: maxLength)
+            NoteEditorSheet(title: title, placeholder: placeholder, text: $text, maxLength: maxLength, bulleted: bulleted)
         }
     }
 }

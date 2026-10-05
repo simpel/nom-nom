@@ -25,7 +25,7 @@ COMPONENTS=()
 while IFS= read -r d; do COMPONENTS+=("$(basename "$d")"); done < <(find "$DS_DIR" -mindepth 1 -maxdepth 1 -type d | sort)
 
 # The Swift calls that count as "composes the design system" in a feature view.
-DS_CALLS="AppButton|AppButtonLabel|Card|SectionCard|DSSection|ListRow|EmptyState|Badge|Avatar|Bar|ScoreValue|SectionHeader|AppToggle|Input|TextArea|ScreenHeader|Facts|ScoreCard|PhotoCard|PhotoStrip|PhotoStripEditor|RatingList|Timeline|RecipeCard|RecipeLinkCard|RecipeShelf|PartyCard|SegmentedBar|ValueStepper|LabeledPhotoCard|TasteScoreSelector|SheetBody|SheetCard|SheetHero|SwipeableListCard|TrendChart|MediaViewerSheet|NameFieldsCard|PartyFormFields|VisibilityToggleCard|AccountActionsSection|ChoiceTile|TagToggle"
+DS_CALLS="AppButton|AppButtonLabel|Card|SectionCard|DSSection|ListRow|EmptyState|Badge|Avatar|Bar|ScoreValue|SectionHeader|AppToggle|Input|TextArea|ScreenHeader|Facts|ScoreCard|PhotoCard|PhotoStrip|PhotoStripEditor|RatingList|Timeline|RecipeCard|RecipeLinkCard|RecipeShelf|PartyCard|SegmentedBar|ValueStepper|LabeledPhotoCard|TasteScoreSelector|SheetBody|SheetCard|SheetHero|SwipeableListCard|TrendChart|MediaViewerSheet|NameFieldsCard|PartyFormFields|VisibilityToggleCard|AccountActionsSection|ChoiceTile|TagToggle|ProCard|ProGate|ProMark|Skeleton|SkeletonBone|ScreenSkeleton"
 
 in_gaps() { grep -qw "$1" "$GAPS"; }
 
@@ -56,7 +56,7 @@ while IFS= read -r -d '' f; do
   rel="${f#"$ROOT/"}"
   name="$(basename "$f" .swift)"; name="${name%%+*}"
   grep -qE ':[[:space:]]*View[[:space:]]*\{|some View' "$f" || continue
-  grep -qE "\\b($DS_CALLS)\\(" "$f" && continue
+  grep -qE "\\b($DS_CALLS)[[:space:]]*[({]" "$f" && continue
   in_gaps "$name" && continue
   echo "  WARN  $rel"
   warnings=$((warnings + 1))

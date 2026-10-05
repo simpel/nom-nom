@@ -18,14 +18,13 @@ struct PartySetupStepView: View {
     private var party: Party? { partyID.flatMap { store.party($0) } }
     private var invites: [PartyInvite] {
         guard let partyID else { return [] }
-        return store.invites(forParty: partyID)
+        return store.pendingInvites(forParty: partyID)
     }
 
     var body: some View {
         SheetBody {
             if let party {
                 PartyInviteLinkCard(party: party)
-                PartyInvitesSection(invites: invites)
             }
 
             membersSection
@@ -54,6 +53,7 @@ struct PartySetupStepView: View {
                             leading: .avatar(Avatar(profile: member, size: .sm, decorative: true))
                         )
                     }
+                    ForEach(invites) { PartyInviteRow(invite: $0) }
                 } else {
                     // One line of meta (ListRow README); invites open once the party exists.
                     ListRow(

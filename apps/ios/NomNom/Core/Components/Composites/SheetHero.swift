@@ -2,7 +2,8 @@ import SwiftUI
 
 /// The BottomSheet hero: ScoreValue `lg` over a Bar `md` (the same pair
 /// as ScoreCard, `s3` apart) and a `sans-md` `text-secondary` lead whose key
-/// figure is set semibold in `primary-text`.
+/// figure is set semibold in `primary-text`. Numeral and bar take the score's
+/// reaction step (`-text` ink, `-fill` bar): DS-GAPS B, "SheetHero reaction ink".
 ///
 /// ```swift
 /// SheetHero(score: 1, lead: "16 above Joel\u{2019}s usual of 84", emphasis: "16 above")
@@ -14,8 +15,11 @@ struct SheetHero: View {
     var lead: String?
     /// The first occurrence of this fragment in `lead` is emphasised.
     var emphasis: String?
+    /// `.pro` for the health score (numeral `pro-text`, bar `pro`).
+    var ink: ScoreValueInk
 
-    init(score: Double?, verdict: String? = nil, lead: String? = nil, emphasis: String? = nil) {
+    init(score: Double?, verdict: String? = nil, lead: String? = nil, emphasis: String? = nil, ink: ScoreValueInk = .reaction) {
+        self.ink = ink
         self.score = score
         self.verdict = verdict
         self.lead = lead
@@ -24,9 +28,8 @@ struct SheetHero: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: DS.Spacing.s3) {
-            ScoreValue(score: score, verdict: verdict, size: .lg)
-            Bar(value: score.map { $0 * 100 }, size: .md)
-                .accessibilityHidden(true)
+            ScoreValue(score: score, verdict: verdict, size: .lg, ink: ink)
+            bar.accessibilityHidden(true)
             if let lead, !lead.isEmpty {
                 Text(Self.emphasised(lead, fragment: emphasis))
                     .textStyle(.sansMd, tone: .secondary)
@@ -34,6 +37,19 @@ struct SheetHero: View {
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    @ViewBuilder private var bar: some View {
+        if let score {
+            Bar(
+                segments: [BarSegment(value: score * 100, ink: ink == .pro ? .color(DS.Color.pro) : .reaction(Reaction(score: score)))],
+                max: 100,
+                size: .md,
+                label: "\(Int((score * 100).rounded())) out of 100"
+            )
+        } else {
+            Bar(value: nil, size: .md)
+        }
     }
 
     /// `lead` with `fragment` set semibold in `primary-text`.

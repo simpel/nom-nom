@@ -167,12 +167,12 @@
 .nn-badge[data-size="sm"] { height: var(--spacing-5); padding: 0 var(--spacing-2); }
 
 /* ---------- SectionHeader (also SectionCard's heading) */
-.nn-section-header { display: flex; align-items: baseline; justify-content: space-between; gap: var(--spacing-2); min-width: 0; }
+.nn-section-header { display: flex; align-items: first baseline; justify-content: space-between; gap: var(--spacing-2); min-width: 0; }
 /* The label reserves no space of its own. A Section places it with the inset and gap that a section needs. */
 .nn-section__head { padding: 0 var(--spacing-2); margin: 0 0 var(--spacing-2); }
 /* Type comes from Text (sans-xs, tertiary); this adds only the casing, the tracking and the layout. */
-.nn-section-header__title { margin: 0; display: inline-flex; align-items: center; gap: var(--spacing-1\.5); min-width: 0;
-  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; letter-spacing: var(--tracking-widest); text-transform: uppercase; }
+.nn-section-header__title { margin: 0; display: inline-flex; align-items: first baseline; gap: var(--spacing-1\.5); min-width: 0;
+  white-space: normal; overflow-wrap: anywhere; letter-spacing: var(--tracking-widest); text-transform: uppercase; }
 .nn-section-header__title .nn-icon { flex: none; font-size: var(--text-sm); }
 .nn-section-header[data-case="normal"] .nn-section-header__title { letter-spacing: normal; text-transform: none; }
 .nn-section-header[data-variant="primary"] .nn-section-header__title { color: var(--primary-text); font-weight: var(--font-weight-semibold); }
@@ -497,7 +497,27 @@
 
 /* ---------- Reduced motion: one rule for the whole system. Transitions become instant rather than
    fast, and nothing is left animating that a per-component exception forgot to cover. */
+/* ---------- Skeleton: bones in `sunken` with a `panel` sweep, the shape of the content to come */
+.nn-skeleton { display: block; position: relative; overflow: hidden; background: var(--sunken); border-radius: var(--radius-full); height: var(--spacing-4); width: 100%; }
+.nn-skeleton::after { content: ""; position: absolute; inset: 0; transform: translateX(-100%);
+  background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--panel) 70%, transparent), transparent);
+  animation: nn-shimmer var(--duration-shimmer, 1400ms) var(--ease-standard) infinite; }
+@keyframes nn-shimmer { to { transform: translateX(100%); } }
+.nn-skeleton[data-shape="heading"] { height: var(--spacing-6); }
+.nn-skeleton[data-shape="title"] { height: var(--spacing-4); }
+.nn-skeleton[data-shape="meta"] { height: var(--spacing-3); }
+.nn-skeleton[data-shape="text"] { height: var(--spacing-3); }
+.nn-skeleton[data-shape="avatar"] { flex: none; width: var(--spacing-8); height: var(--spacing-8); }
+.nn-skeleton[data-shape="photo"] { flex: none; width: var(--spacing-11); height: var(--spacing-11); border-radius: var(--radius-xl); }
+.nn-skeleton[data-shape="trailing"] { flex: none; width: var(--spacing-10); height: var(--spacing-6); }
+.nn-skeleton-row { display: flex; align-items: center; gap: var(--spacing-3); min-height: var(--spacing-14); padding: var(--spacing-3) 0; box-sizing: border-box; }
+.nn-skeleton-row__lines { flex: 1; display: flex; flex-direction: column; gap: var(--spacing-2); min-width: 0; }
+.nn-skeleton-text { display: flex; flex-direction: column; gap: var(--spacing-3); }
+.nn-skeleton-region { display: flex; flex-direction: column; gap: var(--spacing-3); }
+.nn-skeleton-region__caption { margin: 0; text-align: center; }
+
 @media (prefers-reduced-motion: reduce) {
+  .nn-skeleton::after { display: none; }
   .nn * , .nn *::before, .nn *::after {
     transition-duration: .01ms !important;
     animation-duration: .01ms !important;
@@ -512,6 +532,8 @@
 /* ---------- Forced colours (Windows High Contrast). The system leans on soft tints and hairlines,
    both of which the OS discards: give every boundary a real border and let system colours through. */
 @media (forced-colors: active) {
+  .nn-skeleton { border: var(--border-hairline) solid GrayText; }
+  .nn-skeleton::after { display: none; }
   .nn-card, .nn-field, .nn-bar, .nn-badge, .nn-photo-card, .nn-sheet { border: var(--border-hairline) solid CanvasText; }
   .nn-button { border: var(--border-hairline) solid ButtonText; }
   .nn-button:focus-visible, .nn-card__hit { position: absolute; inset: 0; z-index: 1; padding: 0; border: 0; background: none; border-radius: inherit; cursor: pointer; }

@@ -31,10 +31,18 @@ final class FoodStore {
     var partyMembers: [PartyMember] = []
     var partyInvites: [PartyInvite] = []
     var partyFollowers: [PartyFollower] = []
+    /// Public parties ranked by embedding similarity to the viewer's own (`suggest_parties`), paged.
+    var partySuggestions: [PartySuggestion] = []
+    var partySuggestionsHasMore = true
+    var isLoadingPartySuggestions = false
     var mealParties: [MealParty] = []
     var recipeFavorites: [RecipeFavorite] = []
     /// AI picks per party (`recommend-party-recipes`), in rank order. Empty means fall back to safe bets.
     var partyRecommendations: [UUID: [PartyRecommendation]]
+    /// "Make it land next time" tips per meal (`suggest-recipe-tweaks`, Pro), as last fetched.
+    var recipeTweaksByMeal: [UUID: RecipeTweaks] = [:]
+    /// Party notes on recipes (`party_recipe_notes`, Pro), loaded per recipe.
+    var partyRecipeNotes: [PartyRecipeNote] = []
     var favoriteRecipeIDs: Set<UUID> = []
     var favoriteRecipes: [Recipe] {
         recipes.filter { favoriteRecipeIDs.contains($0.id) }
@@ -132,12 +140,6 @@ final class FoodStore {
         parties.filter(\.isPublic)
     }
 
-    var discoverParties: [Party] {
-        let myIDs = myPartyIDs
-        let followedIDs = followedPartyIDs
-        return parties.filter { $0.isPublic && !myIDs.contains($0.id) && !followedIDs.contains($0.id) }
-    }
-
     func isFollowing(partyID: UUID) -> Bool {
         guard !isMember(of: partyID) else { return false }
         return followedPartyIDs.contains(partyID)
@@ -210,8 +212,10 @@ final class FoodStore {
     func meal(_ id: UUID) -> Meal? { mealByID[id] }
     func party(_ id: UUID) -> Party? { partyByID[id] }
 
+    /// The meal's own name when it has one, else its recipe's.
     func dishName(forMeal meal: Meal) -> String {
-        dishByID[meal.dishID]?.name ?? "Untitled"
+        if let title = meal.title?.nilIfBlank { return title }
+        return dishByID[meal.dishID]?.name ?? "Untitled"
     }
 
     func recipeName(forMeal meal: Meal) -> String {

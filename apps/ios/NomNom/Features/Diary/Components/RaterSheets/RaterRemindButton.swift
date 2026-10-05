@@ -2,8 +2,8 @@ import SwiftUI
 
 /// The unrated sheet's one action, a full-width AppButton `lg` that walks through:
 ///
-/// - not asked → "Ask Oskar to rate" (mail, solid)
-/// - can remind → "Remind Oskar" (bell, solid) → loading → "Reminder sent" (check, soft)
+/// - not asked → "Remind Oskar to rate the meal" (mail, solid; sends the first ask)
+/// - can remind → "Remind Oskar to rate the meal" (bell, solid) → loading → "Reminder sent" (check, soft)
 /// - waiting → "Reminded · try again in 21 h" / "Asked · remind in 21 h" (check, soft, disabled)
 ///
 /// One reminder a day (`remind_meal_invite`). When the invitee has push off, a note
@@ -40,12 +40,12 @@ struct RaterRemindButton: View {
         } else {
             switch store.ratingAskStatus(for: profile.id, onMeal: meal.id) {
             case .notAsked:
-                AppButton("Ask \(name) to rate", icon: "envelope", size: .lg, fullWidth: true, isLoading: isSending) {
+                AppButton("Remind \(name) to rate the meal", icon: "envelope", size: .lg, fullWidth: true, isLoading: isSending) {
                     ask()
                 }
             case .canRemind:
                 AppButton(
-                    isSending ? "Sending reminder" : "Remind \(name)",
+                    isSending ? "Sending reminder" : "Remind \(name) to rate the meal",
                     icon: "bell", size: .lg, fullWidth: true, isLoading: isSending
                 ) {
                     remind()

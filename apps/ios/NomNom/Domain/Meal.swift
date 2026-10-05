@@ -4,6 +4,8 @@ import Foundation
 struct Meal: Identifiable, Hashable, Decodable {
     let id: UUID
     var recipeID: UUID
+    /// Optional name for this serving; the recipe's name is shown when it is nil.
+    var title: String?
     var dishID: UUID {
         get { recipeID }
         set { recipeID = newValue }
@@ -28,6 +30,7 @@ struct Meal: Identifiable, Hashable, Decodable {
     enum CodingKeys: String, CodingKey {
         case id
         case recipeID = "dish_id"
+        case title
         case createdBy = "created_by"
         case eatenOn = "eaten_on"
         case notes
@@ -42,6 +45,7 @@ struct Meal: Identifiable, Hashable, Decodable {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         id = try container.decode(UUID.self, forKey: .id)
         recipeID = try container.decode(UUID.self, forKey: .recipeID)
+        title = try container.decodeIfPresent(String.self, forKey: .title)
         createdBy = try container.decode(UUID.self, forKey: .createdBy)
         eatenOn = try container.decodeDay(.eatenOn)
         notes = try container.decodeIfPresent(String.self, forKey: .notes) ?? ""
@@ -68,6 +72,7 @@ struct Meal: Identifiable, Hashable, Decodable {
     init(
         id: UUID = UUID(),
         recipeID: UUID,
+        title: String? = nil,
         createdBy: UUID,
         eatenOn: Date = .now,
         notes: String = "",
@@ -78,6 +83,7 @@ struct Meal: Identifiable, Hashable, Decodable {
     ) {
         self.id = id
         self.recipeID = recipeID
+        self.title = title
         self.createdBy = createdBy
         self.eatenOn = eatenOn
         self.notes = notes
@@ -92,6 +98,7 @@ struct Meal: Identifiable, Hashable, Decodable {
 
 struct NewMeal: Encodable {
     let dish_id: UUID
+    let title: String?
     let created_by: UUID
     let eaten_on: String
     let notes: String
@@ -99,8 +106,9 @@ struct NewMeal: Encodable {
     let effort: Int?
     let repeat_desire: Int?
 
-    init(recipeID: UUID, createdBy: UUID, eatenOn: Date, notes: String, photoPaths: [String] = [], effort: EffortLevel? = nil, repeatDesire: RotationGoal? = nil) {
+    init(recipeID: UUID, title: String? = nil, createdBy: UUID, eatenOn: Date, notes: String, photoPaths: [String] = [], effort: EffortLevel? = nil, repeatDesire: RotationGoal? = nil) {
         self.dish_id = recipeID
+        self.title = title
         self.created_by = createdBy
         self.eaten_on = PostgresDate.string(from: eatenOn)
         self.notes = notes
@@ -109,28 +117,43 @@ struct NewMeal: Encodable {
         self.repeat_desire = repeatDesire?.rawValue
     }
 
-    init(dishID: UUID, createdBy: UUID, eatenOn: Date, notes: String, photoPaths: [String] = [], effort: EffortLevel? = nil, repeatDesire: RotationGoal? = nil) {
-        self.init(recipeID: dishID, createdBy: createdBy, eatenOn: eatenOn, notes: notes, photoPaths: photoPaths, effort: effort, repeatDesire: repeatDesire)
+    init(dishID: UUID, title: String? = nil, createdBy: UUID, eatenOn: Date, notes: String, photoPaths: [String] = [], effort: EffortLevel? = nil, repeatDesire: RotationGoal? = nil) {
+        self.init(recipeID: dishID, title: title, createdBy: createdBy, eatenOn: eatenOn, notes: notes, photoPaths: photoPaths, effort: effort, repeatDesire: repeatDesire)
     }
 }
 
 struct MealPatch: Encodable {
     let dish_id: UUID
+    let title: String?
     let eaten_on: String
     let notes: String
     let effort: Int?
     let repeat_desire: Int?
 
-    init(recipeID: UUID, eatenOn: Date, notes: String, effort: EffortLevel? = nil, repeatDesire: RotationGoal? = nil) {
+    init(recipeID: UUID, title: String? = nil, eatenOn: Date, notes: String, effort: EffortLevel? = nil, repeatDesire: RotationGoal? = nil) {
         self.dish_id = recipeID
+        self.title = title
         self.eaten_on = PostgresDate.string(from: eatenOn)
         self.notes = notes
         self.effort = effort?.rawValue
         self.repeat_desire = repeatDesire?.rawValue
     }
 
-    init(dishID: UUID, eatenOn: Date, notes: String, effort: EffortLevel? = nil, repeatDesire: RotationGoal? = nil) {
-        self.init(recipeID: dishID, eatenOn: eatenOn, notes: notes, effort: effort, repeatDesire: repeatDesire)
+    init(dishID: UUID, title: String? = nil, eatenOn: Date, notes: String, effort: EffortLevel? = nil, repeatDesire: RotationGoal? = nil) {
+        self.init(recipeID: dishID, title: title, eatenOn: eatenOn, notes: notes, effort: effort, repeatDesire: repeatDesire)
+    }
+
+    enum CodingKeys: String, CodingKey { case dish_id, title, eaten_on, notes, effort, repeat_desire }
+
+    /// `title` is always sent, as null when cleared, so an edit can remove a custom name.
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(dish_id, forKey: .dish_id)
+        try container.encode(title, forKey: .title)
+        try container.encode(eaten_on, forKey: .eaten_on)
+        try container.encode(notes, forKey: .notes)
+        try container.encode(effort, forKey: .effort)
+        try container.encode(repeat_desire, forKey: .repeat_desire)
     }
 }
 

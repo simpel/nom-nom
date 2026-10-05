@@ -14,6 +14,7 @@ struct CookModeView: View {
 
     @State private var index = 0
     @State private var details: [RecipeStepDetail]?
+    @State private var isLoadingDetails = true
     @State private var timer = CookModeTimer()
 
     private var steps: [String] { recipe.instructions }
@@ -36,7 +37,7 @@ struct CookModeView: View {
                 .padding(.top, DS.Spacing.s5)
 
                 ScrollView {
-                    CookModeStepView(recipe: recipe, index: index, detail: details?[index], timer: timer)
+                    CookModeStepView(recipe: recipe, index: index, detail: details?[index], isLoadingDetail: isLoadingDetails, timer: timer)
                         .padding(.horizontal, DS.Spacing.gutter)
                         .padding(.vertical, DS.Spacing.s7)
                         .id(index)
@@ -57,7 +58,10 @@ struct CookModeView: View {
             .screenTitle(recipe.name, displayMode: .inline)
             .sheetCloseToolbar { dismiss() }
         }
-        .task { details = await store.stepDetails(for: recipe) }
+        .task {
+            details = await store.stepDetails(for: recipe)
+            isLoadingDetails = false
+        }
         .onAppear { UIApplication.shared.isIdleTimerDisabled = true }
         .onDisappear {
             UIApplication.shared.isIdleTimerDisabled = false

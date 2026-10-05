@@ -21,7 +21,8 @@ struct PartyAverageRatingCard: View {
             verdict: stats?.reaction.shortLabel,
             layout: .compact,
             title: "Average rating",
-            count: countText
+            count: countText,
+            barSegments: stats.map { store.barSegments($0.shares) }
         )
     }
 }

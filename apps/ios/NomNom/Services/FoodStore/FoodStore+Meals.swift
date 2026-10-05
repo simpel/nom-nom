@@ -218,6 +218,8 @@ extension FoodStore {
     struct MealDraft {
         var mealID: UUID?
         var dishName: String
+        /// Optional name for this serving; blank means the recipe's name is used.
+        var mealTitle: String = ""
         var linkedDishID: UUID?
         var eatenOn: Date
         var notes: String
@@ -249,7 +251,7 @@ extension FoodStore {
             if let id = draft.mealID {
                 meal = try await supabase
                     .from("meals")
-                    .update(MealPatch(dishID: dish.id, eatenOn: draft.eatenOn, notes: draft.notes, effort: draft.effort, repeatDesire: draft.repeatDesire))
+                    .update(MealPatch(dishID: dish.id, title: draft.mealTitle.nilIfBlank, eatenOn: draft.eatenOn, notes: draft.notes, effort: draft.effort, repeatDesire: draft.repeatDesire))
                     .eq("id", value: id.uuidString)
                     .select()
                     .single()
@@ -259,6 +261,7 @@ extension FoodStore {
                 meal = try await supabase
                     .from("meals")
                     .insert(NewMeal(dishID: dish.id,
+                                    title: draft.mealTitle.nilIfBlank,
                                     createdBy: userID,
                                     eatenOn: draft.eatenOn,
                                     notes: draft.notes,

@@ -2,12 +2,14 @@ import SwiftUI
 
 /// Meal Detail's ScreenHeader, centred on the meal's first photo as its Avatar (the
 /// cuisine photo when it has none): the party as the eyebrow (none for a meal of your
-/// own), the dish as the title, the date, and "Rate this meal" (or "Change your
-/// rating", soft, once you have rated).
+/// own), the dish as the title, the date, "Rate this meal" (or "Change your rating",
+/// soft, once you have rated) and "View recipe" (`secondary soft`) when there is one.
 struct MealDetailHeader: View {
     let meal: Meal
     /// Nil when the viewer can't rate this meal: the header then has no action.
     let onRate: (() -> Void)?
+    /// Nil when the meal has no recipe: no "View recipe".
+    var onViewRecipe: (() -> Void)?
 
     @Environment(FoodStore.self) private var store
 
@@ -17,7 +19,7 @@ struct MealDetailHeader: View {
             eyebrow: party,
             date: meal.eatenOn,
             avatar: avatar,
-            actions: action.map { [$0] } ?? []
+            actions: [action, recipeAction].compactMap { $0 }
         )
     }
 
@@ -35,6 +37,10 @@ struct MealDetailHeader: View {
     private var party: String? {
         let name = store.partyDisplayName(forMeal: meal)
         return name == "You" ? nil : name
+    }
+
+    private var recipeAction: ScreenHeaderAction? {
+        onViewRecipe.map { ScreenHeaderAction(title: "View recipe", variant: .secondary, appearance: .soft, action: $0) }
     }
 
     /// The score is already in the ScoreCard below, so the action names the task, not

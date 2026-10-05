@@ -15,5 +15,6 @@ struct RecipeFilterToolbarButton: View {
         }
         .accessibilityLabel("Sort and filter")
         .accessibilityValue(isFiltered ? "Filtered" : "")
+        .barItemStyle()
     }
 }

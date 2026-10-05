@@ -21,7 +21,7 @@ struct HouseholdMembersSection: View {
 
     private var pendingInvites: [PartyInvite] {
         guard let party = activeParty else { return [] }
-        return store.invites(forParty: party.id).filter(\.isPending)
+        return store.pendingInvites(forParty: party.id)
     }
 
     var body: some View {
@@ -39,7 +39,7 @@ struct HouseholdMembersSection: View {
             if !newValue.isEmpty { successAlertMessage = nil }
         }
 
-        if !partyMembers.isEmpty {
+        if !partyMembers.isEmpty || !pendingInvites.isEmpty {
             DSSection("Members", trailing: "\(partyMembers.count)") {
                 Card(layout: .list) {
                     ForEach(partyMembers) { member in
@@ -55,11 +55,10 @@ struct HouseholdMembersSection: View {
                         }
                         .buttonStyle(ListRowButtonStyle())
                     }
+                    ForEach(pendingInvites) { PartyInviteRow(invite: $0) }
                 }
             }
         }
-
-        PartyInvitesSection(invites: pendingInvites)
 
         if !store.myEaters.isEmpty {
             DSSection("Profiles without an account", trailing: "\(store.myEaters.count)") {

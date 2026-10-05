@@ -29,6 +29,8 @@ enum AvatarSize: Equatable, CaseIterable {
 struct Avatar: View {
     let name: String
     var photoPath: String?
+    /// A picked photo not uploaded yet; shown instead of `photoPath`.
+    var photoData: Data?
     var text: String?
     var bucket: String
     /// A bundled photo shown when `photoPath` has none (a cuisine's category photograph).
@@ -47,6 +49,7 @@ struct Avatar: View {
     init(
         name: String,
         photoPath: String? = nil,
+        photoData: Data? = nil,
         text: String? = nil,
         bucket: String = SupabaseConfig.profileBucket,
         assetName: String? = nil,
@@ -55,6 +58,7 @@ struct Avatar: View {
     ) {
         self.name = name
         self.photoPath = photoPath
+        self.photoData = photoData
         self.text = text
         self.bucket = bucket
         self.assetName = assetName
@@ -79,10 +83,11 @@ struct Avatar: View {
                   assetName: category.assetImageName, size: size, decorative: decorative)
     }
 
+    /// Empty when there is no name yet (onboarding before the name is typed): a bare circle.
     private var initials: String {
         if let text, !text.isEmpty { return String(text.prefix(2)) }
         let words = name.split(whereSeparator: \.isWhitespace)
-        guard let first = words.first?.first else { return "?" }
+        guard let first = words.first?.first else { return "" }
         if words.count > 1, let last = words.last?.first {
             return "\(first)\(last)".uppercased()
         }
@@ -91,7 +96,7 @@ struct Avatar: View {
 
     var body: some View {
         ZStack {
-            if let imageData, let image = UIImage(data: imageData) {
+            if let image = (photoData ?? imageData).flatMap(UIImage.init(data:)) {
                 Image(uiImage: image)
                     .resizable()
                     .scaledToFill()

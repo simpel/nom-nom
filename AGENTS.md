@@ -71,7 +71,7 @@ apps/
 │   │   │   ├── Primitives/  # AppButton, AppButtonLabel, Badge, Avatar, Bar, ScoreValue,
 │   │   │   │                  SectionHeader, AppToggle, Input, TextArea
 │   │   │   ├── Layout/      # Card, DSSection, SectionCard, ScreenHeader, SwipeableListCard
-│   │   │   ├── Composites/  # ListRow, EmptyState, Facts, ScoreCard, PhotoCard, PhotoStrip,
+│   │   │   ├── Composites/  # ListRow, EmptyState, Skeleton, Facts, ScoreCard, PhotoCard, PhotoStrip,
 │   │   │   │                  RatingList, Timeline, RecipeCard, RecipeLinkCard, RecipeShelf,
 │   │   │   │                  PartyCard, SegmentedBar, ValueStepper, LabeledPhotoCard,
 │   │   │   │                  TasteScoreSelector, ProMark/ProCard/ProGate/ProView (Pro),
@@ -145,14 +145,14 @@ When creating or moving a file, use this decision tree:
 
 Never add new domain methods directly into `FoodStore.swift`.
 - `FoodStore.swift` contains only core `@Observable` state declarations and shared initialization.
-- Group all async actions, database calls, and domain-specific mutations into `FoodStore+<Domain>.swift` files (one per domain — `Meals`, `Recipes`, `RecipeAI`, `RecipeDiscovery`, `RecipeSafeBets`, `RecipeSteps`, `RecipeFavorites`, `Parties`, `PartyFollowing`, `PartyInvites`, `PartyScores`, `Ratings`, `Health`, `Insights`, `Notifications`, `Inbox`, `MealInviteReminders`, `Categories`, `Eaters`, `Profile`, `Loading`, `Errors`, `Preview`).
+- Group all async actions, database calls, and domain-specific mutations into `FoodStore+<Domain>.swift` files (one per domain — `Meals`, `Recipes`, `RecipeAI`, `RecipeDiscovery`, `RecipeSafeBets`, `RecipeSteps`, `RecipeFavorites`, `Parties`, `PartyFollowing`, `PartyInvites`, `PartyScores`, `Ratings`, `Health`, `Insights`, `Notifications`, `Inbox`, `MealInviteReminders`, `TableExplanation`, `ScoreInsight`, `RecipeTweaks`, `PartyRecipeNotes`, `Categories`, `Eaters`, `Profile`, `Loading`, `Errors`, `Preview`).
 - When adding a new domain concept, create a new `FoodStore+<NewDomain>.swift` extension file rather than growing an existing one or `FoodStore.swift` itself.
 
 ---
 
 ## 5. Modal Sheet Dismissal & Confirmation Convention (Apple HIG Aligned)
 
-Every modal sheet is a design-system **BottomSheet** (`design-system/components/BottomSheet/README.md`): `.dsSheet()` on its root for the `sheet` ground, `radius-4xl` corners and the DS grabber, and `SheetBody { … }` for the content padding and gaps. The close button sits on `.topBarLeading` alone (an AppButton `secondary soft` icon-only `xmark`, drawn by the modifiers below); any primary action (`+`, `checkmark` to save, `Next`) sits on `.topBarTrailing`.
+Every modal sheet is a design-system **BottomSheet** (`design-system/components/BottomSheet/README.md`): `.dsSheet()` on its root for the `sheet` ground, `radius-4xl` corners and the DS grabber, and `SheetBody { … }` for the content padding and gaps. The close button sits on `.topBarLeading` alone (a system `xmark` on the bar's white glass circle, drawn by the modifiers below); any primary action (`+`, `checkmark` to save, `Next`) sits on `.topBarTrailing`.
 
 ### A. Intent Matrix
 
@@ -210,7 +210,7 @@ To prevent duplication and ensure high consistency:
 
 2. **Centralized Screen Navigation & Headers**:
    - Always use `.screenTitle(_ title: String, displayMode: NavigationBarItem.TitleDisplayMode = .large)` for screen/sheet titles.
-   - Every screen and sheet opens with **one** `ScreenHeader(_:eyebrow:date:summary:avatar:role:actions:)` (`design-system/components/ScreenHeader/README.md`). It is centred only by an `avatar`, `role: .tabRoot` (Meals, Recipes, Parties, which also carry a one-sentence summary) or `role: .moment` (sign-in, onboarding, the Pro paywall); otherwise leading. The eyebrow is ONE item (a category or the parent it lives in, never a date, product or flow name); dates go in `date:`; actions are at most two `ScreenHeaderAction`s, `md`, label only, on one row. There is no meta, facts, badges, align or size.
+   - Every screen and sheet opens with **one** `ScreenHeader(_:eyebrow:date:summary:avatar:avatarEdit:role:actions:)` (`design-system/components/ScreenHeader/README.md`). An editable avatar (camera badge, tap to take or pick a photo) is `avatarEdit: ScreenHeaderAvatarEdit(...)`, never a hand-built photo picker beside the header (DS-GAPS.md, "ScreenHeader avatar edit mode"). It is centred only by an `avatar`, `role: .tabRoot` (Meals, Recipes, Parties, which also carry a one-sentence summary) or `role: .moment` (sign-in, onboarding, the Pro paywall); otherwise leading. The eyebrow is ONE item (a category or the parent it lives in, never a date, product or flow name); dates go in `date:`; actions are at most two `ScreenHeaderAction`s, `md`, label only, on one row. There is no meta, facts, badges, align or size.
    - Small facts about the subject (time, method, servings, rotation) are `Facts(_:layout:)` (`.grid` / `.strip`), `text-primary` only; wrap it in a `Card` where the screen wants a surface.
    - **Screen anatomy** (root README): chrome · ScreenHeader · PhotoStrip · Facts · primary content · sections · destructive and account actions, `DS.Spacing.block` apart. Photos never sit above the header.
    - Text is set only with `.textStyle(_:tone:weight:italic:numeric:lines:align:)` (`serifXs…serifXl`, `sansXs…sansXl`; weight `.semibold` is opt-in). Never `.font(.system(size:))`, a font name or a raw size.
@@ -219,7 +219,7 @@ To prevent duplication and ensure high consistency:
    - **Foundations**: `DSAxes` (`DSVariant` primary/secondary/destructive/pro/warning/reaction, `DSAppearance` solid/soft/outline/ghost/elevated, `DSPaint`), `NomNomPreview`, photo plumbing.
    - **Primitives**: `AppButton` / `AppButtonLabel`, `Badge` (`.verdict`, `.delta`, `.rotation`, `.pro`, `.dishSummary`, `.rank`), `Avatar`, `Bar`, `ScoreValue`, `SectionHeader`, `AppToggle`, `Input`, `TextArea`.
    - **Layout**: `Card` (`layout: .block/.list`, `size`, `variant: .primary`, optional `action`), `DSSection` (label above content), `SectionCard` (label inside a card), `ScreenHeader`, `SwipeableListCard`.
-   - **Composites**: `ListRow` (the one row: leading Avatar / PhotoCard `xs` / icon / rank, meta, value, trailing Badge / ScoreValue / AppButton / Toggle, chevron, unread), `EmptyState` (`screen` / `card` / `plain` / `row`), `Facts`, `ScoreCard`, `PhotoCard` (owns the photo → cuisine → no-photo fallback), `PhotoStrip`, `RatingList`, `Timeline`, `RecipeCard`, `RecipeLinkCard`, `RecipeShelf`, `PartyCard`, `SegmentedBar`, `ValueStepper`, `LabeledPhotoCard`, `TasteScoreSelector`, the Pro language (`ProMark`, `ProCard`, `ProGate`, `.proView()`: a locked Pro block in a free view is a ProCard, a Pro-only screen is a ProView behind a ProGate), and the BottomSheet parts `SheetBody` / `SheetCard` / `SheetHero`.
+   - **Composites**: `ListRow` (the one row: leading Avatar / PhotoCard `xs` / icon / rank, meta, value, trailing Badge / ScoreValue / AppButton / Toggle, chevron, unread), `EmptyState` (`screen` / `card` / `plain` / `row`), `Skeleton` (the one loading state: `list` / `card` / `text` / `row` bones in the content's shape, a caption for slow work; a spinner only inside a button the person pressed), `Facts`, `ScoreCard`, `PhotoCard` (owns the photo → cuisine → no-photo fallback), `PhotoStrip`, `RatingList`, `Timeline`, `RecipeCard`, `RecipeLinkCard`, `RecipeShelf`, `PartyCard`, `SegmentedBar`, `ValueStepper`, `LabeledPhotoCard`, `TasteScoreSelector`, the Pro language (`ProMark`, `ProCard`, `ProGate`, `.proView()`: a locked Pro block in a free view is a ProCard, a Pro-only screen is a ProView behind a ProGate), and the BottomSheet parts `SheetBody` / `SheetCard` / `SheetHero`.
    - Every list is `Card(layout: .list)` of `ListRow`s; never hand-draw dividers, capsules, avatars or thumbnails.
    - Each component follows its README in `design-system/components/<Name>/README.md`. Read it before changing the component.
 
@@ -249,7 +249,7 @@ AppButton(icon: "chevron.left", accessibilityLabel: "Back", variant: .secondary,
 
 1. **`variant`** (colour role, default `.primary`):
    - **`.primary`**: `solid` is the one main commitment on a screen ("Log a meal", "Rate this meal"); one per view. `soft` is for supporting branded actions ("Resend", "Join dinner party").
-   - **`.secondary`**: alternatives and utilities ("Use a different address", "Reset filters", "Skip step"). `secondary soft` icon-only is the in-sheet close.
+   - **`.secondary`**: alternatives and utilities ("Use a different address", "Reset filters", "Skip step").
    - **`.destructive`**: irreversible actions only ("Delete meal", "Leave party", "Sign out"). Prefer `outline` or `ghost`, and confirm with an alert.
    - **`.pro`**: Nom Nom Pro CTAs only ("Unlock with Pro").
    - `.reaction(r)` is used only inside TasteScoreSelector, never as an action.
@@ -264,7 +264,7 @@ AppButton(icon: "chevron.left", accessibilityLabel: "Back", variant: .secondary,
 Only these specific system-level APIs are exempt from `AppButton`:
 1. **Alerts & Dialogs (`alert`, `confirmationDialog`)**: Must use native `Button("Title", role: ...)` primitives required by SwiftUI.
 2. **System Menus & Swipes (`swipeActions`, `contextMenu`, `Menu`)**: Must use native `Button` primitives required by iOS system menus.
-3. **Sheet Navigation Toolbars**: Handled by the sheet modifiers in Section 5.
+3. **Top-bar controls** (sheet and screen toolbars): system `Button`s handled by the sheet modifiers in Section 5. Every one is a `text-primary` glyph on the native white glass circle via `.barItemStyle()`; never the `primary` tint, never an AppButton.
 
 ---
 

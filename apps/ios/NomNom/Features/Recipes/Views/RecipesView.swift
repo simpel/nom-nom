@@ -29,7 +29,7 @@ struct RecipesView: View {
             .refreshable { await store.load() }
             .mainTabToolbar {
                 Section {
-                    Button("New recipe", systemImage: "plus") { showingCreateSheet = true }
+                    Button("New recipe") { showingCreateSheet = true }
                 }
             }
             .sheet(isPresented: $showingCreateSheet) {

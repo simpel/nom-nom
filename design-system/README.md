@@ -44,7 +44,7 @@ Every size in the system is a **Tailwind** step, and every step is a token with 
 | Font size | `text-xs` 12 · `text-sm` 14 · `text-base` 16 · `text-lg` 18 · `text-xl` 20 · `text-2xl` 24 · `text-3xl` 30 · `text-4xl` 36 · `text-5xl` 48 · `text-6xl` 60 | `text-*` |
 | Weight | `font-weight-normal` 400 · `font-weight-semibold` 600 | `font-normal`, `font-semibold` |
 | Border width | `border-hairline` 1 · `border-thick` 2 | the only two widths the system draws |
-| Motion | `duration-press` 120ms · `duration-state` 150ms · `duration-layout` 250ms · `ease-standard` · `scale-press` .985 · `scale-press-row` .995 · `scale-knob` .92 | every transition uses one of these |
+| Motion | `duration-press` 120ms · `duration-state` 150ms · `duration-layout` 250ms · `duration-shimmer` 1400ms (Skeleton only) · `ease-standard` · `scale-press` .985 · `scale-press-row` .995 · `scale-knob` .92 | every transition uses one of these |
 | Letter spacing | `tracking-tight` −0.025em (large serif) · `tracking-widest` 0.1em (overlines) | `tracking-*` |
 | Line height (separate from size) | `leading-none` 1 · `leading-tight` 1.25 · `leading-snug` 1.375 · `leading-normal` 1.5 · `leading-relaxed` 1.625 | `leading-*` |
 | Spacing | `spacing-N` = N × 0.25rem: 0.5 · 1 · 1.5 · 2 · 2.5 · 3 · 3.5 · 4 · 5 · 6 · 7 · 8 · 9 · 10 · 11 · 12 · 14 · 16 · 20 · 24 · 28 · 36 · 48 · 64 · 72 | `p-*`, `gap-*`, `w-*`, `h-*` |
@@ -116,6 +116,13 @@ The px values in the scale above are the sizes at the default setting. Fixed com
 
 - Press: `opacity-70` over 120ms ease-out. Buttons never scale; pressable cards and rows may add `scale-press` (0.985) / `scale-press-row` (0.995). Focus and error borders animate over 150ms ease-out. Selection springs (≈0.25s) with a light haptic.
 - Disabled: `opacity-50` on buttons and fields. Pending: a spinner replaces the button icon.
+- **Loading has one paradigm, by what is waiting.**
+  - Content whose shape you know (a list, a card, a block of copy) is a **Skeleton** in that shape: `sunken` bones that a `panel` sweep crosses every `duration-shimmer`, in the same Card, row count and heights the content will have, so nothing moves when it lands.
+  - Work that takes seconds (an AI answer, a big sync) adds a `caption` under the bones saying what is happening, in the household voice: "Working out what to change". Never a percentage you can't keep, never "Please wait".
+  - An action the person just started is a spinner in its button (`AppButton` `loading`), never a Skeleton.
+  - A whole screen loading shows its chrome and header at once and skeletons the blocks below; never a lone centred spinner.
+  - Reduce Motion stops the sweep and keeps the bones. Every Skeleton is a `role="status"` region named by its caption.
+  - When it fails, the bones give way to what went wrong and one way to try again; when it comes back empty, to an EmptyState.
 - Focused field: 1.5px `primary` at `opacity-80`; error: 1.5px `destructive` at `opacity-80`.
 - Web keyboard focus: 2px solid `focus-ring`, 2px offset (≥6:1 on `bg`).
 - Honour Reduce Motion (opacity only) and Differentiate Without Color (numerals always visible).
@@ -149,7 +156,7 @@ The px values in the scale above are the sizes at the default setting. Fixed com
 
 ## Components
 
-Thirty-one live React components in `components/bundle.js` (`window.NomNom`, React 18 from `components/lib/`), styled by `components/bundle.css`. Load `tokens.css`, `bundle.css`, the two libraries and `bundle.js`; put `class="nn"` on the root; props are in `components/index.d.ts`.
+Thirty-two live React components in `components/bundle.js` (`window.NomNom`, React 18 from `components/lib/`), styled by `components/bundle.css`. Load `tokens.css`, `bundle.css`, the two libraries and `bundle.js`; put `class="nn"` on the root; props are in `components/index.d.ts`.
 
 **One naming convention for every component:**
 
@@ -173,7 +180,7 @@ Every component is made of the ones below it; none writes its own font, surface,
 | Foundations | Text, Icon | every piece of copy (type scale + tone); every glyph |
 | Primitives | AppButton, Badge, Avatar, SectionHeader, ScoreValue, Bar, PhotoCard, Card, Input, TextArea, Toggle | actions; labels; people; **one small label, the same wherever it sits**; numeral + verdict; **every bar — one fill or several blocks**; photo tiles + verdict badge; the panel surface + press + chevron; fields; one on/off switch |
 | Layout | Section, SectionCard, ScreenHeader | a SectionHeader over content; a Card whose label sits inside it; the top of every screen and sheet |
-| Composites | ScoreCard, RatingList, Timeline, RecipeCard, RecipeLinkCard, PhotoStrip, Facts, TasteScoreSelector, BottomSheet, ListRow, EmptyState, SegmentedBar, ValueStepper | screen blocks, each listing what it is built from in its README |
+| Composites | ScoreCard, RatingList, Timeline, RecipeCard, RecipeLinkCard, PhotoStrip, Facts, TasteScoreSelector, BottomSheet, ListRow, EmptyState, Skeleton, SegmentedBar, ValueStepper | screen blocks, each listing what it is built from in its README |
 
 | composite | built from |
 | --- | --- |
@@ -190,6 +197,7 @@ Every component is made of the ones below it; none writes its own font, surface,
 | Input / TextArea | Text (label) · AppButton (clear) · Icon |
 | ListRow | Text · Icon; slots take Avatar · PhotoCard `xs` · Badge · ScoreValue `xs` · AppButton `sm` · Toggle |
 | EmptyState | Card · Text · AppButton · Icon |
+| Skeleton | Card (`list` or block) · Text (caption) · bones in `sunken` |
 | SegmentedBar | Bar · Section · SectionHeader · Badge `reaction sm` · Text · RatingList (legend="rows") |
 | ValueStepper | AppButton `iconOnly` × 2 · Text |
 | Toggle | AppButton `secondary ghost`, restyled as a track; the knob is its label |

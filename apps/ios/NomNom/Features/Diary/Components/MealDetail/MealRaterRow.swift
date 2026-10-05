@@ -5,7 +5,9 @@ import SwiftUI
 ///
 /// - Rated: meta "Chef", "You" or "First rating"; trailing the change vs their usual
 ///   (delta Badge, "As usual" tertiary, or a "New" Badge) beside ScoreValue `xs`.
-/// - Not yet: meta "You", "Not asked yet", "Asked 2 days ago" or "Reminded 2 hr. ago".
+/// - Not yet: meta "You", "Not asked yet", "Asked 2 days ago" or "Reminded 2 hr. ago";
+///   trailing an Ask / Remind button (`secondary soft`, MealRaterRowAction) for other
+///   members, a "Rate" button (`primary soft`) for the viewer.
 struct MealRaterRow: View {
     let meal: Meal
     let rater: FoodStore.MealRater
@@ -23,7 +25,7 @@ struct MealRaterRow: View {
             if rater.isViewer { return nil }
             return isNew ? "First rating" : nil
         }
-        if rater.isViewer { return "Tap to rate" }
+        if rater.isViewer { return nil }
         guard let profile = rater.profile else { return nil }
         switch store.ratingAskStatus(for: profile.id, onMeal: meal.id) {
         case .notAsked:
@@ -44,15 +46,37 @@ struct MealRaterRow: View {
                 size: .sm,
                 decorative: true
             )),
-            trailing: score == nil ? nil : .view {
+            trailing: trailing,
+            chevron: score == nil && remindProfile == nil && !rater.isViewer,
+            action: action
+        )
+    }
+
+    /// Someone else's unrated row gets Ask / Remind; the viewer's own row and
+    /// household members (no account) keep the chevron.
+    private var remindProfile: Profile? {
+        guard score == nil, !rater.isViewer else { return nil }
+        return rater.profile
+    }
+
+    private var trailing: ListRowTrailing? {
+        if score != nil {
+            return .view {
                 HStack(spacing: DS.Spacing.s3) {
                     change
                     ScoreValue(score: score, size: .xs)
                 }
-            },
-            chevron: score == nil,
-            action: action
-        )
+            }
+        }
+        if let profile = remindProfile {
+            return .view { MealRaterRowAction(meal: meal, profile: profile) }
+        }
+        if rater.isViewer, store.canRate(meal: meal) {
+            // Rate is primary, Remind secondary; `soft` because the header's
+            // "Rate this meal" is the screen's one solid.
+            return .button(AppButton("Rate", appearance: .soft, size: .sm, action: action))
+        }
+        return nil
     }
 
     @ViewBuilder

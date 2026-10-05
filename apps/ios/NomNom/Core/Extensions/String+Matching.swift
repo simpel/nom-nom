@@ -1,6 +1,12 @@
 import Foundation
 
 extension String {
+    /// The trimmed text, or nil when nothing is left (an optional field left blank).
+    var nilIfBlank: String? {
+        let value = trimmedName
+        return value.isEmpty ? nil : value
+    }
+
     var trimmedName: String {
         let collapsed = split(whereSeparator: { $0.isWhitespace }).joined(separator: " ")
         return collapsed

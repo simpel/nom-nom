@@ -11,6 +11,7 @@ struct PartyInsightsSection: View {
     @Environment(FoodStore.self) private var store
     @State private var insights: PartyInsights?
     @State private var hasLoadedInsights = false
+    @State private var hasLoadedFlavors = false
     @State private var flavorProfile: [FlavorProfileEntry] = []
     @State private var selectedMember: MemberTasteMatch?
 
@@ -46,6 +47,8 @@ struct PartyInsightsSection: View {
         VStack(alignment: .leading, spacing: DS.Spacing.block) {
             if hasLoadedInsights {
                 EditorialTextView(insightSummary: insights?.summarySentence)
+            } else {
+                Skeleton(layout: .text, lines: 3, label: "Loading the party summary")
             }
 
             DSSection("Ratings over time") {
@@ -65,6 +68,7 @@ struct PartyInsightsSection: View {
             insights = try? await store.fetchInsights(for: partyID)
             hasLoadedInsights = true
             flavorProfile = (try? await store.fetchFlavorProfile(forParty: partyID)) ?? []
+            hasLoadedFlavors = true
         }
         .sheet(item: $selectedMember) { member in
             PartyMemberInsightSheet(member: member, partyID: partyID)
@@ -96,7 +100,11 @@ struct PartyInsightsSection: View {
             }
         }
 
-        FlavorProfileCard(entries: flavorProfile)
+        if hasLoadedFlavors {
+            FlavorProfileCard(entries: flavorProfile)
+        } else {
+            Skeleton(rows: 3, trailing: true, label: "Loading the flavour profile")
+        }
 
         if let recommendations = insights?.recommendations, !recommendations.isEmpty {
             RecipeShelf("AI recipe recommendations", items: recommendations) {

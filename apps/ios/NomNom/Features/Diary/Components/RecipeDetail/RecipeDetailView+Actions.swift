@@ -6,24 +6,20 @@ extension RecipeDetailView {
     @ToolbarContentBuilder
     var toolbarContent: some ToolbarContent {
         if showCloseButton {
-            ToolbarItem(placement: .topBarLeading) {
-                SheetCloseButton { dismiss() }
-            }
+            SheetLeadingCloseItem(accessibilityLabel: "Close") { dismiss() }
         }
 
         ToolbarItem(placement: .topBarTrailing) {
             if let recipe {
                 let isFavorite = store.isFavorite(recipe: recipe)
-                // Off: `primary-text`, like the toolbar's other glyphs. On: `destructive-text`,
-                // the PhotoCard README's favourite heart, so it matches the recipe cards.
-                AppButton(
-                    icon: isFavorite ? "heart.fill" : "heart",
-                    accessibilityLabel: isFavorite ? "Remove from Favourites" : "Add to Favourites",
-                    variant: isFavorite ? .destructive : .primary,
-                    appearance: .ghost
-                ) {
+                // A system bar button like the toolbar's other glyphs; filled once a favourite.
+                Button {
                     Task { await store.toggleFavorite(recipe: recipe) }
+                } label: {
+                    Image(systemName: isFavorite ? "heart.fill" : "heart").fontWeight(.semibold)
                 }
+                .accessibilityLabel(isFavorite ? "Remove from Favourites" : "Add to Favourites")
+                .barItemStyle()
             }
         }
 
@@ -50,7 +46,8 @@ extension RecipeDetailView {
     }
 
     /// Fetches a recipe that isn't in the store yet, then backfills its health score
-    /// (recipes saved before scoring existed, or whose first analysis failed). Silent:
+    /// (recipes saved before scoring existed, or whose first analysis failed). Pro only,
+    /// since the health score is a Pro feature. Silent:
     /// there is no "generate" button.
     func loadRecipeAndHealth() async {
         if recipe == nil {
@@ -73,7 +70,7 @@ extension RecipeDetailView {
             store.upsertLocal(recipe: fallbackRecipe)
         }
 
-        guard let recipe, recipe.healthIndex == nil, !recipe.ingredients.isEmpty, !healthAnalysisFailed else { return }
+        guard entitlements.hasProAccess, let recipe, recipe.healthIndex == nil, !recipe.ingredients.isEmpty, !healthAnalysisFailed else { return }
         isAnalyzingHealth = true
         do {
             // Let the loading placeholder render before a request that may fail instantly.

@@ -17,6 +17,7 @@ extension View {
             .presentationDragIndicator(.hidden)
             .presentationBackground(pro ? DS.Color.proSoft : DS.Color.sheet)
             .presentationCornerRadius(DS.Radius.xl4)
+            .environment(\.isProSheet, pro)
     }
 
     /// Form, editor, rating and filter sheets: leading close (discards the draft)

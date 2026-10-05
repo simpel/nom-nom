@@ -19,8 +19,8 @@ enum ScreenHeaderRole: Equatable { case standard, tabRoot, moment }
 /// The top of every screen and sheet (components/ScreenHeader/README.md): avatar,
 /// eyebrow, `serif-lg` title, date, one sentence and up to two actions, in that order.
 ///
-/// - Centred when there is an `avatar` or the `role` is `.tabRoot` or `.moment`; otherwise
-///   leading. There is no `align`.
+/// - Centred when there is an `avatar` (always), the `role` is `.tabRoot` or `.moment`, or
+///   `centered` is set; otherwise leading. There is no free `align`.
 /// - `eyebrow`: ONE item, a category ("Italian") or the context it lives in ("The Friday
 ///   Feast Club"). Never two joined, never a date, product or flow name.
 /// - `date`: formatted here, "Sunday 4 October", with the year only when it isn't this year.
@@ -32,8 +32,10 @@ enum ScreenHeaderRole: Equatable { case standard, tabRoot, moment }
 /// ScreenHeader(meal.title, eyebrow: party.name, date: meal.date,
 ///              actions: [.init(title: "Rate this meal") { rate() }])
 /// ScreenHeader(party.name, summary: party.about, avatar: Avatar(party: party))
+/// ScreenHeader(name, avatar: Avatar(name: name), avatarEdit: .init(hasPhoto: false) { data in … })
 /// ScreenHeader("Meals", summary: "…", role: .tabRoot, actions: [.init(title: "Log a meal") { log() }])
 /// ScreenHeader("Cook with the whole picture", summary: "…", role: .moment)
+/// ScreenHeader("What did you cook?", summary: "…", centered: true, actions: [...])
 /// ```
 struct ScreenHeader: View {
     let title: String
@@ -41,7 +43,12 @@ struct ScreenHeader: View {
     var date: Date?
     var summary: String?
     var avatar: Avatar?
+    /// Makes the avatar editable: a camera badge on its top-right; tap to take or pick a photo.
+    var avatarEdit: ScreenHeaderAvatarEdit?
     var role: ScreenHeaderRole
+    /// Centres a `standard` header (an empty-state style prompt in a sheet). An avatar or a
+    /// `tabRoot` / `moment` role already centres it. DS-GAPS.md, "ScreenHeader `centered`".
+    var centered: Bool
     var actions: [ScreenHeaderAction]
 
     init(
@@ -50,7 +57,9 @@ struct ScreenHeader: View {
         date: Date? = nil,
         summary: String? = nil,
         avatar: Avatar? = nil,
+        avatarEdit: ScreenHeaderAvatarEdit? = nil,
         role: ScreenHeaderRole = .standard,
+        centered: Bool = false,
         actions: [ScreenHeaderAction] = []
     ) {
         self.title = title
@@ -58,11 +67,13 @@ struct ScreenHeader: View {
         self.date = date
         self.summary = summary
         self.avatar = avatar
+        self.avatarEdit = avatarEdit
         self.role = role
+        self.centered = centered
         self.actions = Array(actions.prefix(2))
     }
 
-    private var centred: Bool { avatar != nil || role != .standard }
+    private var centred: Bool { avatar != nil || role != .standard || centered }
     private var horizontal: HorizontalAlignment { centred ? .center : .leading }
     private var frameAlignment: Alignment { centred ? .center : .leading }
     private var textAlign: TextAlignment { centred ? .center : .leading }
@@ -76,7 +87,13 @@ struct ScreenHeader: View {
 
     var body: some View {
         VStack(alignment: horizontal, spacing: DS.Spacing.s4) {
-            if let sizedAvatar { sizedAvatar }
+            if let sizedAvatar {
+                if let avatarEdit {
+                    ScreenHeaderEditableAvatar(avatar: sizedAvatar, edit: avatarEdit)
+                } else {
+                    sizedAvatar
+                }
+            }
             VStack(alignment: horizontal, spacing: DS.Spacing.s2) {
                 if let eyebrow, !eyebrow.isEmpty {
                     SectionHeader(title: eyebrow)
@@ -154,6 +171,13 @@ private struct ScreenHeaderGallery: View {
                         summary: "A weekly gathering of home cooks, every Friday night.",
                         avatar: Avatar(name: "The Friday Feast Club", bucket: SupabaseConfig.partyBucket),
                         actions: [.init(title: "Add meal") {}]
+                    )
+                    ScreenHeader(
+                        "Your seat at the table",
+                        summary: "Introduce yourself so the people you eat with recognise you.",
+                        avatar: Avatar(name: "Anna Berg"),
+                        avatarEdit: ScreenHeaderAvatarEdit(hasPhoto: false) { _ in },
+                        role: .moment
                     )
                     ScreenHeader("Cook with the whole picture",
                                  summary: "Trends, party scores and unlimited photos.", role: .moment)

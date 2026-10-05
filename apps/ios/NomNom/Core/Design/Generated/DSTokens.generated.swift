@@ -1,9 +1,9 @@
 // GENERATED — do not edit.
 // Source: design-system/tokens.json (tokens version 1, "Nom Nom")
 //   source: https://claude.ai/artifact/4jeEJ91V5eRxpDn8NtqNgK
-//   version: 1791141337-5358
-//   downloaded: 2026-10-04
-// Tokens: 178 (border-width 2, color 78, container 3, font-weight 2, leading 5, motion 7, opacity 16, radius 8, shadow 7, spacing 25, text 10, tracking 2, type 13)
+//   version: 1791206212-d0ff
+//   downloaded: 2026-10-05
+// Tokens: 179 (border-width 2, color 78, container 3, font-weight 2, leading 5, motion 8, opacity 16, radius 8, shadow 7, spacing 25, text 10, tracking 2, type 13)
 // Dynamic Type mapping: design-system/README.md, "Dynamic Type".
 // Regenerate: python3 scripts/ds-tokens-swift.py
 // swiftlint:disable all
@@ -624,7 +624,7 @@ enum DSTokens {
         )
     }
 
-    /// `motion` — 7 tokens. Durations in seconds; scales as multipliers; easing as
+    /// `motion` — 8 tokens. Durations in seconds; scales as multipliers; easing as
     /// the CSS keyword (map it to an `Animation` in hand-written code).
     /// Durations, easing and press scales. Every transition in the system uses one of these.
     enum Motion {
@@ -637,6 +637,9 @@ enum DSTokens {
         /// Something moving or resizing: the Add photo label collapsing, a bar's fill.
         /// tokens.json: `duration-layout` = `250ms`
         static let durationLayout: Double = 0.25
+        /// One sweep of a Skeleton's shimmer. The only motion that loops; Reduce Motion stops it.
+        /// tokens.json: `duration-shimmer` = `1400ms`
+        static let durationShimmer: Double = 1.4
         /// The one easing curve.
         /// tokens.json: `ease-standard` = `ease-out`
         static let easeStandard: String = "ease-out"

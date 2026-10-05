@@ -30,8 +30,7 @@ struct InsightsTabView: View {
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
                     .background(DS.Color.bg)
                 } else if isLoading {
-                    ProgressView("Loading Insights...")
-                        .controlSize(.large)
+                    InsightsSkeleton()
                 } else if let selectedPartyID {
                     InsightsDashboardView(
                         partyID: selectedPartyID,
@@ -42,7 +41,6 @@ struct InsightsTabView: View {
                     )
                 }
             }
-            .screenTitle("Insights", displayMode: .inline)
             .navigationDestination(for: InsightsRoute.self) { route in
                 switch route {
                 case .dish(let dishID):
@@ -52,31 +50,8 @@ struct InsightsTabView: View {
             .refreshable {
                 await loadInsights()
             }
-            .toolbar {
-                PartyNameToolbarItem()
-                ToolbarItem(placement: .topBarTrailing) {
-                    if !store.myParties.isEmpty {
-                        Menu {
-                            ForEach(store.myParties) { party in
-                                Button {
-                                    selectedPartyID = party.id
-                                    store.currentParty = party
-                                } label: {
-                                    if party.id == selectedPartyID {
-                                        Label(party.name, systemImage: "checkmark")
-                                    } else {
-                                        Text(party.name)
-                                    }
-                                }
-                            }
-                        } label: {
-                            Image(systemName: "person.2")
-                                .fontWeight(.semibold)
-                        }
-                        .accessibilityLabel("Switch Dinner Party")
-                    }
-                }
-            }
+            .mainTabToolbar()
+            .screenTitle("Insights", displayMode: .inline)
         }
         .task {
             if selectedPartyID == nil {

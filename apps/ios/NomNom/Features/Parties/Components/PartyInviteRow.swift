@@ -1,11 +1,12 @@
 import SwiftUI
 
-/// One party invite: ListRow's Invite shape (components/ListRow/README.md). Avatar `sm`
-/// from the address, the email, "Invited {when}", Resend (`secondary ghost sm`) and the
-/// revoke ✕ (`destructive ghost` icon-only). Place it in `PartyInvitesSection`.
+/// Someone invited to a party who hasn't joined yet, as it sits at the end of every
+/// member list: ListRow `inactive` (Avatar `sm`, their name or address and "Invited
+/// {when}" at `opacity-50`) with one live "Remind" AppButton `sm` that resends the
+/// invite. Revoke is in the row's context menu. DS-GAPS.md A, "ListRow inactive".
 ///
-/// Resend and revoke are async; the row shows a spinner on the pressed button, then
-/// "Invitation resent" or the store's error in the meta line.
+/// Remind shows a spinner while it sends, then "Reminder sent" or the store's error in
+/// the meta line.
 struct PartyInviteRow: View {
     let invite: PartyInvite
 
@@ -16,7 +17,7 @@ struct PartyInviteRow: View {
     @State private var phase: Phase = .idle
     @State private var feedback: String?
 
-    private var email: String { invite.inviteeEmail ?? "Invited member" }
+    private var name: String { store.displayName(for: invite) }
 
     private var meta: String {
         if let feedback { return feedback }
@@ -24,27 +25,31 @@ struct PartyInviteRow: View {
         return "Invited \(invite.createdAt.formatted(.relative(presentation: .named)))"
     }
 
+    private var avatar: Avatar {
+        if let id = invite.inviteeID, let profile = store.profiles[id] {
+            return Avatar(profile: profile, size: .sm, decorative: true)
+        }
+        return Avatar(name: name, size: .sm, decorative: true)
+    }
+
     var body: some View {
         if invite.isPending {
             ListRow(
-                email,
+                name,
                 meta: meta,
-                leading: .avatar(Avatar(name: email, size: .sm, decorative: true)),
-                // ListRow README: Resend (`primary solid sm`) + Revoke (`secondary soft sm`),
-                // both labelled — never an unlabelled ✕ in a row.
-                trailing: .view {
-                    HStack(spacing: DS.Spacing.s2) {
-                        AppButton("Resend", size: .sm, isLoading: phase == .resending) { run(.resending) }
-                        AppButton("Revoke", variant: .secondary, appearance: .soft, size: .sm,
-                                  isLoading: phase == .revoking) { run(.revoking) }
-                            .accessibilityLabel("Revoke invite to \(email)")
-                    }
-                },
+                leading: .avatar(avatar),
+                trailing: .button(
+                    AppButton("Remind", size: .sm, isLoading: phase == .resending) { run(.resending) }
+                ),
                 chevron: false
             )
-            .disabled(phase != .idle)
+            .inactive()
+            .accessibilityHint("Invited, hasn\u{2019}t joined yet")
+            .contextMenu {
+                Button("Revoke invite", systemImage: "xmark", role: .destructive) { run(.revoking) }
+            }
         } else {
-            ListRow(email, meta: meta, leading: .avatar(Avatar(name: email, size: .sm, decorative: true)))
+            ListRow(name, meta: meta, leading: .avatar(avatar)).inactive()
         }
     }
 
@@ -62,11 +67,11 @@ struct PartyInviteRow: View {
             }
             if failed {
                 feedback = store.errorMessage ?? (next == .resending
-                    ? "Couldn\u{2019}t resend the invite."
+                    ? "Couldn\u{2019}t send the reminder."
                     : "Couldn\u{2019}t revoke the invite.")
                 store.errorMessage = nil
             } else if next == .resending {
-                feedback = "Invitation resent"
+                feedback = "Reminder sent"
             }
             phase = .idle
         }

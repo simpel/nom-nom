@@ -16,7 +16,8 @@ struct RecipeHealthRationaleSheet: View {
                 SheetHero(
                     score: Double(healthIndex.score) / 100,
                     verdict: healthIndex.verdict,
-                    lead: healthIndex.tier.explanation
+                    lead: healthIndex.tier.explanation,
+                    ink: .pro
                 )
 
                 ProCard(

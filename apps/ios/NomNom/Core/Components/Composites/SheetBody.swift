@@ -19,6 +19,8 @@ import SwiftUI
 /// ```
 struct SheetBody<Content: View>: View {
     @ViewBuilder var content: Content
+    /// A ProView sheet (`.dsSheet(pro: true)`) paints `pro-soft` instead of `sheet`.
+    @Environment(\.isProSheet) private var isProSheet
 
     init(@ViewBuilder content: () -> Content) {
         self.content = content()
@@ -35,6 +37,11 @@ struct SheetBody<Content: View>: View {
             .padding(.top, DS.Spacing.s2)
             .padding(.bottom, DS.Spacing.s10)
         }
-        .background(DS.Color.sheet)
+        .background(isProSheet ? DS.Color.proSoft : DS.Color.sheet)
     }
+}
+
+extension EnvironmentValues {
+    /// Set by `.dsSheet(pro:)`: the sheet is a ProView, so its ground is `pro-soft`.
+    @Entry var isProSheet = false
 }

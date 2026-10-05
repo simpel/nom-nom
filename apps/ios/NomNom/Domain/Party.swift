@@ -233,3 +233,21 @@ struct NewMealParty: Encodable {
     let party_id: UUID
 }
 
+
+/// One row of `suggest_parties`: a public party the viewer is not in, and the viewer's own
+/// party it most resembles. Both are nil when the party cannot be scored yet.
+struct PartySuggestion: Identifiable, Hashable, Decodable {
+    let partyID: UUID
+    let similarPartyID: UUID?
+    let similarity: Double?
+    let sharedCuisine: String?
+
+    var id: UUID { partyID }
+
+    enum CodingKeys: String, CodingKey {
+        case partyID = "party_id"
+        case similarPartyID = "similar_party_id"
+        case similarity
+        case sharedCuisine = "shared_cuisine"
+    }
+}

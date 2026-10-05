@@ -6,9 +6,16 @@ import SwiftUI
 /// "90", and a second bar under it read as noise (DS-GAPS.md B, "Meal score card").
 /// Built from ScoreCard's parts (Card `md`, ScoreValue `lg`, the delta line) so it
 /// reads as a ScoreCard. Pressable: opens the score breakdown.
+///
+/// Unrated (`score` nil, DS-GAPS.md B, "Meal score card, unrated"): "No score yet"
+/// `serif-sm` over "0 of 4 have rated", and a "Remind" AppButton `sm` on the right when
+/// `onRemind` is set (`secondary soft`, like every Remind). Not pressable: there is no
+/// breakdown yet.
 struct MealScoreCard: View {
     let score: Double?
     let ratings: [MealRating]
+    var raterCount: Int = 0
+    var onRemind: (() -> Void)?
     var delta: Int?
     var deltaText: String?
     var deltaReference: String?
@@ -26,6 +33,32 @@ struct MealScoreCard: View {
     }
 
     var body: some View {
+        if score == nil {
+            unrated
+        } else {
+            rated
+        }
+    }
+
+    private var unrated: some View {
+        Card(size: .md) {
+            HStack(alignment: .center, spacing: DS.Spacing.s4) {
+                VStack(alignment: .leading, spacing: DS.Spacing.s0_5) {
+                    Text("No score yet")
+                        .textStyle(.serifSm)
+                    Text("\(ratings.count) of \(raterCount) have rated")
+                        .textStyle(.sansSm, tone: .secondary, numeric: true)
+                }
+                .accessibilityElement(children: .combine)
+                Spacer(minLength: 0)
+                if let onRemind {
+                    AppButton("Remind", variant: .secondary, appearance: .soft, size: .sm, action: onRemind)
+                }
+            }
+        }
+    }
+
+    private var rated: some View {
         Card(size: .md, spacing: DS.Spacing.s3_5, action: action) {
             ScoreValue(score: score, size: .lg)
 

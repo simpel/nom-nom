@@ -58,6 +58,40 @@ extension FoodStore {
         }
     }
 
+    /// The party header's avatar pen. A new photo becomes the cover (first in
+    /// `photo_paths`); when the party is full, it replaces the old cover. `nil` removes
+    /// the cover and the next photo takes its place.
+    func setPartyCover(_ data: Data?, for party: Party) async {
+        var paths = party.photoPaths
+        var dropped: [String] = []
+        do {
+            if let data {
+                let added = try await uploadPartyPhotos([data], partyID: party.id)
+                guard !added.isEmpty else { return }
+                if paths.count >= PhotosDraft.maxCount, !paths.isEmpty {
+                    dropped.append(paths.removeFirst())
+                }
+                paths = added + paths
+            } else {
+                guard !paths.isEmpty else { return }
+                dropped.append(paths.removeFirst())
+            }
+            let updated: Party = try await supabase
+                .from("parties")
+                .update(PartyPatch(photo_paths: paths))
+                .eq("id", value: party.id.uuidString)
+                .select()
+                .single()
+                .execute()
+                .value
+            replaceLocal(party: updated)
+            for path in dropped { await deletePartyObject(path) }
+            errorMessage = nil
+        } catch {
+            errorMessage = Self.describe(error)
+        }
+    }
+
     func deletePartyObject(_ path: String) async {
         PhotoCache.shared.forget(path)
         do {

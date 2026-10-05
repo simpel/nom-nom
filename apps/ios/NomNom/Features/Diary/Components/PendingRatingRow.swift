@@ -2,14 +2,15 @@ import SwiftUI
 
 /// A meal waiting for the viewer's rating ("Nom Nom iOS" canvas): a split ListRow with
 /// PhotoCard `xs`, the dish name and "{cook} cooked \u{00B7} {date}" (just the date for
-/// the viewer's own meals), and a `primary soft sm` "Rate" button. The row and Rate both
-/// open the meal page, where rating happens; declining an invite is in the row's native context menu. Place it in a
+/// the viewer's own meals), and a `primary soft sm` "Rate" button. The row opens the meal page and Rate
+/// opens the rate flow in a sheet; declining an invite is in the row's native context menu. Place it in a
 /// `Card(layout: .list)`.
 struct PendingRatingRow: View {
     let meal: Meal
 
     @Environment(FoodStore.self) private var store
     @State private var showDetail = false
+    @State private var showRating = false
 
     private var isOwn: Bool { meal.createdBy == store.userID }
 
@@ -25,7 +26,7 @@ struct PendingRatingRow: View {
             store.dishName(forMeal: meal),
             meta: meta,
             leading: .photo(.meal(meal)),
-            trailing: .button(AppButton("Rate", appearance: .soft, size: .sm) { showDetail = true }),
+            trailing: .button(AppButton("Rate", appearance: .soft, size: .sm) { showRating = true }),
             chevron: false,
             action: { showDetail = true }
         )
@@ -37,6 +38,7 @@ struct PendingRatingRow: View {
         .navigationDestination(isPresented: $showDetail) {
             MealDetailView(mealID: meal.id)
         }
+        .sheet(isPresented: $showRating) { RateMealSheet(mealID: meal.id) }
     }
 
     private func decline() {

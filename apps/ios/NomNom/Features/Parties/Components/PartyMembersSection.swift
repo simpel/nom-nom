@@ -3,7 +3,8 @@ import SwiftUI
 /// The party's members ("Nom Nom iOS" canvas): a "Members" section over one swipeable
 /// list card. Members see an "Add members" row first (opens the invite sheet); each
 /// member row (Avatar, name, "You · 20 rated here", their average score) opens the
-/// member sheet. Members can swipe another member's row to remove them.
+/// member sheet. Members can swipe another member's row to remove them. Members also see
+/// everyone invited who hasn't joined, last, as inactive PartyInviteRows with Remind.
 struct PartyMembersSection: View {
     let party: Party
     let onAddMembers: () -> Void
@@ -15,11 +16,13 @@ struct PartyMembersSection: View {
     private enum Item: Identifiable {
         case add
         case member(Profile)
+        case invite(PartyInvite)
 
         var id: String {
             switch self {
             case .add: return "add"
             case .member(let profile): return profile.id.uuidString
+            case .invite(let invite): return "invite_\(invite.id.uuidString)"
             }
         }
     }
@@ -32,7 +35,8 @@ struct PartyMembersSection: View {
     private var isMember: Bool { store.isMember(of: party.id) }
 
     private var items: [Item] {
-        (isMember ? [.add] : []) + members.map(Item.member)
+        let invites = isMember ? store.pendingInvites(forParty: party.id).map(Item.invite) : []
+        return (isMember ? [.add] : []) + members.map(Item.member) + invites
     }
 
     var body: some View {
@@ -49,6 +53,8 @@ struct PartyMembersSection: View {
                 ListRow("Add members", meta: "Share the invite link", leading: .icon("plus"), chevron: false, action: onAddMembers)
             case .member(let member):
                 row(for: member)
+            case .invite(let invite):
+                PartyInviteRow(invite: invite)
             }
         }
         .sheet(item: $selectedMember) { target in

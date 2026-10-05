@@ -25,7 +25,8 @@ enum SectionHeaderVariant: Equatable {
 ///
 /// Axes: case (`uppercase`), trailing (`trailing` + `trailingTone`) and emphasis
 /// (`variant`). The trailing slot takes a figure — a count, a byline, a score — never a
-/// second label or a button. The title truncates before the figure does.
+/// second label or a button. The title is never truncated: it wraps to as many lines as
+/// it needs and the figure stays aligned to its first line.
 struct SectionHeader: View {
     let title: String
     var trailing: String?
@@ -55,8 +56,9 @@ struct SectionHeader: View {
     }
 
     var body: some View {
+        // The title wraps onto as many lines as it needs; the figure stays on the first.
         HStack(alignment: .firstTextBaseline, spacing: DS.Spacing.s2) {
-            HStack(spacing: DS.Spacing.s1_5) {
+            HStack(alignment: .firstTextBaseline, spacing: DS.Spacing.s1_5) {
                 if let systemImage {
                     // bundle.css: the title's icon is `text-sm`.
                     Image(systemName: systemImage)
@@ -65,8 +67,8 @@ struct SectionHeader: View {
                 }
                 Text(uppercase ? title.uppercased() : title)
                     .tracking(uppercase ? DS.TextStyle.sansXs.trackingWidest : 0)
-                    .textStyle(.sansXs, tone: nil, weight: variant == .primary ? .semibold : nil, lines: 1)
-                    .truncationMode(.tail)
+                    .textStyle(.sansXs, tone: nil, weight: variant == .primary ? .semibold : nil)
+                    .fixedSize(horizontal: false, vertical: true)
             }
             .foregroundStyle(variant == .primary ? DS.Color.primaryText : DS.Color.textTertiary)
             .accessibilityAddTraits(.isHeader)

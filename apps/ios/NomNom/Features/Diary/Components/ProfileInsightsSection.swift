@@ -7,6 +7,10 @@ struct ProfileInsightsSection: View {
 
     @Environment(FoodStore.self) private var store
     @State private var flavorProfile: [FlavorProfileEntry] = []
+    @State private var hasLoadedFlavors = false
+
+    /// The Pro upsell is for your own profile only; nobody sees a lock on someone else's.
+    private var isOwnProfile: Bool { raterRef == .account(store.userID) }
 
     private var tasteProfile: RaterTasteProfile? {
         store.tasteProfile(for: raterRef)
@@ -17,7 +21,7 @@ struct ProfileInsightsSection: View {
     }
 
     var body: some View {
-        if tasteProfile != nil || healthInsights != nil {
+        if isOwnProfile, tasteProfile != nil || healthInsights != nil {
             ProCard(
                 "Insights",
                 teaser: "See this taste profile, the health trend and the flavours behind it."
@@ -43,11 +47,16 @@ struct ProfileInsightsSection: View {
                         }
                     }
 
-                    FlavorProfileCard(entries: flavorProfile)
+                    if hasLoadedFlavors {
+                        FlavorProfileCard(entries: flavorProfile)
+                    } else {
+                        Skeleton(rows: 3, trailing: true, label: "Loading the flavour profile")
+                    }
                 }
             }
             .task(id: raterRef) {
                 flavorProfile = (try? await store.fetchFlavorProfile(for: raterRef)) ?? []
+                hasLoadedFlavors = true
             }
         }
     }

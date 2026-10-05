@@ -18,6 +18,7 @@ struct MealDetailView: View {
     @State private var showRecipeSheet = false
     @State private var showRatingSheet = false
     @State private var showScoreSheet = false
+    @State private var showRemindSheet = false
     @State private var selectedPartyForSheet: Party?
     @State private var selectedPhotoIndex: Int?
     @State private var selectedRecipePhotoIndex: Int?
@@ -35,8 +36,7 @@ struct MealDetailView: View {
                 if let meal {
                     MealDetailContent(meal: meal, topInset: topInset, actions: actions(for: meal))
                 } else if !didAttemptFetch {
-                    ProgressView()
-                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    ScreenSkeleton(label: "Loading meal")
                 } else {
                     EmptyState("Meal is gone", message: "It looks like this meal was deleted.", layout: .screen)
                         .padding(.horizontal, DS.Spacing.gutter)
@@ -68,6 +68,9 @@ struct MealDetailView: View {
         .sheet(isPresented: $showRatingSheet) { RateMealSheet(mealID: mealID) }
         .sheet(isPresented: $showScoreSheet) {
             if let meal { MealScoreBreakdownSheet(meal: meal) }
+        }
+        .sheet(isPresented: $showRemindSheet) {
+            if let meal { RemindRatersSheet(meal: meal) }
         }
         .sheet(isPresented: $showRecipeSheet) {
             if let meal {
@@ -148,6 +151,7 @@ struct MealDetailView: View {
             },
             onRate: store.canRate(meal: meal) ? { showRatingSheet = true } : nil,
             onOpenScore: { showScoreSheet = true },
+            onRemind: { showRemindSheet = true },
             onOpenRecipe: { showRecipeSheet = true },
             onOpenParty: { selectedPartyForSheet = $0 },
             onOpenMeal: { pushedMealID = $0 }

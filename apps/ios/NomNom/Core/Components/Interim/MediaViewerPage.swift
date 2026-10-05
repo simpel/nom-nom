@@ -18,7 +18,14 @@ struct MediaViewerPage: View {
                     .scaledToFit()
                     .accessibilityLabel("Photo")
             } else if !didLoad {
-                ProgressView().tint(DS.Color.Stone.stone0)
+                // A photo-shaped bone on the viewer's dark ground (Skeleton README).
+                RoundedRectangle(cornerRadius: DS.Radius.xl3, style: .continuous)
+                    .fill(DS.Color.sunken)
+                    .skeletonShimmer()
+                    .clipShape(RoundedRectangle(cornerRadius: DS.Radius.xl3, style: .continuous))
+                    .aspectRatio(1, contentMode: .fit)
+                    .padding(DS.Spacing.gutter)
+                    .accessibilityLabel("Loading photo")
             } else {
                 Image(systemName: "fork.knife")
                     .textStyle(.sansXl, tone: .tertiary)

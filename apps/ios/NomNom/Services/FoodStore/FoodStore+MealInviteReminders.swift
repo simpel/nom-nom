@@ -27,6 +27,38 @@ extension FoodStore {
         return .waiting(since: invite.lastNudgedAt, next: invite.nextReminderAt, reminded: invite.remindedAt != nil)
     }
 
+    /// Everyone on `meal` the viewer could nudge: other members with an account who
+    /// haven't rated. Household eaters have no inbox, so they never appear.
+    func remindableRaters(forMeal meal: Meal) -> [MealRater] {
+        raters(forMeal: meal).filter { $0.rating == nil && !$0.isViewer && $0.profile != nil }
+    }
+
+    /// Whether anyone on `meal` can be asked or reminded right now.
+    func canRemindAnyone(forMeal meal: Meal) -> Bool {
+        remindableRaters(forMeal: meal).contains { $0.profile.map { canNudgeToRate($0, onMeal: meal.id) } ?? false }
+    }
+
+    /// Whether `profile` can be asked or reminded right now (not inside the one-a-day wait).
+    func canNudgeToRate(_ profile: Profile, onMeal mealID: UUID) -> Bool {
+        if case .waiting = ratingAskStatus(for: profile.id, onMeal: mealID) { return false }
+        return true
+    }
+
+    /// Asks `profile` to rate, or reminds them when they were already asked. False (with
+    /// `errorMessage` set) when it fails or the one-a-day wait isn't over.
+    func nudgeToRate(_ profile: Profile, onMeal mealID: UUID) async -> Bool {
+        switch ratingAskStatus(for: profile.id, onMeal: mealID) {
+        case .notAsked:
+            return await askToRate(member: profile, forMeal: mealID)
+        case .canRemind:
+            guard let invite = pendingInvite(for: profile.id, onMeal: mealID) else { return false }
+            return await remindToRate(invite: invite)
+        case .waiting:
+            errorMessage = "You can send one reminder a day."
+            return false
+        }
+    }
+
     /// Sends one reminder. Returns false (with `errorMessage` set) when it can't.
     func remindToRate(invite: MealInvite) async -> Bool {
         struct Params: Encodable { let p_invite_id: String }

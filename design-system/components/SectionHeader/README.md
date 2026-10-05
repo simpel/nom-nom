@@ -40,7 +40,7 @@ Plus `title`, an optional `icon` before it, and `as` (the title element — `h2`
 - **One label per surface.** A card gets one, at the top. Two small uppercase labels in the same card compete and neither reads as the heading.
 - **At most one thing to the right of it.** The trailing slot takes a figure — a count, a byline, a score — not a second label and never a button. If a card needs a category, an author and a score, the category is the label and the rest belong with the content they describe, not crowded onto the label's line.
 - Uppercase for categories and section names; normal case for possessive or personal labels ("Joel's note"). Same size and colour either way.
-- The title truncates before the trailing figure does: the number is the part that must stay readable.
+- The title is never truncated. It wraps to as many lines as it needs, and the trailing figure stays on one line, aligned to the title's first line (top), so a long title ("Every time the Friday Feast Club cooked this") reads in full beside "3 times".
 - `variant: 'primary'` recolours the label only; it does not tint anything. Use it when the surface around it is already a `primary` card, and on one label there.
 - The component never paints a background. If a label needs a surface, the surface is a Card the consumer places — SectionCard exists for exactly that pairing.
 

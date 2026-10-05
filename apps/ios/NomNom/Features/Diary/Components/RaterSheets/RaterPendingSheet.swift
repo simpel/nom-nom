@@ -1,9 +1,9 @@
 import SwiftUI
 
-/// Someone who hasn't rated a meal yet ("Nom Nom iOS" canvas, RaterUnrated): a
-/// BottomSheet titled with their name, the PersonHeaderRow, an empty score (dashed
-/// placeholder, ScoreValue `lg` em dash, empty Bar), "Oskar hasn’t rated Pasta alla
-/// norma yet.", a status line, and the Ask / Remind button (RaterRemindButton).
+/// Someone who hasn't rated a meal yet: a BottomSheet titled with their name, the
+/// PersonHeaderRow and the Ask / Remind button (RaterRemindButton). No empty score:
+/// the meal's score card already says nobody has. A household member (no account)
+/// gets one line saying whoever logs the meal adds their verdict.
 struct RaterPendingSheet: View {
     let meal: Meal
     let rater: RaterRef
@@ -23,17 +23,9 @@ struct RaterPendingSheet: View {
         NavigationStack {
             SheetBody {
                 RaterPersonRow(meal: meal, rater: rater) { showProfile = true }
-                VStack(alignment: .leading, spacing: DS.Spacing.s3) {
-                    HStack(spacing: DS.Spacing.s3) {
-                        EmptyScoreGlyph()
-                        ScoreValue(score: nil, size: .lg)
-                    }
-                    Bar(value: nil, size: .md).accessibilityHidden(true)
-                    Text("\(name) hasn\u{2019}t rated \(store.dishName(forMeal: meal)) yet.")
-                        .textStyle(.sansMd, tone: .secondary)
-                    if let line = statusLine(name: name) {
-                        Text(line).textStyle(.sansSm, tone: .tertiary)
-                    }
+                if profile == nil {
+                    Text("Household members\u{2019} verdicts are added by whoever logs the meal.")
+                        .textStyle(.sansSm, tone: .tertiary)
                 }
                 if let profile {
                     RaterRemindButton(meal: meal, profile: profile, name: name, justSent: $justSent)
@@ -46,39 +38,5 @@ struct RaterPendingSheet: View {
             }
         }
         .dsSheet(detents: [.medium, .large])
-    }
-
-    private func statusLine(name: String) -> String? {
-        guard let profile else { return "Household members\u{2019} verdicts are added by whoever logs the meal." }
-        if justSent {
-            return profile.notifyViaPush ? "Push notification sent to \(name)." : "Sent to \(name)\u{2019}s inbox."
-        }
-        switch store.ratingAskStatus(for: profile.id, onMeal: meal.id) {
-        case .notAsked:
-            return "Not asked yet."
-        case .canRemind(let since):
-            let verb = store.pendingInvite(for: profile.id, onMeal: meal.id)?.remindedAt == nil ? "Asked" : "Reminded"
-            return "\(verb) \(since.formatted(.relative(presentation: .named)))."
-        case .waiting(let since, _, let reminded):
-            let when = since.formatted(.relative(presentation: .named))
-            return reminded ? "Reminded \(when). One reminder per day." : "Asked \(when)."
-        }
-    }
-}
-
-/// The unrated score's placeholder: a `spacing-11` circle on `sunken` with a dashed
-/// `border-thick` `line-control` ring (DS-GAPS.md, "Empty score").
-private struct EmptyScoreGlyph: View {
-    var body: some View {
-        Circle()
-            .fill(DS.Color.sunken)
-            .overlay {
-                Circle().strokeBorder(
-                    DS.Color.lineControl,
-                    style: StrokeStyle(lineWidth: DS.BorderWidth.thick, dash: [DS.Spacing.s1, DS.Spacing.s1])
-                )
-            }
-            .frame(width: DS.Spacing.s11, height: DS.Spacing.s11)
-            .accessibilityHidden(true)
     }
 }
