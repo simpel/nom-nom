@@ -20,10 +20,12 @@ struct SuggestedPartiesSection: View {
     var body: some View {
         if !visible.isEmpty || store.partySuggestionsHasMore {
             DSSection("Suggested parties") {
-                LazyVStack(spacing: DS.Spacing.s4) {
-                    ForEach(visible, id: \.party.id) { SuggestedPartyCard(party: $0.party, reason: $0.reason) }
+                Card(layout: .list) {
+                    ForEach(visible, id: \.party.id) { 
+                        SuggestedPartyRow(party: $0.party, reason: $0.reason) 
+                    }
                     if store.partySuggestionsHasMore {
-                        Skeleton(layout: .card, lines: 2)
+                        Skeleton(layout: .row, lines: 2)
                             .task(id: store.partySuggestions.count) { await store.loadPartySuggestions() }
                     }
                 }

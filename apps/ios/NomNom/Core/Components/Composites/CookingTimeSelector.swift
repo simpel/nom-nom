@@ -1,20 +1,22 @@
 import SwiftUI
 
-/// Standalone cooking time / effort selector: one OptionCell per EffortLevel, label over
-/// description, `spacing-1.5` apart. Tapping the chosen cell clears it.
+/// Standalone cooking time / effort selector: a row of four borderless ChoiceTiles, one
+/// per EffortLevel, the range in serif over "minutes" in sans (as the rate-a-meal
+/// steps). Tapping the chosen tile clears it.
 struct CookingTimeSelector: View {
     @Binding var selection: EffortLevel?
 
     var body: some View {
-        HStack(spacing: DS.Spacing.s1_5) {
+        HStack(spacing: DS.Spacing.s2) {
             ForEach(EffortLevel.allCases) { level in
                 let isSelected = selection == level
-                OptionCell(isSelected: isSelected, minHeight: DS.Spacing.s16) {
+                ChoiceTile(isSelected: isSelected, square: false) {
                     selection = isSelected ? nil : level
                 } label: {
-                    OptionCellText(label: level.label, description: level.description, isSelected: isSelected)
+                    ChoiceTileText(title: level.range, subtitle: level.description, isSelected: isSelected)
+                        .padding(.vertical, DS.Spacing.s2)
                 }
-                .accessibilityLabel([level.label, level.description].compactMap { $0 }.joined(separator: ", "))
+                .accessibilityLabel(level.label)
             }
         }
         .sensoryFeedback(.impact(weight: .light), trigger: selection)

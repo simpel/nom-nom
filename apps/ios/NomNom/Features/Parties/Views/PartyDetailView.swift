@@ -13,8 +13,8 @@ struct PartyDetailView: View {
 
     @State var showingSettings = false
     @State var showingMembersSheet = false
-    @State var showingInvite = false
     @State var showingCreateMeal = false
+    @State var showingInsights = false
     @State var confirmLeave = false
     @State var selectedPhotoIndex: Int?
     @State var didAttemptFetch = false
@@ -68,19 +68,24 @@ struct PartyDetailView: View {
 
                 PartyAverageRatingCard(party: party)
 
-                NavigationLink {
-                    PartyInsightsView(party: party)
-                } label: {
-                    ProLinkCard(title: "See insights", subtitle: "Ratings over time, taste match, health and flavours")
+                if isMember {
+                    Button {
+                        showingInsights = true
+                    } label: {
+                        ProLinkCard(title: "See insights", subtitle: "Ratings over time, taste match, health and flavours")
+                    }
+                    .buttonStyle(AppPressableButtonStyle())
+                    .sheet(isPresented: $showingInsights) {
+                        PartyInsightsView(party: party)
+                    }
                 }
-                .buttonStyle(AppPressableButtonStyle())
 
                 if isMember {
-                    PartyMembersSection(party: party) { showingInvite = true }
+                    PartyMembersSection(party: party)
                     PartyMealsSection(party: party)
                 } else {
                     PartyMealsSection(party: party)
-                    PartyMembersSection(party: party) { showingInvite = true }
+                    PartyMembersSection(party: party)
                 }
             }
             .padding(.horizontal, DS.Spacing.gutter)
@@ -112,9 +117,6 @@ struct PartyDetailView: View {
         }
         .sheet(isPresented: $showingMembersSheet) {
             PartyMembersSheet(party: party)
-        }
-        .sheet(isPresented: $showingInvite) {
-            PartyInviteView(party: party)
         }
         .sheet(isPresented: $showingCreateMeal) {
             MealEditorView(mealID: nil, prefilledPartyID: party.id)

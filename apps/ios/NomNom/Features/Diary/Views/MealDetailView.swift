@@ -20,6 +20,7 @@ struct MealDetailView: View {
     @State private var showScoreSheet = false
     @State private var showRemindSheet = false
     @State private var selectedPartyForSheet: Party?
+    @State private var showingPhotoPicker = false
     @State private var selectedPhotoIndex: Int?
     @State private var selectedRecipePhotoIndex: Int?
     @State private var pushedMealID: UUID?
@@ -98,6 +99,9 @@ struct MealDetailView: View {
         .navigationDestination(item: $pushedMealID) { id in
             MealDetailView(mealID: id)
         }
+        .avatarPhotoPicker(isPresented: $showingPhotoPicker) { data in
+            if let meal { addPhotoData(data, to: meal, prepend: false) }
+        }
     }
 
     /// A small inset under the navigation bar.
@@ -138,10 +142,25 @@ struct MealDetailView: View {
         }
     }
 
+    private func addPhotoData(_ data: Data, to meal: Meal, prepend: Bool) {
+        let existing = meal.photoPaths.map { FoodStore.PhotosDraft.Item.existing(path: $0) }
+        let newItem = FoodStore.PhotosDraft.Item.added(id: UUID(), data: data)
+        let items = prepend ? [newItem] + existing : existing + [newItem]
+        let draft = FoodStore.PhotosDraft(items: items)
+        Task {
+            do {
+                try await store.applyPhotos(draft, to: meal)
+            } catch {
+                // Ignore for now or handle via store.errorMessage
+            }
+        }
+    }
+
     private func actions(for meal: Meal) -> MealDetailActions {
         let mealPhotoCount = meal.photoPaths.count
         return MealDetailActions(
-            onAddPhoto: canEdit ? { showEditor = true } : nil,
+            onAddPhoto: canEdit ? { showingPhotoPicker = true } : nil,
+            onAddPhotoData: canEdit ? { data in addPhotoData(data, to: meal, prepend: true) } : nil,
             onSelectPhoto: { index in
                 if index < mealPhotoCount {
                     selectedPhotoIndex = index

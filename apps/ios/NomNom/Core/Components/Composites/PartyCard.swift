@@ -72,13 +72,17 @@ struct PartyCard<Destination: View, Join: View>: View {
 
     var body: some View {
         Card(spacing: DS.Spacing.s3) {
-            NavigationLink(destination: destination) { main }
-                .buttonStyle(AppPressableButtonStyle())
+            ZStack(alignment: .topTrailing) {
+                NavigationLink(destination: destination) { main }
+                    .buttonStyle(AppPressableButtonStyle())
+                
+                if mode == .discover {
+                    join
+                }
+            }
+            
             if !recentMeals.isEmpty {
                 mealsRow
-            }
-            if mode == .discover {
-                join
             }
         }
     }
@@ -98,6 +102,9 @@ struct PartyCard<Destination: View, Join: View>: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
                 if mode == .mine {
                     ScoreValue(score: score, size: .xs)
+                } else if mode == .discover {
+                    // Reserve space for the top-trailing join button so text doesn't overlap
+                    Spacer().frame(width: DS.Spacing.s11, height: DS.Spacing.s11)
                 }
             }
             if !party.about.isEmpty {

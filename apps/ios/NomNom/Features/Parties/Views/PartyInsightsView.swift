@@ -10,31 +10,35 @@ struct PartyInsightsView: View {
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {
-        ProGate(
-            "Insights are part of Nom Nom Pro",
-            message: "See how \(party.name) eats over time.",
-            benefits: [
-                "Ratings over time, member by member",
-                "Taste match, health and flavours",
-                "AI recipe ideas for your next dinner"
-            ],
-            onDismiss: { dismiss() }
-        ) {
-            ScrollView {
-                VStack(alignment: .leading, spacing: DS.Spacing.block) {
-                    VStack(alignment: .leading, spacing: DS.Spacing.s2) {
-                        ProMark()
-                        ScreenHeader(party.name)
-                    }
-                    .padding(.horizontal, DS.Spacing.gutter)
+        NavigationStack {
+            ProGate(
+                "Insights are part of Nom Nom Pro",
+                message: "See how \(party.name) eats over time.",
+                benefits: [
+                    "Ratings over time, member by member",
+                    "Taste match, health and flavours",
+                    "AI recipe ideas for your next dinner"
+                ],
+                onDismiss: { dismiss() }
+            ) {
+                ScrollView {
+                    VStack(alignment: .leading, spacing: DS.Spacing.block) {
+                        VStack(alignment: .leading, spacing: DS.Spacing.s2) {
+                            ProMark()
+                            ScreenHeader(party.name)
+                        }
+                        .padding(.horizontal, DS.Spacing.gutter)
 
-                    PartyInsightsSection(partyID: party.id)
+                        PartyInsightsSection(partyID: party.id)
+                    }
+                    .padding(.top, DS.Spacing.s3)
+                    .padding(.bottom, DS.Spacing.s11)
                 }
-                .padding(.top, DS.Spacing.s3)
-                .padding(.bottom, DS.Spacing.s11)
             }
+            .proView()
+            .screenTitle("Insights", displayMode: .inline)
+            .sheetCloseToolbar()
         }
-        .proView()
-        .screenTitle("Insights", displayMode: .inline)
+        .dsSheet()
     }
 }

@@ -10,6 +10,7 @@ struct MealDetailHeader: View {
     let onRate: (() -> Void)?
     /// Nil when the meal has no recipe: no "View recipe".
     var onViewRecipe: (() -> Void)?
+    var onAddPhotoData: ((Data) -> Void)?
 
     @Environment(FoodStore.self) private var store
 
@@ -19,6 +20,9 @@ struct MealDetailHeader: View {
             eyebrow: party,
             date: meal.eatenOn,
             avatar: avatar,
+            avatarEdit: onAddPhotoData.map { onPick in
+                ScreenHeaderAvatarEdit(hasPhoto: meal.photoPath != nil, onPick: onPick, onRemove: nil)
+            },
             actions: [action, recipeAction].compactMap { $0 }
         )
     }

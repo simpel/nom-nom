@@ -15,26 +15,13 @@ struct MealDetailsStepView: View {
                 Input(
                     "Name this meal",
                     label: "Name (optional)",
-                    text: Binding(
-                        get: { draft.mealTitle },
-                        set: { draft.mealTitle = $0 }
-                    ),
+                    text: $draft.mealTitle,
                     hint: "Leave blank to use \(draft.dishName)."
                 )
 
-                AssetPhotosPickerSection(
-                    draft: Binding(
-                        get: { draft.photos },
-                        set: { draft.photos = $0 }
-                    )
-                )
+                AssetPhotosPickerSection(draft: $draft.photos)
 
-                MealEditorCookingTimeSection(
-                    effort: Binding(
-                        get: { draft.effort },
-                        set: { draft.effort = $0 }
-                    )
-                )
+                MealEditorCookingTimeSection(effort: $draft.effort)
 
                 MealEditorPartiesSection(
                     selectedParties: Binding(

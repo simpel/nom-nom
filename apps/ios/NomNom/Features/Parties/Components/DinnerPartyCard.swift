@@ -7,7 +7,6 @@ struct DinnerPartyCard: View {
     let party: Party
 
     @Environment(FoodStore.self) private var store
-    @State private var showingInviteSheet = false
 
     private var isMember: Bool { store.isMember(of: party.id) }
     private var meals: [Meal] { store.meals(forParty: party.id) }
@@ -31,12 +30,6 @@ struct DinnerPartyCard: View {
         }
         .contextMenu {
             if isMember {
-                Button {
-                    showingInviteSheet = true
-                } label: {
-                    Label("Invite Member", systemImage: "person.badge.plus")
-                }
-
                 ShareLink(
                     item: party.webInviteURL,
                     subject: Text("Join \(party.name) on Nom Nom"),
@@ -45,9 +38,6 @@ struct DinnerPartyCard: View {
                     Label("Share Invite Link", systemImage: "square.and.arrow.up")
                 }
             }
-        }
-        .sheet(isPresented: $showingInviteSheet) {
-            PartyInviteView(party: party)
         }
     }
 }

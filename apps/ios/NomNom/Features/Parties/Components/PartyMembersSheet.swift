@@ -7,7 +7,6 @@ struct PartyMembersSheet: View {
     @Environment(FoodStore.self) private var store
     @Environment(\.dismiss) private var dismiss
 
-    @State private var showingInviteSheet = false
     @State private var memberToRemove: Profile?
     @State private var actionError: String?
 
@@ -35,22 +34,12 @@ struct PartyMembersSheet: View {
                         AppButtonLabel("Share link", icon: "square.and.arrow.up", appearance: .soft, fullWidth: true)
                     }
                     .buttonStyle(AppPressableButtonStyle())
-
-                    AppButton("Invite by email", icon: "envelope", appearance: .outline, fullWidth: true) {
-                        showingInviteSheet = true
-                    }
                 }
 
                 membersSection
             }
             .screenTitle("Members", displayMode: .inline)
-            .sheetOverviewToolbar(
-                primarySystemImage: "person.badge.plus",
-                onPrimaryAction: { showingInviteSheet = true }
-            )
-            .sheet(isPresented: $showingInviteSheet) {
-                PartyInviteView(party: party)
-            }
+            .sheetOverviewToolbar()
             .alert(
                 "Remove Member?",
                 isPresented: Binding(

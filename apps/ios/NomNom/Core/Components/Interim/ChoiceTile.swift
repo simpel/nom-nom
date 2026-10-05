@@ -13,23 +13,33 @@ import SwiftUI
 struct ChoiceTile<Label: View>: View {
     let isSelected: Bool
     var tint: Color = DS.Color.primary
+    /// Square by default (the rate-a-meal grids); `false` lets a row of tiles keep its height to its copy, with the compact `radius-lg`.
+    var square: Bool = true
     let action: () -> Void
     @ViewBuilder var label: Label
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     private var shape: RoundedRectangle {
-        RoundedRectangle(cornerRadius: DS.Radius.xl3, style: .continuous)
+        RoundedRectangle(cornerRadius: square ? DS.Radius.xl3 : DS.Radius.lg, style: .continuous)
+    }
+
+    @ViewBuilder
+    private func sized(_ content: some View) -> some View {
+        if square {
+            content
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .aspectRatio(1, contentMode: .fit)
+        } else {
+            content.frame(maxWidth: .infinity)
+        }
     }
 
     var body: some View {
         Button {
             withAnimation(OptionCell<EmptyView>.selectionAnimation(reduceMotion: reduceMotion)) { action() }
         } label: {
-            label
-                .padding(DS.Spacing.s2)
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .aspectRatio(1, contentMode: .fit)
+            sized(label.padding(DS.Spacing.s2))
                 .background {
                     shape.fill(DS.Color.panel)
                     if isSelected {

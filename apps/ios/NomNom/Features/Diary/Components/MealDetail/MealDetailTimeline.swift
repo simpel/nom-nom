@@ -11,7 +11,7 @@ struct MealDetailTimeline: View {
 
     private var occasions: [TimelineOccasion] {
         (history + [meal])
-            .sorted { $0.eatenOn < $1.eatenOn }
+            .sorted { $0.eatenOn > $1.eatenOn }
             .map { serving in
                 TimelineOccasion(
                     id: AnyHashable(serving.id),

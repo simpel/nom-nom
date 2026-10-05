@@ -1,9 +1,8 @@
 import SwiftUI
 
-/// The follow control under a `discover` PartyCard, for a public party the viewer isn't
-/// a member of. Same labels and appearances as the party screen's ScreenHeader action:
-/// "Follow" (`primary solid`) or "Following" (`primary soft`, checkmark), one request
-/// at a time, with a light haptic on change.
+/// The follow control under a `discover` PartyCard or in a ListRow, for a public party the viewer isn't
+/// a member of. It displays as an icon (`plus` for follow, `checkmark` for following) with 
+/// `primary solid` or `primary soft` appearance, one request at a time, with a light haptic on change.
 ///
 /// PartyCard README names this slot "Ask to join"; the app follows public parties
 /// instead of requesting to join them (see DS-GAPS.md).
@@ -19,14 +18,12 @@ struct PartyFollowButton: View {
     var body: some View {
         if !isMember && party.isPublic {
             AppButton(
-                isFollowing ? "Following" : "Follow",
-                icon: isFollowing ? "checkmark" : nil,
+                icon: isFollowing ? "checkmark" : "plus",
+                accessibilityLabel: isFollowing ? "Unfollow \(party.name)" : "Follow \(party.name)",
                 appearance: isFollowing ? .soft : .solid,
-                size: .sm,
                 isLoading: isProcessing,
                 action: toggleFollow
             )
-            .accessibilityLabel(isFollowing ? "Unfollow \(party.name)" : "Follow \(party.name)")
             .sensoryFeedback(.impact(weight: .light), trigger: isFollowing)
         }
     }

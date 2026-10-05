@@ -13,14 +13,10 @@ struct MealEditorView: View {
 
     @State private var title = ""
     @State private var linkedDishID: UUID?
-    @State private var date = Date.now
-    @State private var notes = ""
-    @State private var mealTitle = ""
-    @State private var effort: EffortLevel?
-    @State private var repeatDesire: RotationGoal?
-    @State private var selectedParties: Set<UUID> = []
+    /// The one meal draft. Step 1 edits date and notes in place; the Details step
+    /// binds to it directly, so typing there touches one field and nothing else.
+    @State private var draft = FoodStore.MealDraft(dishName: "", eatenOn: .now, notes: "")
 
-    @State private var photosDraft = FoodStore.PhotosDraft()
     @State private var recipeDraft = FoodStore.RecipeDraft()
     @State private var loadedRecipeDishID: UUID?
 
@@ -44,38 +40,6 @@ struct MealEditorView: View {
 
     private var isExistingDish: Bool { existingMatchedDish != nil }
 
-    private var currentDraft: FoodStore.MealDraft {
-        let name = title.trimmedName
-
-        return FoodStore.MealDraft(mealID: mealID,
-                                   dishName: name,
-                                   mealTitle: mealTitle,
-                                   linkedDishID: linkedDishID ?? existingMatchedDish?.id,
-                                   eatenOn: date,
-                                   notes: notes,
-                                   photos: photosDraft,
-                                   effort: effort,
-                                   repeatDesire: repeatDesire,
-                                   servedParties: selectedParties,
-                                   recipe: recipeDraft)
-    }
-
-    private var currentDraftBinding: Binding<FoodStore.MealDraft> {
-        Binding(
-            get: { currentDraft },
-            set: { updated in
-                photosDraft = updated.photos
-                selectedParties = updated.servedParties ?? selectedParties
-                date = updated.eatenOn
-                recipeDraft = updated.recipe ?? recipeDraft
-                notes = updated.notes
-                mealTitle = updated.mealTitle
-                effort = updated.effort
-                repeatDesire = updated.repeatDesire
-            }
-        )
-    }
-
     var body: some View {
         NavigationStack {
             ScrollView {
@@ -90,7 +54,7 @@ struct MealEditorView: View {
                         onRemoveRecipe: removeSelectedDish
                     )
 
-                    MealEditorDetailsSection(date: $date, notes: $notes)
+                    MealEditorDetailsSection(date: $draft.eatenOn, notes: $draft.notes)
                 }
                 .padding(.horizontal, DS.Spacing.gutter)
                 .padding(.top, DS.Spacing.s5)
@@ -100,7 +64,7 @@ struct MealEditorView: View {
             .screenTitle(isEditing ? "Edit meal" : "New meal", displayMode: .inline)
             .sheetNextToolbar(canProceed: canProceed, onNext: proceed)
             .navigationDestination(isPresented: $navigateToDetailsStep) {
-                MealDetailsStepView(draft: currentDraftBinding, onDismiss: { dismiss() })
+                MealDetailsStepView(draft: $draft, onDismiss: { dismiss() })
             }
             .sheet(isPresented: $showRecipeEditorSheet) {
                 DishRecipeEditSheet(dishName: $title,
@@ -149,7 +113,12 @@ struct MealEditorView: View {
         recipeDraft = FoodStore.RecipeDraft()
     }
 
+    /// Step 1's recipe choice goes into the draft once, on the way to Details.
     private func proceed() {
+        draft.mealID = mealID
+        draft.dishName = title.trimmedName
+        draft.linkedDishID = linkedDishID ?? existingMatchedDish?.id
+        draft.recipe = recipeDraft
         navigateToDetailsStep = true
     }
 
@@ -169,8 +138,8 @@ struct MealEditorView: View {
             removedPhotoPaths: [],
             effort: dish.effort
         )
-        if effort == nil, let dishEffort = dish.effort {
-            effort = dishEffort
+        if draft.effort == nil, let dishEffort = dish.effort {
+            draft.effort = dishEffort
         }
     }
 
@@ -179,18 +148,18 @@ struct MealEditorView: View {
         didLoad = true
 
         guard let meal else {
-            if let initialDate { date = initialDate }
+            if let initialDate { draft.eatenOn = initialDate }
             if let prefilledDishID, let dish = store.dish(prefilledDishID) {
                 title = dish.name
                 linkedDishID = dish.id
                 loadRecipe(from: dish)
             }
             if let prefilledPartyID {
-                selectedParties = [prefilledPartyID]
+                draft.servedParties = [prefilledPartyID]
             } else if let lastParty = store.myParties.first {
-                selectedParties = [lastParty.id]
+                draft.servedParties = [lastParty.id]
             } else {
-                selectedParties = []
+                draft.servedParties = []
             }
             return
         }
@@ -198,13 +167,13 @@ struct MealEditorView: View {
         let dish = store.dish(meal.dishID)
         title = dish?.name ?? ""
         linkedDishID = dish?.id
-        date = meal.eatenOn
-        notes = meal.notes
-        mealTitle = meal.title ?? ""
-        effort = meal.effort
-        repeatDesire = meal.repeatDesire
-        photosDraft = FoodStore.PhotosDraft(existingPaths: meal.photoPaths)
-        selectedParties = Set(store.parties(forMeal: meal.id).map(\.id))
+        draft.eatenOn = meal.eatenOn
+        draft.notes = meal.notes
+        draft.mealTitle = meal.title ?? ""
+        draft.effort = meal.effort
+        draft.repeatDesire = meal.repeatDesire
+        draft.photos = FoodStore.PhotosDraft(existingPaths: meal.photoPaths)
+        draft.servedParties = Set(store.parties(forMeal: meal.id).map(\.id))
 
         if let dish {
             loadRecipe(from: dish)

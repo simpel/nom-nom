@@ -7,7 +7,6 @@ import SwiftUI
 /// everyone invited who hasn't joined, last, as inactive PartyInviteRows with Remind.
 struct PartyMembersSection: View {
     let party: Party
-    let onAddMembers: () -> Void
 
     @Environment(FoodStore.self) private var store
     @State private var memberToRemove: Profile?
@@ -36,7 +35,7 @@ struct PartyMembersSection: View {
 
     private var items: [Item] {
         let invites = isMember ? store.pendingInvites(forParty: party.id).map(Item.invite) : []
-        return (isMember ? [.add] : []) + members.map(Item.member) + invites
+        return members.map(Item.member) + invites + (isMember ? [.add] : [])
     }
 
     var body: some View {
@@ -50,13 +49,20 @@ struct PartyMembersSection: View {
         ) { item in
             switch item {
             case .add:
-                ListRow("Add members", meta: "Share the invite link", leading: .icon("plus"), chevron: false, action: onAddMembers)
-            case .member(let member):
-                row(for: member)
-            case .invite(let invite):
-                PartyInviteRow(invite: invite)
+                    ShareLink(
+                        item: party.webInviteURL,
+                        subject: Text("Join \(party.name) on Nom Nom"),
+                        message: Text(party.shareMessage)
+                    ) {
+                        ListRow("Add members", meta: "Share the invite link", leading: .icon("plus"), chevron: false)
+                    }
+                    .buttonStyle(AppPressableButtonStyle())
+                case .member(let member):
+                    row(for: member)
+                case .invite(let invite):
+                    PartyInviteRow(invite: invite)
+                }
             }
-        }
         .sheet(item: $selectedMember) { target in
             PartyMemberInsightSheet(memberRef: .account(target.id), partyID: party.id)
         }

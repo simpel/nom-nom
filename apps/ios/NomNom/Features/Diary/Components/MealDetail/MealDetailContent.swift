@@ -3,6 +3,7 @@ import SwiftUI
 /// What Meal Detail's blocks ask the screen to present.
 struct MealDetailActions {
     var onAddPhoto: (() -> Void)?
+    var onAddPhotoData: ((Data) -> Void)?
     let onSelectPhoto: (Int) -> Void
     /// Nil when the viewer can't rate this meal (`FoodStore.canRate(meal:)`).
     let onRate: (() -> Void)?
@@ -34,7 +35,8 @@ struct MealDetailContent: View {
                 MealDetailHeader(
                     meal: meal,
                     onRate: actions.onRate,
-                    onViewRecipe: store.recipe(meal.recipeID) != nil ? actions.onOpenRecipe : nil
+                    onViewRecipe: store.recipe(meal.recipeID) != nil ? actions.onOpenRecipe : nil,
+                    onAddPhotoData: actions.onAddPhotoData
                 )
 
                 MealScoreCard(
