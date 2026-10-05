@@ -6,6 +6,8 @@ extension FoodStore {
         let score: Double
         let count: Int
         let reaction: Reaction
+        /// Each rater's part of `score` (0–100 points); they add up to `score * 100`.
+        var shares: [RaterRef: Double] = [:]
     }
 
     /// Average rating score for a specific rater (or all raters if nil) across the last `limit`
@@ -44,17 +46,11 @@ extension FoodStore {
         let slice = candidateRatings.prefix(limit)
         guard !slice.isEmpty else { return nil }
 
-        let scores = slice.map(\.rating.reaction.score)
+        let scores = slice.map(\.rating.score)
         let avg = scores.reduce(0.0, +) / Double(scores.count)
 
-        let reaction: Reaction
-        if avg >= 0.85 { reaction = .amazing }
-        else if avg >= 0.70 { reaction = .great }
-        else if avg >= 0.50 { reaction = .good }
-        else if avg >= 0.30 { reaction = .meh }
-        else if avg >= 0.15 { reaction = .bad }
-        else { reaction = .inedible }
-
-        return PartyScoreStats(score: avg, count: slice.count, reaction: reaction)
+        var shares: [RaterRef: Double] = [:]
+        for entry in slice { shares[entry.rating.source, default: 0] += entry.rating.score * 100 / Double(slice.count) }
+        return PartyScoreStats(score: avg, count: slice.count, reaction: Reaction(score: avg), shares: shares)
     }
 }

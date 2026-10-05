@@ -21,8 +21,11 @@ struct RecipeScannerSheet: View {
         NavigationStack {
             ZStack {
                 ScrollView {
-                    VStack(spacing: DS.Spacing.section) {
-                        guidanceHeader
+                    VStack(spacing: DS.Spacing.block) {
+                        ScreenHeader(
+                            "Cookbook & Card Scanner",
+                            summary: "Take or select up to \(maxPhotos) photos covering the title, ingredients, and cooking steps."
+                        )
 
                         captureActions
 
@@ -34,21 +37,19 @@ struct RecipeScannerSheet: View {
                             )
                         }
                     }
-                    .padding(.horizontal, DS.Spacing.screenHorizontal)
-                    .padding(.top, DS.Spacing.screenTop)
-                    .padding(.bottom, 100) // Clearance for fixed bottom CTA
+                    .padding(.horizontal, DS.Spacing.gutter)
+                    .padding(.top, DS.Spacing.s5)
+                    .padding(.bottom, DS.Spacing.block)
                 }
-                .background(DS.Color.bg)
-
-                // Fixed bottom CTA
-                VStack {
-                    Spacer()
+                .background(DS.Color.sheet)
+                // Fixed bottom CTA; the scroll content insets itself above it.
+                .safeAreaInset(edge: .bottom) {
                     bottomActionBar
-                        .padding(.horizontal, DS.Spacing.screenHorizontal)
-                        .padding(.bottom, DS.Spacing.screenBottom)
+                        .padding(.horizontal, DS.Spacing.gutter)
+                        .padding(.bottom, DS.Spacing.s11)
                         .background(
                             LinearGradient(
-                                colors: [DS.Color.bg.opacity(0), DS.Color.bg],
+                                colors: [DS.Color.sheet.opacity(DS.Opacity.o0), DS.Color.sheet],
                                 startPoint: .top,
                                 endPoint: .bottom
                             )
@@ -63,17 +64,9 @@ struct RecipeScannerSheet: View {
                 }
             }
             .screenTitle("Scan Recipe", displayMode: .inline)
-            .toolbar {
-                ToolbarItem(placement: .topBarLeading) {
-                    Button {
-                        analysisTask?.cancel()
-                        dismiss()
-                    } label: {
-                        Image(systemName: "xmark")
-                            .fontWeight(.semibold)
-                    }
-                    .accessibilityLabel("Cancel")
-                }
+            .sheetCancelToolbar {
+                analysisTask?.cancel()
+                dismiss()
             }
             .sheet(isPresented: $showCamera) {
                 CameraPicker { image in
@@ -95,34 +88,15 @@ struct RecipeScannerSheet: View {
                 Text(errorMessage ?? "")
             }
         }
+        .dsSheet()
     }
 
     // MARK: - Subviews
 
-    private var guidanceHeader: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            Text("Cookbook & Card Scanner")
-                .font(.headline.weight(.semibold))
-                .foregroundStyle(DS.Color.textPrimary)
-
-            Text("Take or select up to \(maxPhotos) photos covering the title, ingredients, and cooking steps.")
-                .font(.subheadline)
-                .foregroundStyle(DS.Color.textSecondary)
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-    }
-
     private var captureActions: some View {
-        HStack(spacing: 12) {
+        HStack(spacing: DS.Spacing.s3) {
             if CameraPicker.isAvailable {
-                AppButton(
-                    "Camera",
-                    systemImage: "camera",
-                    variant: .secondary,
-                    style: .outlined,
-                    size: .md,
-                    isFullWidth: true
-                ) {
+                AppButton("Camera", icon: "camera", appearance: .outline, fullWidth: true) {
                     showCamera = true
                 }
                 .disabled(stagedPhotos.count >= maxPhotos || isAnalyzing)
@@ -134,22 +108,9 @@ struct RecipeScannerSheet: View {
                 matching: .images,
                 photoLibrary: .shared()
             ) {
-                HStack(spacing: 8) {
-                    Image(systemName: "photo.on.rectangle")
-                        .font(.callout.weight(.semibold))
-                    Text("Library")
-                        .font(.callout.weight(.semibold))
-                }
-                .frame(maxWidth: .infinity)
-                .frame(height: 42)
-                .padding(.horizontal, 16)
-                .foregroundStyle(DS.Color.textPrimary)
-                .background(DS.Color.panel)
-                .clipShape(Capsule())
-                .overlay {
-                    Capsule().strokeBorder(DS.Color.lineStrong, lineWidth: 1.5)
-                }
+                AppButtonLabel("Library", icon: "photo.on.rectangle", appearance: .outline, fullWidth: true)
             }
+            .buttonStyle(AppPressableButtonStyle())
             .disabled(stagedPhotos.count >= maxPhotos || isAnalyzing)
         }
     }
@@ -157,11 +118,11 @@ struct RecipeScannerSheet: View {
     private var bottomActionBar: some View {
         AppButton(
             extractButtonTitle,
-            systemImage: "sparkles",
-            variant: stagedPhotos.isEmpty ? .neutral : .primary,
-            style: .normal,
-            size: .xl,
-            isFullWidth: true
+            icon: "sparkles",
+            variant: stagedPhotos.isEmpty ? .secondary : .primary,
+            appearance: stagedPhotos.isEmpty ? .soft : .solid,
+            size: .lg,
+            fullWidth: true
         ) {
             extractRecipe()
         }

@@ -9,11 +9,11 @@ extension FoodStore {
         let raterRatings = ratings(for: rater)
         guard !raterRatings.isEmpty else { return nil }
 
-        let average = raterRatings.map(\.reaction.score).reduce(0, +) / Double(raterRatings.count)
+        let average = raterRatings.map(\.score).reduce(0, +) / Double(raterRatings.count)
 
         var distribution: [Reaction: Int] = [:]
         for rating in raterRatings {
-            distribution[rating.reaction, default: 0] += 1
+            distribution[rating.tier, default: 0] += 1
         }
 
         var cuisineCounts: [String: Int] = [:]
@@ -33,7 +33,7 @@ extension FoodStore {
                   let recipe = recipe(meal.dishID),
                   let kindID = recipe.dishKindID,
                   let kind = taxonomyTerms[kindID] else { continue }
-            dishKindScores[kind.name, default: []].append(rating.reaction.score)
+            dishKindScores[kind.name, default: []].append(rating.score)
         }
         let topDishKinds = dishKindScores
             .map { (kindName: $0.key, count: $0.value.count, averageScore: $0.value.reduce(0, +) / Double($0.value.count)) }

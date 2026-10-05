@@ -3,6 +3,7 @@
 // or dynamically registers a new canonical term with a permanent UUID and human-readable name.
 
 import { SupabaseClient } from "jsr:@supabase/supabase-js@2";
+import { suggestRatingTraits } from "./rating-traits.ts";
 
 export interface TaxonomyTermResult {
   id: string;
@@ -133,13 +134,21 @@ export async function resolveTaxonomyTerm({
     }
   }
 
-  // 5. No match found: register a brand new canonical term
+  // 5. No match found: register a brand new canonical term, with its rating traits
   const humanName = toHumanReadableName(rawTerm);
   const insertPayload: Record<string, unknown> = {
     dimension,
     slug,
     name: humanName,
     aliases: [normalizedLower],
+    rating_traits: await suggestRatingTraits({
+      client,
+      dimension,
+      name: humanName,
+      apiKey,
+      gatewayBaseUrl,
+      embedding,
+    }),
   };
   if (embedding) {
     insertPayload.embedding = embedding;

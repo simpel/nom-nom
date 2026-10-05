@@ -3,11 +3,11 @@ import SwiftUI
 struct RootTabView: View {
     @Environment(FoodStore.self) private var store
     @Environment(NotificationManager.self) private var notifications
-    @State private var selection = 0
+    @State private var navigator = AppNavigator()
     @State private var didApplyLaunchArguments = false
-    @State private var activeRateMealID: UUID?
     @State private var activeViewMealID: UUID?
     @State private var activePartyID: UUID?
+    @State private var showingInbox = false
 
     var body: some View {
         Group {
@@ -17,12 +17,8 @@ struct RootTabView: View {
                 legacyTabView
             }
         }
-        .sheet(item: Binding(
-            get: { activeRateMealID.map { RateMealSheetTarget(id: $0) } },
-            set: { activeRateMealID = $0?.id }
-        )) { target in
-            MealRatingSheet(mealID: target.id)
-        }
+        // README "Colour": `primary` is "the main action, active tab, focused field".
+        .tint(DS.Color.primary)
         .sheet(item: Binding(
             get: { activeViewMealID.map { RateMealSheetTarget(id: $0) } },
             set: { activeViewMealID = $0?.id }
@@ -39,16 +35,13 @@ struct RootTabView: View {
                 PartyDetailView(partyID: target.id, showCloseButton: true)
             }
         }
+        .sheet(isPresented: $showingInbox) {
+            InboxSheetView()
+        }
         .onChange(of: notifications.pendingURL) { _, newURL in
             if let newURL {
                 handleIncomingURL(newURL)
                 notifications.pendingURL = nil
-            }
-        }
-        .onChange(of: notifications.pendingRateMealID) { _, newID in
-            if let newID {
-                activeRateMealID = newID
-                notifications.pendingRateMealID = nil
             }
         }
         .onChange(of: notifications.pendingViewMealID) { _, newID in
@@ -58,13 +51,14 @@ struct RootTabView: View {
             }
         }
         .onAppear {
+            // Onboarding ends in the inbox when the viewer joined through an invite.
+            if notifications.pendingInbox {
+                showingInbox = true
+                notifications.pendingInbox = false
+            }
             if let pending = notifications.pendingURL {
                 handleIncomingURL(pending)
                 notifications.pendingURL = nil
-            }
-            if let pending = notifications.pendingRateMealID {
-                activeRateMealID = pending
-                notifications.pendingRateMealID = nil
             }
             if let pending = notifications.pendingViewMealID {
                 activeViewMealID = pending
@@ -79,37 +73,35 @@ struct RootTabView: View {
         } message: {
             Text(store.errorMessage ?? "")
         }
+        // Last, so the sheets above inherit it too.
+        .environment(navigator)
         #if DEBUG
         .task { await applyLaunchArguments() }
         #endif
     }
     
-    private var partyTabTitle: String {
-        store.currentParty?.name ?? "Parties"
-    }
-
     @available(iOS 18.0, *)
     @ViewBuilder
     private var modernTabView: some View {
-        let tabView = TabView(selection: $selection) {
-            Tab("Meals", systemImage: "fork.knife", value: 0) {
+        let tabView = TabView(selection: $navigator.tab) {
+            Tab("Meals", systemImage: "fork.knife", value: AppTab.meals) {
                 MealsView()
             }
             .badge(store.awaitingMyRating.count)
 
-            Tab(partyTabTitle, systemImage: "person.2", value: 1) {
+            Tab("Parties", systemImage: "person.2", value: AppTab.parties) {
                 DinnerPartiesView()
             }
 
-            Tab("Recipes", systemImage: "book.pages", value: 2) {
+            Tab("Recipes", systemImage: "book.pages", value: AppTab.recipes) {
                 RecipesView()
             }
             
-            Tab("Insights", systemImage: "chart.bar", value: 3) {
+            Tab("Insights", systemImage: "chart.bar", value: AppTab.insights) {
                 InsightsTabView()
             }
 
-            Tab(value: 4, role: .search) {
+            Tab(value: AppTab.search, role: .search) {
                 RecipeSearchView()
             }
         }
@@ -123,34 +115,34 @@ struct RootTabView: View {
 
     @ViewBuilder
     private var legacyTabView: some View {
-        TabView(selection: $selection) {
+        TabView(selection: $navigator.tab) {
             MealsView()
-                .tag(0)
+                .tag(AppTab.meals)
                 .tabItem {
                     Label("Meals", systemImage: "fork.knife")
                 }
                 .badge(store.awaitingMyRating.count)
 
             DinnerPartiesView()
-                .tag(1)
+                .tag(AppTab.parties)
                 .tabItem {
-                    Label(partyTabTitle, systemImage: "person.2")
+                    Label("Parties", systemImage: "person.2")
                 }
 
             RecipesView()
-                .tag(2)
+                .tag(AppTab.recipes)
                 .tabItem {
                     Label("Recipes", systemImage: "book.pages")
                 }
                 
             InsightsTabView()
-                .tag(3)
+                .tag(AppTab.insights)
                 .tabItem {
                     Label("Insights", systemImage: "chart.bar")
                 }
 
             RecipeSearchView()
-                .tag(4)
+                .tag(AppTab.search)
                 .tabItem {
                     Label("Search", systemImage: "magnifyingglass")
                 }
@@ -158,64 +150,25 @@ struct RootTabView: View {
     }
 
     private func handleIncomingURL(_ url: URL) {
-        guard let components = URLComponents(url: url, resolvingAgainstBaseURL: true) else { return }
-
-        let pathParts = url.pathComponents.filter { $0 != "/" }
-        let isUniversalLink = url.host == "www.nomnom.casa" || url.host == "nomnom.casa"
-        let hostOrPath = isUniversalLink ? (pathParts.first ?? "") : (url.host ?? "")
-
-        // 1. Party links: /invite?party_id=... or /party?id=... or /party/<uuid>
-        if let queryItems = components.queryItems {
-            if let partyIDString = queryItems.first(where: { $0.name == "party_id" })?.value ?? (hostOrPath == "party" ? queryItems.first(where: { $0.name == "id" })?.value : nil),
-               let uuid = UUID(uuidString: partyIDString) {
-                selection = 1
-                activePartyID = uuid
-                return
-            }
+        guard let link = DeepLink(url: url) else { return }
+        navigator.tab = AppTab(rawValue: link.tab) ?? .meals
+        switch link {
+        case .party(let id): activePartyID = id
+        case .partyInvite(let id): openInvite(toParty: id)
+        case .viewMeal(let id): activeViewMealID = id
         }
+    }
 
-        if hostOrPath == "party" {
-            for part in pathParts {
-                if let uuid = UUID(uuidString: part) {
-                    selection = 1
-                    activePartyID = uuid
-                    return
-                }
-            }
-        }
-
-        // 2. Meal links: /rate-meal?id=... or /invite?meal_id=... or /meal?id=...
-        if let queryItems = components.queryItems {
-            if let idString = queryItems.first(where: { $0.name == "id" || $0.name == "meal_id" })?.value,
-               let uuid = UUID(uuidString: idString) {
-                selection = 0
-                if hostOrPath == "rate-meal" || hostOrPath == "invite" {
-                    activeRateMealID = uuid
-                } else {
-                    activeViewMealID = uuid
-                }
-                return
-            }
-        }
-
-        // 3. /meal/<uuid>/rate or /meal/<uuid>
-        for part in pathParts {
-            if let uuid = UUID(uuidString: part) {
-                selection = 0
-                if url.path.contains("rate") {
-                    activeRateMealID = uuid
-                } else {
-                    activeViewMealID = uuid
-                }
-                return
-            }
-        }
-        
-        // 4. nomnom://<uuid> (fallback for legacy meal view)
-        if !isUniversalLink, let host = url.host, let uuid = UUID(uuidString: host) {
-            selection = 0
-            activeViewMealID = uuid
+    /// A member goes straight to the party; anyone else gets the invite in their inbox
+    /// to accept or decline.
+    private func openInvite(toParty partyID: UUID) {
+        if store.isMember(of: partyID) {
+            activePartyID = partyID
             return
+        }
+        Task {
+            guard await store.requestPartyInvite(partyID: partyID) != nil else { return }
+            showingInbox = true
         }
     }
 
@@ -229,8 +182,8 @@ struct RootTabView: View {
         didApplyLaunchArguments = true
 
         let config = LaunchArgumentsParser.parse()
-        if let tab = config.initialTab {
-            selection = tab
+        if let tab = config.initialTab.flatMap(AppTab.init(rawValue:)) {
+            navigator.tab = tab
         }
         if config.seedSampleData {
             await SampleData.populate(store)

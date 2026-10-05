@@ -30,7 +30,7 @@ extension FoodStore {
             return (m, rating, r)
         }.sorted { $0.meal.eatenOn > $1.meal.eatenOn }
 
-        let liked = ratedMeals.filter { $0.rating.reaction.score >= 0.60 }
+        let liked = ratedMeals.filter { $0.rating.score >= 0.60 }
         var cuisineCounts: [String: Int] = [:]
         for item in liked {
             if let c = item.recipe.cuisine, let formatted = Cuisine.formatDisplayName(c) {
@@ -73,7 +73,7 @@ extension FoodStore {
         for meal in partyMeals {
             let ratings = ratingsByMeal[meal.id] ?? []
             if !ratings.isEmpty {
-                let avg = ratings.reduce(0.0) { $0 + $1.reaction.score } / Double(ratings.count)
+                let avg = ratings.reduce(0.0) { $0 + $1.score } / Double(ratings.count)
                 partyScoresByDish[meal.dishID, default: []].append(avg)
             }
         }
@@ -83,7 +83,7 @@ extension FoodStore {
         for recipe in allRecipes {
             var userScore: Double = 0.85
             if let prior = ratingsByRecipeID[recipe.id]?.first {
-                userScore = prior.reaction.score
+                userScore = prior.score
             } else {
                 if let kind = dishKind(for: recipe), let delta = kindAffinities[kind.slug] {
                     userScore += delta * 0.5
@@ -128,8 +128,8 @@ extension FoodStore {
             guard let rating = mealRatings.first(where: { $0.source == rater }),
                   let recipe = recipe(meal.dishID) else { continue }
 
-            let partyAvg = mealRatings.reduce(0.0) { $0 + $1.reaction.score } / Double(max(1, mealRatings.count))
-            let userScoreInt = Int((rating.reaction.score * 100.0).rounded())
+            let partyAvg = mealRatings.reduce(0.0) { $0 + $1.score } / Double(max(1, mealRatings.count))
+            let userScoreInt = Int((rating.score * 100.0).rounded())
             let partyAvgInt = Int((partyAvg * 100.0).rounded())
 
             records.append(

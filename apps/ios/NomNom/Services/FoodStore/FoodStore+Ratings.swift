@@ -3,12 +3,25 @@ import Supabase
 
 extension FoodStore {
 
-    func rate(mealID: UUID, as reaction: Reaction) async {
+    /// Whether the viewer was at the table and may rate this meal: the cook, anyone
+    /// asked to rate it, or a member of a party it was served to. Mirrors
+    /// `can_rate_meal` (RLS). Following a public party lets you read a meal, not rate it.
+    func canRate(meal: Meal) -> Bool {
+        meal.createdBy == userID
+            || invites(forMeal: meal.id).contains { $0.inviteeID == userID }
+            || parties(forMeal: meal.id).contains { isMember(of: $0.id) }
+    }
+
+    /// Saves the viewer's own rating with everything they said about the meal. Only
+    /// ever writes the viewer's row: nobody rates for anybody else.
+    @discardableResult
+    func saveMyRating(mealID: UUID, answers: RatingAnswers) async -> Bool {
+        guard let reaction = answers.reaction else { return false }
         do {
-            if let existing = ratings(forMeal: mealID).first(where: { $0.raterID == userID }) {
+            if let existing = rating(for: .account(userID), on: mealID) {
                 let updated: MealRating = try await supabase
                     .from("meal_ratings")
-                    .update(RatingPatch(reaction: reaction.rawValue))
+                    .update(RatingPatch(reaction: reaction, answers: answers))
                     .eq("id", value: existing.id.uuidString)
                     .select()
                     .single()
@@ -18,7 +31,7 @@ extension FoodStore {
             } else {
                 let created: MealRating = try await supabase
                     .from("meal_ratings")
-                    .insert(NewRating(mealID: mealID, source: .account(userID), reaction: reaction))
+                    .insert(NewRating(mealID: mealID, raterID: userID, reaction: reaction, answers: answers))
                     .select()
                     .single()
                     .execute()
@@ -32,8 +45,11 @@ extension FoodStore {
             }
             reindex()
             errorMessage = nil
+            return true
         } catch {
+            Self.log.error("Failed to save rating: \(error.localizedDescription, privacy: .public)")
             errorMessage = Self.describe(error)
+            return false
         }
     }
 
@@ -65,13 +81,7 @@ extension FoodStore {
 
     /// Average taste reaction for a single meal based on all eaters' verdicts.
     func averageReaction(forMeal mealID: UUID) -> Reaction? {
-        guard let score = averageScore(forMeal: mealID) else { return nil }
-        if score >= 0.85 { return .amazing }
-        if score >= 0.70 { return .great }
-        if score >= 0.50 { return .good }
-        if score >= 0.30 { return .meh }
-        if score >= 0.15 { return .bad }
-        return .inedible
+        averageScore(forMeal: mealID).map(Reaction.init(score:))
     }
 
     /// Average rotation goal for a meal, falling back to dish average if not explicitly set.
@@ -102,58 +112,7 @@ extension FoodStore {
 
     /// Average taste reaction across all historical servings of a dish.
     func averageReaction(forDish dishID: UUID) -> Reaction? {
-        guard let avgScore = averageScore(forDish: dishID) else { return nil }
-        if avgScore >= 0.85 { return .amazing }
-        if avgScore >= 0.70 { return .great }
-        if avgScore >= 0.50 { return .good }
-        if avgScore >= 0.30 { return .meh }
-        if avgScore >= 0.15 { return .bad }
-        return .inedible
-    }
-
-    /// Saves an eater's evaluation of a meal: taste verdict, rotation goal, and eater notes.
-    func saveEaterRating(
-        mealID: UUID,
-        verdicts: [RaterRef: Reaction],
-        repeatDesire: RotationGoal?,
-        notes: String? = nil
-    ) async -> Bool {
-        guard let currentMeal = meal(mealID) else { return false }
-        do {
-            // 1. Update verdicts (ratings for me and household eaters)
-            try await applyVerdicts(verdicts, to: currentMeal)
-
-            // 2. Update rotation goal on the meal if changed
-            struct MealRotationPatch: Encodable {
-                let repeat_desire: Int?
-            }
-            if currentMeal.repeatDesire != repeatDesire {
-                let patch = MealRotationPatch(repeat_desire: repeatDesire?.rawValue)
-                let updatedMeal: Meal = try await supabase
-                    .from("meals")
-                    .update(patch)
-                    .eq("id", value: mealID.uuidString)
-                    .select()
-                    .single()
-                    .execute()
-                    .value
-                upsertLocal(meal: updatedMeal)
-            }
-
-            // 3. Accept pending invite if applicable
-            if let invite = invites.first(where: { $0.mealID == mealID && $0.inviteeID == userID }),
-               invite.status != .accepted {
-                try await setInviteStatus(invite, to: .accepted)
-            }
-
-            reindex()
-            errorMessage = nil
-            return true
-        } catch {
-            Self.log.error("Failed to save eater rating: \(error.localizedDescription, privacy: .public)")
-            errorMessage = Self.describe(error)
-            return false
-        }
+        averageScore(forDish: dishID).map(Reaction.init(score:))
     }
 
     /// Saves the chef's review and adjustments: actual cooking time/duration and chef cooking notes.
@@ -203,20 +162,5 @@ extension FoodStore {
             errorMessage = Self.describe(error)
             return false
         }
-    }
-
-    /// Backwards-compatible convenience method.
-    func saveRating(
-        mealID: UUID,
-        verdicts: [RaterRef: Reaction],
-        repeatDesire: RotationGoal?,
-        effort: EffortLevel?,
-        notes: String? = nil
-    ) async -> Bool {
-        let ok1 = await saveEaterRating(mealID: mealID, verdicts: verdicts, repeatDesire: repeatDesire, notes: notes)
-        if let effort {
-            _ = await saveChefDetails(mealID: mealID, effort: effort, notes: notes ?? "")
-        }
-        return ok1
     }
 }

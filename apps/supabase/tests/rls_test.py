@@ -61,7 +61,8 @@ check("profile has display_name derived from first and last name",
 
 print("\n== cook creates dish + meal ==")
 st, dish = call("POST", "/rest/v1/dishes", a_tok,
-                {"owner_id": a_id, "name": "Tacos", "normalized_name": f"tacos {tag}"}, REP)
+                {"owner_id": a_id, "name": "Tacos", "normalized_name": f"tacos {tag}",
+                 "is_public": False}, REP)
 check("cook can insert own dish", st == 201, f"{st} {dish}")
 dish_id = dish[0]["id"]
 
@@ -74,7 +75,14 @@ print("\n== outsider is walled off ==")
 st, r = call("GET", f"/rest/v1/meals?id=eq.{meal_id}", o_tok)
 check("outsider cannot read someone else's meal", st == 200 and r == [], f"{st} {r}")
 st, r = call("GET", f"/rest/v1/dishes?id=eq.{dish_id}", o_tok)
-check("outsider cannot read someone else's dish", st == 200 and r == [], f"{st} {r}")
+check("outsider cannot read someone else's private dish", st == 200 and r == [], f"{st} {r}")
+
+# Dishes default to public (20260902180000_dish_public_and_cuisine); a public dish is readable by anyone.
+st, pub = call("POST", "/rest/v1/dishes", a_tok,
+               {"owner_id": a_id, "name": "Pancakes", "normalized_name": f"pancakes {tag}"}, REP)
+check("cook can insert a dish that defaults to public", st == 201 and pub[0].get("is_public") is True, f"{st} {pub}")
+st, r = call("GET", f"/rest/v1/dishes?id=eq.{pub[0]['id']}", o_tok)
+check("outsider can read a public dish", st == 200 and len(r) == 1, f"{st} {r}")
 st, r = call("POST", "/rest/v1/meal_ratings", o_tok,
              {"meal_id": meal_id, "rater_id": o_id, "reaction": 0}, REP)
 check("outsider cannot rate a meal they're not part of", st >= 400, f"{st} {r}")
@@ -139,6 +147,46 @@ check("party member can read dish served to the party", st == 200 and len(g_dish
 st, o_meals = call("GET", f"/rest/v1/meals?id=eq.{meal2_id}", o_tok)
 check("outsider cannot read meal served to the party", st == 200 and o_meals == [], f"{st} {o_meals}")
 
+print("\n== every eater rates for themselves ==")
+st, r = call("POST", "/rest/v1/meal_ratings", b_tok,
+             {"meal_id": meal2_id, "rater_id": b_id, "reaction": 4, "tags": ["tasty", "comforting"],
+              "plate": 3, "again": 2, "note": "More lemon next time"}, REP)
+check("party member can rate a party meal with tags, plate, again and a note",
+      st == 201 and r[0]["tags"] == ["tasty", "comforting"] and r[0]["plate"] == 3 and r[0]["note"] == "More lemon next time",
+      f"{st} {r}")
+check("Great + seconds + soon + two good tags scores 90",
+      st == 201 and float(r[0]["score"]) == 0.9, f"{st} {r}")
+b_rating_id = r[0]["id"] if st == 201 else None
+st, r = call("POST", "/rest/v1/meal_ratings", a_tok,
+             {"meal_id": meal2_id, "rater_id": a_id, "reaction": 4, "tags": ["dry", "overcooked"],
+              "plate": 0, "again": 0}, REP)
+check("Great + a few bites + not again + two problem tags scores 70",
+      st == 201 and float(r[0]["score"]) == 0.7, f"{st} {r}")
+a_rating_id = r[0]["id"] if st == 201 else None
+if a_rating_id:
+    st, r = call("PATCH", f"/rest/v1/meal_ratings?id=eq.{a_rating_id}", a_tok,
+                 {"reaction": 1, "tags": ["bland"]}, REP)
+    check("a Bad never scores under 15", st == 200 and float(r[0]["score"]) == 0.15, f"{st} {r}")
+    st, r = call("PATCH", f"/rest/v1/meal_ratings?id=eq.{a_rating_id}", a_tok,
+                 {"reaction": -1, "tags": ["allergy"], "plate": 3, "again": 2}, REP)
+    check("Can't eat scores 0 whatever else was answered", st == 200 and float(r[0]["score"]) == 0, f"{st} {r}")
+st, tags = call("GET", "/rest/v1/rating_tags?select=id&id=eq.wilted", b_tok)
+check("members can read the tag catalogue", st == 200 and len(tags) == 1, f"{st} {tags}")
+st, r = call("POST", "/rest/v1/meal_ratings", b_tok,
+             {"meal_id": meal_id, "rater_id": b_id, "reaction": 3, "tags": ["delicious"]}, REP)
+check("an unknown tag is rejected", st >= 400, f"{st} {r}")
+st, r = call("POST", "/rest/v1/meal_ratings", a_tok,
+             {"meal_id": meal2_id, "rater_id": b_id, "reaction": 0}, REP)
+check("cook cannot record a verdict as another member", st >= 400, f"{st} {r}")
+st, eater = call("POST", "/rest/v1/eaters", a_tok, {"owner_id": a_id, "name": "Kid"}, REP)
+if st == 201:
+    st, r = call("POST", "/rest/v1/meal_ratings", a_tok,
+                 {"meal_id": meal2_id, "eater_id": eater[0]["id"], "reaction": 4}, REP)
+    check("cook cannot rate for a household eater", st >= 400, f"{st} {r}")
+if b_rating_id:
+    st, r = call("PATCH", f"/rest/v1/meal_ratings?id=eq.{b_rating_id}", a_tok, {"reaction": -1}, REP)
+    check("cook cannot change another member's rating", st == 200 and r == [], f"{st} {r}")
+
 print("\n== recipe like notifies the recipe owner ==")
 st, _ = call("PATCH", f"/rest/v1/dishes?id=eq.{dish2_id}", a_tok, {"is_public": True})
 check("owner can make a recipe public", st in (200, 204), f"{st}")
@@ -158,6 +206,40 @@ check("outsider can follow a public party", st == 201, f"{st} {follow}")
 st, a_notes = call("GET", "/rest/v1/notifications?select=kind,body", a_tok)
 check("party creator received a party_followed notification",
       st == 200 and any(n["kind"] == "party_followed" for n in a_notes), f"{st} {a_notes}")
+st, r = call("POST", "/rest/v1/meal_ratings", o_tok,
+             {"meal_id": meal2_id, "rater_id": o_id, "reaction": 5}, REP)
+check("a public-party follower cannot rate the party's meal", st >= 400, f"{st} {r}")
+
+print("\n== party recipe notes (one per party per recipe) ==")
+st, note = call("POST", "/rest/v1/party_recipe_notes", b_tok,
+                {"party_id": party_id, "dish_id": dish2_id, "body": "Halve the chilli", "updated_by": b_id}, REP)
+check("party member can add the party's note on a recipe", st == 201, f"{st} {note}")
+st, r = call("POST", "/rest/v1/party_recipe_notes", a_tok,
+             {"party_id": party_id, "dish_id": dish2_id, "body": "Second note", "updated_by": a_id}, REP)
+check("a party has at most one note per recipe", st >= 400, f"{st} {r}")
+st, r = call("GET", f"/rest/v1/party_recipe_notes?dish_id=eq.{dish2_id}", a_tok)
+check("other party members can read the note",
+      st == 200 and len(r) == 1 and r[0]["body"] == "Halve the chilli", f"{st} {r}")
+st, r = call("GET", f"/rest/v1/party_recipe_notes?dish_id=eq.{dish2_id}", o_tok)
+check("a follower who is not a member cannot read the note", st == 200 and len(r) == 0, f"{st} {r}")
+st, r = call("POST", "/rest/v1/party_recipe_notes", o_tok,
+             {"party_id": party_id, "dish_id": dish_id, "body": "Sneaky", "updated_by": o_id}, REP)
+check("an outsider cannot write a party's note", st >= 400, f"{st} {r}")
+st, r = call("PATCH", f"/rest/v1/party_recipe_notes?dish_id=eq.{dish2_id}", o_tok, {"body": "Changed"}, REP)
+check("an outsider cannot edit a party's note", st in (200, 204) and not r, f"{st} {r}")
+
+print("\n== meal score tweaks cache (service role writes, members read) ==")
+st, r = call("POST", "/rest/v1/meal_score_tweaks", SERVICE,
+             {"meal_id": meal2_id, "party_id": party_id, "payload": {"headline": "Heat sank it", "summary": "", "tips": []}}, REP)
+check("service role can cache tips", st == 201, f"{st} {r}")
+st, r = call("GET", f"/rest/v1/meal_score_tweaks?meal_id=eq.{meal2_id}", b_tok)
+check("party member can read cached tips", st == 200 and len(r) == 1, f"{st} {r}")
+st, r = call("GET", f"/rest/v1/meal_score_tweaks?meal_id=eq.{meal2_id}", o_tok)
+check("non-member cannot read cached tips", st == 200 and len(r) == 0, f"{st} {r}")
+st, r = call("PATCH", f"/rest/v1/meal_score_tweaks?meal_id=eq.{meal2_id}", b_tok, {"payload": {}}, REP)
+check("party member cannot write the tips cache", st in (200, 204) and not r, f"{st} {r}")
+st, r = call("POST", "/rest/v1/rpc/has_pro", b_tok, {"p_user_id": b_id})
+check("has_pro is not callable by signed-in users", st >= 400, f"{st} {r}")
 
 print("\n== invite unregistered email to party, then sign up ==")
 future_party_email = f"futureparty-{tag}@example.com"

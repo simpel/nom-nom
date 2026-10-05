@@ -3,7 +3,7 @@ import Supabase
 
 extension FoodStore {
 
-    func addEater(name: String, emoji: String) async {
+    func addEater(name: String) async {
         let trimmed = name.trimmedName
         guard !trimmed.isEmpty else { return }
         do {
@@ -11,7 +11,6 @@ extension FoodStore {
                 .from("eaters")
                 .insert(NewEater(owner_id: userID,
                                  name: trimmed,
-                                 emoji: emoji,
                                  sort_index: (myEaters.map(\.sortIndex).max() ?? -1) + 1))
                 .select()
                 .single()
@@ -30,7 +29,6 @@ extension FoodStore {
             let updated: Eater = try await supabase
                 .from("eaters")
                 .update(EaterPatch(name: eater.name.trimmedName,
-                                   emoji: eater.emoji,
                                    is_active: eater.isActive,
                                    sort_index: eater.sortIndex))
                 .eq("id", value: eater.id.uuidString)

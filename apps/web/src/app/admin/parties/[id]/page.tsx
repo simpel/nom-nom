@@ -67,7 +67,7 @@ export default async function PartyDetailPage({ params }: { params: Promise<{ id
           health_score
         ),
         meal_ratings (
-          reaction,
+          score,
           rater_id,
           eater_id
         )
@@ -80,17 +80,6 @@ export default async function PartyDetailPage({ params }: { params: Promise<{ id
 
   // --- Calculate Advanced Metrics ---
   
-  // Helpers
-  const normalizeScore = (react: number) => {
-    if (react === -1) return 0.0;
-    if (react === 1) return 0.2;
-    if (react === 2) return 0.4;
-    if (react === 3) return 0.6;
-    if (react === 4) return 0.8;
-    if (react === 5) return 1.0;
-    return 0.6;
-  }
-
   // 1. Effort vs Reward
   const effortStats: any = {
     0: { score: 0, count: 0, label: '0–15m' },
@@ -121,7 +110,7 @@ export default async function PartyDetailPage({ params }: { params: Promise<{ id
     const mRatings: Record<string, number> = {};
     
     for (const r of (m.meal_ratings || [])) {
-        const norm = normalizeScore(r.reaction);
+        const norm = Number(r.score); // meal_ratings.score: 0..1 from every answer
         mealTotalScore += norm;
         mealRatingCount++;
         

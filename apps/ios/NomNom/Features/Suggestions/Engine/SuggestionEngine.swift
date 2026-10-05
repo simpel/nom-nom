@@ -1,106 +1,12 @@
 import Foundation
 
-// MARK: - Modes
-
-enum SuggestionMode: String, CaseIterable, Identifiable {
-    case balanced
-    case crowdPleasers
-    case longTime
-    case adventurous
-
-    var id: String { rawValue }
-
-    var title: String {
-        switch self {
-        case .balanced: return "Balanced"
-        case .crowdPleasers: return "Crowd pleasers"
-        case .longTime: return "Long time no see"
-        case .adventurous: return "Adventurous"
-        }
-    }
-
-    var shortTitle: String {
-        switch self {
-        case .balanced: return "Balanced"
-        case .crowdPleasers: return "Favourites"
-        case .longTime: return "Overdue"
-        case .adventurous: return "New"
-        }
-    }
-
-    var explanation: String {
-        switch self {
-        case .balanced:
-            return "Food they liked that we haven't had for a while, with a nudge towards dishes we've only tried once or twice."
-        case .crowdPleasers:
-            return "Safe bets. Ranked almost purely on how much the kids liked it, and hard on anything somebody disliked."
-        case .longTime:
-            return "Rotation first. Dishes we're overdue for, even if they're only moderately popular."
-        case .adventurous:
-            return "Leans on the dishes we know least about, so the ratings get more reliable over time."
-        }
-    }
-
-    var symbol: String {
-        switch self {
-        case .balanced: return "scalemass"
-        case .crowdPleasers: return "heart.fill"
-        case .longTime: return "clock.arrow.circlepath"
-        case .adventurous: return "sparkles"
-        }
-    }
-
-    var weights: SuggestionWeights {
-        switch self {
-        case .balanced: return .balanced
-        case .crowdPleasers: return .crowdPleasers
-        case .longTime: return .longTime
-        case .adventurous: return .adventurous
-        }
-    }
-}
-
-// MARK: - Filters
-
-struct SuggestionFilters: Equatable {
-    var mode: SuggestionMode = .balanced
-    /// Only keep dishes these people are known to like. Keyed by `RaterRef` rather
-    /// than an eater id, so "must be liked by" can name a household member or an
-    /// account holder — both leave verdicts now.
-    var requiredRaters: Set<RaterRef> = []
-    /// Hide anything cooked more recently than this many days ago.
-    var minDaysSinceServed: Int = 0
-    /// Drop dishes where somebody's recent verdict was a flat no.
-    var hideDisliked: Bool = true
-    /// Keep dishes that exist but have no verdicts yet.
-    var includeUntried: Bool = true
-    var searchText: String = ""
-
-    var isDefault: Bool {
-        requiredRaters.isEmpty
-            && minDaysSinceServed == 0
-            && hideDisliked
-            && includeUntried
-            && searchText.isEmpty
-    }
-
-    /// Number of non-default knobs, for the toolbar badge.
-    var activeCount: Int {
-        var n = 0
-        if !requiredRaters.isEmpty { n += 1 }
-        if minDaysSinceServed > 0 { n += 1 }
-        if !hideDisliked { n += 1 }
-        if !includeUntried { n += 1 }
-        return n
-    }
-}
+// Modes and filters live in SuggestionMode.swift.
 
 // MARK: - Output
 
 struct EaterVerdict: Identifiable, Hashable {
     let ref: RaterRef
     let name: String
-    let emoji: String
     /// Recency-weighted 0...1, `nil` when this person never rated the dish.
     let score: Double?
     let sampleCount: Int
@@ -108,13 +14,7 @@ struct EaterVerdict: Identifiable, Hashable {
     var id: RaterRef { ref }
 
     var reaction: Reaction? {
-        guard let score else { return nil }
-        if score >= 0.85 { return .amazing }
-        if score >= 0.70 { return .great }
-        if score >= 0.50 { return .good }
-        if score >= 0.30 { return .meh }
-        if score >= 0.15 { return .bad }
-        return .inedible
+        score.map(Reaction.init(score:))
     }
 }
 
@@ -154,7 +54,7 @@ struct SuggestionEngine {
         var mealsByDish: [UUID: [Meal]]
         var ratingsByMeal: [UUID: [MealRating]]
         /// Everyone whose opinion the UI shows a column for.
-        var roster: [(ref: RaterRef, emoji: String, name: String)]
+        var roster: [(ref: RaterRef, name: String)]
     }
 
     func rank(_ inputs: Inputs, filters: SuggestionFilters) -> [Suggestion] {
@@ -190,7 +90,6 @@ struct SuggestionEngine {
                 let entry = metrics.perEater[person.ref]
                 return EaterVerdict(ref: person.ref,
                                     name: person.name,
-                                    emoji: person.emoji,
                                     score: entry?.score,
                                     sampleCount: entry?.count ?? 0)
             }
@@ -231,7 +130,7 @@ struct SuggestionEngine {
                    servings: servings.map { meal in
                        ServingRecord(date: meal.eatenOn,
                                      reactions: (ratingsByMeal[meal.id] ?? []).map {
-                                         (eater: Optional($0.source), score: $0.reaction.score)
+                                         (eater: Optional($0.source), score: $0.score)
                                      })
                    })
     }

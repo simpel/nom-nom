@@ -61,8 +61,6 @@ struct NewRecipe: Encodable {
     }
 }
 
-typealias NewDish = NewRecipe
-
 /// Patch for a recipe rename.
 struct RecipeNamePatch: Encodable {
     let name: String
@@ -74,14 +72,10 @@ struct RecipeNamePatch: Encodable {
     }
 }
 
-typealias DishNamePatch = RecipeNamePatch
-
 /// Patch for recipe cover photos.
 struct RecipePhotosPatch: Encodable {
     let photo_paths: [String]
 }
-
-typealias DishPhotosPatch = RecipePhotosPatch
 
 struct RecipeContentPatch: Encodable {
     let ingredients: [RecipeIngredient]
@@ -131,8 +125,6 @@ struct RecipeContentPatch: Encodable {
         self.dish_kind_id = dishKindID
     }
 }
-
-typealias DishRecipePatch = RecipeContentPatch
 
 /// Patch for updating recipe health score and rationale.
 struct RecipeHealthPatch: Encodable {

@@ -7,7 +7,6 @@ extension FoodStore {
         firstName: String,
         lastName: String,
         displayName: String? = nil,
-        emoji: String = "🧑",
         newPhotoData: Data? = nil,
         removePhoto: Bool = false
     ) async {
@@ -41,7 +40,6 @@ extension FoodStore {
                     first_name: cleanFirst,
                     last_name: cleanLast,
                     display_name: cleanDisplay,
-                    avatar_emoji: emoji,
                     photo_path: uploadedPath
                 ))
                 .eq("id", value: userID.uuidString)
@@ -119,6 +117,34 @@ extension FoodStore {
             profiles[updated.id] = updated
             errorMessage = nil
         } catch {
+            errorMessage = Self.describe(error)
+        }
+    }
+
+    /// The unit system recipe amounts are shown in: the person's choice, else the device's.
+    var unitSystem: UnitSystem { myProfile?.unitSystem ?? .deviceDefault }
+
+    /// Saves the choice on the profile, so it follows the person across recipes and devices.
+    func setUnitSystem(_ system: UnitSystem) async {
+        guard system != unitSystem || myProfile?.unitSystem == nil else { return }
+        let previous = myProfile
+        if var current = myProfile {
+            current.unitSystem = system
+            profiles[userID] = current
+        }
+        do {
+            let updated: Profile = try await supabase
+                .from("profiles")
+                .update(UnitSystemPatch(unit_system: system.rawValue))
+                .eq("id", value: userID.uuidString)
+                .select()
+                .single()
+                .execute()
+                .value
+            profiles[updated.id] = updated
+            errorMessage = nil
+        } catch {
+            profiles[userID] = previous
             errorMessage = Self.describe(error)
         }
     }

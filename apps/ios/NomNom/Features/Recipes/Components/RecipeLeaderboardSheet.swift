@@ -2,8 +2,6 @@ import SwiftUI
 
 /// Modal sheet displaying the global leaderboard of recipes ranked by average meal rating score.
 struct RecipeLeaderboardSheet: View {
-    var highlightedRecipeID: UUID? = nil
-
     @Environment(FoodStore.self) private var store
     @Environment(\.dismiss) private var dismiss
 
@@ -20,78 +18,52 @@ struct RecipeLeaderboardSheet: View {
 
     var body: some View {
         NavigationStack {
-            ScrollView {
+            SheetBody {
                 if rankedRecipes.isEmpty {
                     emptyState
                 } else {
                     rankedList
                 }
             }
-            .background(DS.Color.bg)
-            .screenTitle("Global Leaderboard", displayMode: .inline)
-            .sheetCloseToolbar(color: DS.Color.textPrimary)
+            .screenTitle("Leaderboard", displayMode: .inline)
+            .sheetCloseToolbar()
             .navigationDestination(for: Recipe.self) { recipe in
                 RecipeDetailView(recipe: recipe)
             }
         }
+        .dsSheet()
     }
 
     // MARK: - Subviews
 
     private var rankedList: some View {
-        VStack(alignment: .leading, spacing: DS.Spacing.section) {
-            SectionCard(
-                "Ranked Dishes",
-                caption: "\(rankedRecipes.count) \(rankedRecipes.count == 1 ? "dish" : "dishes")"
-            ) {
-                VStack(spacing: 0) {
-                    ForEach(Array(rankedRecipes.enumerated()), id: \.element.recipe.id) { index, item in
-                        NavigationLink(value: item.recipe) {
-                            RecipeLeaderboardRow(
-                                rank: index + 1,
-                                recipe: item.recipe,
-                                score: item.score,
-                                reaction: item.reaction,
-                                isHighlighted: item.recipe.id == highlightedRecipeID
-                            )
-                        }
-                        .buttonStyle(.plain)
-
-                        if index < rankedRecipes.count - 1 {
-                            Divider()
-                                .padding(.leading, 46)
-                        }
+        DSSection(
+            "Ranked dishes",
+            trailing: "\(rankedRecipes.count) \(rankedRecipes.count == 1 ? "dish" : "dishes")"
+        ) {
+            Card(layout: .list) {
+                ForEach(Array(rankedRecipes.enumerated()), id: \.element.recipe.id) { index, item in
+                    NavigationLink(value: item.recipe) {
+                        RecipeLeaderboardRow(
+                            rank: index + 1,
+                            recipe: item.recipe,
+                            score: item.score,
+                            reaction: item.reaction
+                        )
                     }
+                    .buttonStyle(ListRowButtonStyle())
                 }
             }
         }
-        .padding(.horizontal, DS.Spacing.screenHorizontal)
-        .padding(.top, DS.Spacing.screenTop)
-        .padding(.bottom, DS.Spacing.screenBottom)
     }
 
     private var emptyState: some View {
-        VStack(spacing: DS.Spacing.section) {
-            Spacer(minLength: 20)
-
-            CategoryPhotoArcView()
-                .padding(.vertical, DS.Spacing.sm)
-
-            VStack(spacing: 0) {
-                Text("No Ranked Dishes")
-                    .font(AppTypography.displayL)
-                    .foregroundStyle(DS.Color.textPrimary)
-
-                Text("Cook and rate meals to rank your recipes on the leaderboard.")
-                    .font(AppTypography.bodyM)
-                    .foregroundStyle(DS.Color.textSecondary)
-                    .multilineTextAlignment(.center)
-                    .lineSpacing(3)
-                    .padding(.horizontal, 28)
-            }
-
-            Spacer(minLength: 40)
-        }
+        // README case "Not enough data yet": no action, waiting is the answer.
+        EmptyState(
+            "Not enough meals yet",
+            message: "Rate a meal and its recipe takes a place on the leaderboard.",
+            layout: .screen
+        )
     }
 }
 

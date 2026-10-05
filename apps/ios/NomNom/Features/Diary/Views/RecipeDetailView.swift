@@ -1,37 +1,36 @@
 import SwiftUI
-import Supabase
 
-/// Comprehensive detail view for a recipe:
-/// - Harmonized centered arc hero presentation with photos, recipe title, and last cooked date
-/// - Key-value details table (Created by, Cooking Time, Cuisine, Tags) matching MealDetailView
-/// - Structured ingredients, instructions, and recipe page photos
-/// - Cooked history list with auto-loading on scroll (when history exists)
-/// - Top-right Edit button when owned by current user
+/// A recipe's detail screen ("Nom Nom iOS" canvas), top to bottom on `bg`: ScreenHeader
+/// (cuisine, name, "Start cooking" / "Use in a meal"), PhotoStrip, the Facts card, the party and health ScoreCards, ingredients with servings, steps,
+/// recipe pages and details. The toolbar has the favourite heart and the PageMenu,
+/// whose recipe group gives the owner Generate photo / Edit / Delete.
 struct RecipeDetailView: View {
     let recipeID: UUID
     var showCloseButton: Bool = false
+    /// Scroll to the current party's note once it loads (opened from "View note on recipe").
+    var focusPartyNote: Bool = false
 
-    @Environment(FoodStore.self) private var store
-    @Environment(\.dismiss) private var dismiss
+    @Environment(FoodStore.self) var store
+    @Environment(EntitlementStore.self) var entitlements
+    @Environment(\.dismiss) var dismiss
 
-    @State private var fallbackRecipe: Recipe?
-    @State private var isLoadingRemote = false
-    @State private var showEditSheet = false
-    @State private var showMealEditor = false
-    @State private var selectedMealForDetail: Meal?
-    @State private var selectedPhotoIndex: Int?
-    @State private var confirmDeleteRecipe = false
-    @State private var deleteError: String?
-    @State private var isAnalyzingHealth = false
-    @State private var showHealthRationale = false
-    @State private var showGlobalLeaderboard = false
-    @State private var isGeneratingPhoto = false
-    
-    @State private var healthAnalysisFailed = false
+    @State var fallbackRecipe: Recipe?
+    @State var isLoadingRemote = false
+    @State var showEditSheet = false
+    @State var showMealEditor = false
+    @State var selectedPhotoIndex: Int?
+    @State var confirmDeleteRecipe = false
+    @State var deleteError: String?
+    @State var isAnalyzingHealth = false
+    @State var healthAnalysisFailed = false
+    @State var showHealthRationale = false
+    @State var isGeneratingPhoto = false
+    @State var showCookMode = false
 
-    init(recipeID: UUID, showCloseButton: Bool = false) {
+    init(recipeID: UUID, showCloseButton: Bool = false, focusPartyNote: Bool = false) {
         self.recipeID = recipeID
         self.showCloseButton = showCloseButton
+        self.focusPartyNote = focusPartyNote
         self._fallbackRecipe = State(initialValue: nil)
     }
 
@@ -42,42 +41,19 @@ struct RecipeDetailView: View {
     }
 
     init(dishID: UUID, showCloseButton: Bool = false) {
-        self.recipeID = dishID
-        self.showCloseButton = showCloseButton
-        self._fallbackRecipe = State(initialValue: nil)
+        self.init(recipeID: dishID, showCloseButton: showCloseButton)
     }
 
-    private var recipe: Recipe? { store.recipe(recipeID) ?? fallbackRecipe }
-    private var history: [Meal] { store.servings(of: recipeID).sorted { $0.eatenOn > $1.eatenOn } }
+    var recipe: Recipe? { store.recipe(recipeID) ?? fallbackRecipe }
 
-    private var allPhotos: [String] {
-        if let recipe {
-            var paths: [String] = []
-            for p in recipe.photoPaths where !paths.contains(p) {
-                paths.append(p)
-            }
-            for p in recipe.recipePhotoPaths where !paths.contains(p) {
-                paths.append(p)
-            }
-            return paths
+    /// Dish photos, then recipe pages, without duplicates (all in the recipe bucket).
+    var allPhotos: [String] {
+        guard let recipe else { return store.photos(for: recipeID) }
+        var paths: [String] = []
+        for path in recipe.photoPaths + recipe.recipePhotoPaths where !paths.contains(path) {
+            paths.append(path)
         }
-        return store.photos(for: recipeID)
-    }
-
-    private var globalRank: Int? {
-        guard let recipe else { return nil }
-        let rankedRecipes = store.myDishes.compactMap { dish -> (UUID, Double)? in
-            if let score = store.averageScore(forDish: dish.id) {
-                return (dish.id, score)
-            }
-            return nil
-        }
-        .sorted { $0.1 > $1.1 }
-        
-        if let index = rankedRecipes.firstIndex(where: { $0.0 == recipe.id }) {
-            return index + 1
-        }
-        return nil
+        return paths
     }
 
     var body: some View {
@@ -85,126 +61,21 @@ struct RecipeDetailView: View {
             if let recipe {
                 content(for: recipe)
             } else if store.isLoading || isLoadingRemote {
-                ProgressView()
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                ScreenSkeleton(label: "Loading recipe")
             } else {
-                ContentUnavailableView(
-                    "Recipe is gone",
-                    systemImage: "questionmark.folder",
-                    description: Text("It was deleted.")
-                )
+                EmptyState("Recipe is gone", message: "It was deleted.", layout: .screen)
+                    .padding(.horizontal, DS.Spacing.gutter)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .background(DS.Color.bg)
             }
         }
-        .screenTitle(recipe?.name ?? "Recipe", displayMode: .inline)
-        .task {
-            if recipe == nil {
-                isLoadingRemote = true
-                defer { isLoadingRemote = false }
-                do {
-                    let fetched: Recipe = try await supabase
-                        .from("dishes")
-                        .select()
-                        .eq("id", value: recipeID.uuidString)
-                        .single()
-                        .execute()
-                        .value
-                    store.upsertLocal(recipe: fetched)
-                    fallbackRecipe = fetched
-                } catch {
-                    // Recipe not found or was deleted
-                }
-            } else if let rec = fallbackRecipe, store.recipe(recipeID) == nil {
-                store.upsertLocal(recipe: rec)
-            }
-
-            // Backfills the health score for recipes saved before this existed, or if a
-            // prior automatic analysis failed. Silent — no "generate" button in the UI.
-            if let recipe, recipe.healthIndex == nil, !recipe.ingredients.isEmpty, !healthAnalysisFailed {
-                isAnalyzingHealth = true
-                do {
-                    // Ensure the UI has time to render the loading spinners
-                    // before the network request potentially fails instantly
-                    try await Task.sleep(for: .milliseconds(250))
-                    try await store.analyzeHealth(for: recipe)
-                    isAnalyzingHealth = false
-                } catch {
-                    isAnalyzingHealth = false
-                    healthAnalysisFailed = true // Mark as failed so we show the null state
-                }
-            }
-        }
-        .toolbar {
-            if showCloseButton {
-                ToolbarItem(placement: .topBarLeading) {
-                    Button {
-                        dismiss()
-                    } label: {
-                        Image(systemName: "xmark")
-                            .fontWeight(.semibold)
-                    }
-                    .accessibilityLabel("Close")
-                }
-            }
-
-            ToolbarItemGroup(placement: .topBarTrailing) {
-                if let recipe {
-                    Button {
-                        Task { await store.toggleFavorite(recipe: recipe) }
-                    } label: {
-                        Image(systemName: store.isFavorite(recipe: recipe) ? "heart.fill" : "heart")
-                            .foregroundStyle(store.isFavorite(recipe: recipe) ? DS.Color.accent : DS.Color.textSecondary)
-                    }
-                    .accessibilityLabel(store.isFavorite(recipe: recipe) ? "Remove from Favourites" : "Add to Favourites")
-                }
-
-                if let recipe, recipe.ownerID == store.userID {
-                    Menu {
-                        if recipe.photoPaths.isEmpty {
-                            Button {
-                                generatePhoto(for: recipe)
-                            } label: {
-                                Label(isGeneratingPhoto ? "Generating Photo…" : "Generate Photo with AI", systemImage: "sparkles")
-                            }
-                            .disabled(isGeneratingPhoto)
-                        }
-
-                        Button {
-                            showEditSheet = true
-                        } label: {
-                            Label("Edit", systemImage: "pencil")
-                        }
-
-                        Button(role: .destructive) {
-                            confirmDeleteRecipe = true
-                        } label: {
-                            Label("Delete recipe", systemImage: "trash")
-                        }
-                    } label: {
-                        Image(systemName: "ellipsis")
-                            .fontWeight(.semibold)
-                    }
-                    .accessibilityLabel("Recipe options")
-                }
-            }
-        }
-        .alert(
-            "Delete this recipe?",
-            isPresented: $confirmDeleteRecipe
-        ) {
+        .screenTitle(showCloseButton ? (recipe?.name ?? "Recipe") : "", displayMode: .inline)
+        .task { await loadRecipeAndHealth() }
+        .task(id: recipeID) { await store.loadPartyRecipeNotes(dishID: recipeID) }
+        .toolbar { toolbarContent }
+        .alert("Delete this recipe?", isPresented: $confirmDeleteRecipe) {
             Button("Cancel", role: .cancel) {}
-            Button("Delete Recipe", role: .destructive) {
-                if let recipe {
-                    Task {
-                        await store.delete(recipe: recipe)
-                        if store.errorMessage == nil {
-                            dismiss()
-                        } else {
-                            deleteError = store.errorMessage
-                            store.errorMessage = nil
-                        }
-                    }
-                }
-            }
+            Button("Delete Recipe", role: .destructive) { deleteRecipe() }
         } message: {
             Text("This will permanently remove this recipe.")
         }
@@ -222,20 +93,12 @@ struct RecipeDetailView: View {
         .sheet(isPresented: $showMealEditor) {
             MealEditorView(mealID: nil, prefilledDishID: recipeID)
         }
-        .sheet(item: $selectedMealForDetail) { meal in
-            NavigationStack {
-                MealDetailView(mealID: meal.id, showCloseButton: true)
-            }
-        }
-        .sheet(isPresented: Binding(
-            get: { selectedPhotoIndex != nil },
-            set: { if !$0 { selectedPhotoIndex = nil } }
-        )) {
+        .sheet(item: Binding(
+            get: { selectedPhotoIndex.map { PhotoIndexWrapper(index: $0) } },
+            set: { selectedPhotoIndex = $0?.index }
+        )) { wrapper in
             if !allPhotos.isEmpty {
-                MealGalleryViewerSheet(
-                    paths: allPhotos,
-                    initialIndex: selectedPhotoIndex ?? 0
-                )
+                MediaViewerSheet(.paths(allPhotos, bucket: SupabaseConfig.recipeBucket), startIndex: wrapper.index)
             }
         }
         .sheet(isPresented: $showHealthRationale) {
@@ -243,134 +106,79 @@ struct RecipeDetailView: View {
                 RecipeHealthRationaleSheet(recipe: recipe, healthIndex: healthIndex)
             }
         }
-        .sheet(isPresented: $showGlobalLeaderboard) {
-            RecipeLeaderboardSheet(highlightedRecipeID: recipe?.id)
+        .fullScreenCover(isPresented: $showCookMode) {
+            if let recipe {
+                CookModeView(recipe: recipe) { showMealEditor = true }
+            }
         }
     }
 
-    @ViewBuilder
     private func content(for recipe: Recipe) -> some View {
-        ScrollView {
-            VStack(spacing: 0) {
-                ArcHeroHeaderView(
-                    photoPaths: allPhotos,
-                    cuisine: recipe.cuisine,
-                    title: recipe.name,
-                    subtitle: recipeSubtitle(for: recipe),
-                    alignment: .center,
-                    onSelectPhoto: { index in
-                        selectedPhotoIndex = index
-                    }
-                ) {
-                    AppButton(
-                        "Use in Meal",
-                        variant: .primary,
-                        style: .normal,
-                        size: .md
-                    ) {
-                        showMealEditor = true
-                    }
+        let isOwner = recipe.ownerID == store.userID
+        return ScrollViewReader { proxy in ScrollView {
+            VStack(alignment: .leading, spacing: DS.Spacing.block) {
+                RecipeDetailHeader(
+                    recipe: recipe,
+                    onStartCooking: { showCookMode = true },
+                    onUseInMeal: { showMealEditor = true }
+                )
+
+                PhotoStrip(
+                    photos: allPhotos.map { .remote(path: $0, bucket: SupabaseConfig.recipeBucket, cuisine: recipe.cuisine) },
+                    onAddPhoto: isOwner ? { showEditSheet = true } : nil,
+                    onSelect: { selectedPhotoIndex = $0 }
+                )
+
+                RecipeDetailFacts(recipe: recipe)
+
+                RecipeScoreCards(
+                    recipe: recipe,
+                    isAnalyzingHealth: isAnalyzingHealth,
+                    healthAnalysisFailed: healthAnalysisFailed,
+                    onOpenHealth: { showHealthRationale = true }
+                )
+
+                PartyRecipeNoteCard(recipeID: recipe.id)
+                    .id(Self.partyNoteAnchor)
+
+                if !recipe.ingredients.isEmpty {
+                    RecipeIngredientsCard(ingredients: recipe.ingredients, serves: recipe.serves)
                 }
 
-                VStack(spacing: DS.Spacing.section) {
-                    // Health score hero, calculated automatically once the recipe is saved —
-                    // no manual "generate" action needed. Tapping opens the full rationale sheet.
-                    let rank = globalRank
-                    let reaction = store.averageReaction(forDish: recipe.id)
-                    
-                    if let healthIndex = recipe.healthIndex {
-                        DividedScoreCard(
-                            score: "\(healthIndex.score)",
-                            verdict: healthIndex.verdict,
-                            color: healthIndex.scoreColor,
-                            globalScore: rank?.ordinalString ?? "—",
-                            globalColor: reaction?.text ?? DS.Color.textTertiary,
-                            action: {
-                                showHealthRationale = true
-                            },
-                            globalAction: {
-                                showGlobalLeaderboard = true
-                            }
-                        )
-                        .padding(.horizontal, DS.Spacing.screenHorizontal)
-                    } else {
-                        // Fallback if no health index yet.
-                        DividedScoreCard(
-                            score: healthAnalysisFailed ? "—" : "—",
-                            verdict: healthAnalysisFailed ? "Unrated" : "Unrated",
-                            color: DS.Color.textTertiary,
-                            globalScore: rank?.ordinalString ?? "—",
-                            globalColor: reaction?.text ?? DS.Color.textTertiary,
-                            isLoading: isAnalyzingHealth,
-                            globalAction: {
-                                showGlobalLeaderboard = true
-                            }
-                        )
-                        .padding(.horizontal, DS.Spacing.screenHorizontal)
-                    }
-
-                    // 1. Ingredients
-                    if !recipe.ingredients.isEmpty {
-                        RecipeIngredientsCard(ingredients: recipe.ingredients)
-                            .padding(.horizontal, DS.Spacing.screenHorizontal)
-                    }
-
-                    // 2. Instructions
-                    if !recipe.instructions.isEmpty {
-                        RecipeStepsCard(instructions: recipe.instructions)
-                            .padding(.horizontal, DS.Spacing.screenHorizontal)
-                    }
-
-                    // 3. Recipe Page Photos (if any)
-                    if !recipe.recipePhotoPaths.isEmpty {
-                        RecipePhotosCard(recipe: recipe)
-                            .padding(.horizontal, DS.Spacing.screenHorizontal)
-                    }
-
-                    // 4. Details
-                    RecipeDetailInfoCard(recipe: recipe)
-                        .padding(.horizontal, DS.Spacing.screenHorizontal)
-
-                    // 5. History
-                    if !history.isEmpty {
-                        RecipeHistorySection(history: history) { meal in
-                            selectedMealForDetail = meal
-                        }
-                        .padding(.horizontal, DS.Spacing.screenHorizontal)
-                    }
+                if !recipe.instructions.isEmpty {
+                    RecipeStepsCard(instructions: recipe.instructions)
                 }
+
+                if !recipe.recipePhotoPaths.isEmpty {
+                    RecipePhotosCard(recipe: recipe)
+                }
+
+                RecipeDetailInfoCard(recipe: recipe)
             }
-            .padding(.top, DS.Spacing.screenTop)
-            .padding(.bottom, DS.Spacing.screenBottom)
+            .padding(.horizontal, DS.Spacing.gutter)
+            .padding(.top, DS.Spacing.s4)
+            .padding(.bottom, DS.Spacing.s12)
         }
         .background(DS.Color.bg)
-    }
-
-    private func generatePhoto(for recipe: Recipe) {
-        guard !isGeneratingPhoto else { return }
-        isGeneratingPhoto = true
-        UIImpactFeedbackGenerator(style: .medium).impactOccurred()
-        Task {
-            defer { isGeneratingPhoto = false }
-            do {
-                try await store.generateRecipeImage(for: recipe)
-                UINotificationFeedbackGenerator().notificationOccurred(.success)
-            } catch {
-                UINotificationFeedbackGenerator().notificationOccurred(.error)
+        // Runs on appear too, so a note already in memory still gets scrolled to.
+        .task(id: partyNoteLoaded) {
+            guard focusPartyNote, partyNoteLoaded else { return }
+            // Let the sheet finish presenting before scrolling.
+            try? await Task.sleep(for: .milliseconds(Int(DS.Motion.durationLayout * 1000)))
+            withAnimation(DS.Motion.layout) {
+                proxy.scrollTo(Self.partyNoteAnchor, anchor: .top)
             }
         }
-    }
-
-    private func recipeSubtitle(for recipe: Recipe) -> String {
-        if let last = history.first?.eatenOn {
-            return "Last cooked \(last.formatted(.dateTime.day().month(.abbreviated).year()))"
-        } else {
-            return "Never cooked"
         }
     }
-}
 
-typealias DishDetailView = RecipeDetailView
+    private static let partyNoteAnchor = "partyNote"
+
+    private var partyNoteLoaded: Bool {
+        guard let party = store.currentParty else { return false }
+        return store.partyRecipeNote(dishID: recipeID, partyID: party.id) != nil
+    }
+}
 
 #Preview {
     NomNomPreview { store in

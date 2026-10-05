@@ -10,25 +10,25 @@ struct SignInView: View {
             VStack {
                 Spacer()
 
-                VStack(spacing: DS.Spacing.md) {
-                    AuthHeroArcView()
-                        .padding(.bottom, DS.Spacing.xs)
+                VStack(spacing: DS.Spacing.s5) {
+                    AppIconMark()
 
-                    PageHeader(
-                        title: "Nom Nom",
-                        subtitle: "Keep track of what you cooked, whether the kids ate it, and what to cook next."
+                    // The sign-in buttons stay at the bottom: Sign in with Apple is
+                    // Apple's own control, not an AppButton the header could build.
+                    ScreenHeader(
+                        "Nom Nom",
+                        summary: "Keep track of what you cooked, whether the kids ate it, and what to cook next.",
+                        role: .moment
                     )
                 }
 
                 Spacer()
 
-                VStack(spacing: 12) {
+                VStack(spacing: DS.Spacing.s3) {
                     if let message = auth.errorMessage {
                         Text(message)
-                            .font(.subheadline)
-                            .foregroundStyle(DS.Color.textSecondary)
-                            .multilineTextAlignment(.center)
-                            .padding(.bottom, 4)
+                            .textStyle(.sansSm, tone: .secondary, align: .center)
+                            .padding(.bottom, DS.Spacing.s1)
                     }
 
                     // 1. Sign in with Apple (Black button with Apple logo)
@@ -37,20 +37,20 @@ struct SignInView: View {
                     // 2. Sign in with email (Leads to separate screen)
                     AppButton(
                         "Sign in with email",
-                        variant: .neutral,
-                        style: .outlined,
-                        size: .xl,
-                        isFullWidth: true,
-                        disabled: auth.isWorking
+                        variant: .secondary,
+                        appearance: .outline,
+                        size: .lg,
+                        fullWidth: true
                     ) {
                         auth.errorMessage = nil
                         navigateToEmailSignIn = true
                     }
+                    .disabled(auth.isWorking)
                 }
-                .padding(.bottom, DS.Spacing.screenBottom)
+                .padding(.bottom, DS.Spacing.s11)
             }
-            .padding(.horizontal, 24)
-            .frame(maxWidth: 460)
+            .padding(.horizontal, DS.Spacing.s6)
+            .frame(maxWidth: DS.Container.sm)
             .frame(maxWidth: .infinity)
             .background(DS.Color.bg)
             .navigationDestination(isPresented: $navigateToEmailSignIn) {

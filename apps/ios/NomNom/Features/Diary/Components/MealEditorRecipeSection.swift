@@ -6,6 +6,7 @@ struct MealEditorRecipeSection: View {
     let existingMatchedRecipe: Recipe?
     let isExistingRecipe: Bool
     let onPickRecipe: () -> Void
+    let onCreateRecipe: () -> Void
     let onEditRecipe: () -> Void
     let onRemoveRecipe: () -> Void
 
@@ -16,6 +17,7 @@ struct MealEditorRecipeSection: View {
         existingMatchedRecipe: Recipe?,
         isExistingRecipe: Bool,
         onPickRecipe: @escaping () -> Void,
+        onCreateRecipe: @escaping () -> Void,
         onEditRecipe: @escaping () -> Void,
         onRemoveRecipe: @escaping () -> Void
     ) {
@@ -23,30 +25,9 @@ struct MealEditorRecipeSection: View {
         self.existingMatchedRecipe = existingMatchedRecipe
         self.isExistingRecipe = isExistingRecipe
         self.onPickRecipe = onPickRecipe
+        self.onCreateRecipe = onCreateRecipe
         self.onEditRecipe = onEditRecipe
         self.onRemoveRecipe = onRemoveRecipe
-    }
-
-    // Compatibility init
-    init(
-        title: Binding<String>,
-        existingMatchedDish: Recipe?,
-        isExistingDish: Bool,
-        onPickDish: @escaping () -> Void,
-        onEditRecipe: @escaping () -> Void,
-        onRemoveDish: @escaping () -> Void
-    ) {
-        self._title = title
-        self.existingMatchedRecipe = existingMatchedDish
-        self.isExistingRecipe = isExistingDish
-        self.onPickRecipe = onPickDish
-        self.onEditRecipe = onEditRecipe
-        self.onRemoveRecipe = onRemoveDish
-    }
-
-    private var recipePhotos: [String] {
-        guard let recipe = existingMatchedRecipe else { return [] }
-        return store.photos(for: recipe)
     }
 
     private var isCreator: Bool {
@@ -54,91 +35,64 @@ struct MealEditorRecipeSection: View {
         return recipe.ownerID == store.userID
     }
 
-    private var displayPhotoItems: [HeroPhotoItem] {
-        guard let recipe = existingMatchedRecipe else { return [] }
-        var items: [HeroPhotoItem] = []
-        var paths: [String] = []
-        for p in recipe.recipePhotoPaths where !paths.contains(p) {
-            paths.append(p)
-            items.append(.remote(path: p, bucket: SupabaseConfig.recipeBucket))
-        }
-        for p in recipe.photoPaths where !paths.contains(p) {
-            paths.append(p)
-            items.append(.remote(path: p, bucket: SupabaseConfig.photoBucket))
-        }
-        for p in store.photos(for: recipe) where !paths.contains(p) {
-            paths.append(p)
-            items.append(.remote(path: p, bucket: SupabaseConfig.photoBucket))
-        }
-        return Array(items.prefix(FoodStore.PhotosDraft.maxCount))
+    /// The recipe's photo, resolved as PhotoCard does it: meal photos, recipe photos, then the cuisine's photograph.
+    private var recipeAvatar: Avatar {
+        guard let recipe = existingMatchedRecipe else { return Avatar(name: title) }
+        let photo = PhotoCardSource.recipe(recipe).resolved(in: store)
+        return Avatar(name: recipe.name, photoPath: photo.path, bucket: photo.bucket, assetName: photo.cuisineAsset)
     }
 
     var body: some View {
-        if title.trimmedName.isEmpty {
-            emptyRecipeDeckView
-        } else {
-            heroRecipeSelectedView
-        }
-    }
-
-    private var emptyRecipeDeckView: some View {
-        EmptyRecipeDeckHeroView(onTap: onPickRecipe)
-            .frame(height: 228)
-            .frame(maxWidth: .infinity)
-            .padding(.vertical, 4)
-            .padding(.bottom, 36)
-    }
-
-    private var heroRecipeSelectedView: some View {
-        VStack(spacing: DS.Spacing.heroInner) {
-            HeroPhotoDeckView(
-                items: displayPhotoItems,
-                cuisine: existingMatchedRecipe?.cuisine,
-                cardWidth: 144,
-                cardHeight: 192
-            )
-            .frame(height: 228)
-            .frame(maxWidth: .infinity)
-            .padding(.vertical, 4)
-
-            VStack(spacing: 14) {
-                VStack(spacing: 4) {
-                    if let cuisineName = Cuisine.formatDisplayName(existingMatchedRecipe?.cuisine) {
-                        Text(cuisineName)
-                            .font(.subheadline.weight(.medium))
-                            .foregroundStyle(DS.Color.accentText)
-                    }
-
-                    Text(title)
-                        .font(AppTypography.pageTitleFont)
-                        .foregroundStyle(DS.Color.textPrimary)
-                        .multilineTextAlignment(.center)
-                        .padding(.horizontal, 20)
-                }
-
-                Menu {
-                    Button(action: onPickRecipe) {
-                        Label("Change Recipe", systemImage: "arrow.triangle.2.circlepath")
-                    }
-
-                    if isCreator {
-                        Button(action: onEditRecipe) {
-                            Label("Edit Recipe Details", systemImage: "square.and.pencil")
-                        }
-                    }
-
-                    Button(role: .destructive, action: onRemoveRecipe) {
-                        Label("Remove", systemImage: "trash")
-                    }
-                } label: {
-                    SubtleCapsuleLabel(title: "Change recipe", systemImage: "arrow.triangle.2.circlepath")
-                }
-                .buttonStyle(.plain)
+        Group {
+            if title.trimmedName.isEmpty {
+                ScreenHeader(
+                    "What did you cook?",
+                    summary: "Pick it from your recipes, or create a new one.",
+                    centered: true,
+                    actions: [
+                        .init(title: "Pick recipe", action: onPickRecipe),
+                        .init(title: "Create recipe", variant: .secondary, appearance: .soft, action: onCreateRecipe)
+                    ]
+                )
+            } else {
+                selectedRecipe
             }
         }
+        .padding(.bottom, DS.Spacing.block)
+    }
+
+    private var selectedRecipe: some View {
+        VStack(spacing: DS.Spacing.s4) {
+            ScreenHeader(
+                title,
+                eyebrow: Cuisine.formatDisplayName(existingMatchedRecipe?.cuisine),
+                avatar: recipeAvatar
+            )
+
+            Menu {
+                Button(action: onPickRecipe) {
+                    Label("Change Recipe", systemImage: "arrow.triangle.2.circlepath")
+                }
+
+                if isCreator {
+                    Button(action: onEditRecipe) {
+                        Label("Edit Recipe Details", systemImage: "square.and.pencil")
+                    }
+                }
+
+                Button(role: .destructive, action: onRemoveRecipe) {
+                    Label("Remove", systemImage: "trash")
+                }
+            } label: {
+                AppButtonLabel(
+                    "Change recipe",
+                    variant: .secondary,
+                    appearance: .soft,
+                    size: .md
+                )
+            }
+            .buttonStyle(AppPressableButtonStyle())
+        }
         .frame(maxWidth: .infinity)
-        .padding(.bottom, 36)
     }
 }
-
-typealias MealEditorDishSection = MealEditorRecipeSection

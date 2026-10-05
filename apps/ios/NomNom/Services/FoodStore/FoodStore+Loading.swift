@@ -30,6 +30,7 @@ extension FoodStore {
             async let recipeFavorites: [RecipeFavorite] = supabase.from("recipe_favorites").select().execute().value
             async let categories: [CategoryRecord] = supabase.from("categories").select().execute().value
             async let taxonomyTerms: [TaxonomyTermRecord] = supabase.from("taxonomy_terms").select().execute().value
+            async let ratingTags: [RatingTagOption] = supabase.from("rating_tags").select().order("sort").execute().value
 
             self.dishes = try await dishes
             self.meals = try await meals
@@ -51,6 +52,7 @@ extension FoodStore {
             }
             let loadedTerms = (try? await taxonomyTerms) ?? []
             self.taxonomyTerms = Dictionary(uniqueKeysWithValues: loadedTerms.map { ($0.id, $0) })
+            self.ratingTags = (try? await ratingTags) ?? []
 
             reindex()
             try await loadProfiles()
@@ -111,17 +113,17 @@ extension FoodStore {
         favoriteRecipeIDs = Set(recipeFavorites.filter { $0.userID == userID }.map(\.recipeID))
 
         let myPartyIDs = self.myPartyIDs
+        let saved = UserDefaults.standard.string(forKey: "selectedParty_\(userID.uuidString)")
         if let current = currentParty, !myPartyIDs.contains(current.id) {
             currentParty = nil
         } else if currentParty == nil,
-                  let savedIDString = UserDefaults.standard.string(forKey: "selectedParty_\(userID.uuidString)"),
-                  let savedID = UUID(uuidString: savedIDString),
+                  let saved,
+                  let savedID = UUID(uuidString: saved),
                   myPartyIDs.contains(savedID),
                   let savedParty = partyByID[savedID] {
             currentParty = savedParty
         }
-        
-        // No solo state: default to a party if one is available
+
         if currentParty == nil {
             currentParty = myParties.first
         }

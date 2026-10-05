@@ -6,55 +6,42 @@ struct RecipeInstructionsEditorSection: View {
 
     var body: some View {
         SectionCard("Instructions") {
-            VStack(spacing: 10) {
+            VStack(spacing: DS.Spacing.s2_5) {
                 ForEach(Array(instructions.indices), id: \.self) { index in
                     stepRow(at: index)
                 }
 
-                AppButton(
-                    "Add Step",
-                    systemImage: "plus",
-                    variant: .secondary,
-                    style: .ghost,
-                    size: .sm
-                ) {
-                    withAnimation(.easeInOut(duration: 0.2)) {
+                AppButton("Add Step", icon: "plus", appearance: .ghost, size: .sm) {
+                    withAnimation(DS.Motion.layout) {
                         $instructions.wrappedValue.append("")
                     }
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(.top, instructions.isEmpty ? 2 : 4)
+                .padding(.top, instructions.isEmpty ? DS.Spacing.s0_5 : DS.Spacing.s1)
             }
         }
     }
 
     private func stepRow(at index: Int) -> some View {
-        HStack(alignment: .top, spacing: 8) {
+        HStack(alignment: .center, spacing: DS.Spacing.s2) {
             Text("\(index + 1)")
-                .font(.caption.weight(.bold))
-                .foregroundStyle(DS.Color.textSecondary)
-                .frame(width: 24, height: 24)
+                .textStyle(.sansXs, tone: .secondary, weight: .semibold, numeric: true)
+                .frame(width: DS.Spacing.s6, height: DS.Spacing.s6)
                 .background(DS.Color.sunken, in: Circle())
-                .padding(.top, 6)
+                .accessibilityLabel("Step \(index + 1)")
 
-            TextArea(
-                "Step description...",
-                text: $instructions[index],
-                lineLimit: 2...8,
-                font: .subheadline
-            )
+            NoteField("Describe this step", text: $instructions[index], title: "Step \(index + 1)")
 
             AppButton(
-                systemImage: "minus.circle",
+                icon: "minus.circle",
+                accessibilityLabel: "Remove step",
                 variant: .destructive,
-                style: .ghost,
-                size: .sm
+                appearance: .ghost
             ) {
-                withAnimation(.easeInOut(duration: 0.2)) {
+                withAnimation(DS.Motion.layout) {
                     removeStep(at: index)
                 }
             }
-            .accessibilityLabel("Remove step")
         }
     }
 

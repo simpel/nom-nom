@@ -1,79 +1,37 @@
 import SwiftUI
 
-/// Main Tab — Recipes. Global discovery and category exploration hub, or personal recipes collection.
+/// Main tab — Recipes ("Nom Nom iOS" canvas): a ScreenHeader with no action (the tab is
+/// for finding recipes; "New recipe" lives in the PageMenu and on My recipes), then the
+/// Pro party card (AI picks, else safe bets), My favourites, My recipes, Popular recipes
+/// and the cuisine categories.
 struct RecipesView: View {
     @Environment(FoodStore.self) private var store
 
-    @State private var selectedTab: RecipeTab = .favourites
     @State private var showingCreateSheet = false
-
-    enum RecipeTab: String, CaseIterable, Identifiable {
-        case favourites = "Favourites"
-        case myRecipes = "My Recipes"
-        case inspiration = "Inspiration"
-
-        var id: String { rawValue }
-    }
 
     var body: some View {
         NavigationStack {
             ScrollView {
-                VStack(alignment: .leading, spacing: DS.Spacing.sectionCompact) {
-                    PageHeading(title: "Recipes", actionTitle: "Add recipe") {
-                        showingCreateSheet = true
-                    }
-                    .padding(.horizontal, DS.Spacing.screenHorizontal)
+                VStack(alignment: .leading, spacing: DS.Spacing.block) {
+                    ScreenHeader(
+                        "Recipes",
+                        summary: "Find something to cook, from party picks to what everyone loves.",
+                        role: .tabRoot
+                    )
+                    .padding(.horizontal, DS.Spacing.gutter)
 
-                    if store.myRecipes.isEmpty {
-                        RecipeInspirationSection()
-                    } else {
-                        let availableTabs: [RecipeTab] = store.favoriteRecipes.isEmpty ? [.myRecipes, .inspiration] : [.favourites, .myRecipes, .inspiration]
-                        let resolvedTab: RecipeTab = availableTabs.contains(selectedTab) ? selectedTab : availableTabs.first!
-
-                        Picker("View", selection: Binding(
-                            get: { resolvedTab },
-                            set: { selectedTab = $0 }
-                        )) {
-                            ForEach(availableTabs) { tab in
-                                Text(tab.rawValue).tag(tab)
-                            }
-                        }
-                        .pickerStyle(.segmented)
-                        .padding(.horizontal, DS.Spacing.screenHorizontal)
-
-                        switch resolvedTab {
-                        case .favourites:
-                            VStack(alignment: .leading, spacing: DS.Spacing.md) {
-                                HStack {
-                                    Text("\(store.favoriteRecipes.count) recipe\(store.favoriteRecipes.count == 1 ? "" : "s")")
-                                        .font(.caption.weight(.medium))
-                                        .monospacedDigit()
-                                        .foregroundStyle(DS.Color.textSecondary)
-                                    Spacer()
-                                }
-                                .padding(.horizontal, DS.Spacing.screenHorizontal)
-                                .padding(.vertical, 4)
-                                
-                                MinimalRecipeGrid(recipes: store.favoriteRecipes.sorted { $0.createdAt > $1.createdAt })
-                            }
-                        case .inspiration:
-                            RecipeInspirationSection()
-                        case .myRecipes:
-                            MyRecipesSection(
-                                recipes: store.myRecipes.sorted { $0.createdAt > $1.createdAt },
-                                onCreateRecipe: { showingCreateSheet = true }
-                            )
-                        }
-                    }
+                    RecipesBrowseSections()
                 }
-                .padding(.top, DS.Spacing.screenTop)
-                .padding(.bottom, DS.Spacing.screenBottom)
+                .padding(.top, DS.Spacing.s5)
+                .padding(.bottom, DS.Spacing.s11)
             }
             .background(DS.Color.bg)
-            .refreshable {
-                await store.load()
+            .refreshable { await store.load() }
+            .mainTabToolbar {
+                Section {
+                    Button("New recipe") { showingCreateSheet = true }
+                }
             }
-            .mainTabToolbar()
             .sheet(isPresented: $showingCreateSheet) {
                 CreateRecipeSheet()
             }
@@ -82,7 +40,7 @@ struct RecipesView: View {
 }
 
 #Preview {
-    NomNomPreview {
+    NomNomPreview(inNavigationStack: false) {
         RecipesView()
     }
 }

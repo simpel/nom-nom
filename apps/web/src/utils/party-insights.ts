@@ -31,16 +31,6 @@ function getAdminSupabase() {
     return createSupabaseClient(supabaseUrl, supabaseServiceKey);
 }
 
-function normalizeReaction(react: number): number {
-    if (react === -1) return 0.0;
-    if (react === 1) return 0.2;
-    if (react === 2) return 0.4;
-    if (react === 3) return 0.6;
-    if (react === 4) return 0.8;
-    if (react === 5) return 1.0;
-    return 0.6;
-}
-
 const PARTY_INSIGHT_SYSTEM_PROMPT = `Analyze the following dinner party history (recent meals, top cuisines, average scores 0.0-1.0, and member ratings).
 Produce a JSON response analyzing their preferences, explaining individual member taste matches/mismatches with the food served, and suggesting new meals.
 IMPORTANT: In the 'summary_sentence', you MUST use markdown to color-code the text:
@@ -122,7 +112,7 @@ export async function generatePartyInsightsForParty(
                 meal_ratings (
                     rater_id,
                     eater_id,
-                    reaction
+                    score
                 )
             )
         `)
@@ -157,7 +147,7 @@ export async function generatePartyInsightsForParty(
         const memberRatings: Record<string, number> = {};
 
         for (const r of ratings) {
-            const norm = normalizeReaction(r.reaction);
+            const norm = Number(r.score); // meal_ratings.score: 0..1 from every answer
             totalScore += norm;
             count++;
 

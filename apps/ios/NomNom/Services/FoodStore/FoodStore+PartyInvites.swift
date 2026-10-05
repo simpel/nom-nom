@@ -213,6 +213,8 @@ extension FoodStore {
                 parties.append(fetched)
             }
             reindex()
+            // Someone who joined through an invite (and has no party yet) lands in it.
+            if currentParty == nil { currentParty = party(invite.partyID) }
             errorMessage = nil
         } catch let error as PostgrestError where error.code == "23505" {
             if let idx = partyInvites.firstIndex(where: { $0.id == invite.id }) {
@@ -258,19 +260,30 @@ extension FoodStore {
     }
 
     @discardableResult
+    /// The name a pending invite shows in a member list: the invitee's name when they
+    /// have an account, else the address.
+    func displayName(for invite: PartyInvite) -> String {
+        if let id = invite.inviteeID, let profile = profiles[id] { return profile.shownName }
+        return invite.inviteeEmail ?? "Invited member"
+    }
+
+    /// Pending invites to `partyID`, oldest first, for the bottom of its member lists.
+    func pendingInvites(forParty partyID: UUID) -> [PartyInvite] {
+        invites(forParty: partyID).filter(\.isPending).sorted { $0.createdAt < $1.createdAt }
+    }
+
     func resendPartyInvite(_ invite: PartyInvite) async -> Bool {
-        guard let email = invite.inviteeEmail else { return false }
-        struct SendInvitePayload: Encodable {
-            let party_id: String
-            let invitee_email: String
+        let options: FunctionInvokeOptions
+        if let email = invite.inviteeEmail {
+            options = FunctionInvokeOptions(body: SendEmailInvitePayload(party_id: invite.partyID.uuidString, invitee_email: email))
+        } else if let inviteeID = invite.inviteeID {
+            options = FunctionInvokeOptions(body: SendProfileInvitePayload(party_id: invite.partyID.uuidString, invitee_user_id: inviteeID.uuidString))
+        } else {
+            return false
         }
-        let payload = SendInvitePayload(party_id: invite.partyID.uuidString, invitee_email: email)
         do {
-            try await supabase.functions.invoke(
-                "send-invite-email",
-                options: FunctionInvokeOptions(body: payload)
-            )
-            Self.log.info("Invite email resent successfully to \(email)")
+            try await supabase.functions.invoke("send-invite-email", options: options)
+            Self.log.info("Party invite resent")
             errorMessage = nil
             return true
         } catch {

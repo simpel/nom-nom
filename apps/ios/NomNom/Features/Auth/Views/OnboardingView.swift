@@ -1,75 +1,87 @@
 import SwiftUI
 
-/// Multi-step onboarding presented on first sign-in.
-/// Guides the user through:
-/// 0: Identity setup (Name and optional photo)
-/// 1: Notification & Email delivery preferences, then finish setup
+/// Multi-step onboarding presented on first sign-in:
+/// 1. Identity (name and optional photo)
+/// 2. Notification & email delivery preferences
+/// 3. Dinner party: start one, or accept the pending invites (several are fine; a code
+///    or invite link adds one). Skipped when the account is already in a party.
+/// 4. Only after joining more than one party: pick which one to open.
+/// It ends on Meals for the party she started, joined or picked.
 struct OnboardingView: View {
-    @Environment(FoodStore.self) private var store
+    enum Step { case profile, notifications, party, pickParty }
 
-    @State private var step = 0
-    @State private var firstName = ""
-    @State private var lastName = ""
-    @State private var photoDraft = FoodStore.PhotosDraft()
-    @State private var enablePush = true
-    @State private var enableEmail = true
-    @State private var isSaving = false
+    @Environment(FoodStore.self) var store
+    @Environment(NotificationManager.self) var notifications
 
-    private let totalSteps = 2
+    @State var stepIndex = 0
+    @State var firstName = ""
+    @State var lastName = ""
+    @State var photoDraft = FoodStore.PhotosDraft()
+    @State var enablePush = true
+    @State var enableEmail = true
+    @State var partyChoice = OnboardingPartyChoice.create
+    @State var partyName = ""
+    @State var inviteCode = ""
+    @State var codeError: String?
+    @State var isAddingCode = false
+    @State var joinedPartyIDs: [UUID] = []
+    @State var busyInviteID: UUID?
+    @State var pickingID: UUID?
+    @State var hadPartyAtStart = false
+    @State var isSaving = false
+
+    var steps: [Step] {
+        if hadPartyAtStart { return [.profile, .notifications] }
+        let picks = partyChoice == .invites && joinedPartyIDs.count > 1
+        return picks ? [.profile, .notifications, .party, .pickParty] : [.profile, .notifications, .party]
+    }
+    var step: Step { steps[min(stepIndex, steps.count - 1)] }
 
     var body: some View {
         NavigationStack {
             ScrollView {
-                VStack(spacing: DS.Spacing.sectionCompact) {
-                    switch step {
-                    case 0:
-                        OnboardingProfileStep(
-                            firstName: $firstName,
-                            lastName: $lastName,
-                            photoDraft: $photoDraft
-                        )
-                        .transition(.opacity)
-                    default:
-                        OnboardingMealsStep(
-                            enablePush: $enablePush,
-                            enableEmail: $enableEmail
-                        )
-                        .transition(.opacity)
-                    }
+                VStack(spacing: DS.Spacing.s6) {
+                    stepContent.transition(.opacity)
                 }
-                .padding(.horizontal, DS.Spacing.screenHorizontal)
-                .padding(.top, DS.Spacing.screenTop)
-                .padding(.bottom, DS.Spacing.md)
+                .padding(.horizontal, DS.Spacing.gutter)
+                .padding(.top, DS.Spacing.s5)
+                .padding(.bottom, DS.Spacing.s4)
             }
             .background(DS.Color.bg)
             .safeAreaInset(edge: .bottom) {
-                bottomBar
+                if step != .pickParty {
+                    bottomButton
+                        .padding(.horizontal, DS.Spacing.gutter)
+                        .padding(.top, DS.Spacing.s3)
+                        .padding(.bottom, DS.Spacing.s2)
+                        // README "Layout": no shadows except on things that float; the bar sits on `bg`.
+                        .background(DS.Color.bg)
+                }
             }
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .principal) {
-                    OnboardingStepProgress(currentStep: step, totalSteps: totalSteps)
+                    OnboardingStepProgress(currentStep: stepIndex, totalSteps: steps.count)
                 }
-                if step > 0 {
+                if stepIndex > 0 {
+                    // A sheet toolbar uses a system button (AppButton README "Rules").
                     ToolbarItem(placement: .topBarLeading) {
-                        Button {
-                            withAnimation(.easeInOut(duration: 0.25)) {
-                                step -= 1
-                            }
-                        } label: {
-                            HStack(spacing: 4) {
-                                Image(systemName: "chevron.backward")
-                                Text("Back")
-                            }
-                            .font(.subheadline)
+                        Button("Back", systemImage: "chevron.backward") {
+                            withAnimation(DS.Motion.layout) { stepIndex -= 1 }
                         }
                         .disabled(isSaving)
+                        .barItemStyle()
                     }
                 }
             }
         }
         .interactiveDismissDisabled()
-        .onAppear(perform: loadInitialState)
+        .onAppear {
+            loadInitialState()
+            claimInviteLink()
+        }
+        .onChange(of: notifications.pendingURL) { _, _ in claimInviteLink() }
+        .onChange(of: inviteCode) { _, _ in codeError = nil }
         .alert("Couldn't Save", isPresented: Binding(
             get: { store.errorMessage != nil },
             set: { if !$0 { store.errorMessage = nil } }
@@ -80,94 +92,62 @@ struct OnboardingView: View {
         }
     }
 
-    // MARK: - Bottom Actions
-
-    private var bottomBar: some View {
-        VStack(spacing: 8) {
-            switch step {
-            case 0:
-                AppButton(
-                    "Continue",
-                    variant: .primary,
-                    style: .normal,
-                    size: .xl,
-                    isFullWidth: true,
-                    disabled: firstName.trimmedName.isEmpty || lastName.trimmedName.isEmpty
-                ) {
-                    withAnimation(.easeInOut(duration: 0.25)) { step = 1 }
-                }
-
-            default:
-                AppButton(
-                    "Get Cooking",
-                    variant: .primary,
-                    style: .normal,
-                    size: .xl,
-                    isFullWidth: true,
-                    isPending: isSaving,
-                    disabled: isSaving
-                ) {
-                    saveAndFinish()
-                }
+    @ViewBuilder
+    private var stepContent: some View {
+        switch step {
+        case .profile:
+            OnboardingProfileStep(firstName: $firstName, lastName: $lastName, photoDraft: $photoDraft)
+        case .notifications:
+            OnboardingMealsStep(enablePush: $enablePush, enableEmail: $enableEmail)
+        case .party:
+            OnboardingPartyStep(
+                choice: $partyChoice, partyName: $partyName, inviteCode: $inviteCode,
+                codeError: codeError, isAddingCode: isAddingCode,
+                joinedPartyIDs: joinedPartyIDs, busyInviteID: busyInviteID,
+                onAddCode: addInviteCode, onAccept: accept, onDecline: decline
+            )
+        case .pickParty:
+            OnboardingPickPartyStep(
+                parties: joinedPartyIDs.compactMap { store.party($0) },
+                pickingID: pickingID
+            ) { party in
+                pickingID = party.id
+                finish(landing: party.id)
             }
         }
-        .padding(.horizontal, DS.Spacing.screenHorizontal)
-        .padding(.top, DS.Spacing.sm)
-        .padding(.bottom, DS.Spacing.xs)
-        .background(
-            DS.Color.bg
-                .shadow(color: DS.Color.line.opacity(0.15), radius: 6, y: -2)
-        )
     }
 
-    // MARK: - Actions
-
-    private func loadInitialState() {
-        if let profile = store.myProfile {
-            firstName = profile.firstName
-            lastName = profile.lastName
-            if profile.onboardingCompletedAt == nil {
-                enablePush = true
-                enableEmail = true
+    @ViewBuilder
+    private var bottomButton: some View {
+        switch step {
+        case .profile:
+            AppButton("Continue", size: .lg, fullWidth: true) { advance() }
+                .disabled(firstName.trimmedName.isEmpty || lastName.trimmedName.isEmpty)
+        case .notifications:
+            if steps.last == .notifications {
+                AppButton("Get cooking", size: .lg, fullWidth: true, isLoading: isSaving) { finish(landing: nil) }
             } else {
-                enablePush = profile.notifyViaPush
-                enableEmail = profile.notifyViaEmail
+                AppButton("Continue", size: .lg, fullWidth: true) { advance() }
             }
-            if let photoPath = profile.photoPath, !photoPath.isEmpty {
-                photoDraft = FoodStore.PhotosDraft(existingPaths: [photoPath])
-            }
+        case .party:
+            partyButton
+        case .pickParty:
+            EmptyView()
         }
     }
 
-    private func saveAndFinish() {
-        isSaving = true
-        let photoData = photoDraft.addedData.first
-        Task {
-            await store.updateProfile(
-                firstName: firstName,
-                lastName: lastName,
-                newPhotoData: photoData
-            )
-            guard store.errorMessage == nil else { isSaving = false; return }
-
-            if enablePush {
-                _ = await NotificationManager.shared.requestAuthorization()
+    @ViewBuilder
+    private var partyButton: some View {
+        switch partyChoice {
+        case .create:
+            AppButton("Get cooking", size: .lg, fullWidth: true, isLoading: isSaving) { finish(landing: nil) }
+                .disabled(partyName.trimmedName.isEmpty)
+        case .invites:
+            let many = joinedPartyIDs.count > 1
+            AppButton(many ? "Continue" : "Get cooking", size: .lg, fullWidth: true, isLoading: isSaving) {
+                if many { advance() } else { finish(landing: joinedPartyIDs.first) }
             }
-            // Onboarding sets the delivery channels; every event class starts on
-            // and can be tuned later in Settings.
-            await store.updateNotificationPreferences(
-                mealInvite: true,
-                mealRating: true,
-                partyInvite: true,
-                partyActivity: true,
-                recipeLike: true,
-                viaPush: enablePush,
-                viaEmail: enableEmail
-            )
-            guard store.errorMessage == nil else { isSaving = false; return }
-
-            await store.completeOnboarding()
-            isSaving = false
+            .disabled(joinedPartyIDs.isEmpty || busyInviteID != nil)
         }
     }
 }

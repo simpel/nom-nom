@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// Dedicated modal sheet for editing an existing dinner party's details, cover photo, and visibility.
+/// Dedicated modal sheet for editing an existing dinner party's details, photos, and visibility.
 struct PartySettingsSheet: View {
     let party: Party
     var onPartyLeft: (() -> Void)? = nil
@@ -22,41 +22,11 @@ struct PartySettingsSheet: View {
 
     var body: some View {
         NavigationStack {
-            ScrollView {
-                VStack(spacing: DS.Spacing.section) {
-                    AssetPhotosPickerSection(
-                        draft: $photoDraft,
-                        title: "Cover Photo",
-                        bucket: SupabaseConfig.partyBucket,
-                        maxCount: 1
-                    )
+            SheetBody {
+                PartyFormFields(photoDraft: $photoDraft, name: $name, about: $about)
 
-                    SectionCard("Party Name") {
-                        Input("Party name (e.g. Taco Night)", text: $name, style: .cardRow)
-                            .autocorrectionDisabled()
-                    }
-
-                    SectionCard("About", caption: "Optional") {
-                        TextArea("What is this dinner party about?", text: $about, lineLimit: 3...5)
-                    }
-
-                    SectionCard("Sharing & Visibility") {
-                        VStack(alignment: .leading, spacing: 6) {
-                            Toggle("Make dinner party public", isOn: $isPublic)
-                                .font(.body.weight(.medium))
-                                .nativeToggle()
-
-                            Text("When enabled, other foodies can discover and follow this dinner party.")
-                                .font(.caption)
-                                .foregroundStyle(DS.Color.textSecondary)
-                        }
-                    }
-                }
-                .padding(.horizontal, DS.Spacing.screenHorizontal)
-                .padding(.top, DS.Spacing.screenTop)
-                .padding(.bottom, DS.Spacing.screenBottom)
+                VisibilityToggleCard.party(isPublic: $isPublic)
             }
-            .background(DS.Color.bg)
             .screenTitle("Edit Party", displayMode: .inline)
             .sheetCommitToolbar(
                 isSaving: isSaving,
@@ -74,6 +44,7 @@ struct PartySettingsSheet: View {
                 Text(saveError ?? "")
             }
         }
+        .dsSheet()
     }
 
     private func populate() {
@@ -82,9 +53,7 @@ struct PartySettingsSheet: View {
         name = party.name
         about = party.about
         isPublic = party.isPublic
-        if let photoPath = party.photoPath, !photoPath.isEmpty {
-            photoDraft = FoodStore.PhotosDraft(existingPaths: [photoPath])
-        }
+        photoDraft = FoodStore.PhotosDraft(existingPaths: party.photoPaths)
     }
 
     private func save() {
@@ -93,15 +62,12 @@ struct PartySettingsSheet: View {
         isSaving = true
         UIImpactFeedbackGenerator(style: .medium).impactOccurred()
         Task {
-            let photoData = photoDraft.addedData.first
-            let removePhoto = photoDraft.isEmpty && party.photoPath != nil
             await store.updateParty(
                 party,
                 name: partyName,
                 about: about,
                 isPublic: isPublic,
-                newPhotoData: photoData,
-                removePhoto: removePhoto
+                photos: photoDraft
             )
             isSaving = false
             if store.errorMessage == nil {

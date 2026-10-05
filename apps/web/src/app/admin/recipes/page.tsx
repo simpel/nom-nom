@@ -17,7 +17,7 @@ export default async function RecipesListPage() {
 
   const { data: recipes, error } = await adminSupabase
     .from('dishes')
-    .select('id, name, cuisine, effort, serves, embedding, health_score, health_verdict, created_at, updated_at')
+    .select('id, name, cuisine, effort, serves, embedding, health_score, health_verdict, dish_kind_id, cooking_method_id, created_at, updated_at')
     .order('created_at', { ascending: false })
 
   if (error) {
@@ -44,6 +44,7 @@ export default async function RecipesListPage() {
     hasEmbedding: r.embedding !== null,
     healthScore: r.health_score,
     healthVerdict: r.health_verdict,
+    hasTaxonomy: r.dish_kind_id !== null && r.cooking_method_id !== null,
     createdAt: r.created_at,
     updatedAt: r.updated_at,
     mealCount: mealCountMap.get(r.id) || 0,

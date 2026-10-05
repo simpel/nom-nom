@@ -99,7 +99,8 @@ Return a single JSON object matching this schema:
   "health_verdict": "string (One of: 'Nutritious', 'Balanced', 'Moderate', 'Indulgent')",
   "health_rationale": "string (A crisp, concise 1-2 sentences strictly under 35 words explaining why the recipe earned this score number)",
   "health_breakdown": {
-    "positives": ["string (key nutritional strength)", "string (key nutritional strength)"],
+    "positives": ["string (key nutritional strength, 2-5 words)", "string (key nutritional strength)"],
+    "considerations": ["string (what holds the score back, 2-5 words, e.g. 'Salt from the cheese')", "string"],
     "cooking_impact": "string (1 concise sentence on how the cooking/prep method influenced the score)",
     "macros": {
       "calories": integer (estimated total kcal per serving),
@@ -114,7 +115,7 @@ Return a single JSON object matching this schema:
   "cuisine": "string or null (wide umbrella culinary tradition)"
 }
 
-Return ONLY valid JSON without conversational text or markdown code fence blocks outside JSON.\`;
+Return ONLY valid JSON without conversational text or markdown code fence blocks outside JSON.`;
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -275,6 +276,7 @@ Cooking Instructions:
       health_rationale: z.string(),
       health_breakdown: z.object({
         positives: z.array(z.string()),
+        considerations: z.array(z.string()).default([]),
         cooking_impact: z.string(),
         macros: z.object({
           calories: z.number(),

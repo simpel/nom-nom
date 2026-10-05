@@ -1,35 +1,31 @@
 import SwiftUI
 
-/// Elevated header view showing user avatar (or serif monogram initial), name, and membership subtitle directly on the background.
+/// The top of a person's profile: a ScreenHeader centred by the person's avatar, their
+/// name and, on your own profile, "Edit profile" (secondary soft) and a camera badge on the avatar.
 struct ProfileHeaderCard: View {
     let name: String
-    let subtitle: String
     var photoPath: String? = nil
     let isCurrentUser: Bool
+    var onEdit: (() -> Void)? = nil
+    /// Avatar edit mode; used only on your own profile.
+    var avatarEdit: ScreenHeaderAvatarEdit? = nil
 
     var body: some View {
-        VStack(spacing: 14) {
-            UserAvatar(name: name, photoPath: photoPath, size: 80)
-
-            PageHeader(
-                title: name,
-                subtitle: subtitle.isEmpty ? nil : subtitle,
-                alignment: .center
-            )
-        }
-        .frame(maxWidth: .infinity)
-        .padding(.top, 8)
-        .padding(.bottom, 6)
+        ScreenHeader(
+            name,
+            avatar: Avatar(name: name, photoPath: photoPath, decorative: true),
+            avatarEdit: isCurrentUser ? avatarEdit : nil,
+            actions: (isCurrentUser && onEdit != nil) ? [
+                ScreenHeaderAction(title: "Edit profile", variant: .secondary, appearance: .soft) { onEdit?() },
+            ] : []
+        )
     }
 }
 
 #Preview {
     NomNomPreview { _ in
-        ProfileHeaderCard(
-            name: "Joel Sandén",
-            subtitle: "Member of 2 dinner parties",
-            isCurrentUser: true
-        )
-        .padding()
+        ProfileHeaderCard(name: "Joel Sandén", isCurrentUser: true, onEdit: {},
+                          avatarEdit: ScreenHeaderAvatarEdit(hasPhoto: false) { _ in })
+            .padding(DS.Spacing.gutter)
     }
 }

@@ -88,4 +88,35 @@ extension Array where Element == Meal {
             (title: key.title(currentYear: currentYear), meals: buckets[key] ?? [])
         }
     }
+
+    /// Groups meals by calendar week for the Meals list ("Nom Nom iOS" canvas):
+    /// "This week", "Last week", then one bucket per month ("September", or
+    /// "December 2025" for past years). Newest bucket first; meals keep their order.
+    func groupedByWeek(calendar: Calendar = .current, now: Date = .now) -> [(title: String, meals: [Meal])] {
+        let currentYear = calendar.component(.year, from: now)
+        guard let thisWeek = calendar.dateInterval(of: .weekOfYear, for: now)?.start,
+              let lastWeek = calendar.date(byAdding: .weekOfYear, value: -1, to: thisWeek) else {
+            return [(title: "Meals", meals: self)]
+        }
+
+        var order: [String] = []
+        var buckets: [String: [Meal]] = [:]
+        let formatter = DateFormatter()
+
+        for meal in sorted(by: { $0.eatenOn > $1.eatenOn }) {
+            let title: String
+            if meal.eatenOn >= thisWeek {
+                title = "This week"
+            } else if meal.eatenOn >= lastWeek {
+                title = "Last week"
+            } else {
+                let year = calendar.component(.year, from: meal.eatenOn)
+                formatter.setLocalizedDateFormatFromTemplate(year == currentYear ? "MMMM" : "MMMM yyyy")
+                title = formatter.string(from: meal.eatenOn)
+            }
+            if buckets[title] == nil { order.append(title) }
+            buckets[title, default: []].append(meal)
+        }
+        return order.map { (title: $0, meals: buckets[$0] ?? []) }
+    }
 }

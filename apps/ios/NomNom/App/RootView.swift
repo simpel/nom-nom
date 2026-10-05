@@ -21,7 +21,7 @@ struct RootView: View {
                     .transition(.opacity)
             }
         }
-        .animation(.easeInOut(duration: 0.25), value: auth.phase)
+        .animation(DS.Motion.layout, value: auth.phase)
         .task(id: auth.userID) {
             if let userID = auth.userID {
                 await EntitlementStore.shared.signIn(userID: userID)
@@ -62,7 +62,7 @@ private struct SignedInView: View {
                     }
             }
         }
-        .animation(.easeInOut(duration: 0.35), value: store?.isProfileSetup)
+        .animation(DS.Motion.layout, value: store?.isProfileSetup)
         .onChange(of: NotificationManager.shared.deviceToken) { _, newToken in
             if let newToken, let store {
                 Task {
@@ -73,15 +73,18 @@ private struct SignedInView: View {
     }
 }
 
+/// The launch screen while the session and store load: the name set in type
+/// (README "Logo": "the name is set in type: 'Nom Nom' in Newsreader") over one
+/// shimmering bone (Skeleton README: never a lone spinner).
 struct LaunchPlaceholder: View {
     init(caption: String? = nil) {}
 
     var body: some View {
-        VStack(spacing: DS.Spacing.md) {
-            Text("NomNom")
-                .font(AppTypography.displayXL)
-                .foregroundStyle(DS.Color.textPrimary)
-            ProgressView()
+        VStack(spacing: DS.Spacing.s4) {
+            Text("Nom Nom")
+                .textStyle(.serifLg)
+            SkeletonBone(width: DS.Spacing.s36, height: DS.Spacing.s1_5)
+                .accessibilityLabel("Loading")
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(DS.Color.bg)

@@ -1,18 +1,21 @@
 import SwiftUI
 
-/// Section in MealEditorView for date and chef notes, presented as two distinct cards.
+/// Section in MealEditorView for date and chef notes, presented as two distinct cards
+/// `spacing-7` (`block`) apart.
 struct MealEditorDetailsSection: View {
     @Binding var date: Date
     @Binding var notes: String
 
     var body: some View {
-        SectionCard("Date") {
-            DatePicker("Date eaten", selection: $date, displayedComponents: [.date])
-                .font(.body.weight(.medium))
-        }
+        VStack(spacing: DS.Spacing.block) {
+            SectionCard("Date") {
+                DatePicker("Date eaten", selection: $date, displayedComponents: [.date])
+                    .textStyle(.sansMd)
+            }
 
-        SectionCard("Notes", caption: "Optional") {
-            TextArea("Add any adjustments, substitutions, or memories...", text: $notes, lineLimit: 3...6)
+            SectionCard("Notes", trailing: "Optional") {
+                NoteField("Add any adjustments, substitutions, or memories…", text: $notes, title: "Notes")
+            }
         }
     }
 }

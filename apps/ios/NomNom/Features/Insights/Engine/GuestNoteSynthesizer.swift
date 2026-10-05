@@ -30,18 +30,18 @@ enum GuestNoteSynthesizer {
         }
 
         let liked = ratedMeals
-            .filter { $0.rating.reaction.score >= 0.60 }
+            .filter { $0.rating.score >= 0.60 }
             .sorted {
-                if $0.rating.reaction.score != $1.rating.reaction.score {
-                    return $0.rating.reaction.score > $1.rating.reaction.score
+                if $0.rating.score != $1.rating.score {
+                    return $0.rating.score > $1.rating.score
                 }
                 return $0.meal.eatenOn > $1.meal.eatenOn
             }
         let disliked = ratedMeals
-            .filter { $0.rating.reaction.score <= 0.40 }
+            .filter { $0.rating.score <= 0.40 }
             .sorted {
-                if $0.rating.reaction.score != $1.rating.reaction.score {
-                    return $0.rating.reaction.score < $1.rating.reaction.score
+                if $0.rating.score != $1.rating.score {
+                    return $0.rating.score < $1.rating.score
                 }
                 return $0.meal.eatenOn > $1.meal.eatenOn
             }

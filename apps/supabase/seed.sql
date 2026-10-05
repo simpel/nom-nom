@@ -883,6 +883,65 @@ values ('e0000000-0000-0000-0000-000000000040', 'f917e487-1f8c-4d3c-b42a-d77f1c1
 on conflict (id) do nothing;
 
 
+-- 5b. Link recipes to the canonical taxonomy terms (dish kind, cooking method, cuisine)
+-- seeded by the taxonomy migrations, so rating tags and admin term pages have real data.
+update public.dishes d
+set dish_kind_id = dk.id,
+    cooking_method_id = cm.id
+from (values
+    ('e0000000-0000-0000-0000-000000000001', 'pizza',            'baking'),
+    ('e0000000-0000-0000-0000-000000000002', 'pasta',            'simmering'),
+    ('e0000000-0000-0000-0000-000000000003', 'pasta',            'slow_cooking'),
+    ('e0000000-0000-0000-0000-000000000004', 'pasta',            'simmering'),
+    ('e0000000-0000-0000-0000-000000000005', 'risotto',          'simmering'),
+    ('e0000000-0000-0000-0000-000000000006', 'tacos',            'slow_cooking'),
+    ('e0000000-0000-0000-0000-000000000007', 'tacos',            'frying'),
+    ('e0000000-0000-0000-0000-000000000008', 'bowl',             'simmering'),
+    ('e0000000-0000-0000-0000-000000000009', 'tacos',            'baking'),
+    ('e0000000-0000-0000-0000-000000000010', 'appetizer',        'raw_cured'),
+    ('e0000000-0000-0000-0000-000000000011', 'meatballs',        'frying'),
+    ('e0000000-0000-0000-0000-000000000012', 'seafood',          'sauteing'),
+    ('e0000000-0000-0000-0000-000000000013', 'burger',           'sauteing'),
+    ('e0000000-0000-0000-0000-000000000014', 'curry',            'simmering'),
+    ('e0000000-0000-0000-0000-000000000015', 'stir_fry',         'sauteing'),
+    ('e0000000-0000-0000-0000-000000000016', 'soup',             'simmering'),
+    ('e0000000-0000-0000-0000-000000000017', 'soup',             'simmering'),
+    ('e0000000-0000-0000-0000-000000000018', 'curry',            'frying'),
+    ('e0000000-0000-0000-0000-000000000019', 'bowl',             'roasting'),
+    ('e0000000-0000-0000-0000-000000000020', 'roast',            'roasting'),
+    ('e0000000-0000-0000-0000-000000000021', 'stir_fry',         'sauteing'),
+    ('e0000000-0000-0000-0000-000000000022', 'stir_fry',         'sauteing'),
+    ('e0000000-0000-0000-0000-000000000023', 'dumplings',        'steaming'),
+    ('e0000000-0000-0000-0000-000000000024', 'bowl',             'grilling'),
+    ('e0000000-0000-0000-0000-000000000025', 'stir_fry',         'sauteing'),
+    ('e0000000-0000-0000-0000-000000000026', 'curry',            'simmering'),
+    ('e0000000-0000-0000-0000-000000000027', 'curry',            'simmering'),
+    ('e0000000-0000-0000-0000-000000000028', 'curry',            'simmering'),
+    ('e0000000-0000-0000-0000-000000000029', 'roast',            'roasting'),
+    ('e0000000-0000-0000-0000-000000000030', 'bbq',              'grilling'),
+    ('e0000000-0000-0000-0000-000000000031', 'seafood',          'simmering'),
+    ('e0000000-0000-0000-0000-000000000032', 'seafood',          'sauteing'),
+    ('e0000000-0000-0000-0000-000000000033', 'breakfast_brunch', 'simmering'),
+    ('e0000000-0000-0000-0000-000000000034', 'appetizer',        'frying'),
+    ('e0000000-0000-0000-0000-000000000035', 'roast',            'roasting'),
+    ('e0000000-0000-0000-0000-000000000036', 'stew',             'slow_cooking'),
+    ('e0000000-0000-0000-0000-000000000037', 'stew',             'slow_cooking'),
+    ('e0000000-0000-0000-0000-000000000038', 'stew',             'simmering'),
+    ('e0000000-0000-0000-0000-000000000039', 'burger',           'frying'),
+    ('e0000000-0000-0000-0000-000000000040', 'bbq',              'smoking')
+) as m (dish_id, dish_kind, cooking_method)
+join public.taxonomy_terms dk on dk.dimension = 'dish_kind' and dk.slug = m.dish_kind
+join public.taxonomy_terms cm on cm.dimension = 'cooking_method' and cm.slug = m.cooking_method
+where d.id = m.dish_id::uuid;
+
+update public.dishes d
+set cuisine_id = t.id
+from public.taxonomy_terms t
+where t.dimension = 'cuisine'
+  and t.slug = d.cuisine
+  and d.id::text like 'e0000000-%';
+
+
 -- 6. Meals & Ratings
 insert into public.meals (id, dish_id, created_by, eaten_on, notes, effort, repeat_desire)
 values ('ba000000-0000-0000-0000-000000000001', 'e0000000-0000-0000-0000-000000000001', 'f917e487-1f8c-4d3c-b42a-d77f1c19bceb', '2025-09-05', 'Inaugural Friday feast! Homemade pizza night with extra crispy crust.', 2, 2)
@@ -2911,3 +2970,7 @@ on conflict (meal_id, party_id) do nothing;
 
 -- 7. Mark historical notifications as read to avoid inbox clutter
 update public.notifications set read_at = now() where read_at is null;
+
+-- 8. Servings on the seeded recipes (local data only; the column comes from
+-- 20260907210000_add_dish_serves.sql, so no migration is needed)
+update public.dishes set serves = 4 where serves is null;

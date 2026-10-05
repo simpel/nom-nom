@@ -18,6 +18,9 @@ export async function POST(request: Request) {
 
     const body = await request.json().catch(() => ({}));
     const recipeId: string | undefined = body.recipe_id;
+    // 'missing_taxonomy' re-runs the analysis for dishes that lack dish kind / cooking
+    // method links (e.g. seeded or pre-taxonomy dishes that already have a health score).
+    const missingTaxonomy = body.mode === 'missing_taxonomy';
 
     try {
         let query = adminSupabase
@@ -26,6 +29,8 @@ export async function POST(request: Request) {
 
         if (recipeId) {
             query = query.eq('id', recipeId);
+        } else if (missingTaxonomy) {
+            query = query.or('dish_kind_id.is.null,cooking_method_id.is.null').limit(50);
         } else {
             query = query.is('health_score', null).limit(50);
         }
@@ -40,7 +45,11 @@ export async function POST(request: Request) {
             return NextResponse.json({
                 success: true,
                 updated: 0,
-                message: recipeId ? 'Recipe not found' : 'All dishes have a health score',
+                message: recipeId
+                    ? 'Recipe not found'
+                    : missingTaxonomy
+                        ? 'All dishes are linked to taxonomy terms'
+                        : 'All dishes have a health score',
             });
         }
 

@@ -1,7 +1,7 @@
 'use client'
 
 import { useMemo, useState } from 'react'
-import { backfillDishEmbeddingsAction, backfillHealthScoresAction } from '../actions'
+import { backfillDishEmbeddingsAction, backfillHealthScoresAction, linkTaxonomyAction } from '../actions'
 import { toast } from 'sonner'
 
 type RecipeData = {
@@ -13,12 +13,13 @@ type RecipeData = {
   hasEmbedding: boolean
   healthScore: number | null
   healthVerdict: string | null
+  hasTaxonomy: boolean
   createdAt: string
   updatedAt: string
   mealCount: number
 }
 
-type Filter = 'all' | 'needs_embedding' | 'needs_health'
+type Filter = 'all' | 'needs_embedding' | 'needs_health' | 'needs_taxonomy'
 
 export default function RecipesListClient({ initialData }: { initialData: RecipeData[] }) {
   const [recipes] = useState<RecipeData[]>(initialData)
@@ -27,6 +28,7 @@ export default function RecipesListClient({ initialData }: { initialData: Recipe
 
   const needsEmbeddingCount = recipes.filter(r => !r.hasEmbedding).length
   const needsHealthCount = recipes.filter(r => r.healthScore === null).length
+  const needsTaxonomyCount = recipes.filter(r => !r.hasTaxonomy).length
 
   const handleBackfillEmbeddings = () => {
     toast.promise(
@@ -50,10 +52,22 @@ export default function RecipesListClient({ initialData }: { initialData: Recipe
     )
   }
 
+  const handleLinkTaxonomy = () => {
+    toast.promise(
+      linkTaxonomyAction(),
+      {
+        loading: 'Linking taxonomy terms...',
+        success: (res) => res.message || `Linked ${res.updated} dish(es)${res.failed ? `, ${res.failed} skipped` : ''}`,
+        error: (err) => `Failed to link taxonomy: ${err.message}`
+      }
+    )
+  }
+
   const filtered = useMemo(() => {
     return recipes.filter(r => {
       if (filter === 'needs_embedding' && r.hasEmbedding) return false
       if (filter === 'needs_health' && r.healthScore !== null) return false
+      if (filter === 'needs_taxonomy' && r.hasTaxonomy) return false
       if (query && !r.name.toLowerCase().includes(query.toLowerCase())) return false
       return true
     })
@@ -71,6 +85,9 @@ export default function RecipesListClient({ initialData }: { initialData: Recipe
           </FilterButton>
           <FilterButton active={filter === 'needs_health'} onClick={() => setFilter('needs_health')}>
             Needs health score ({needsHealthCount})
+          </FilterButton>
+          <FilterButton active={filter === 'needs_taxonomy'} onClick={() => setFilter('needs_taxonomy')}>
+            Needs taxonomy ({needsTaxonomyCount})
           </FilterButton>
         </div>
         <div className="flex gap-2 items-center">
@@ -94,6 +111,13 @@ export default function RecipesListClient({ initialData }: { initialData: Recipe
             className="bg-black text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-gray-800 disabled:opacity-50 whitespace-nowrap"
           >
             Generate Health Scores
+          </button>
+          <button
+            onClick={handleLinkTaxonomy}
+            disabled={needsTaxonomyCount === 0}
+            className="bg-black text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-gray-800 disabled:opacity-50 whitespace-nowrap"
+          >
+            Link Taxonomy
           </button>
         </div>
       </div>

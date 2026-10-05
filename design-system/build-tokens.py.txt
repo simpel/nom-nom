@@ -1,0 +1,110 @@
+#!/usr/bin/env python3
+"""Rebuild project/tokens.css from project/tokens.json.
+
+tokens.json is the source of truth. tokens.css is generated — never hand-edit it.
+Run from the project directory: python3 build-tokens.py
+"""
+import json
+import sys
+
+FAMILY_ORDER = [
+    "color", "spacing", "radius", "shadow", "opacity", "container",
+    "text", "font-weight", "tracking", "leading", "border-width", "motion",
+]
+
+
+def decls(tokens, theme=None):
+    out = []
+    for t in tokens:
+        v = t["value"]
+        if isinstance(v, dict):
+            if theme is None:
+                continue
+            raw = v.get(theme)
+            if raw is None:
+                if theme == "dark":
+                    continue          # light-only token: emitted once in the light block
+                raw = v.get("light")
+        else:
+            if theme == "dark":
+                continue
+            raw = v
+        if isinstance(raw, str) and raw.startswith("{") and raw.endswith("}"):
+            raw = "var(--%s)" % raw[1:-1]
+        name = t["name"].replace(".", "\\.")
+        note = (" /* %s */" % t["usage"]) if t.get("usage") else ""
+        out.append("  --%s: %s;%s" % (name, raw, note))
+    return out
+
+
+def type_composites(type_family):
+    """Composite font shorthands, written as references so a step can only change in one place."""
+    size_for = {
+        "xs": "text-xl", "sm": "text-2xl", "md": "text-3xl", "lg": "text-4xl", "xl": "text-5xl",
+    }
+    sans_size = {
+        "xs": "text-xs", "sm": "text-sm", "md": "text-base", "lg": "text-lg", "xl": "text-xl",
+    }
+    lead = {1: "leading-none", 1.25: "leading-tight", 1.375: "leading-snug", 1.5: "leading-normal"}
+    out = []
+    for group in type_family["groups"]:
+        serif = group["family"] == "serif"
+        for st in group["styles"]:
+            step = st["name"].split("-")[1]
+            size = (size_for if serif else sans_size)[step]
+            lh = lead[st["lineHeight"]]
+            fam = "font-" + st.get("family", group["family"])
+            note = (" /* %s */" % st["usage"]) if st.get("usage") else ""
+            out.append("  --text-%s: var(--font-weight-normal) var(--%s)/var(--%s) var(--%s);%s"
+                       % (st["name"], size, lh, fam, note))
+    return out
+
+
+def build(d):
+    L = ["/* Nom Nom — GENERATED from tokens.json by build-tokens.py. Do not hand-edit. */"]
+
+    colors = d["color"]["tokens"]
+    L.append(':root, [data-theme="light"] {')
+    L += decls(colors, "light")
+    L.append("}")
+
+    dark = decls(colors, "dark")
+    L.append('[data-theme="dark"] {')
+    L += dark
+    L.append("}")
+    # The same dark values for people whose OS says dark and who have not chosen light.
+    L.append("@media (prefers-color-scheme: dark) {")
+    L.append('  :root:not([data-theme="light"]) {')
+    L += ["  " + line for line in dark]
+    L.append("  }")
+    L.append("}")
+
+    L.append(":root {")
+    for fam in FAMILY_ORDER:
+        if fam == "color" or fam not in d:
+            continue
+        L += decls(d[fam]["tokens"])
+    for fam, key in (("serif", "families"), ):
+        pass
+    for name, value in d["type"]["families"].items():
+        L.append("  --font-%s: %s;" % (name, value))
+    L += type_composites(d["type"])
+    L.append("}")
+
+    for f in d["type"]["fonts"]:
+        L.append("@font-face {")
+        L.append('  font-family: "%s";' % f["family"])
+        L.append('  src: url("%s") format("truetype");' % f["file"])
+        L.append("  font-weight: %s;" % f["weight"])
+        L.append("  font-style: %s;" % f["style"])
+        L.append("  font-display: swap;")
+        L.append("}")
+
+    return "\n".join(L) + "\n"
+
+
+if __name__ == "__main__":
+    d = json.load(open("tokens.json"))
+    css = build(d)
+    open("tokens.css", "w").write(css)
+    print("tokens.css: %d lines" % css.count("\n"), file=sys.stderr)

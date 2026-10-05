@@ -15,15 +15,13 @@ extension FoodStore {
             id: previewUserID,
             firstName: "Joel",
             lastName: "Sandén",
-            displayName: "Joel",
-            avatarEmoji: "🧑‍🍳"
+            displayName: "Joel"
         )
         let friendProfile = Profile(
             id: friendUserID,
             firstName: "Alice",
             lastName: "Lind",
-            displayName: "Alice",
-            avatarEmoji: "👩‍🌾"
+            displayName: "Alice"
         )
         store.profiles = [
             previewUserID: myProfile,
@@ -35,14 +33,12 @@ extension FoodStore {
             id: UUID(uuidString: "00000000-0000-0000-0000-000000000010")!,
             ownerID: previewUserID,
             name: "Leo",
-            emoji: "👦",
             sortIndex: 0
         )
         let kid2 = Eater(
             id: UUID(uuidString: "00000000-0000-0000-0000-000000000011")!,
             ownerID: previewUserID,
             name: "Maya",
-            emoji: "👧",
             sortIndex: 1
         )
         store.eaters = [kid1, kid2]

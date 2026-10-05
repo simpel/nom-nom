@@ -1,6 +1,7 @@
 import SwiftUI
 
-/// Category drill-down screen displaying recipes in an ultra-minimalist 2-column grid.
+/// Category drill-down: a ScreenHeader with the category photo as its avatar and "Add
+/// recipe" as the one action, then the recipes in a two-column grid.
 struct CategoryRecipesView: View {
     let categoryName: String
     let displayName: String
@@ -55,82 +56,60 @@ struct CategoryRecipesView: View {
     var body: some View {
         Group {
             if rawRecipes.isEmpty {
-                VStack(spacing: DS.Spacing.md) {
-                    CategoryHeroCoverCard(category: currentCategoryItem, count: 0)
-                        .padding(.top, DS.Spacing.sm)
+                VStack(spacing: DS.Spacing.block) {
+                    header.padding(.top, DS.Spacing.s5)
 
-                    ContentUnavailableView {
-                        Label("No \(displayName) recipes", systemImage: "fork.knife")
-                    } description: {
-                        Text("Add a new recipe categorized under \(displayName) to see it here.")
-                    } actions: {
-                        AppButton("Create Recipe", variant: .primary, style: .normal, size: .md) {
-                            showingCreateSheet = true
-                        }
-                    }
+                    EmptyState(
+                        "No \(displayName) recipes yet",
+                        message: "Add a \(displayName) recipe and it will show up here.",
+                        action: EmptyStateAction("Add recipe") { showingCreateSheet = true }
+                    )
+                    .padding(.horizontal, DS.Spacing.gutter)
+                    Spacer(minLength: 0)
                 }
             } else if displayedRecipes.isEmpty {
-                VStack(spacing: DS.Spacing.md) {
-                    CategoryHeroCoverCard(category: currentCategoryItem, count: rawRecipes.count)
-                        .padding(.top, DS.Spacing.sm)
+                VStack(spacing: DS.Spacing.block) {
+                    header.padding(.top, DS.Spacing.s5)
 
-                    ContentUnavailableView {
-                        Label("No matching recipes", systemImage: "line.3.horizontal.decrease")
-                    } description: {
-                        Text("Try loosening your effort or rating filters.")
-                    } actions: {
-                        AppButton("Reset Filters", variant: .neutral, style: .outlined, size: .md) {
+                    // README case "Filters found nothing".
+                    EmptyState(
+                        "Nothing with these filters",
+                        message: "Effort and rating narrow the list the most.",
+                        action: EmptyStateAction("Clear filters", variant: .secondary) {
                             filterCriteria = RecipeFilterCriteria()
                         }
-                    }
+                    )
+                    .padding(.horizontal, DS.Spacing.gutter)
+                    Spacer(minLength: 0)
                 }
             } else {
                 ScrollView {
-                    VStack(alignment: .leading, spacing: DS.Spacing.md) {
-                        CategoryHeroCoverCard(category: currentCategoryItem, count: rawRecipes.count)
-                        subHeader
-                        MinimalRecipeGrid(recipes: displayedRecipes, onSelect: onSelectRecipe)
+                    VStack(alignment: .leading, spacing: DS.Spacing.block) {
+                        header
+                        MinimalRecipeGrid(recipes: displayedRecipes, title: "Recipes", onSelect: onSelectRecipe)
                     }
-                    .padding(.top, DS.Spacing.sm)
-                    .padding(.bottom, DS.Spacing.screenBottom)
+                    .padding(.top, DS.Spacing.s5)
+                    .padding(.bottom, DS.Spacing.s11)
                 }
             }
         }
         .background(DS.Color.bg)
-        .screenTitle(displayName)
+        .screenTitle("", displayMode: .inline)
         .toolbar {
-            ToolbarItemGroup(placement: .topBarTrailing) {
-                AppButton(systemImage: "plus", variant: .primary, style: .ghost, size: .sm) {
-                    showingCreateSheet = true
-                }
-                .accessibilityLabel("Create Recipe")
-
-                if isCustomCategory, categoryRecord != nil {
-                    Menu {
-                        Button {
-                            if let record = categoryRecord {
-                                newCategoryName = record.name
-                                showingRenameAlert = true
-                            }
-                        } label: {
-                            Label("Rename Category", systemImage: "pencil")
-                        }
-
-                        Button(role: .destructive) {
-                            showingDeleteConfirm = true
-                        } label: {
-                            Label("Delete Category", systemImage: "trash")
-                        }
-                    } label: {
-                        Image(systemName: "ellipsis.circle")
-                            .font(.body.weight(.medium))
-                            .foregroundStyle(DS.Color.textSecondary)
+            // Navigation toolbars use system buttons (AppButton README "Rules").
+            if !rawRecipes.isEmpty {
+                ToolbarItem(placement: .topBarTrailing) {
+                    RecipeFilterToolbarButton(isFiltered: !filterCriteria.isDefault) {
+                        showingFilterSheet = true
                     }
                 }
             }
+            ToolbarItem(placement: .topBarTrailing) {
+                PageMenu { categoryMenu }
+            }
         }
-        .alert("Rename Category", isPresented: $showingRenameAlert) {
-            TextField("Category Name", text: $newCategoryName)
+        .alert("Rename category", isPresented: $showingRenameAlert) {
+            TextField("Category name", text: $newCategoryName)
             Button("Cancel", role: .cancel) {}
             Button("Save") {
                 if let record = categoryRecord, !newCategoryName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
@@ -143,11 +122,11 @@ struct CategoryRecipesView: View {
             Text("Renaming this kitchen category will update its recipes and regenerate its theme photo.")
         }
         .confirmationDialog(
-            "Delete Category?",
+            "Delete category?",
             isPresented: $showingDeleteConfirm,
             titleVisibility: .visible
         ) {
-            Button("Delete Category & Photo", role: .destructive) {
+            Button("Delete category and photo", role: .destructive) {
                 if let record = categoryRecord {
                     Task {
                         try? await store.deleteCategory(id: record.id)
@@ -169,26 +148,32 @@ struct CategoryRecipesView: View {
         }
     }
 
-    private var subHeader: some View {
-        HStack {
-            Text("\(displayedRecipes.count) recipe\(displayedRecipes.count == 1 ? "" : "s")")
-                .font(.caption.weight(.medium))
-                .monospacedDigit()
-                .foregroundStyle(DS.Color.textSecondary)
-
-            Spacer()
-
-            AppButton(
-                filterCriteria.isDefault ? "Sort & Filter" : "Filtered",
-                variant: filterCriteria.isDefault ? .neutral : .primary,
-                style: .ghost,
-                size: .sm
-            ) {
-                showingFilterSheet = true
+    /// The page menu's category group: Rename and Delete, for custom categories only.
+    @ViewBuilder
+    private var categoryMenu: some View {
+        if isCustomCategory, let record = categoryRecord {
+            Section {
+                Button("Rename category", systemImage: "pencil") {
+                    newCategoryName = record.name
+                    showingRenameAlert = true
+                }
+                Button("Delete category", systemImage: "trash", role: .destructive) {
+                    showingDeleteConfirm = true
+                }
             }
         }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 4)
+    }
+
+    /// The screen's one header: the category photo as the `xl` avatar, "Add recipe" as the action.
+    private var header: some View {
+        ScreenHeader(
+            displayName,
+            eyebrow: "Recipes",
+            avatar: Avatar(category: currentCategoryItem, size: .xl, decorative: true),
+            // An empty category's EmptyState already carries "Add recipe".
+            actions: rawRecipes.isEmpty ? [] : [ScreenHeaderAction(title: "Add recipe") { showingCreateSheet = true }]
+        )
+        .padding(.horizontal, DS.Spacing.gutter)
     }
 }
 

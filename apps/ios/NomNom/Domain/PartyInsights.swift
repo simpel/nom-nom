@@ -83,7 +83,6 @@ enum TasteTrendDirection: String, Hashable, Equatable, Sendable {
 struct MemberTasteMatch: Identifiable, Hashable, Equatable, Sendable {
     let ref: RaterRef
     let name: String
-    let emoji: String
     let matchScore: Int // 0 to 100 percentage
     var mismatchScore: Int { max(0, 100 - matchScore) }
     let ratedMealsCount: Int
@@ -149,7 +148,6 @@ struct PartyHealthInsights: Hashable, Equatable {
 struct MemberTrendSeries: Identifiable, Hashable {
     let ref: RaterRef
     let name: String
-    let emoji: String
     let points: [(date: Date, score: Double)]
 
     var id: RaterRef { ref }
@@ -157,7 +155,6 @@ struct MemberTrendSeries: Identifiable, Hashable {
     static func == (lhs: MemberTrendSeries, rhs: MemberTrendSeries) -> Bool {
         lhs.ref == rhs.ref &&
         lhs.name == rhs.name &&
-        lhs.emoji == rhs.emoji &&
         lhs.points.map(\.date) == rhs.points.map(\.date) &&
         lhs.points.map(\.score) == rhs.points.map(\.score)
     }
@@ -165,7 +162,6 @@ struct MemberTrendSeries: Identifiable, Hashable {
     func hash(into hasher: inout Hasher) {
         hasher.combine(ref)
         hasher.combine(name)
-        hasher.combine(emoji)
         for point in points {
             hasher.combine(point.date)
             hasher.combine(point.score)

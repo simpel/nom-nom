@@ -27,17 +27,20 @@ enum EffortLevel: Int, Codable, CaseIterable, Identifiable, Hashable, TactilePic
         }
     }
 
-    var description: String? {
+    /// The range alone, for tiles that print the unit on a second line.
+    var range: String {
         switch self {
-        case .zeroTo15: return "Quick"
-        case .fifteenTo30: return "Weeknight"
-        case .thirtyTo60: return "Standard"
-        case .over60: return "Slow cook"
+        case .zeroTo15: return "0–15"
+        case .fifteenTo30: return "15–30"
+        case .thirtyTo60: return "30–60"
+        case .over60: return "60+"
         }
     }
 
+    var description: String? { "min" }
+
     var tint: Color {
-        DS.Color.accent
+        DS.Color.primary
     }
 
     var title: String { label }
@@ -78,7 +81,7 @@ enum RotationGoal: Int, Codable, CaseIterable, Identifiable, Hashable, TactilePi
     }
 
     var tint: Color {
-        DS.Color.accent
+        DS.Color.primary
     }
 
     var title: String { label }

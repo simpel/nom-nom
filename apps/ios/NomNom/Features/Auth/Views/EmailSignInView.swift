@@ -10,7 +10,7 @@ struct EmailSignInView: View {
 
     var body: some View {
         ScrollView {
-            VStack(spacing: DS.Spacing.sectionLarge) {
+            VStack(spacing: DS.Spacing.s10) {
                 header
 
                 switch auth.step {
@@ -24,9 +24,9 @@ struct EmailSignInView: View {
                 developmentHint
                 #endif
             }
-            .padding(.horizontal, 24)
-            .padding(.bottom, DS.Spacing.screenBottom)
-            .frame(maxWidth: 460)
+            .padding(.horizontal, DS.Spacing.s6)
+            .padding(.bottom, DS.Spacing.s11)
+            .frame(maxWidth: DS.Container.sm)
             .frame(maxWidth: .infinity)
         }
         .background(DS.Color.bg)
@@ -40,25 +40,24 @@ struct EmailSignInView: View {
     // MARK: - Header
 
     private var header: some View {
-        PageHeader(
-            title: auth.step == .email ? "Sign in with email" : "Check your inbox",
-            subtitle: auth.step == .email
+        ScreenHeader(
+            auth.step == .email ? "Sign in with email" : "Check your inbox",
+            summary: auth.step == .email
                 ? "Enter your email and we'll send you a six-digit verification code."
-                : "Enter the code we mailed to complete sign in."
+                : "Enter the code we mailed to complete sign in.",
+            role: .moment
         )
-        .padding(.top, DS.Spacing.screenTop)
+        .padding(.top, DS.Spacing.s5)
     }
 
     // MARK: - Step one: Email
 
     private var emailStep: some View {
-        VStack(spacing: 14) {
+        VStack(spacing: DS.Spacing.s3_5) {
             Input(
                 "you@example.com",
                 text: $email,
-                size: .xl,
-                shape: .capsule,
-                isError: auth.errorMessage != nil,
+                error: auth.errorMessage,
                 isFocused: $emailFocused
             )
             .textContentType(.emailAddress)
@@ -73,35 +72,19 @@ struct EmailSignInView: View {
                 }
             }
 
-            if let message = auth.errorMessage {
-                Text(message)
-                    .font(.subheadline)
-                    .foregroundStyle(DS.Color.textSecondary)
-                    .multilineTextAlignment(.center)
-            }
-
-            AppButton(
-                "Email me a code",
-                variant: .primary,
-                style: .normal,
-                size: .xl,
-                isFullWidth: true,
-                isPending: auth.isWorking,
-                disabled: auth.isWorking || email.trimmingCharacters(in: .whitespaces).isEmpty,
-                action: send
-            )
+            AppButton("Email me a code", size: .lg, fullWidth: true, isLoading: auth.isWorking, action: send)
+                .disabled(email.trimmingCharacters(in: .whitespaces).isEmpty)
         }
-        .animation(.easeInOut(duration: 0.2), value: auth.errorMessage)
+        .animation(DS.Motion.state, value: auth.errorMessage)
         .onAppear { emailFocused = true }
     }
 
     // MARK: - Step two: Code
 
     private func codeStep(sentTo address: String) -> some View {
-        VStack(spacing: 14) {
+        VStack(spacing: DS.Spacing.s3_5) {
             Text("We sent a code to **\(address)**")
-                .font(.subheadline)
-                .multilineTextAlignment(.center)
+                .textStyle(.sansMd, tone: .secondary, align: .center)
 
             OTPCodeField(
                 code: $code,
@@ -115,56 +98,41 @@ struct EmailSignInView: View {
                     }
                 }
             )
-            .padding(.vertical, 4)
+            .padding(.vertical, DS.Spacing.s1)
 
             if auth.errorMessage != nil {
-                HStack(spacing: 6) {
+                HStack(spacing: DS.Spacing.s1_5) {
                     Text("The code didn't work.")
-                        .foregroundStyle(DS.Color.textSecondary)
+                        .textStyle(.sansSm, tone: .secondary)
 
-                    AppButton("Send new code", variant: .neutral, style: .ghost, size: .sm) {
+                    AppButton("Send new code", variant: .secondary, appearance: .ghost, size: .sm) {
                         code = ""
                         auth.errorMessage = nil
                         Task { await auth.sendCode(to: address) }
                     }
                 }
-                .font(.subheadline)
                 .transition(.opacity)
             }
 
-            AppButton(
-                "Sign in",
-                variant: .primary,
-                style: .normal,
-                size: .xl,
-                isFullWidth: true,
-                isPending: auth.isWorking,
-                disabled: auth.isWorking || code.count < 6,
-                action: { verify() }
-            )
+            AppButton("Sign in", size: .lg, fullWidth: true, isLoading: auth.isWorking) { verify() }
+                .disabled(code.count < 6)
 
-            AppButton(
-                "Use a different address",
-                variant: .neutral,
-                style: .ghost,
-                size: .xl,
-                isFullWidth: true,
-                disabled: auth.isWorking
-            ) {
+            AppButton("Use a different address", variant: .secondary, appearance: .ghost, size: .lg, fullWidth: true) {
                 code = ""
                 auth.startOver()
             }
+            .disabled(auth.isWorking)
 
             #if DEBUG
             if ReviewerAccount.isReviewerEmail(address) {
-                AppButton("Fill reviewer code (\(ReviewerAccount.code))", variant: .neutral, style: .outlined, size: .sm) {
+                AppButton("Fill reviewer code (\(ReviewerAccount.code))", variant: .secondary, appearance: .outline, size: .sm) {
                     code = ReviewerAccount.code
                     verify(code: ReviewerAccount.code)
                 }
             }
             #endif
         }
-        .animation(.easeInOut(duration: 0.2), value: auth.errorMessage)
+        .animation(DS.Motion.state, value: auth.errorMessage)
     }
 
     // MARK: - Actions
@@ -181,26 +149,14 @@ struct EmailSignInView: View {
     }
 
     #if DEBUG
+    /// Debug-only shortcut: a pressable ListRow in a list Card.
     private var developmentHint: some View {
-        Button {
-            email = ReviewerAccount.email
-            send()
-        } label: {
-            HStack {
-                Text("Fill test account")
-                    .font(.footnote.weight(.medium))
-                Spacer()
-                Text(ReviewerAccount.email)
-                    .font(.footnote)
-                    .foregroundStyle(DS.Color.textSecondary)
-            }
-            .padding(12)
-            .background {
-                RoundedRectangle(cornerRadius: AppRadius.card, style: .continuous)
-                    .fill(DS.Color.sunken)
+        Card(layout: .list) {
+            ListRow("Fill test account", meta: ReviewerAccount.email) {
+                email = ReviewerAccount.email
+                send()
             }
         }
-        .buttonStyle(.plain)
     }
     #endif
 }

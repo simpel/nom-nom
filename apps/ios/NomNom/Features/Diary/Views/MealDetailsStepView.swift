@@ -1,33 +1,27 @@
 import SwiftUI
 
-/// Step 2 of logging a meal: Photos, cooking time / effort, and dinner parties.
+/// Step 2 (last) of logging a meal: Photos, cooking time / effort, and dinner parties.
 struct MealDetailsStepView: View {
     @Binding var draft: FoodStore.MealDraft
     var onDismiss: () -> Void
 
     @Environment(FoodStore.self) private var store
 
-    @State private var navigateToVerdict = false
     @State private var isSaving = false
-
-    private var isEditing: Bool { draft.mealID != nil }
 
     var body: some View {
         ScrollView {
-            VStack(spacing: DS.Spacing.section) {
-                MealPhotosPickerSection(
-                    draft: Binding(
-                        get: { draft.photos },
-                        set: { draft.photos = $0 }
-                    )
+            VStack(spacing: DS.Spacing.block) {
+                Input(
+                    "Name this meal",
+                    label: "Name (optional)",
+                    text: $draft.mealTitle,
+                    hint: "Leave blank to use \(draft.dishName)."
                 )
 
-                MealEditorCookingTimeSection(
-                    effort: Binding(
-                        get: { draft.effort },
-                        set: { draft.effort = $0 }
-                    )
-                )
+                AssetPhotosPickerSection(draft: $draft.photos)
+
+                MealEditorCookingTimeSection(effort: $draft.effort)
 
                 MealEditorPartiesSection(
                     selectedParties: Binding(
@@ -36,36 +30,28 @@ struct MealDetailsStepView: View {
                     )
                 )
             }
-            .padding(.horizontal, DS.Spacing.screenHorizontal)
-            .padding(.top, DS.Spacing.screenTop)
-            .padding(.bottom, DS.Spacing.screenBottom)
+            .padding(.horizontal, DS.Spacing.gutter)
+            .padding(.top, DS.Spacing.s5)
+            .padding(.bottom, DS.Spacing.s11)
         }
-        .background(DS.Color.bg)
+        .background(DS.Color.sheet)
         .screenTitle("Details", displayMode: .inline)
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
                 if isSaving {
                     ProgressView().controlSize(.small)
-                } else if isEditing {
+                } else {
                     Button {
                         save()
                     } label: {
                         Image(systemName: "checkmark")
                             .fontWeight(.semibold)
                     }
-                } else {
-                    Button("Next") {
-                        navigateToVerdict = true
-                    }
-                    .fontWeight(.semibold)
+                    .barItemStyle()
                 }
             }
         }
-        .navigationDestination(isPresented: $navigateToVerdict) {
-            MealVerdictStepView(draft: draft, onDismiss: onDismiss)
-        }
         .interactiveDismissDisabled(isSaving)
-        .presentationDragIndicator(.visible)
         .simultaneousGesture(
             DragGesture(minimumDistance: 30)
                 .onEnded { value in

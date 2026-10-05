@@ -8,6 +8,9 @@ struct TaxonomyTermRecord: Identifiable, Hashable, Decodable, Sendable {
     let slug: String
     let name: String
     let aliases: [String]
+    /// What the term says about a dish (`crust`, `saucy`, `raw`, …): decides which
+    /// rating tags a meal offers. Only dish kinds and cooking methods carry them.
+    let ratingTraits: [String]
     let createdAt: Date
     let updatedAt: Date
 
@@ -17,6 +20,7 @@ struct TaxonomyTermRecord: Identifiable, Hashable, Decodable, Sendable {
         case slug
         case name
         case aliases
+        case ratingTraits = "rating_traits"
         case createdAt = "created_at"
         case updatedAt = "updated_at"
     }
@@ -28,6 +32,7 @@ struct TaxonomyTermRecord: Identifiable, Hashable, Decodable, Sendable {
         slug = try container.decode(String.self, forKey: .slug)
         name = try container.decode(String.self, forKey: .name)
         aliases = try container.decodeIfPresent([String].self, forKey: .aliases) ?? []
+        ratingTraits = try container.decodeIfPresent([String].self, forKey: .ratingTraits) ?? []
         createdAt = try container.decodeTimestamp(.createdAt)
         updatedAt = try container.decodeTimestamp(.updatedAt)
     }
@@ -38,6 +43,7 @@ struct TaxonomyTermRecord: Identifiable, Hashable, Decodable, Sendable {
         slug: String,
         name: String,
         aliases: [String] = [],
+        ratingTraits: [String] = [],
         createdAt: Date = .now,
         updatedAt: Date = .now
     ) {
@@ -46,9 +52,8 @@ struct TaxonomyTermRecord: Identifiable, Hashable, Decodable, Sendable {
         self.slug = slug
         self.name = name
         self.aliases = aliases
+        self.ratingTraits = ratingTraits
         self.createdAt = createdAt
         self.updatedAt = updatedAt
     }
 }
-
-typealias DishKindRecord = TaxonomyTermRecord

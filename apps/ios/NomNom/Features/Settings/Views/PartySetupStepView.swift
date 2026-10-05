@@ -13,62 +13,26 @@ struct PartySetupStepView: View {
     @Environment(FoodStore.self) private var store
     @State private var isSaving = false
     @State private var errorMessage: String?
-    @State private var resentAlertMessage: String?
 
     private var isEditing: Bool { partyID != nil }
     private var party: Party? { partyID.flatMap { store.party($0) } }
     private var invites: [PartyInvite] {
         guard let partyID else { return [] }
-        return store.invites(forParty: partyID)
+        return store.pendingInvites(forParty: partyID)
     }
 
     var body: some View {
-        ScrollView {
-            VStack(spacing: DS.Spacing.section) {
-                if let party {
-                    PartyInviteLinkCard(party: party)
-                }
-
-                if party != nil && !invites.isEmpty {
-                    invitesSection
-                }
-
-                membersSection
-
-                SectionCard("Sharing & Visibility") {
-                    VStack(alignment: .leading, spacing: 6) {
-                        Toggle("Make dinner party public", isOn: $isPublic)
-                            .font(.body.weight(.medium))
-                            .nativeToggle()
-
-                        Text("When enabled, other foodies can discover and follow this dinner party.")
-                            .font(.caption)
-                            .foregroundStyle(DS.Color.textSecondary)
-                    }
-                }
+        SheetBody {
+            if let party {
+                PartyInviteLinkCard(party: party)
             }
-            .padding(.horizontal, DS.Spacing.screenHorizontal)
-            .padding(.top, DS.Spacing.screenTop)
-            .padding(.bottom, DS.Spacing.screenBottom)
+
+            membersSection
+
+            VisibilityToggleCard.party(isPublic: $isPublic)
         }
-        .background(DS.Color.bg)
-        .screenTitle("Party Setup", displayMode: .inline)
-        .toolbar {
-            ToolbarItem(placement: .topBarTrailing) {
-                if isSaving {
-                    ProgressView().controlSize(.small)
-                } else {
-                    Button {
-                        save()
-                    } label: {
-                        Image(systemName: "checkmark")
-                            .fontWeight(.semibold)
-                    }
-                }
-            }
-        }
-        .presentationDragIndicator(.visible)
-        .interactiveDismissDisabled(isSaving)
+        .screenTitle("Party setup", displayMode: .inline)
+        .stepCommitToolbar(isSaving: isSaving, onSave: save)
         .alert("Couldn't save dinner party",
                isPresented: Binding(get: { errorMessage != nil },
                                     set: { if !$0 { errorMessage = nil } })) {
@@ -76,125 +40,27 @@ struct PartySetupStepView: View {
         } message: {
             Text(errorMessage ?? "")
         }
-        .alert("Invitation Resent", isPresented: Binding(
-            get: { resentAlertMessage != nil },
-            set: { if !$0 { resentAlertMessage = nil } }
-        )) {
-            Button("OK") { resentAlertMessage = nil }
-        } message: {
-            Text(resentAlertMessage ?? "")
-        }
     }
 
     private var membersSection: some View {
-        SectionCard("Members") {
-            if let party {
-                let members = store.members(of: party.id)
-                VStack(spacing: 8) {
-                    ForEach(members) { member in
-                        HStack(spacing: 12) {
-                            UserAvatar(profile: member, size: 32)
-
-                            VStack(alignment: .leading, spacing: 2) {
-                                Text(member.shownName)
-                                    .font(.body)
-                                    .foregroundStyle(DS.Color.textPrimary)
-                                Text(member.id == party.createdBy ? "Host" : "Member")
-                                    .font(.caption2)
-                                    .foregroundStyle(DS.Color.textSecondary)
-                            }
-
-                            Spacer()
-                        }
-                        .padding(.vertical, DS.Spacing.sm)
-
-                        if member.id != members.last?.id {
-                            Divider()
-                        }
+        DSSection("Members") {
+            Card(layout: .list) {
+                if let party {
+                    ForEach(store.members(of: party.id)) { member in
+                        ListRow(
+                            member.shownName,
+                            meta: member.id == party.createdBy ? "Host" : "Member",
+                            leading: .avatar(Avatar(profile: member, size: .sm, decorative: true))
+                        )
                     }
-                }
-            } else {
-                HStack(spacing: 12) {
-                    ZStack {
-                        Circle()
-                            .fill(DS.Color.accentSoft)
-                            .frame(width: 40, height: 40)
-                        Image(systemName: "person.badge.shield.checkmark")
-                            .font(.system(size: 17, weight: .semibold))
-                            .foregroundStyle(DS.Color.accentText)
-                    }
-
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text("You (Host)")
-                            .font(.subheadline.weight(.semibold))
-                            .foregroundStyle(DS.Color.textPrimary)
-
-                        Text("You will be able to share invite links and invite friends as soon as this party is created.")
-                            .font(.caption)
-                            .foregroundStyle(DS.Color.textSecondary)
-                    }
-                }
-                .padding(.vertical, DS.Spacing.sm)
-            }
-        }
-    }
-
-    private var invitesSection: some View {
-        SectionCard("Invited") {
-            VStack(spacing: 8) {
-                ForEach(invites) { invite in
-                    HStack(spacing: 12) {
-                        Image(systemName: "envelope")
-                            .foregroundStyle(DS.Color.textSecondary)
-
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text(invite.inviteeEmail ?? "Invited member")
-                                .font(.subheadline)
-                                .foregroundStyle(DS.Color.textPrimary)
-                            Text(invite.status.rawValue.capitalized)
-                                .font(.caption2)
-                                .foregroundStyle(invite.status == .pending ? DS.Color.accentText : DS.Color.textSecondary)
-                        }
-
-                        Spacer()
-
-                        if invite.isPending {
-                            HStack(spacing: 8) {
-                                AppButton("Resend", variant: .secondary, style: .outlined, size: .sm) {
-                                    Task {
-                                        let success = await store.resendPartyInvite(invite)
-                                        if success {
-                                            resentAlertMessage = "Invitation resent to \(invite.inviteeEmail ?? "member")."
-                                        } else {
-                                            errorMessage = store.errorMessage
-                                            store.errorMessage = nil
-                                        }
-                                    }
-                                }
-
-                                AppButton(
-                                    systemImage: "trash",
-                                    variant: .destructive,
-                                    style: .ghost,
-                                    size: .sm
-                                ) {
-                                    Task {
-                                        await store.revokePartyInvite(invite)
-                                        if let message = store.errorMessage {
-                                            errorMessage = message
-                                            store.errorMessage = nil
-                                        }
-                                    }
-                                }
-                                .accessibilityLabel("Revoke invite")
-                            }
-                        }
-                    }
-                    .padding(.vertical, DS.Spacing.sm)
-
-                    if invite.id != invites.last?.id {
-                        Divider()
-                    }
+                    ForEach(invites) { PartyInviteRow(invite: $0) }
+                } else {
+                    // One line of meta (ListRow README); invites open once the party exists.
+                    ListRow(
+                        "You",
+                        meta: "Host \u{00B7} invite people once the party is created",
+                        leading: .avatar(Avatar(name: store.myProfile?.shownName ?? "You", size: .sm, decorative: true))
+                    )
                 }
             }
         }
@@ -207,15 +73,12 @@ struct PartySetupStepView: View {
         UIImpactFeedbackGenerator(style: .medium).impactOccurred()
         Task {
             if let party {
-                let photoData = photoDraft.addedData.first
-                let removePhoto = photoDraft.isEmpty && party.photoPath != nil
                 await store.updateParty(
                     party,
                     name: partyName,
                     about: about,
                     isPublic: isPublic,
-                    newPhotoData: photoData,
-                    removePhoto: removePhoto
+                    photos: photoDraft
                 )
                 isSaving = false
                 if store.errorMessage == nil {
@@ -226,12 +89,11 @@ struct PartySetupStepView: View {
                     store.errorMessage = nil
                 }
             } else {
-                let photoData = photoDraft.addedData.first
                 if let newParty = await store.createParty(
                     name: partyName,
                     about: about,
                     isPublic: isPublic,
-                    photoData: photoData
+                    photos: photoDraft.addedData
                 ) {
                     store.currentParty = newParty
                     onCreated?(newParty)
