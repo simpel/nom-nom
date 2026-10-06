@@ -8,6 +8,8 @@ struct MealsView: View {
     @State private var editorTarget: MealEditorTarget?
 
     @State private var mealToRemove: Meal?
+    @State private var mealToRemind: Meal?
+    @State private var openMealID: UUID?
 
     private var currentMeals: [Meal] {
         store.activeMeals
@@ -43,12 +45,11 @@ struct MealsView: View {
                                         mealToRemove = meal
                                     }
                                 ) { meal in
-                                    NavigationLink {
-                                        MealDetailView(mealID: meal.id)
-                                    } label: {
-                                        MealRow(meal: meal, metaStyle: .ratingProgress, isMinimal: true)
-                                    }
-                                    .buttonStyle(ListRowButtonStyle())
+                                    MealRow(
+                                        meal: meal, metaStyle: .ratingProgress, isMinimal: true,
+                                        action: { openMealID = meal.id },
+                                        onRemind: { mealToRemind = meal }
+                                    )
                                     .contextMenu {
                                         if meal.createdBy == store.userID {
                                             Button {
@@ -77,6 +78,12 @@ struct MealsView: View {
             .mainTabToolbar()
             .sheet(item: $editorTarget) { target in
                 MealEditorView(mealID: target.mealID)
+            }
+            .sheet(item: $mealToRemind) { meal in
+                RemindRatersSheet(meal: meal)
+            }
+            .navigationDestination(item: $openMealID) { mealID in
+                MealDetailView(mealID: mealID)
             }
             .alert(
                 "Delete Meal?",

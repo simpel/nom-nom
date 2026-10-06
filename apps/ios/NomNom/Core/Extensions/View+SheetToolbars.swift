@@ -9,11 +9,15 @@ extension View {
     /// DS grabber (`spacing-10` × `spacing-1.5`, `radius-sm`, `grabber`, `spacing-2`
     /// from the top) in place of the system drag indicator. Apply to the sheet's root
     /// view; lay its content out with `SheetBody`. The scrim is the system dimming
-    /// (DS-GAPS.md).
-    func dsSheet(detents: Set<PresentationDetent> = [.large], pro: Bool = false) -> some View {
+    /// (DS-GAPS.md). Pass `selection` to drive the detent (a sheet sized to its content).
+    func dsSheet(
+        detents: Set<PresentationDetent> = [.large],
+        selection: Binding<PresentationDetent>? = nil,
+        pro: Bool = false
+    ) -> some View {
         self
             .overlay(alignment: .top) { SheetGrabber() }
-            .presentationDetents(detents)
+            .modifier(SheetDetents(detents: detents, selection: selection))
             .presentationDragIndicator(.hidden)
             .presentationBackground(pro ? DS.Color.proSoft : DS.Color.sheet)
             .presentationCornerRadius(DS.Radius.xl4)
@@ -101,6 +105,21 @@ extension View {
             onPrimaryAction: onPrimaryAction,
             onClose: onClose
         ))
+    }
+}
+
+/// `presentationDetents`, with the selection when the sheet drives its own detent.
+private struct SheetDetents: ViewModifier {
+    let detents: Set<PresentationDetent>
+    let selection: Binding<PresentationDetent>?
+
+    @ViewBuilder
+    func body(content: Content) -> some View {
+        if let selection {
+            content.presentationDetents(detents, selection: selection)
+        } else {
+            content.presentationDetents(detents)
+        }
     }
 }
 
