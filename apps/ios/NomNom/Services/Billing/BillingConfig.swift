@@ -12,7 +12,7 @@ enum BillingConfig {
     #else
     /// RevenueCat Public API Key for Production
     /// (Replace with live key when deploying)
-    static let revenueCatKey = "test_POkASvbxfrOxxzZbnPjsTqLLEzG"
+    static let revenueCatKey = "appl_mjcGoFuwMSsgiDmnpAIRXaseutb"
     #endif
     
     /// The Entitlement ID set up in your RevenueCat Dashboard
