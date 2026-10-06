@@ -14,14 +14,19 @@ enum MealRowMeta {
 /// One meal in a list: a ListRow with the meal's PhotoCard thumbnail, the dish name,
 /// a meta line and its score. Place it in a `Card(layout: .list)`.
 ///
-/// With `.ratingProgress` the trailing slot is a "Not rated" Badge until the viewer
-/// has rated, then the meal's ScoreValue.
+/// With `.ratingProgress` the trailing slot is the meal's ScoreValue, or, while nobody
+/// has rated and `onRemind` is set, a "Remind" AppButton that splits the row.
 struct MealRow: View {
     let meal: Meal
     var raterRef: RaterRef? = nil
     var metaStyle: MealRowMeta = .parties
     /// Parties only in the meta line and no chevron.
     var isMinimal: Bool = false
+    /// Makes the row pressable (opens the meal). Needed instead of a wrapping
+    /// NavigationLink when the row carries a Remind button.
+    var action: (() -> Void)? = nil
+    /// Opens RemindRatersSheet.
+    var onRemind: (() -> Void)? = nil
 
     @Environment(FoodStore.self) private var store
 
@@ -69,7 +74,16 @@ struct MealRow: View {
         return pending > 0 ? ListRowMetaAccent(text: "Waiting on \(pending)") : nil
     }
 
+    /// A `primary soft sm` "Remind" while nobody has rated and someone can be nudged.
+    private var showsRemind: Bool {
+        guard onRemind != nil, metaStyle == .ratingProgress else { return false }
+        return raters.allSatisfy { $0.rating == nil } && !store.remindableRaters(forMeal: meal).isEmpty
+    }
+
     private var trailing: ListRowTrailing? {
+        if showsRemind, let onRemind {
+            return .button(AppButton("Remind", appearance: .soft, size: .sm, action: onRemind))
+        }
         return .score(score)
     }
 
@@ -82,7 +96,8 @@ struct MealRow: View {
             metaAccent: waitingOn,
             leading: .photo(.meal(meal)),
             trailing: trailing,
-            chevron: !isMinimal
+            chevron: !isMinimal,
+            action: action
         )
     }
 }

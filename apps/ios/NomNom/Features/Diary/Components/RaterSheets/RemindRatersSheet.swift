@@ -1,6 +1,7 @@
 import SwiftUI
 
-/// "Remind to rate", opened from MealScoreCard's unrated state: a ScreenHeader, then a Card list of
+/// "Remind to rate", opened from MealScoreCard's unrated state and a Meals-list MealRow nobody
+/// has rated yet. It opens just tall enough to show the Remind button: a ScreenHeader, then a Card list of
 /// everyone who hasn't rated, each a ListRow with Avatar `sm` and a Toggle (all on), and
 /// a full-width "Remind" AppButton `lg` that asks or reminds every switched-on person.
 /// Someone inside the one-a-day wait shows "Reminded 3 hr. ago" with the switch off and
@@ -14,34 +15,50 @@ struct RemindRatersSheet: View {
     @State private var didSeed = false
     @State private var isSending = false
     @State private var error: String?
+    /// The blocks' height and the bar + home-indicator insets, measured so the sheet
+    /// opens just tall enough to show the Remind button.
+    @State private var contentHeight: CGFloat = 0
+    @State private var insets: CGFloat = 0
+    @State private var detent: PresentationDetent = .medium
+
+    /// SheetBody's `spacing-2` top and `spacing-10` bottom padding around the blocks.
+    private var fitDetent: PresentationDetent {
+        guard contentHeight > 0 else { return .medium }
+        return .height(insets + DS.Spacing.s2 + contentHeight + DS.Spacing.s10)
+    }
 
     var body: some View {
         let raters = store.remindableRaters(forMeal: meal)
 
         NavigationStack {
             SheetBody {
-                ScreenHeader(
-                    "Remind to rate",
-                    eyebrow: store.dishName(forMeal: meal),
-                    summary: "Each person gets a push, or a note in their inbox. One reminder a day."
-                )
-                Card(layout: .list) {
-                    ForEach(raters) { rater in
-                        if let profile = rater.profile {
-                            row(rater, profile: profile)
+                VStack(alignment: .leading, spacing: DS.Spacing.s6) {
+                    ScreenHeader(
+                        "Remind to rate",
+                        eyebrow: store.dishName(forMeal: meal),
+                        summary: "Each person gets a push, or a note in their inbox. One reminder a day."
+                    )
+                    Card(layout: .list) {
+                        ForEach(raters) { rater in
+                            if let profile = rater.profile {
+                                row(rater, profile: profile)
+                            }
                         }
                     }
+                    AppButton(
+                        selected.count > 1 ? "Remind \(selected.count) people" : "Remind",
+                        size: .lg, fullWidth: true, isLoading: isSending
+                    ) { send() }
+                    .disabled(selected.isEmpty)
                 }
-                AppButton(
-                    selected.count > 1 ? "Remind \(selected.count) people" : "Remind",
-                    size: .lg, fullWidth: true, isLoading: isSending
-                ) { send() }
-                .disabled(selected.isEmpty)
+                .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { contentHeight = $0 }
             }
+            .onGeometryChange(for: CGFloat.self) { $0.safeAreaInsets.top + $0.safeAreaInsets.bottom } action: { insets = $0 }
             .screenTitle("Remind", displayMode: .inline)
             .sheetCloseToolbar()
         }
-        .dsSheet(detents: [.medium, .large])
+        .dsSheet(detents: [fitDetent, .large], selection: $detent)
+        .onChange(of: fitDetent) { _, new in if detent != .large { detent = new } }
         .onAppear { seed(raters) }
         .alert("Couldn\u{2019}t send", isPresented: Binding(get: { error != nil }, set: { if !$0 { error = nil } })) {
             Button("OK") { error = nil }
