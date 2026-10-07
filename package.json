@@ -4,7 +4,9 @@
   "scripts": {
     "build": "turbo run build",
     "dev": "turbo run dev",
-    "lint": "turbo run lint"
+    "lint": "turbo run lint",
+    "ios": "./scripts/ios-run.sh",
+    "ios:install": "./scripts/ios-run.sh --no-launch"
   },
   "devDependencies": {
     "turbo": "latest"
