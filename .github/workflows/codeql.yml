@@ -1,9 +1,12 @@
 name: CodeQL
 
+# Feature PRs target release/* and skip CodeQL (the Swift build takes ~30 min).
+# It runs on each release branch, on the release PR into main, and on main.
 on:
   push:
     branches:
       - main
+      - "release/**"
   pull_request:
     branches:
       - main
