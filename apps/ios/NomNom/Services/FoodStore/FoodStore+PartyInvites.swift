@@ -189,7 +189,17 @@ extension FoodStore {
                 .eq("id", value: invite.id.uuidString)
                 .execute()
 
-            partyMembers.append(member)
+            // Fetch all members now that we have access to the party
+            let allMembers: [PartyMember] = (try? await supabase
+                .from("party_members")
+                .select()
+                .eq("party_id", value: invite.partyID.uuidString)
+                .execute()
+                .value) ?? [member]
+
+            partyMembers.removeAll(where: { $0.partyID == invite.partyID })
+            partyMembers.append(contentsOf: allMembers)
+
             if let idx = partyInvites.firstIndex(where: { $0.id == invite.id }) {
                 partyInvites[idx].status = .accepted
             }
@@ -215,6 +225,7 @@ extension FoodStore {
             reindex()
             // Someone who joined through an invite (and has no party yet) lands in it.
             if currentParty == nil { currentParty = party(invite.partyID) }
+            try? await loadProfiles()
             errorMessage = nil
         } catch let error as PostgrestError where error.code == "23505" {
             if let idx = partyInvites.firstIndex(where: { $0.id == invite.id }) {

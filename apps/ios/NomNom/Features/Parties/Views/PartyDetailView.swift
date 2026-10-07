@@ -96,11 +96,15 @@ struct PartyDetailView: View {
         .screenTitle(showCloseButton ? party.name : "", displayMode: .inline)
         .toolbar { toolbarContent(for: party) }
         .modifier(PartyDetailCloseToolbar(isShown: showCloseButton))
-        .alert("Leave Party?", isPresented: $confirmLeave) {
+        .alert(store.members(of: party.id).count <= 1 ? "Delete Dinner Party?" : "Leave Party?", isPresented: $confirmLeave) {
             Button("Cancel", role: .cancel) {}
-            Button("Leave Party", role: .destructive) { leave(party) }
+            Button(store.members(of: party.id).count <= 1 ? "Delete Party" : "Leave Party", role: .destructive) { leave(party) }
         } message: {
-            Text("You will lose access to meals served to this party. If you are the last member, the party will be deleted.")
+            if store.members(of: party.id).count <= 1 {
+                Text("Since you are the last member, leaving will delete the dinner party.")
+            } else {
+                Text("You will lose access to meals served to this party.")
+            }
         }
         .alert("Something Went Wrong", isPresented: Binding(
             get: { actionError != nil },

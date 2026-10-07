@@ -24,8 +24,8 @@ struct RecipeDetailView: View {
     @State var isAnalyzingHealth = false
     @State var healthAnalysisFailed = false
     @State var showHealthRationale = false
-    @State var isGeneratingPhoto = false
     @State var showCookMode = false
+    @State var shareImage: Image?
 
     init(recipeID: UUID, showCloseButton: Bool = false, focusPartyNote: Bool = false) {
         self.recipeID = recipeID
@@ -50,7 +50,7 @@ struct RecipeDetailView: View {
     var allPhotos: [String] {
         guard let recipe else { return store.photos(for: recipeID) }
         var paths: [String] = []
-        for path in recipe.photoPaths + recipe.recipePhotoPaths where !paths.contains(path) {
+        for path in recipe.photoPaths where !paths.contains(path) {
             paths.append(path)
         }
         return paths

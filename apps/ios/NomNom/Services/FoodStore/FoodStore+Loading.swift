@@ -37,7 +37,18 @@ extension FoodStore {
             self.eaters = try await eaters
             self.ratings = try await ratings
             self.invites = try await invites
-            self.notifications = try await inbox
+            var rawInbox = try await inbox
+            rawInbox.sort { $0.createdAt > $1.createdAt }
+            var uniqueInbox: [AppNotification] = []
+            var seenPartyInvites: Set<UUID> = []
+            for note in rawInbox {
+                if note.kind == .partyInvite, let pID = note.partyID {
+                    if seenPartyInvites.contains(pID) { continue }
+                    seenPartyInvites.insert(pID)
+                }
+                uniqueInbox.append(note)
+            }
+            self.notifications = uniqueInbox
             self.parties = try await parties
             self.partyMembers = try await partyMembers
             self.partyInvites = try await partyInvites
@@ -65,15 +76,15 @@ extension FoodStore {
 
     func loadProfiles() async throws {
         var wanted: Set<UUID> = [userID]
-        wanted.formUnion(meals.map(\.createdBy))
-        wanted.formUnion(dishes.map(\.ownerID))
+        wanted.formUnion(meals.compactMap(\.createdBy))
+        wanted.formUnion(dishes.compactMap(\.ownerID))
         wanted.formUnion(invites.map(\.inviterID))
         wanted.formUnion(invites.compactMap(\.inviteeID))
         wanted.formUnion(ratings.compactMap(\.raterID))
         wanted.formUnion(partyMembers.map(\.userID))
         wanted.formUnion(partyInvites.map(\.inviterID))
         wanted.formUnion(partyInvites.compactMap(\.inviteeID))
-        wanted.formUnion(parties.map(\.createdBy))
+        wanted.formUnion(parties.compactMap(\.createdBy))
         wanted.formUnion(partyFollowers.map(\.userID))
 
         let missing = wanted.subtracting(profiles.keys)

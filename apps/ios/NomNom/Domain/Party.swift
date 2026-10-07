@@ -11,7 +11,7 @@ struct Party: Identifiable, Hashable, Decodable {
     var photoPaths: [String]
     /// Short code that joins the party in onboarding ("I have an invite").
     var inviteCode: String?
-    let createdBy: UUID
+    let createdBy: UUID?
     let createdAt: Date
     var updatedAt: Date
 
@@ -38,7 +38,7 @@ struct Party: Identifiable, Hashable, Decodable {
         photoPaths = try container.decodeIfPresent([String].self, forKey: .photoPaths)
             ?? photoPath.map { [$0] } ?? []
         inviteCode = try container.decodeIfPresent(String.self, forKey: .inviteCode)
-        createdBy = try container.decode(UUID.self, forKey: .createdBy)
+        createdBy = try container.decodeIfPresent(UUID.self, forKey: .createdBy)
         createdAt = try container.decodeTimestamp(.createdAt)
         updatedAt = try container.decodeTimestamp(.updatedAt)
     }
@@ -51,7 +51,7 @@ struct Party: Identifiable, Hashable, Decodable {
         photoPath: String? = nil,
         photoPaths: [String]? = nil,
         inviteCode: String? = nil,
-        createdBy: UUID,
+        createdBy: UUID?,
         createdAt: Date = .now,
         updatedAt: Date = .now
     ) {

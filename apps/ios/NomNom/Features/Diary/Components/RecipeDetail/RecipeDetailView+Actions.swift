@@ -24,6 +24,24 @@ extension RecipeDetailView {
         }
 
         ToolbarItem(placement: .topBarTrailing) {
+            if let recipe {
+                if let shareImage {
+                    ShareLink(item: recipe.shareURL, subject: Text(recipe.name), preview: SharePreview(recipe.name, image: shareImage)) {
+                        Image(systemName: "square.and.arrow.up").fontWeight(.semibold)
+                    }
+                    .accessibilityLabel("Share recipe")
+                    .barItemStyle()
+                } else {
+                    ShareLink(item: recipe.shareURL, subject: Text(recipe.name), preview: SharePreview(recipe.name)) {
+                        Image(systemName: "square.and.arrow.up").fontWeight(.semibold)
+                    }
+                    .accessibilityLabel("Share recipe")
+                    .barItemStyle()
+                }
+            }
+        }
+
+        ToolbarItem(placement: .topBarTrailing) {
             PageMenu { recipeMenu }
         }
     }
@@ -33,12 +51,6 @@ extension RecipeDetailView {
     var recipeMenu: some View {
         if let recipe, recipe.ownerID == store.userID {
             Section {
-                if recipe.photoPaths.isEmpty {
-                    Button(isGeneratingPhoto ? "Generating photo\u{2026}" : "Generate photo", systemImage: "sparkles") {
-                        generatePhoto(for: recipe)
-                    }
-                    .disabled(isGeneratingPhoto)
-                }
                 Button("Edit recipe", systemImage: "pencil") { showEditSheet = true }
                 Button("Delete recipe", systemImage: "trash", role: .destructive) { confirmDeleteRecipe = true }
             }
@@ -70,29 +82,36 @@ extension RecipeDetailView {
             store.upsertLocal(recipe: fallbackRecipe)
         }
 
-        guard entitlements.hasProAccess, let recipe, recipe.healthIndex == nil, !recipe.ingredients.isEmpty, !healthAnalysisFailed else { return }
-        isAnalyzingHealth = true
-        do {
-            // Let the loading placeholder render before a request that may fail instantly.
-            try await Task.sleep(for: .milliseconds(250))
-            try await store.analyzeHealth(for: recipe)
-        } catch {
-            healthAnalysisFailed = true
+        if let recipe, recipe.photoPaths.isEmpty, recipe.ownerID == store.userID, !store.generatingPhotoRecipeIDs.contains(recipe.id) {
+            generatePhoto(for: recipe)
         }
-        isAnalyzingHealth = false
+
+        if entitlements.hasProAccess, let recipe, recipe.healthIndex == nil, !recipe.ingredients.isEmpty, !healthAnalysisFailed {
+            isAnalyzingHealth = true
+            do {
+                // Let the loading placeholder render before a request that may fail instantly.
+                try await Task.sleep(for: .milliseconds(250))
+                try await store.analyzeHealth(for: recipe)
+            } catch {
+                healthAnalysisFailed = true
+            }
+            isAnalyzingHealth = false
+        }
+
+        if let photoPath = self.recipe?.photoPaths.first ?? self.recipe?.recipePhotoPaths.first {
+            if let data = await PhotoCache.shared.data(for: photoPath, bucket: SupabaseConfig.recipeBucket),
+               let uiImage = UIImage(data: data) {
+                shareImage = Image(uiImage: uiImage)
+            }
+        }
     }
 
     func generatePhoto(for recipe: Recipe) {
-        guard !isGeneratingPhoto else { return }
-        isGeneratingPhoto = true
-        UIImpactFeedbackGenerator(style: .medium).impactOccurred()
         Task {
-            defer { isGeneratingPhoto = false }
             do {
                 try await store.generateRecipeImage(for: recipe)
-                UINotificationFeedbackGenerator().notificationOccurred(.success)
             } catch {
-                UINotificationFeedbackGenerator().notificationOccurred(.error)
+                FoodStore.log.error("Failed to generate recipe image: \(error.localizedDescription, privacy: .public)")
             }
         }
     }

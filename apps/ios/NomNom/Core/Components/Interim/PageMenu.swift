@@ -27,22 +27,25 @@ struct PageMenu<Context: View>: View {
     var body: some View {
         Menu {
             context()
-            Section("Dinner party") {
-                if !store.myParties.isEmpty {
-                    Picker("Dinner party", selection: partySelection) {
-                        ForEach(store.myParties) { party in
-                            Text(party.name).tag(Optional(party.id))
+            Section {
+                Menu("Dinner parties", systemImage: "person.2") {
+                    if !store.myParties.isEmpty {
+                        Picker("Dinner party", selection: partySelection) {
+                            ForEach(store.myParties) { party in
+                                Text(party.name).tag(Optional(party.id))
+                            }
                         }
+                        .pickerStyle(.inline)
                     }
-                    .pickerStyle(.inline)
+                    Button("Manage parties", systemImage: "gearshape") { navigator.tab = .parties }
                 }
-                Button("Manage parties", systemImage: "person.2") { navigator.tab = .parties }
             }
             Section {
                 Button { sheet = .inbox } label: {
-                    Label("Inbox", systemImage: "tray")
                     if store.unreadCount > 0 {
-                        Text(store.unreadCount == 1 ? "1 unread" : "\(store.unreadCount) unread")
+                        Label(store.unreadCount == 1 ? "Inbox (1 unread)" : "Inbox (\(store.unreadCount) unread)", systemImage: "tray")
+                    } else {
+                        Label("Inbox", systemImage: "tray")
                     }
                 }
                 Button("My profile", systemImage: "person.crop.circle") { sheet = .profile }

@@ -73,13 +73,7 @@ extension PhotoStripEditor {
                 for data in photos { recipeDraft.wrappedValue.addPhotoData(data) }
             },
             onRemove: { index in
-                let storedCount = recipeDraft.wrappedValue.existingPhotoPaths.count
-                if index < storedCount {
-                    let path = recipeDraft.wrappedValue.existingPhotoPaths.remove(at: index)
-                    recipeDraft.wrappedValue.removedPhotoPaths.append(path)
-                } else if recipeDraft.wrappedValue.addedPhotoData.indices.contains(index - storedCount) {
-                    recipeDraft.wrappedValue.addedPhotoData.remove(at: index - storedCount)
-                }
+                recipeDraft.wrappedValue.removePhoto(at: index)
             },
             onSelect: onSelect
         )

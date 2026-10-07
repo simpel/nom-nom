@@ -116,7 +116,7 @@ struct PhotoCard<Overlay: View>: View {
     private func picture(_ resolved: PhotoCardResolvedSource) -> some View {
         if let image = resolved.image ?? (loadedKey == resolved.loadKey ? loadedImage : nil) {
             Image(uiImage: image).resizable().scaledToFill()
-        } else if resolved.path != nil, loadedKey != resolved.loadKey {
+        } else if (resolved.path != nil && loadedKey != resolved.loadKey) || resolved.isGenerating {
             // Still loading: the Skeleton ground and sweep, so the cuisine photo doesn't
             // flash first (Skeleton README).
             DS.Color.sunken.skeletonShimmer()

@@ -25,6 +25,9 @@ final class FoodStore {
     var taxonomyTerms: [UUID: TaxonomyTermRecord] = [:]
     /// The "what stood out" catalogue (`rating_tags`), in picker order.
     var ratingTags: [RatingTagOption] = []
+    
+    /// Recipes currently having AI photos generated in the background.
+    var generatingPhotoRecipeIDs: Set<UUID> = []
 
     // Dinner Parties
     var parties: [Party] = []
@@ -81,7 +84,7 @@ final class FoodStore {
 
     // MARK: - Slices the views want
 
-    var myDishes: [Recipe] { dishes.filter { $0.ownerID == userID } }
+    var myDishes: [Recipe] { dishes.filter { $0.ownerID == userID && !$0.isDeleted } }
     var myRecipes: [Recipe] { myDishes }
 
     func isFavorite(recipeID: UUID) -> Bool {

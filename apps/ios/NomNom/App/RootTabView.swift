@@ -6,6 +6,7 @@ struct RootTabView: View {
     @State private var navigator = AppNavigator()
     @State private var didApplyLaunchArguments = false
     @State private var activeViewMealID: UUID?
+    @State private var activeViewRecipeID: UUID?
     @State private var activePartyID: UUID?
     @State private var showingInbox = false
 
@@ -25,6 +26,14 @@ struct RootTabView: View {
         )) { target in
             NavigationStack {
                 MealDetailView(mealID: target.id, showCloseButton: true)
+            }
+        }
+        .sheet(item: Binding(
+            get: { activeViewRecipeID.map { RateMealSheetTarget(id: $0) } },
+            set: { activeViewRecipeID = $0?.id }
+        )) { target in
+            NavigationStack {
+                RecipeDetailView(recipeID: target.id, showCloseButton: true)
             }
         }
         .sheet(item: Binding(
@@ -156,6 +165,7 @@ struct RootTabView: View {
         case .party(let id): activePartyID = id
         case .partyInvite(let id): openInvite(toParty: id)
         case .viewMeal(let id): activeViewMealID = id
+        case .viewRecipe(let id): activeViewRecipeID = id
         }
     }
 

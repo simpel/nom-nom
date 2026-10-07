@@ -10,10 +10,11 @@ struct RecipeDetailInfoCard: View {
     @State private var showingCreator = false
 
     private var creatorName: String {
-        if let profile = store.profiles[recipe.ownerID] {
+        guard let ownerID = recipe.ownerID else { return "Unknown" }
+        if let profile = store.profiles[ownerID] {
             return profile.shownName
         }
-        if recipe.ownerID == store.userID {
+        if ownerID == store.userID {
             return store.myProfile?.shownName ?? "You"
         }
         return "Someone"
@@ -22,8 +23,10 @@ struct RecipeDetailInfoCard: View {
     var body: some View {
         DSSection("Details") {
             Card(layout: .list) {
-                ListRow("Created by", value: creatorName, chevron: true) {
-                    showingCreator = true
+                if let ownerID = recipe.ownerID {
+                    ListRow("Created by", value: creatorName, chevron: true) {
+                        showingCreator = true
+                    }
                 }
 
                 if let kind = store.dishKind(for: recipe) {
@@ -32,10 +35,12 @@ struct RecipeDetailInfoCard: View {
             }
         }
         .sheet(isPresented: $showingCreator) {
-            NavigationStack {
-                PersonDetailView(raterRef: .account(recipe.ownerID), isSheet: true)
+            if let ownerID = recipe.ownerID {
+                NavigationStack {
+                    PersonDetailView(raterRef: .account(ownerID), isSheet: true)
+                }
+                .dsSheet()
             }
-            .dsSheet()
         }
     }
 }

@@ -47,8 +47,9 @@ struct RecipeCard<Footer: View>: View {
     }
 
     private var creatorLine: String? {
-        guard recipe.ownerID != store.userID,
-              let creator = store.profiles[recipe.ownerID]?.shortName else { return nil }
+        guard let ownerID = recipe.ownerID,
+              ownerID != store.userID,
+              let creator = store.profiles[ownerID]?.shortName else { return nil }
         return "by \(creator)"
     }
 
@@ -61,6 +62,9 @@ struct RecipeCard<Footer: View>: View {
     private func toggleFavorite() {
         Task { await store.toggleFavorite(recipe: recipe) }
     }
+
+    @State private var showingCreateMeal = false
+    @State private var confirmDelete = false
 
     var body: some View {
         // bundle.css `.nn-recipe-card { gap: var(--spacing-1\.5) }`.
@@ -93,6 +97,20 @@ struct RecipeCard<Footer: View>: View {
         .frame(idealWidth: DS.Spacing.s48, maxWidth: .infinity, alignment: .leading)
         .contentShape(Rectangle())
         .contextMenu {
+            Button {
+                showingCreateMeal = true
+            } label: {
+                Label("Add meal", systemImage: "plus")
+            }
+            
+            ShareLink(
+                item: recipe.shareURL,
+                subject: Text(recipe.name),
+                preview: SharePreview(recipe.name)
+            ) {
+                Label("Share recipe", systemImage: "square.and.arrow.up")
+            }
+
             Button(action: toggleFavorite) {
                 Label(
                     isFavorite ? "Remove from favourites" : "Add to favourites",
@@ -102,11 +120,22 @@ struct RecipeCard<Footer: View>: View {
 
             if recipe.ownerID == store.userID {
                 Button(role: .destructive) {
-                    Task { await store.delete(recipe: recipe) }
+                    confirmDelete = true
                 } label: {
                     Label("Delete", systemImage: "trash")
                 }
             }
+        }
+        .sheet(isPresented: $showingCreateMeal) {
+            MealEditorView(mealID: nil, prefilledDishID: recipe.id)
+        }
+        .alert("Delete Recipe?", isPresented: $confirmDelete) {
+            Button("Cancel", role: .cancel) {}
+            Button("Delete", role: .destructive) {
+                Task { await store.delete(recipe: recipe) }
+            }
+        } message: {
+            Text("This will permanently delete the recipe for everyone.")
         }
     }
 }

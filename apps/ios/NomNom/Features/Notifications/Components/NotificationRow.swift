@@ -50,10 +50,10 @@ struct NotificationRow: View {
                 leading: notification.listRowLeading(in: store),
                 trailing: .view {
                     HStack(spacing: DS.Spacing.s2) {
-                        AppButton("Accept", size: .sm) { respond(to: invite, accept: true) }
                         AppButton("Decline", variant: .secondary, appearance: .soft, size: .sm) {
                             respond(to: invite, accept: false)
                         }
+                        AppButton("Accept", size: .sm) { respond(to: invite, accept: true) }
                     }
                 }
             )

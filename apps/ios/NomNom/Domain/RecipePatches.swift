@@ -2,7 +2,7 @@ import Foundation
 
 /// Insert payload for Supabase `dishes` table.
 struct NewRecipe: Encodable {
-    let owner_id: UUID
+    let owner_id: UUID?
     let name: String
     let normalized_name: String
     let ingredients: [RecipeIngredient]
@@ -20,9 +20,10 @@ struct NewRecipe: Encodable {
     let health_breakdown: HealthBreakdown?
     let dish_kind_id: UUID?
     let is_public: Bool
+    let is_deleted: Bool
 
     init(
-        ownerID: UUID,
+        ownerID: UUID?,
         name: String,
         ingredients: [RecipeIngredient] = [],
         instructions: [String] = [],
@@ -38,7 +39,8 @@ struct NewRecipe: Encodable {
         healthRationale: String? = nil,
         healthBreakdown: HealthBreakdown? = nil,
         dishKindID: UUID? = nil,
-        isPublic: Bool = true
+        isPublic: Bool = true,
+        isDeleted: Bool = false
     ) {
         self.owner_id = ownerID
         self.name = name.trimmedName
@@ -58,6 +60,7 @@ struct NewRecipe: Encodable {
         self.health_breakdown = healthBreakdown
         self.dish_kind_id = dishKindID
         self.is_public = isPublic
+        self.is_deleted = isDeleted
     }
 }
 
@@ -87,6 +90,7 @@ struct RecipeContentPatch: Encodable {
     let cooking_method_id: UUID?
     let serves: Int?
     let is_public: Bool
+    let is_deleted: Bool
     let health_score: Int?
     let health_verdict: String?
     let health_rationale: String?
@@ -103,6 +107,7 @@ struct RecipeContentPatch: Encodable {
         cookingMethodID: UUID? = nil,
         serves: Int? = nil,
         isPublic: Bool = true,
+        isDeleted: Bool = false,
         healthScore: Int? = nil,
         healthVerdict: String? = nil,
         healthRationale: String? = nil,
@@ -118,6 +123,7 @@ struct RecipeContentPatch: Encodable {
         self.cooking_method_id = cookingMethodID
         self.serves = serves
         self.is_public = isPublic
+        self.is_deleted = isDeleted
         self.health_score = healthScore
         self.health_verdict = healthVerdict
         self.health_rationale = healthRationale

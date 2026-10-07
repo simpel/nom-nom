@@ -16,6 +16,10 @@ struct DinnerPartyCard: View {
         meals.sorted { $0.eatenOn > $1.eatenOn }.prefix(8).map { PartyCardMeal(id: $0.id, source: .meal($0), title: store.dishName(forMeal: $0), date: $0.eatenOn) }
     }
 
+    @State private var showingCreateMeal = false
+    @State private var showingSettings = false
+    @State private var confirmLeave = false
+
     var body: some View {
         PartyCard(
             party: party,
@@ -30,13 +34,51 @@ struct DinnerPartyCard: View {
         }
         .contextMenu {
             if isMember {
+                Button {
+                    showingCreateMeal = true
+                } label: {
+                    Label("Add meal", systemImage: "plus")
+                }
+
+                Button {
+                    showingSettings = true
+                } label: {
+                    Label("Edit party", systemImage: "pencil")
+                }
+
                 ShareLink(
                     item: party.webInviteURL,
                     subject: Text("Join \(party.name) on Nom Nom"),
                     message: Text(party.shareMessage)
                 ) {
-                    Label("Share Invite Link", systemImage: "square.and.arrow.up")
+                    Label("Share invite link", systemImage: "square.and.arrow.up")
                 }
+
+                Button(role: .destructive) {
+                    confirmLeave = true
+                } label: {
+                    Label("Leave party", systemImage: "rectangle.portrait.and.arrow.right")
+                }
+            }
+        }
+        .sheet(isPresented: $showingCreateMeal) {
+            MealEditorView(mealID: nil, prefilledPartyID: party.id)
+        }
+        .sheet(isPresented: $showingSettings) {
+            PartySettingsSheet(party: party) {}
+        }
+        .alert(store.members(of: party.id).count <= 1 ? "Delete Dinner Party?" : "Leave Party?", isPresented: $confirmLeave) {
+            Button("Cancel", role: .cancel) {}
+            Button(store.members(of: party.id).count <= 1 ? "Delete Party" : "Leave Party", role: .destructive) {
+                Task {
+                    await store.leaveParty(party)
+                }
+            }
+        } message: {
+            if store.members(of: party.id).count <= 1 {
+                Text("Since you are the last member, leaving will delete the dinner party.")
+            } else {
+                Text("You will lose access to meals served to this party.")
             }
         }
     }

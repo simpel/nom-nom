@@ -7,7 +7,7 @@ import Foundation
 /// `unique (owner_id, normalized_name)` prevents duplicate recipes.
 struct Recipe: Identifiable, Hashable, Decodable {
     let id: UUID
-    var ownerID: UUID
+    var ownerID: UUID?
     /// The name as the user typed it (display form).
     var name: String
     /// Lowercased, diacritic-folded, whitespace-collapsed. Used for matching.
@@ -49,6 +49,7 @@ struct Recipe: Identifiable, Hashable, Decodable {
     var dishKindID: UUID?
     /// Whether the recipe is public and visible to other dinner parties.
     var isPublic: Bool
+    var isDeleted: Bool
     var createdAt: Date
 
     var healthIndex: HealthIndex? {
@@ -86,13 +87,14 @@ struct Recipe: Identifiable, Hashable, Decodable {
         case canonicalIngredients = "canonical_ingredients"
         case dishKindID = "dish_kind_id"
         case isPublic = "is_public"
+        case isDeleted = "is_deleted"
         case createdAt = "created_at"
     }
 
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         id = try container.decode(UUID.self, forKey: .id)
-        ownerID = try container.decode(UUID.self, forKey: .ownerID)
+        ownerID = try container.decodeIfPresent(UUID.self, forKey: .ownerID)
         name = try container.decode(String.self, forKey: .name)
         normalizedName = try container.decode(String.self, forKey: .normalizedName)
         ingredients = try container.decodeIfPresent([RecipeIngredient].self, forKey: .ingredients) ?? []
@@ -116,12 +118,13 @@ struct Recipe: Identifiable, Hashable, Decodable {
         canonicalIngredients = try container.decodeIfPresent([String].self, forKey: .canonicalIngredients) ?? []
         dishKindID = try container.decodeIfPresent(UUID.self, forKey: .dishKindID)
         isPublic = try container.decodeIfPresent(Bool.self, forKey: .isPublic) ?? true
+        isDeleted = try container.decodeIfPresent(Bool.self, forKey: .isDeleted) ?? false
         createdAt = try container.decodeTimestamp(.createdAt)
     }
 
     init(
         id: UUID = UUID(),
-        ownerID: UUID,
+        ownerID: UUID?,
         name: String,
         normalizedName: String? = nil,
         ingredients: [RecipeIngredient] = [],
@@ -140,6 +143,7 @@ struct Recipe: Identifiable, Hashable, Decodable {
         canonicalIngredients: [String] = [],
         dishKindID: UUID? = nil,
         isPublic: Bool = true,
+        isDeleted: Bool = false,
         createdAt: Date = .now
     ) {
         self.id = id
@@ -162,6 +166,7 @@ struct Recipe: Identifiable, Hashable, Decodable {
         self.canonicalIngredients = canonicalIngredients
         self.dishKindID = dishKindID
         self.isPublic = isPublic
+        self.isDeleted = isDeleted
         self.createdAt = createdAt
     }
 

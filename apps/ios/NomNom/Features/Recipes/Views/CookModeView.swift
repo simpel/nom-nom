@@ -13,12 +13,11 @@ struct CookModeView: View {
     @Environment(\.dismiss) private var dismiss
 
     @State private var index = 0
-    @State private var details: [RecipeStepDetail]?
-    @State private var isLoadingDetails = true
     @State private var timer = CookModeTimer()
 
     private var steps: [String] { recipe.instructions }
     private var isLast: Bool { index == steps.count - 1 }
+    private var details: [RecipeStepDetail]? { recipe.currentStepDetails }
 
     private var timeLeft: String? {
         guard let details else { return nil }
@@ -36,31 +35,60 @@ struct CookModeView: View {
                 .padding(.horizontal, DS.Spacing.gutter)
                 .padding(.top, DS.Spacing.s5)
 
-                ScrollView {
-                    CookModeStepView(recipe: recipe, index: index, detail: details?[index], isLoadingDetail: isLoadingDetails, timer: timer)
-                        .padding(.horizontal, DS.Spacing.gutter)
-                        .padding(.vertical, DS.Spacing.s7)
-                        .id(index)
-                }
-
-                CookModeFooter(
-                    index: index,
-                    isLast: isLast,
-                    onBack: { move(-1) },
-                    onNext: { move(1) },
-                    onLogMeal: {
-                        dismiss()
-                        onLogMeal()
+                TabView(selection: $index) {
+                    ForEach(0..<steps.count, id: \.self) { i in
+                        ScrollView {
+                            CookModeStepView(recipe: recipe, index: i, detail: details?[i], timer: timer)
+                                .padding(.horizontal, DS.Spacing.gutter)
+                                .padding(.vertical, DS.Spacing.s7)
+                        }
+                        .safeAreaInset(edge: .bottom) {
+                            if i == steps.count - 1 {
+                                VStack(spacing: 0) {
+                                    AppButton("Create a meal", size: .lg, fullWidth: true) {
+                                        dismiss()
+                                        onLogMeal()
+                                    }
+                                    .padding(.horizontal, DS.Spacing.gutter)
+                                    .padding(.vertical, DS.Spacing.s4)
+                                }
+                                .background(.regularMaterial)
+                            }
+                        }
+                        .tag(i)
                     }
-                )
+                }
+                .tabViewStyle(.page(indexDisplayMode: .never))
             }
             .background(DS.Color.bg)
             .screenTitle(recipe.name, displayMode: .inline)
-            .sheetCloseToolbar { dismiss() }
-        }
-        .task {
-            details = await store.stepDetails(for: recipe)
-            isLoadingDetails = false
+            .toolbar {
+                ToolbarItem(placement: .topBarLeading) {
+                    Button(action: { dismiss() }) {
+                        Image(systemName: "xmark").fontWeight(.semibold)
+                    }
+                    .accessibilityLabel("Close")
+                    .barItemStyle()
+                }
+
+                ToolbarItemGroup(placement: .topBarTrailing) {
+                    HStack(spacing: DS.Spacing.s4) {
+                        Button(action: { move(-1) }) {
+                            Image(systemName: "chevron.left").fontWeight(.semibold)
+                        }
+                        .disabled(index == 0)
+                        .accessibilityLabel("Previous step")
+                        .barItemStyle()
+
+                        Button(action: { move(1) }) {
+                            Image(systemName: "chevron.right").fontWeight(.semibold)
+                        }
+                        .disabled(isLast)
+                        .accessibilityLabel("Next step")
+                        .barItemStyle()
+                    }
+                }
+            }
         }
         .onAppear { UIApplication.shared.isIdleTimerDisabled = true }
         .onDisappear {

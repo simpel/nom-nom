@@ -137,6 +137,6 @@ struct MealDetailContent: View {
     static func recipePhotoPaths(_ recipe: Recipe?) -> [String] {
         guard let recipe else { return [] }
         var seen = Set<String>()
-        return (recipe.recipePhotoPaths + recipe.photoPaths).filter { seen.insert($0).inserted }
+        return recipe.photoPaths.filter { seen.insert($0).inserted }
     }
 }

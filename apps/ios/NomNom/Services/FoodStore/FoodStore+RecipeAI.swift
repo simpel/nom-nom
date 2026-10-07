@@ -122,6 +122,8 @@ extension FoodStore {
     /// Invokes the `generate-dish-photo` Edge Function to create an editorial photo for an unphotographed recipe.
     @discardableResult
     func generateRecipeImage(for recipe: Recipe) async throws -> GenerateRecipeImageResult {
+        generatingPhotoRecipeIDs.insert(recipe.id)
+        defer { generatingPhotoRecipeIDs.remove(recipe.id) }
         Self.log.info("Generating AI recipe image for '\(recipe.name, privacy: .public)' (id: \(recipe.id, privacy: .public))")
 
         let payload = GenerateRecipeImagePayload(

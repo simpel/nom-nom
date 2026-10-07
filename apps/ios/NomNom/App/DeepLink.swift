@@ -7,12 +7,15 @@ enum DeepLink: Equatable {
     case partyInvite(UUID)
     /// A meal. Rating links open the meal page too: rating happens there, in a sheet.
     case viewMeal(UUID)
+    /// A recipe.
+    case viewRecipe(UUID)
 
     /// The tab that owns the destination.
     var tab: Int {
         switch self {
         case .party, .partyInvite: return 1
         case .viewMeal: return 0
+        case .viewRecipe: return 3
         }
     }
 
@@ -40,8 +43,13 @@ enum DeepLink: Equatable {
         // 2. Meal links: /rate-meal?id=... or /invite?meal_id=... or /meal?id=...
         if let idString = queryItems.first(where: { $0.name == "id" || $0.name == "meal_id" })?.value,
            let uuid = UUID(uuidString: idString) {
-            self = .viewMeal(uuid)
-            return
+            if hostOrPath == "recipe" {
+                self = .viewRecipe(uuid)
+                return
+            } else {
+                self = .viewMeal(uuid)
+                return
+            }
         }
 
         // 3. /meal/<uuid>/rate or /meal/<uuid>

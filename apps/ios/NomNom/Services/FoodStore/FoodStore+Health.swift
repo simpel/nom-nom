@@ -16,9 +16,9 @@ extension FoodStore {
     @discardableResult
     func analyzeHealth(for recipe: Recipe) async throws -> HealthIndex {
         print("[HEALTH_DEBUG] ==================================================")
-        print("[HEALTH_DEBUG] FoodStore.analyzeHealth starting for recipe: '\(recipe.name)' (ID: \(recipe.id), owner: \(recipe.ownerID), user: \(self.userID))")
+        print("[HEALTH_DEBUG] FoodStore.analyzeHealth starting for recipe: '\(recipe.name)' (ID: \(recipe.id), owner: \(recipe.ownerID?.uuidString ?? "nil"), user: \(self.userID))")
         print("[HEALTH_DEBUG] Ingredients count: \(recipe.ingredients.count), Instructions count: \(recipe.instructions.count)")
-        Self.log.info("Analyzing health for recipe '\(recipe.name, privacy: .public)' (id: \(recipe.id, privacy: .public), owner: \(recipe.ownerID, privacy: .public), current user: \(self.userID, privacy: .public))")
+        Self.log.info("Analyzing health for recipe '\(recipe.name, privacy: .public)' (id: \(recipe.id, privacy: .public), owner: \(recipe.ownerID?.uuidString ?? "nil", privacy: .public), current user: \(self.userID, privacy: .public))")
 
         let payload = AnalyzeHealthPayload(
             recipe_id: recipe.id.uuidString,

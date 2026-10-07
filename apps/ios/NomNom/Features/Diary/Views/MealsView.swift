@@ -51,7 +51,23 @@ struct MealsView: View {
                                         onRemind: { mealToRemind = meal }
                                     )
                                     .contextMenu {
+                                        ShareLink(
+                                            item: meal.shareURL,
+                                            subject: Text(store.dishName(forMeal: meal)),
+                                            preview: SharePreview(store.dishName(forMeal: meal))
+                                        ) {
+                                            Label("Share meal", systemImage: "square.and.arrow.up")
+                                        }
+
                                         if meal.createdBy == store.userID {
+                                            if !store.remindableRaters(forMeal: meal).isEmpty {
+                                                Button {
+                                                    mealToRemind = meal
+                                                } label: {
+                                                    Label("Remind raters", systemImage: "bell")
+                                                }
+                                            }
+
                                             Button {
                                                 editorTarget = .existing(meal.id)
                                             } label: {

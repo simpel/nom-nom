@@ -8,8 +8,6 @@ struct CookModeStepView: View {
     @Environment(FoodStore.self) private var store
     let index: Int
     let detail: RecipeStepDetail?
-    /// The step's timer and ingredients are still on their way (`analyze-recipe-steps`).
-    var isLoadingDetail: Bool = false
     let timer: CookModeTimer
 
     private var stepIngredients: [RecipeIngredient] {
@@ -26,11 +24,7 @@ struct CookModeStepView: View {
                 timerButton(minutes: minutes)
             }
 
-            if isLoadingDetail {
-                DSSection("For this step") {
-                    Skeleton(rows: 2, trailing: true, meta: false, label: "Loading this step")
-                }
-            } else if !stepIngredients.isEmpty {
+            if !stepIngredients.isEmpty {
                 DSSection("For this step") {
                     Card(layout: .list) {
                         ForEach(stepIngredients) { item in

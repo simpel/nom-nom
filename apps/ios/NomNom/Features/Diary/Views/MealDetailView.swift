@@ -27,6 +27,7 @@ struct MealDetailView: View {
     @State private var confirmDeleteMeal = false
     @State private var didAttemptFetch = false
     @State private var deleteError: String?
+    @State private var shareImage: Image?
 
     private var meal: Meal? { store.meal(mealID) }
     private var canEdit: Bool { meal?.createdBy == store.userID }
@@ -47,9 +48,16 @@ struct MealDetailView: View {
             .background(DS.Color.bg)
         }
         .task {
-            guard meal == nil else { return }
-            await store.fetchMealIfMissing(mealID)
-            didAttemptFetch = true
+            if meal == nil {
+                await store.fetchMealIfMissing(mealID)
+                didAttemptFetch = true
+            }
+            if let photoPath = meal?.photoPaths.first ?? store.recipe(meal?.recipeID ?? UUID())?.photoPaths.first {
+                if let data = await PhotoCache.shared.data(for: photoPath, bucket: SupabaseConfig.photoBucket),
+                   let uiImage = UIImage(data: data) {
+                    shareImage = Image(uiImage: uiImage)
+                }
+            }
         }
         .alert("Delete this meal?", isPresented: $confirmDeleteMeal) {
             Button("Cancel", role: .cancel) {}
@@ -112,6 +120,23 @@ struct MealDetailView: View {
         let page = content()
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
+                    if let meal {
+                        if let shareImage {
+                            ShareLink(item: meal.shareURL, subject: Text(store.dishName(forMeal: meal)), preview: SharePreview(store.dishName(forMeal: meal), image: shareImage)) {
+                                Image(systemName: "square.and.arrow.up").fontWeight(.semibold)
+                            }
+                            .accessibilityLabel("Share meal")
+                            .barItemStyle()
+                        } else {
+                            ShareLink(item: meal.shareURL, subject: Text(store.dishName(forMeal: meal)), preview: SharePreview(store.dishName(forMeal: meal))) {
+                                Image(systemName: "square.and.arrow.up").fontWeight(.semibold)
+                            }
+                            .accessibilityLabel("Share meal")
+                            .barItemStyle()
+                        }
+                    }
+                }
+                ToolbarItem(placement: .topBarTrailing) {
                     PageMenu { mealMenu }
                 }
             }
@@ -124,18 +149,13 @@ struct MealDetailView: View {
         }
     }
 
-    /// The page menu's "This meal" group: Edit and Delete for the cook, Share for all.
+    /// The page menu's "This meal" group: Edit and Delete for the cook.
     @ViewBuilder
     private var mealMenu: some View {
         if let meal {
             Section {
                 if canEdit {
                     Button("Edit meal", systemImage: "pencil") { showEditor = true }
-                }
-                ShareLink(item: meal.shareURL, subject: Text(store.dishName(forMeal: meal))) {
-                    Label("Share meal", systemImage: "square.and.arrow.up")
-                }
-                if canEdit {
                     Button("Delete meal", systemImage: "trash", role: .destructive) { confirmDeleteMeal = true }
                 }
             }

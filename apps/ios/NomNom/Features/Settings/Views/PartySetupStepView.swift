@@ -49,7 +49,7 @@ struct PartySetupStepView: View {
                     ForEach(store.members(of: party.id)) { member in
                         ListRow(
                             member.shownName,
-                            meta: member.id == party.createdBy ? "Host" : "Member",
+                            meta: "Member",
                             leading: .avatar(Avatar(profile: member, size: .sm, decorative: true))
                         )
                     }

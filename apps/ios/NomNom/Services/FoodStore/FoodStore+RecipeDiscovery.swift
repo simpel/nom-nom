@@ -24,7 +24,7 @@ extension FoodStore {
             averageScore(forMeal: meal.id).map { (meal.id, $0) }
         })
         return RecipePopularityEngine.sort(
-            recipes: recipes,
+            recipes: recipes.filter { !$0.isDeleted },
             servingsByRecipe: mealsByDish,
             mealScores: allScores
         )
@@ -59,7 +59,7 @@ extension FoodStore {
         }
 
         // 3. Discover any custom cuisines added to recipes
-        for recipe in recipes {
+        for recipe in recipes where !recipe.isDeleted {
             guard let cuisineString = recipe.cuisine else { continue }
             let parts = Cuisine.parseMultiple(from: cuisineString)
             for part in parts {
@@ -77,6 +77,7 @@ extension FoodStore {
     func recipes(inCategory categoryName: String) -> [Recipe] {
         let normalized = categoryName.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
         let matching = recipes.filter { recipe in
+            guard !recipe.isDeleted else { return false }
             guard let cuisine = recipe.cuisine?.lowercased() else { return false }
             let parts = Cuisine.parseMultiple(from: cuisine).map { $0.lowercased() }
             return parts.contains(normalized) || cuisine == normalized
@@ -95,6 +96,7 @@ extension FoodStore {
     func recipeCount(forCategory categoryName: String) -> Int {
         let normalized = categoryName.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
         return recipes.filter { recipe in
+            guard !recipe.isDeleted else { return false }
             guard let cuisine = recipe.cuisine?.lowercased() else { return false }
             let parts = Cuisine.parseMultiple(from: cuisine).map { $0.lowercased() }
             return parts.contains(normalized) || cuisine == normalized
@@ -103,7 +105,7 @@ extension FoodStore {
 
     /// Recipes sorted by most recently cooked date descending.
     var recentRecipes: [Recipe] {
-        recipes
+        recipes.filter { !$0.isDeleted }
             .compactMap { recipe -> (Recipe, Date)? in
                 guard let last = servings(of: recipe.id).map(\.eatenOn).max() else { return nil }
                 return (recipe, last)
@@ -116,7 +118,7 @@ extension FoodStore {
     /// Falls back to the user's recently created recipes if no meals have been logged yet.
     var recentAndFrequentRecipes: [Recipe] {
         let history = dishHistory
-        let cooked = recipes.filter { (history[$0.id]?.timesServed ?? 0) > 0 }
+        let cooked = recipes.filter { !$0.isDeleted && (history[$0.id]?.timesServed ?? 0) > 0 }
         if !cooked.isEmpty {
             return cooked.sorted { lhs, rhs in
                 let histL = history[lhs.id] ?? .none

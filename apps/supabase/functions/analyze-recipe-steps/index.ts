@@ -1,31 +1,25 @@
 // Edge function for cook mode: for each instruction step, how many minutes it waits
 // on (a timer, or null) and which of the recipe's ingredients it uses.
-//
-// Input:  { recipe_id?, name, ingredients: [{quantity, measurement, ingredient}], instructions: [string] }
-// Output: { steps: [{ minutes: number | null, ingredients: number[] }] }  (one per instruction,
-//          ingredients as indexes into the input array)
+// Triggered by the analyze_recipe_steps_webhook DB trigger on
+// dishes insert/update (see migrations/20261006223500_analyze_recipe_steps_webhook.sql).
 
 import { z } from "npm:zod";
+import { createClient } from "jsr:@supabase/supabase-js@2";
 import { GenerationLogger } from "../_shared/generation-logger.ts";
 import { getFeatureModel } from "../_shared/ai-config.ts";
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-  "Access-Control-Allow-Methods": "POST, OPTIONS",
-};
-
-interface IngredientInput {
-  quantity?: string;
-  measurement?: string;
-  ingredient: string;
+interface DishRow {
+  id: string;
+  name: string;
+  ingredients: { quantity?: string; measurement?: string; ingredient: string }[] | null;
+  instructions: string[] | null;
 }
 
-interface RequestPayload {
-  recipe_id?: string;
-  name: string;
-  ingredients: IngredientInput[];
-  instructions: string[];
+interface WebhookPayload {
+  type: "INSERT" | "UPDATE";
+  table: string;
+  record: DishRow;
+  old_record: DishRow | null;
 }
 
 const SYSTEM_PROMPT = `You prepare recipes for a step-by-step cook mode.
@@ -39,60 +33,66 @@ Return exactly one entry per instruction step, in order, as:
 
 Return ONLY valid JSON.`;
 
-function json(body: unknown, status = 200): Response {
-  return new Response(JSON.stringify(body), {
-    status,
-    headers: { ...corsHeaders, "Content-Type": "application/json" },
-  });
-}
-
 Deno.serve(async (req) => {
-  if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
-  if (req.method !== "POST") return json({ error: "Method not allowed" }, 405);
-
-  const apiKey =
-    Deno.env.get("VERCEL_AI_GATEWAY") ||
-    Deno.env.get("VERCEL_AI_GATEWAY_KEY") ||
-    Deno.env.get("AI_GATEWAY_API_KEY") ||
-    Deno.env.get("VERCEL_AI_GATEWAY_TOKEN");
-  if (!apiKey) return json({ error: "AI Gateway API key is not configured" }, 500);
-
-  let payload: RequestPayload;
-  try {
-    payload = await req.json();
-  } catch {
-    return json({ error: "Invalid JSON body" }, 400);
+  const signature = req.headers.get("x-webhook-secret");
+  const expected = Deno.env.get("WEBHOOK_SECRET");
+  if (!signature || signature !== expected) {
+    return new Response("Unauthorized", { status: 401 });
   }
-  const instructions = (payload.instructions || []).map((s) => s.trim()).filter(Boolean);
-  if (!payload.name || instructions.length === 0) {
-    return json({ error: "Recipe name and instructions are required" }, 400);
-  }
-  const ingredients = payload.ingredients || [];
 
-  const logger = GenerationLogger.fromEnv();
-  const model = await getFeatureModel(logger.client, "analyze-recipe-steps");
-  const gatewayBaseUrl = Deno.env.get("AI_GATEWAY_BASE_URL") || "https://ai-gateway.vercel.sh/v1";
-
-  const ingredientList = ingredients
-    .map((ing, i) => {
-      const amount = [ing.quantity, ing.measurement].filter(Boolean).join(" ");
-      return `${i}. ${amount ? `${amount} ` : ""}${ing.ingredient}`;
-    })
-    .join("\n");
-  const stepList = instructions.map((s, i) => `${i + 1}. ${s}`).join("\n");
-  const userMessage = `Recipe: ${payload.name}
-
-Ingredients:
-${ingredientList || "(none listed)"}
-
-Steps:
-${stepList}`;
-
-  if (payload.recipe_id) {
-    await logger.start({ type: "recipe_steps", entityId: payload.recipe_id, prompt: userMessage, model });
-  }
+  let logger: GenerationLogger | null = null;
 
   try {
+    const payload: WebhookPayload = await req.json();
+    const dish = payload.record;
+    
+    const instructions = (dish.instructions || []).map((s) => s.trim()).filter(Boolean);
+    if (!dish.name || instructions.length === 0) {
+      return new Response(JSON.stringify({ skipped: "no-instructions" }), {
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+    const ingredients = dish.ingredients || [];
+
+    const apiKey =
+      Deno.env.get("VERCEL_AI_GATEWAY") ||
+      Deno.env.get("VERCEL_AI_GATEWAY_KEY") ||
+      Deno.env.get("AI_GATEWAY_API_KEY") ||
+      Deno.env.get("VERCEL_AI_GATEWAY_TOKEN");
+    
+    const gatewayBaseUrl = Deno.env.get("AI_GATEWAY_BASE_URL") || "https://ai-gateway.vercel.sh/v1";
+
+    if (!apiKey) {
+      return new Response(JSON.stringify({ error: "no-api-key" }), {
+        status: 500,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+
+    const url = Deno.env.get("SUPABASE_URL");
+    const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+    if (!url || !serviceKey) {
+      return new Response(JSON.stringify({ error: "no-service-credentials" }), {
+        status: 500,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+    const admin = createClient(url, serviceKey);
+
+    logger = GenerationLogger.fromEnv();
+    const model = await getFeatureModel(admin, "analyze-recipe-steps");
+
+    const ingredientList = ingredients
+      .map((ing, i) => {
+        const amount = [ing.quantity, ing.measurement].filter(Boolean).join(" ");
+        return `${i}. ${amount ? `${amount} ` : ""}${ing.ingredient}`;
+      })
+      .join("\n");
+    const stepList = instructions.map((s, i) => `${i + 1}. ${s}`).join("\n");
+    const userMessage = `Recipe: ${dish.name}\n\nIngredients:\n${ingredientList || "(none listed)"}\n\nSteps:\n${stepList}`;
+
+    await logger.start({ type: "recipe_steps", entityId: dish.id, prompt: userMessage, model });
+
     const response = await fetch(`${gatewayBaseUrl}/chat/completions`, {
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${apiKey}` },
@@ -110,14 +110,20 @@ ${stepList}`;
     if (!response.ok) {
       const errorText = await response.text();
       await logger.failure(`AI Gateway error (${response.status}): ${errorText}`);
-      return json({ error: `AI Gateway error (${response.status})` }, 502);
+      return new Response(JSON.stringify({ error: `AI Gateway error (${response.status})` }), {
+        status: 502,
+        headers: { "Content-Type": "application/json" },
+      });
     }
 
     const completion = await response.json();
     const raw: string | undefined = completion.choices?.[0]?.message?.content;
     if (!raw) {
       await logger.failure("Empty response from AI Gateway");
-      return json({ error: "Empty response from AI Gateway" }, 502);
+      return new Response(JSON.stringify({ error: "Empty response from AI Gateway" }), {
+        status: 502,
+        headers: { "Content-Type": "application/json" },
+      });
     }
     const cleaned = raw.trim().replace(/^```(json)?/, "").replace(/```$/, "").trim();
     await logger.success(raw);
@@ -140,11 +146,30 @@ ${stepList}`;
       return { minutes, ingredients: used };
     });
 
-    return json({ steps });
-  } catch (err: unknown) {
+    // Update the recipe with the generated step details
+    const { error: updateErr } = await admin
+      .from("dishes")
+      .update({ instruction_details: steps })
+      .eq("id", dish.id);
+
+    if (updateErr) {
+      console.error(`Failed to update instruction_details for dish ${dish.id}:`, updateErr);
+      return new Response(JSON.stringify({ error: updateErr.message }), {
+        status: 500,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+
+    return new Response(JSON.stringify({ success: true, dish_id: dish.id }), {
+      headers: { "Content-Type": "application/json" },
+    });
+  } catch (err: any) {
     const message = err instanceof Error ? err.message : String(err);
     console.error("Failed to analyze recipe steps:", err);
-    await logger.failure(message);
-    return json({ error: `Internal error: ${message}` }, 500);
+    if (logger) await logger.failure(message);
+    return new Response(JSON.stringify({ error: `Internal error: ${message}` }), {
+      status: 500,
+      headers: { "Content-Type": "application/json" },
+    });
   }
 });

@@ -207,6 +207,16 @@ extension FoodStore {
             addedPhotoData.append(data)
         }
 
+        mutating func removePhoto(at index: Int) {
+            let storedCount = existingPhotoPaths.count
+            if index < storedCount {
+                let path = existingPhotoPaths.remove(at: index)
+                removedPhotoPaths.append(path)
+            } else if addedPhotoData.indices.contains(index - storedCount) {
+                addedPhotoData.remove(at: index - storedCount)
+            }
+        }
+
         var hasContent: Bool {
             if effort != nil || cuisine != nil || serves != nil || !isPublic || dishKindID != nil || cookingMethodID != nil { return true }
             let hasIngredients = ingredients.contains { !$0.isEmpty }

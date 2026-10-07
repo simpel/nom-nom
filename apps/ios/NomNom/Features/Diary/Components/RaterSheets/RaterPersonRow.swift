@@ -15,7 +15,7 @@ struct RaterPersonRow: View {
     }
 
     private var meta: String? {
-        let chef = rater == .account(meal.createdBy) ? "Chef" : nil
+        let chef = (meal.createdBy != nil && rater == .account(meal.createdBy!)) ? "Chef" : nil
         let party = store.parties(forMeal: meal.id).first.map { "Member of \($0.name)" }
         let parts = [chef, party].compactMap { $0 }
         return parts.isEmpty ? nil : parts.joined(separator: " \u{00B7} ")

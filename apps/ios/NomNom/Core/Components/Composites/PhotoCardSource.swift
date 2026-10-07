@@ -34,12 +34,14 @@ enum PhotoCardSource {
             return PhotoCardResolvedSource(image: data.flatMap(UIImage.init(data:)), cuisine: cuisine)
         case .recipe(let recipe):
             let paths = store?.photos(for: recipe) ?? []
-            let path = paths.first ?? recipe.photoPaths.first ?? recipe.recipePhotoPaths.first
-            let inRecipeBucket = path.map { recipe.photoPaths.contains($0) || recipe.recipePhotoPaths.contains($0) } ?? false
+            let path = paths.first ?? recipe.photoPaths.first
+            let inRecipeBucket = path.map { recipe.photoPaths.contains($0) } ?? false
+            let isGenerating = paths.isEmpty && store?.generatingPhotoRecipeIDs.contains(recipe.id) == true
             return PhotoCardResolvedSource(
                 path: path,
                 bucket: inRecipeBucket ? SupabaseConfig.recipeBucket : SupabaseConfig.photoBucket,
-                cuisine: recipe.cuisine
+                cuisine: recipe.cuisine,
+                isGenerating: isGenerating
             )
         case .meal(let meal):
             return PhotoCardResolvedSource(
@@ -59,6 +61,7 @@ struct PhotoCardResolvedSource: Equatable {
     var path: String?
     var bucket: String = SupabaseConfig.photoBucket
     var cuisine: String?
+    var isGenerating: Bool = false
 
     /// The cuisine category asset, when the cuisine has one.
     var cuisineAsset: String? { Cuisine.assetImageName(for: cuisine) }

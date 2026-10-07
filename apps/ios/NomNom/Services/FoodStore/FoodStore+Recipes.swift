@@ -210,9 +210,6 @@ extension FoodStore {
             for p in recipe.photoPaths where !paths.contains(p) {
                 paths.append(p)
             }
-            for p in recipe.recipePhotoPaths where !paths.contains(p) {
-                paths.append(p)
-            }
         }
         return paths
     }
@@ -226,18 +223,13 @@ extension FoodStore {
     func delete(recipe: Recipe) async {
         guard recipe.ownerID == userID else { return }
         do {
-            for path in recipe.photoPaths { await deleteRecipeObject(path) }
-            for path in recipe.recipePhotoPaths { await deleteRecipeObject(path) }
-            try await supabase.from("dishes").delete().eq("id", value: recipe.id.uuidString).execute()
+            try await supabase.from("dishes").update(["is_deleted": true]).eq("id", value: recipe.id.uuidString).execute()
             
-            // Mirror Postgres CASCADE in local store memory
-            let deletedMealIDs = Set(meals.filter { $0.recipeID == recipe.id }.map(\.id))
-            meals.removeAll { deletedMealIDs.contains($0.id) }
-            ratings.removeAll { deletedMealIDs.contains($0.mealID) }
-            invites.removeAll { deletedMealIDs.contains($0.mealID) }
-            mealParties.removeAll { deletedMealIDs.contains($0.mealID) }
-            recipeFavorites.removeAll { $0.recipeID == recipe.id }
-            recipes.removeAll { $0.id == recipe.id }
+            // Soft-delete locally
+            if let index = recipes.firstIndex(where: { $0.id == recipe.id }) {
+                recipes[index].isDeleted = true
+            }
+
             
             reindex()
             errorMessage = nil

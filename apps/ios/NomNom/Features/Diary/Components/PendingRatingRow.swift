@@ -17,7 +17,8 @@ struct PendingRatingRow: View {
     private var meta: String {
         let date = meal.eatenOn.formatted(.dateTime.weekday(.abbreviated).day().month(.abbreviated))
         guard !isOwn else { return date }
-        let cook = store.label(for: .account(meal.createdBy)).name
+        guard let createdBy = meal.createdBy else { return date }
+        let cook = store.label(for: .account(createdBy)).name
         return cook.isEmpty ? date : "\(cook) cooked \u{00B7} \(date)"
     }
 

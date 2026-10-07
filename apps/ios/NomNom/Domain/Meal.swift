@@ -11,7 +11,7 @@ struct Meal: Identifiable, Hashable, Decodable {
         set { recipeID = newValue }
     }
     /// Whoever cooked it. Only this person may edit the meal or invite others.
-    var createdBy: UUID
+    var createdBy: UUID?
     /// Calendar day, at local midnight — the column is a `date`, so there is no
     /// time of day to keep.
     var eatenOn: Date
@@ -46,7 +46,7 @@ struct Meal: Identifiable, Hashable, Decodable {
         id = try container.decode(UUID.self, forKey: .id)
         recipeID = try container.decode(UUID.self, forKey: .recipeID)
         title = try container.decodeIfPresent(String.self, forKey: .title)
-        createdBy = try container.decode(UUID.self, forKey: .createdBy)
+        createdBy = try container.decodeIfPresent(UUID.self, forKey: .createdBy)
         eatenOn = try container.decodeDay(.eatenOn)
         notes = try container.decodeIfPresent(String.self, forKey: .notes) ?? ""
         if let paths = try container.decodeIfPresent([String].self, forKey: .photoPaths), !paths.isEmpty {
@@ -73,7 +73,7 @@ struct Meal: Identifiable, Hashable, Decodable {
         id: UUID = UUID(),
         recipeID: UUID,
         title: String? = nil,
-        createdBy: UUID,
+        createdBy: UUID?,
         eatenOn: Date = .now,
         notes: String = "",
         photoPaths: [String] = [],
@@ -99,7 +99,7 @@ struct Meal: Identifiable, Hashable, Decodable {
 struct NewMeal: Encodable {
     let dish_id: UUID
     let title: String?
-    let created_by: UUID
+    let created_by: UUID?
     let eaten_on: String
     let notes: String
     let photo_paths: [String]

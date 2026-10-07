@@ -30,13 +30,13 @@ struct PendingPartyInvitesSection: View {
                 ?? Avatar(name: name, size: .sm, decorative: true)),
             trailing: .view {
                 HStack(spacing: DS.Spacing.s2) {
-                    AppButton("Accept", size: .sm) {
-                        Task { await store.acceptPartyInvite(invite) }
-                    }
                     AppButton("Decline", variant: .secondary, appearance: .soft, size: .sm) {
                         Task { await store.declinePartyInvite(invite) }
                     }
                     .accessibilityLabel("Decline invite to \(name)")
+                    AppButton("Accept", size: .sm) {
+                        Task { await store.acceptPartyInvite(invite) }
+                    }
                 }
             }
         )

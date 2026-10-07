@@ -44,7 +44,7 @@ struct RaterScoreSheet: View {
 
     /// The meal's note belongs to the cook, so it shows on the cook's sheet only.
     private var cooksNote: String? {
-        guard rater == .account(meal.createdBy) else { return nil }
+        guard let createdBy = meal.createdBy, rater == .account(createdBy) else { return nil }
         let text = meal.notes.trimmingCharacters(in: .whitespacesAndNewlines)
         return text.isEmpty ? nil : text
     }

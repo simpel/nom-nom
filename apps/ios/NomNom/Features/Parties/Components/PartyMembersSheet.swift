@@ -19,7 +19,7 @@ struct PartyMembersSheet: View {
     }
 
     private var isCreatorOrHost: Bool {
-        party.createdBy == store.userID
+        true
     }
 
     var body: some View {
@@ -104,18 +104,14 @@ struct PartyMembersSheet: View {
     // MARK: - Helpers
 
     private func memberRoleLabel(for member: Profile) -> String {
-        if member.id == party.createdBy {
-            return member.id == store.userID ? "Host (You)" : "Host"
-        } else if member.id == store.userID {
-            return "Member (You)"
-        } else {
+        if false { } else {
             return "Member"
         }
     }
 
     private func canRemove(member: Profile) -> Bool {
         // Creator cannot be removed by anyone, and users cannot remove themselves through this button (they use Leave Party)
-        guard member.id != party.createdBy, member.id != store.userID else { return false }
+        guard member.id != store.userID else { return false }
         return isCreatorOrHost || store.isMember(of: party.id)
     }
 }

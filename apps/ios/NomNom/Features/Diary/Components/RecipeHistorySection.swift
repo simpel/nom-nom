@@ -55,11 +55,12 @@ struct RecipeHistorySection: View {
         )
     }
 
-    private func subtitle(for meal: Meal) -> String {
+    private func subtitle(for meal: Meal) -> String? {
         let partyNames = store.parties(forMeal: meal.id).map(\.name).joined(separator: ", ")
         if !partyNames.isEmpty { return partyNames }
         if meal.createdBy == store.userID { return "Cooked by you" }
-        return "Cooked by \(store.label(for: .account(meal.createdBy)).name)"
+        guard let createdBy = meal.createdBy else { return nil }
+        return "Cooked by \(store.label(for: .account(createdBy)).name)"
     }
 
     private func loadMoreIfNeeded(after meal: Meal) {

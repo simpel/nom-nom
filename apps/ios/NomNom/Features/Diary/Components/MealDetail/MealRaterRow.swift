@@ -21,7 +21,7 @@ struct MealRaterRow: View {
 
     private var meta: String? {
         if score != nil {
-            if rater.ref == .account(meal.createdBy) { return "Chef" }
+            if let createdBy = meal.createdBy, rater.ref == .account(createdBy) { return "Chef" }
             if rater.isViewer { return nil }
             return isNew ? "First rating" : nil
         }
