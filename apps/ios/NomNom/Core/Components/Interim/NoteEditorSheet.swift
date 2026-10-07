@@ -16,18 +16,20 @@ struct NoteEditorSheet: View {
     @Binding var text: String
     var maxLength: Int?
     var bulleted: Bool
+    var onRemove: (() -> Void)?
 
     @Environment(\.dismiss) private var dismiss
     @State private var draft: String
     @State private var confirmDelete = false
     @FocusState private var isFocused: Bool
 
-    init(title: String, placeholder: String, text: Binding<String>, maxLength: Int? = nil, bulleted: Bool = false) {
+    init(title: String, placeholder: String, text: Binding<String>, maxLength: Int? = nil, bulleted: Bool = false, onRemove: (() -> Void)? = nil) {
         self.title = title
         self.placeholder = placeholder
         self._text = text
         self.maxLength = maxLength
         self.bulleted = bulleted
+        self.onRemove = onRemove
         let start = text.wrappedValue
         self._draft = State(initialValue: bulleted && start.isEmpty ? BulletList.marker : start)
     }
@@ -40,6 +42,7 @@ struct NoteEditorSheet: View {
     }
 
     private var isOver: Bool { maxLength.map { draft.count > $0 } ?? false }
+    private var canDelete: Bool { hadText || onRemove != nil }
 
     var body: some View {
         NavigationStack {
@@ -66,12 +69,12 @@ struct NoteEditorSheet: View {
                     // Docked above the keyboard, where Notes puts its bar (trash included
                     // when there is a saved note); the full-width Delete note returns
                     // when the keyboard goes down.
-                    NoteFormatBar(onDelete: hadText ? { confirmDelete = true } : nil) {
+                    NoteFormatBar(onDelete: canDelete ? { confirmDelete = true } : nil) {
                         draft = BulletList.toggled(draft)
                     }
-                } else if hadText {
+                } else if canDelete {
                     AppButton(
-                        "Delete note",
+                        onRemove != nil ? "Remove" : "Delete note",
                         icon: "trash",
                         variant: .destructive,
                         appearance: .soft,
@@ -91,14 +94,20 @@ struct NoteEditorSheet: View {
                 text = committed
                 dismiss()
             }
-            .confirmationDialog("Delete this note?", isPresented: $confirmDelete, titleVisibility: .visible) {
-                Button("Delete note", role: .destructive) {
-                    text = ""
+            .confirmationDialog(onRemove != nil ? "Remove this?" : "Delete this note?", isPresented: $confirmDelete, titleVisibility: .visible) {
+                Button(onRemove != nil ? "Remove" : "Delete note", role: .destructive) {
+                    if let onRemove {
+                        onRemove()
+                    } else {
+                        text = ""
+                    }
                     dismiss()
                 }
                 Button("Cancel", role: .cancel) {}
             } message: {
-                Text("It\u{2019}s removed from the recipe for everyone in the party.")
+                if onRemove == nil {
+                    Text("It\u{2019}s removed from the recipe for everyone in the party.")
+                }
             }
             .onChange(of: draft) { old, new in
                 let continued = BulletList.continuing(old, into: new)

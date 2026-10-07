@@ -78,6 +78,7 @@ struct RecipeDetailsStepView: View {
                     onDismiss()
                 }
             } catch {
+                store.errorMessage = FoodStore.describe(error)
                 isSaving = false
             }
         }
