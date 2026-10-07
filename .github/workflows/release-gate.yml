@@ -1,0 +1,23 @@
+name: Release gate
+
+# main only takes PRs from release/* (and Dependabot). Required by the main ruleset.
+on:
+  pull_request:
+    branches:
+      - main
+
+permissions: {}
+
+jobs:
+  source-branch:
+    name: Source is a release branch
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check head branch
+        env:
+          HEAD_REF: ${{ github.head_ref }}
+        run: |
+          case "$HEAD_REF" in
+            release/*|dependabot/*) echo "OK: $HEAD_REF" ;;
+            *) echo "::error::PRs into main must come from a release/* branch (got '$HEAD_REF')."; exit 1 ;;
+          esac
