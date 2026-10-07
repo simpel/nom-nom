@@ -91,7 +91,7 @@ struct NoteEditorSheet: View {
                 text = committed
                 dismiss()
             }
-            .confirmationDialog("Delete this note?", isPresented: $confirmDelete, titleVisibility: .visible) {
+            .alert("Delete this note?", isPresented: $confirmDelete) {
                 Button("Delete note", role: .destructive) {
                     text = ""
                     dismiss()
