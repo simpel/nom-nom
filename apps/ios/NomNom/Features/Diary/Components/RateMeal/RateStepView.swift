@@ -3,18 +3,14 @@ import SwiftUI
 /// One screen of the rate flow, one purpose: a ScreenHeader asking the question (the
 /// dish as eyebrow) over its control. "Next" sits top-right; single-choice questions
 /// also move on by themselves a beat after a pick. Optional questions get "Skip"
-/// pinned to the bottom, which clears that answer and moves on. The first question
-/// is the sheet's root, so it carries the close button instead of back.
+/// pinned to the bottom, which clears that answer and moves on. RateMealSheet adds the
+/// toolbar: the first question is the sheet's root (`.sheetNextToolbar`, close), pushed
+/// ones keep the back button (`.stepNextToolbar`).
 struct RateStepView: View {
     let question: RateQuestion
     @Binding var answers: RatingAnswers
     let eyebrow: String
-    let isRoot: Bool
     let onNext: () -> Void
-
-    private var canProceed: Bool {
-        question != .taste || answers.reaction != nil
-    }
 
     var body: some View {
         SheetBody {
@@ -31,7 +27,6 @@ struct RateStepView: View {
             }
         }
         .screenTitle("Rate meal", displayMode: .inline)
-        .modifier(RateStepToolbar(isRoot: isRoot, canProceed: canProceed, onNext: onNext))
     }
 
     /// Lets the chosen tile show its colour before the next screen slides in.
@@ -50,21 +45,5 @@ struct RateStepView: View {
         case .again: answers.again = nil
         }
         onNext()
-    }
-}
-
-/// The root step closes the sheet (`.sheetNextToolbar`); pushed steps keep the back
-/// button (`.stepNextToolbar`). Both put "Next" top-right.
-private struct RateStepToolbar: ViewModifier {
-    let isRoot: Bool
-    let canProceed: Bool
-    let onNext: () -> Void
-
-    func body(content: Content) -> some View {
-        if isRoot {
-            content.sheetNextToolbar(canProceed: canProceed, onNext: onNext)
-        } else {
-            content.stepNextToolbar(canProceed: canProceed, onNext: onNext)
-        }
     }
 }
