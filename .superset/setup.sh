@@ -26,14 +26,24 @@ for f in "${FILES[@]}"; do
   fi
 done
 
-# Point `gh pr create` at the newest release/* branch instead of main (AGENTS.md §11).
-# Offline or no release branch: gh keeps its default and setup carries on.
-git fetch -q origin '+refs/heads/release/*:refs/remotes/origin/release/*' 2>/dev/null || true
-release=$(git for-each-ref --format='%(refname:lstrip=3)' 'refs/remotes/origin/release/*' | sort -V | tail -n 1)
+# Base branch (AGENTS.md §11): the one picked when the workspace was created (Superset's base
+# picker or `--base-branch`, saved as branch.<name>.base), else the newest release/*.
+# Offline or no base: the workspace keeps what it has and setup carries on.
+git fetch -q origin 2>/dev/null || true
 branch=$(git branch --show-current)
-if [ -n "$release" ] && [ -n "$branch" ]; then
-  git config "branch.$branch.gh-merge-base" "$release"
-  echo "PRs from $branch target $release"
+base=$(git config "branch.$branch.base" 2>/dev/null || true)
+if [ -z "$base" ] || [ "$base" = main ]; then
+  base=$(git for-each-ref --format='%(refname:lstrip=3)' 'refs/remotes/origin/release/*' | sort -V | tail -n 1)
+fi
+if [ -n "$base" ] && [ -n "$branch" ] && git rev-parse -q --verify "origin/$base" >/dev/null; then
+  # Superset can fork from a stale local ref. Catch a fresh branch up to origin/<base>, but only
+  # when that is a fast-forward and the tree is clean, so no work is ever dropped.
+  if [ -z "$(git status --porcelain --untracked-files=no)" ] && git merge-base --is-ancestor HEAD "origin/$base"; then
+    git merge -q --ff-only "origin/$base"
+    echo "$branch starts from origin/$base"
+  fi
+  git config "branch.$branch.gh-merge-base" "$base"
+  echo "PRs from $branch target $base"
 fi
 
 pnpm install --frozen-lockfile
