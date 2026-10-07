@@ -79,10 +79,12 @@ apps/
 │   │   │   └── Interim/     # Patterns the DS does not cover yet (TrendChart, MediaViewerSheet,
 │   │   │                      form blocks). Each is listed in Core/Design/DS-GAPS.md
 │   │   ├── Design/     # DS+*.swift token aliases, Generated/ (never hand-edit), README.md, DS-GAPS.md
-│   │   ├── Extensions/ # Foundation & SwiftUI extensions, sheet/navigation modifiers
+│   │   ├── Extensions/ # Foundation & SwiftUI extensions, sheet/navigation modifiers (.editorSheet)
+│   │   ├── Forms/      # The editor model: SheetForm protocol + FormSession (see §5)
 │   │   ├── Fonts/      # Bundled Newsreader cuts (registered via INFOPLIST_KEY_UIAppFonts)
 │   │   └── Parsing/    # Parsers, formatters, text helpers
 │   ├── Domain/         # Models and entities (Meal, Recipe, Party, Profile, Reaction, HealthIndex, etc.) — NO UI code
+│   │   └── Forms/      # SheetForm values edit sheets work on (RecipeForm, PartyForm, NoteForm, …)
 │   └── Services/       # Backend, networking, data store
 │       ├── FoodStore/  # FoodStore split into domain extensions (FoodStore+Meals, +Recipes, +Parties, etc.)
 │       ├── Supabase/   # Supabase client config + PhotoCache
@@ -137,6 +139,8 @@ When creating or moving a file, use this decision tree:
 | **Design token alias** | A value from `tokens.json` | `NomNom/Core/Design/DS+<Family>.swift` (generated values in `Generated/`, never hand-edited) |
 | **Extension / Utility** | General type extensions | `NomNom/Core/Extensions/<Type>+<Functionality>.swift` |
 | **Data Entity / Value Type** | App-wide data model | `NomNom/Domain/<ModelName>.swift` |
+| **Editor form value** | What an edit sheet edits (one per editable thing, shared by its sheets) | `NomNom/Domain/Forms/<Thing>Form.swift`, conforming to `SheetForm` |
+| **Editor model plumbing** | Session, dismissal, save flow shared by every edit sheet | `NomNom/Core/Forms/` and `NomNom/Core/Extensions/View+EditorSheet.swift` |
 | **Store Mutation / Query** | Domain-specific backend logic | `NomNom/Services/FoodStore/FoodStore+<Domain>.swift` |
 
 ---
@@ -156,35 +160,56 @@ Every modal sheet is a design-system **BottomSheet** (`design-system/components/
 
 ### A. Intent Matrix
 
-| Sheet Type | Purpose & Examples | Leading Action (`.topBarLeading`) | Trailing Action (`.topBarTrailing`) | Modifier |
-| :--- | :--- | :--- | :--- | :--- |
-| **Commit / Form / Editor** | Inputs, edits, ratings, filters (`MealEditorView`, `RecipeEditSheet`, `ProfileSheetView`, `RecipeFilterSheet`) | Close (discards the draft) | Checkmark, or a spinner while saving | `.sheetCommitToolbar` |
-| **Multi-step, first step** | `CreateRecipeSheet`, `RecipeEditSheet`, `CreatePartySheet` | Close | "Next", disabled until the step is valid | `.sheetNextToolbar` |
-| **Multi-step, middle step** | Pushed one-question steps (`RateStepView` in `RateMealSheet`); optional steps pin a `secondary ghost` "Skip" to the bottom | System back button | "Next" | `.stepNextToolbar` |
-| **Multi-step, later step** | Pushed last steps (`RateReviewStep`, `MealDetailsStepView`, `RecipeDetailsStepView`, `PartySetupStepView`) | System back button | Checkmark or spinner; interactive dismiss disabled while saving | `.stepCommitToolbar` |
-| **Media / Photo Viewer** | Full-screen photos with no state changes (`MediaViewerSheet`) | Close | *None* | `.mediaViewerStyle()` |
-| **Note editor** | Full-height edit of one multi-line note, opened by `NoteField` (`NoteEditorSheet`) | Close (discards the draft) | Checkmark | `.sheetCommitToolbar` |
-| **Read-only sheet** | Explanations, insight sheets (`PartyMemberInsightSheet`) | Close | *None* | `.sheetCloseToolbar()` |
-| **Selection / Picker** | Choosing an item dismisses (`RecipePickerSheet`, `CuisinePickerSheet`) | Close | Optional primary action | `.sheetCancelToolbar()` |
-| **Management / Overview** | Modal list overview (`PartyMembersSheet`) | Close | Optional primary action (`plus`) | `.sheetOverviewToolbar` |
+| Sheet Type | Purpose & Examples | Leading Action (`.topBarLeading`) | Trailing Action (`.topBarTrailing`) | Swipe to dismiss | Modifier |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| **Commit / Form / Editor** | Inputs, edits, ratings, filters (`PartySettingsSheet`, `DishRecipeEditSheet`, `RecipeFilterSheet`, `CuisinePickerSheet`) | Close (asks first when changed) | Checkmark, or a spinner while saving; an unchanged edit just closes | Free while unchanged; asks "Discard changes?" once changed; blocked while saving | `.sheetCommitToolbar` |
+| **Multi-step, first step** | `CreateRecipeSheet`, `RecipeEditSheet`, `CreatePartySheet` | Close (asks first when changed) | "Next", disabled until the step is valid | Free while unchanged; asks "Discard changes?" once changed; blocked while saving | `.sheetNextToolbar` |
+| **Multi-step, middle step** | Pushed one-question steps (`RateStepView` in `RateMealSheet`); optional steps pin a `secondary ghost` "Skip" to the bottom | System back button | "Next" | Free while unchanged; asks "Discard changes?" once changed; blocked while saving | `.stepNextToolbar` |
+| **Multi-step, later step** | Pushed last steps (`RateReviewStep`, `MealDetailsStepView`, `RecipeDetailsStepView`, `PartySetupStepView`) | System back button | Checkmark or spinner; interactive dismiss disabled while saving | Free while unchanged; asks "Discard changes?" once changed; blocked while saving | `.stepCommitToolbar` |
+| **Media / Photo Viewer** | Full-screen photos with no state changes (`MediaViewerSheet`) | Close | *None* | Free | `.mediaViewerStyle()` |
+| **Note editor** | Full-height edit of one multi-line note, opened by `NoteField` (`NoteEditorSheet`) | Close (asks first when changed) | Checkmark | Free while unchanged; asks "Discard changes?" once changed; blocked while saving | `.sheetCommitToolbar` |
+| **Read-only sheet** | Explanations, insight sheets (`PartyMemberInsightSheet`) | Close | *None* | Free | `.sheetCloseToolbar()` |
+| **Selection / Picker** | Choosing an item dismisses (`RecipePickerSheet`) | Close | Optional primary action | Free | `.sheetCancelToolbar()` |
+| **Management / Overview** | Modal list overview (`PartyMembersSheet`) | Close | Optional primary action (`plus`) | Free | `.sheetOverviewToolbar` |
 
 ---
 
-### B. Centralized View Modifiers (`NomNom/Core/Extensions/View+SheetToolbars.swift`)
+### B. The editor model (`Core/Forms/`, `Core/Extensions/View+EditorSheet.swift`)
 
-Never hand-write sheet toolbars, grabbers or sheet padding. **ALWAYS** use:
+**Every sheet with an edit state is a `FormSession` behind `.editorSheet`.** Never hand-write save tasks, `isSaving` flags, `didLoad` flags, error alerts, haptics or drag-to-dismiss gestures in a sheet.
+
+1. **Form** (`Domain/Forms/`): the value being edited, a `SheetForm` (`Equatable` + `isValid`). One type per editable thing, shared by every sheet that edits it (`MealDraft`, `RecipeForm`, `PartyForm`, `RatingAnswers`, `RecipeFilterCriteria`, `CuisineSelection`, `NoteForm`).
+2. **Session** (`FormSession<Form>`, `@State` on the sheet root): `form`, the `baseline` it opened with, `isDirty`, `canCommit`, `isSaving`, `error`, `load(_:)` (once, after async loads/prefills), `discard()`, `save(_:)` (haptics, `isSaving`, errors). `kind: .create` always commits; `.edit` closes without saving when nothing changed.
+3. **Chrome**: `.editorSheet(session)` on the NavigationStack (in place of `.dsSheet()`) adds the BottomSheet, Mail-style dismissal, the error alert and `\.dismissSheet`; the session toolbars below read the rest.
+
+The commit closure is the only per-sheet code. A persisting editor calls the store (`await store.updateParty(…); try store.throwIfFailed()`); a value editor writes back to its binding (`{ criteria = $0 }`) and always works on a copy. Pushed steps take `session` (or `$session.form`) and close the whole sheet through the toolbar or `\.dismissSheet`, never an `onDismiss` closure.
 
 ```swift
-NavigationStack {
-    SheetBody { /* sections */ }
-        .screenTitle("Rate meal", displayMode: .inline)
-        .sheetCommitToolbar(isSaving: isSaving, canSave: canSave, onCancel: nil) { save() }
-}
-.dsSheet()                                   // or .dsSheet(detents: [.medium, .large])
+@State private var session = FormSession(PartyForm(party))
 
-.sheetNextToolbar(canProceed: isValid) { path.append(.details) }
-.stepNextToolbar(canProceed: isValid) { path.append(.next) }
-.stepCommitToolbar(isSaving: isSaving, canSave: canSave) { save() }
+NavigationStack {
+    SheetBody { /* fields bound to $session.form */ }
+        .screenTitle("Edit Party", displayMode: .inline)
+        .sheetCommitToolbar(session) { form in
+            await store.updateParty(party, name: form.name, …)
+            try store.throwIfFailed()
+        }
+}
+.editorSheet(session)                        // or .editorSheet(session, detents: [.medium, .large])
+
+.sheetNextToolbar(session, canProceed: session.form.isValid) { path.append(.details) }
+.stepNextToolbar { path.append(.next) }      // middle steps commit nothing
+.stepCommitToolbar(session) { form in … }    // last pushed step
+.discardGuard(isDirty:isSaving:onDiscard:)   // non-form state only (RecipeScannerSheet)
+```
+
+The commit and "Next" toolbars only exist in their session form, and a debug build asserts when one has no `.editorSheet` above it.
+
+### C. Sheets without edits (`NomNom/Core/Extensions/View+SheetToolbars.swift`)
+
+Never hand-write sheet toolbars, grabbers or sheet padding. Sheets that edit nothing use `.dsSheet()` and:
+
+```swift
 .sheetCloseToolbar()                         // read-only sheets
 .sheetCancelToolbar()                        // pickers
 .sheetOverviewToolbar(primarySystemImage: "plus") { showingCreate = true }
@@ -298,7 +323,17 @@ Only these specific system-level APIs are exempt from `AppButton`:
 
 ---
 
-## 11. Summary Checklist Before Creating or Modifying Code
+## 11. Branching & Releases
+
+- **Feature PRs target the newest `release/*` branch, never `main`.** Find it with `git branch -r --list 'origin/release/*' | sort -V | tail -n 1`. New Superset workspaces set this as `gh pr create`'s default base (`.superset/setup.sh`); otherwise pass `--base release/<version>`.
+- **Only release PRs (`release/*` → `main`) go into `main`.** The `Release gate` check fails anything else (Dependabot excepted).
+- **No direct pushes** to `main` or `release/*`; GitHub rulesets require a PR for both.
+- **CodeQL runs on release branches and `main` only**, not on feature PRs. The Swift job takes about 30 min, so a release PR into `main` waits for it.
+- When a workspace needs work that is on the release branch but not yet on `main`, create it from the release branch (`superset ws create … --base-branch release/<version>`).
+
+---
+
+## 12. Summary Checklist Before Creating or Modifying Code
 
 - [ ] Will this change cause the file to exceed ~200–250 lines? If yes, extract a component first.
 - [ ] Is this new component or subview located in the correct `Components/` folder rather than inlined in a parent view?
@@ -312,6 +347,7 @@ Only these specific system-level APIs are exempt from `AppButton`:
 - [ ] Is the view composed from `Core/Components` (Card, ListRow, EmptyState, …)? Is a pattern the DS lacks in `Interim/` with a `DS-GAPS.md` entry, not hand-rolled?
 - [ ] Is `Core/Design/Generated/` untouched (regenerated with `scripts/ds-tokens-swift.py` only)?
 - [ ] Do modal sheets use `.dsSheet()`, `SheetBody` and one of the sheet toolbar modifiers (close on `.topBarLeading`, primary action on `.topBarTrailing`)?
+- [ ] Is every sheet with an edit state a `FormSession` behind `.editorSheet`, with no hand-written save task, error alert or dismiss gesture?
 - [ ] Are all action buttons in screens, sheets, cards, and sections using `AppButton` (or `AppButtonLabel` inside a picker, share link or menu) rather than raw `Button`?
 - [ ] Are AppButton variants (`primary`, `secondary`, `destructive`, `pro`), appearances (`solid`, `soft`, `outline`, `ghost`, `elevated`) and sizes (`xs`, `sm`, `md`, `lg`) used according to Section 8?
 - [ ] Are emojis completely avoided across all UI and data representations?

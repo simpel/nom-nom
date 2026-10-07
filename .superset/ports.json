@@ -1,0 +1,5 @@
+{
+  "ports": [
+    { "port": 3060, "label": "Web (first free port from 3060 up)" }
+  ]
+}

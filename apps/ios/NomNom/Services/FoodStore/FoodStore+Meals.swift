@@ -225,7 +225,7 @@ extension FoodStore {
         }
     }
 
-    struct MealDraft {
+    struct MealDraft: Equatable {
         var mealID: UUID?
         var dishName: String
         /// Optional name for this serving; blank means the recipe's name is used.
