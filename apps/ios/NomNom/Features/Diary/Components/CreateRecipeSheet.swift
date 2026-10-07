@@ -6,14 +6,17 @@ struct CreateRecipeSheet: View {
     var initialCuisine: String? = nil
     var onCreated: ((Recipe) -> Void)?
 
-    @Environment(FoodStore.self) private var store
-    @Environment(\.dismiss) private var dismiss
-
-    @State private var name: String = ""
-    @State private var coverPhotosDraft = FoodStore.PhotosDraft()
-    @State private var recipeDraft = FoodStore.RecipeDraft()
+    @State private var session: FormSession<RecipeForm>
     @State private var navigateToDetails = false
     @State private var showingScanner = false
+
+    init(initialName: String = "", initialCuisine: String? = nil, onCreated: ((Recipe) -> Void)? = nil) {
+        self.initialName = initialName
+        self.initialCuisine = initialCuisine
+        self.onCreated = onCreated
+        let form = RecipeForm(name: initialName, cuisine: initialCuisine)
+        self._session = State(initialValue: FormSession(form, kind: .create))
+    }
 
     var body: some View {
         NavigationStack {
@@ -30,10 +33,10 @@ struct CreateRecipeSheet: View {
                     }
 
                     RecipeBasicsForm(
-                        name: $name,
-                        coverPhotos: $coverPhotosDraft,
-                        effort: $recipeDraft.effort,
-                        cuisine: $recipeDraft.cuisine
+                        name: $session.form.name,
+                        coverPhotos: $session.form.coverPhotos,
+                        effort: $session.form.recipe.effort,
+                        cuisine: $session.form.recipe.cuisine
                     )
                 }
                 .padding(.horizontal, DS.Spacing.gutter)
@@ -42,63 +45,49 @@ struct CreateRecipeSheet: View {
             }
             .background(DS.Color.sheet)
             .screenTitle("New Recipe", displayMode: .inline)
-            .sheetNextToolbar(canProceed: !name.trimmedName.isEmpty) {
+            .sheetNextToolbar(session, canProceed: session.form.isValid) {
                 navigateToDetails = true
             }
             .navigationDestination(isPresented: $navigateToDetails) {
-                RecipeDetailsStepView(
-                    name: name,
-                    coverPhotosDraft: coverPhotosDraft,
-                    recipeDraft: $recipeDraft,
-                    onCreated: onCreated,
-                    onDismiss: { dismiss() }
-                )
+                RecipeDetailsStepView(session: session, onCreated: onCreated)
             }
             .sheet(isPresented: $showingScanner) {
                 RecipeScannerSheet { result, photoDataList in
                     applyParsedRecipe(result, photos: photoDataList)
                 }
             }
-            .onAppear {
-                if name.isEmpty && !initialName.isEmpty {
-                    name = initialName
-                }
-                if recipeDraft.cuisine == nil, let initialCuisine {
-                    recipeDraft.cuisine = initialCuisine
-                }
-            }
         }
-        .dsSheet()
+        .editorSheet(session, errorTitle: "Couldn\u{2019}t save recipe")
     }
 
     private func applyParsedRecipe(_ result: ParsedRecipeResult, photos: [Data]) {
         if !result.name.isEmpty {
-            name = result.name
+            session.form.name = result.name
         }
         if let cuisine = result.cuisine {
-            recipeDraft.cuisine = cuisine
+            session.form.recipe.cuisine = cuisine
         }
         if let cuisineID = result.cuisineID {
-            recipeDraft.cuisineID = cuisineID
+            session.form.recipe.cuisineID = cuisineID
         }
         if let cookingMethodID = result.cookingMethodID {
-            recipeDraft.cookingMethodID = cookingMethodID
+            session.form.recipe.cookingMethodID = cookingMethodID
         }
         if let dishKindID = result.dishKindID {
-            recipeDraft.dishKindID = dishKindID
+            session.form.recipe.dishKindID = dishKindID
         }
         if let effort = result.effort, let level = EffortLevel(rawValue: effort) {
-            recipeDraft.effort = level
+            session.form.recipe.effort = level
         }
         if let serves = result.serves {
-            recipeDraft.serves = serves
+            session.form.recipe.serves = serves
         }
-        recipeDraft.ingredients = result.ingredients
-        recipeDraft.instructions = result.instructions
+        session.form.recipe.ingredients = result.ingredients
+        session.form.recipe.instructions = result.instructions
 
         // Attach scanned photos to drafts
         for photo in photos {
-            recipeDraft.addPhotoData(photo)
+            session.form.recipe.addPhotoData(photo)
         }
 
         navigateToDetails = true

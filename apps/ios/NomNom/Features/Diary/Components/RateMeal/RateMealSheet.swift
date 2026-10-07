@@ -8,12 +8,9 @@ struct RateMealSheet: View {
     let mealID: UUID
 
     @Environment(FoodStore.self) private var store
-    @Environment(\.dismiss) private var dismiss
 
-    @State private var answers = RatingAnswers()
+    @State private var session = FormSession(RatingAnswers(), isLoaded: false)
     @State private var path: [RateStep] = []
-    @State private var isSaving = false
-    @State private var didLoad = false
 
     private var eyebrow: String {
         store.meal(mealID).map { store.dishName(forMeal: $0) } ?? "Meal"
@@ -21,7 +18,10 @@ struct RateMealSheet: View {
 
     var body: some View {
         NavigationStack(path: $path) {
-            RateStepView(question: .taste, answers: $answers, eyebrow: eyebrow, isRoot: true) {
+            RateStepView(question: .taste, answers: $session.form, eyebrow: eyebrow) {
+                go(to: RateQuestion.taste.next)
+            }
+            .sheetNextToolbar(session, canProceed: session.form.reaction != nil) {
                 go(to: RateQuestion.taste.next)
             }
             .navigationDestination(for: RateStep.self) { step in
@@ -29,9 +29,12 @@ struct RateMealSheet: View {
             }
         }
         .environment(\.ratingTraits, traits)
-        .dsSheet()
-        .onAppear(perform: load)
-        .onChange(of: answers.reaction) { _, reaction in dropTagsNotOffered(for: reaction) }
+        .editorSheet(session, errorTitle: "Couldn\u{2019}t save rating")
+        .onAppear { session.load(RatingAnswers(store.rating(for: .account(store.userID), on: mealID))) }
+        .onChange(of: session.form.reaction) { old, reaction in
+            // From no verdict there are no tags to drop, only loaded ones to keep.
+            if old != nil { dropTagsNotOffered(for: reaction) }
+        }
     }
 
     private var traits: Set<String> { store.ratingTraits(forMeal: mealID) }
@@ -39,18 +42,23 @@ struct RateMealSheet: View {
     /// Each verdict has its own tags: changing it keeps only the ones still offered.
     private func dropTagsNotOffered(for reaction: Reaction?) {
         let offered = reaction.map { Set(store.ratingTagOptions(for: $0, traits: traits).map(\.id)) } ?? []
-        answers.tags.formIntersection(offered)
+        session.form.tags.formIntersection(offered)
     }
 
     @ViewBuilder
     private func destination(for step: RateStep) -> some View {
         switch step {
         case .question(let question):
-            RateStepView(question: question, answers: $answers, eyebrow: eyebrow, isRoot: false) {
+            RateStepView(question: question, answers: $session.form, eyebrow: eyebrow) {
                 go(to: question.next)
             }
+            .stepNextToolbar { go(to: question.next) }
         case .review:
-            RateReviewStep(answers: $answers, eyebrow: eyebrow, isSaving: isSaving, onSave: save)
+            RateReviewStep(answers: $session.form, eyebrow: eyebrow)
+                .stepCommitToolbar(session) { answers in
+                    let saved = await store.saveMyRating(mealID: mealID, answers: answers)
+                    try store.throwIfFailed(saved)
+                }
         }
     }
 
@@ -58,24 +66,6 @@ struct RateMealSheet: View {
     private func go(to step: RateStep) {
         guard !path.contains(step) else { return }
         path.append(step)
-    }
-
-    private func load() {
-        guard !didLoad else { return }
-        didLoad = true
-        answers = RatingAnswers(store.rating(for: .account(store.userID), on: mealID))
-    }
-
-    private func save() {
-        isSaving = true
-        Task {
-            let ok = await store.saveMyRating(mealID: mealID, answers: answers)
-            isSaving = false
-            if ok {
-                UINotificationFeedbackGenerator().notificationOccurred(.success)
-                dismiss()
-            }
-        }
     }
 }
 

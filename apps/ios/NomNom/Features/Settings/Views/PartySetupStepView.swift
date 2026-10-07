@@ -3,18 +3,11 @@ import SwiftUI
 /// Step 2 of creating or editing a dinner party: members (first) and sharing & visibility (second).
 struct PartySetupStepView: View {
     var partyID: UUID? = nil
-    let name: String
-    let about: String
-    let photoDraft: FoodStore.PhotosDraft
-    @Binding var isPublic: Bool
+    @Bindable var session: FormSession<PartyForm>
     var onCreated: ((Party) -> Void)? = nil
-    var onDismiss: () -> Void
 
     @Environment(FoodStore.self) private var store
-    @State private var isSaving = false
-    @State private var errorMessage: String?
 
-    private var isEditing: Bool { partyID != nil }
     private var party: Party? { partyID.flatMap { store.party($0) } }
     private var invites: [PartyInvite] {
         guard let partyID else { return [] }
@@ -29,17 +22,10 @@ struct PartySetupStepView: View {
 
             membersSection
 
-            VisibilityToggleCard.party(isPublic: $isPublic)
+            VisibilityToggleCard.party(isPublic: $session.form.isPublic)
         }
         .screenTitle("Party setup", displayMode: .inline)
-        .stepCommitToolbar(isSaving: isSaving, onSave: save)
-        .alert("Couldn't save dinner party",
-               isPresented: Binding(get: { errorMessage != nil },
-                                    set: { if !$0 { errorMessage = nil } })) {
-            Button("OK") { errorMessage = nil }
-        } message: {
-            Text(errorMessage ?? "")
-        }
+        .stepCommitToolbar(session, save: save)
     }
 
     private var membersSection: some View {
@@ -66,44 +52,27 @@ struct PartySetupStepView: View {
         }
     }
 
-    private func save() {
-        let partyName = name.trimmedName
-        guard !partyName.isEmpty else { return }
-        isSaving = true
-        UIImpactFeedbackGenerator(style: .medium).impactOccurred()
-        Task {
-            if let party {
-                await store.updateParty(
-                    party,
-                    name: partyName,
-                    about: about,
-                    isPublic: isPublic,
-                    photos: photoDraft
-                )
-                isSaving = false
-                if store.errorMessage == nil {
-                    UINotificationFeedbackGenerator().notificationOccurred(.success)
-                    onDismiss()
-                } else {
-                    errorMessage = store.errorMessage
-                    store.errorMessage = nil
-                }
-            } else {
-                if let newParty = await store.createParty(
-                    name: partyName,
-                    about: about,
-                    isPublic: isPublic,
-                    photos: photoDraft.addedData
-                ) {
-                    store.currentParty = newParty
-                    onCreated?(newParty)
-                    isSaving = false
-                    UINotificationFeedbackGenerator().notificationOccurred(.success)
-                    onDismiss()
-                } else {
-                    errorMessage = store.errorMessage ?? "An error occurred creating the party."
-                    isSaving = false
-                }
+    private func save(_ form: PartyForm) async throws {
+        if let party {
+            await store.updateParty(
+                party,
+                name: form.name.trimmedName,
+                about: form.about,
+                isPublic: form.isPublic,
+                photos: form.photos
+            )
+            try store.throwIfFailed()
+        } else {
+            let newParty = await store.createParty(
+                name: form.name.trimmedName,
+                about: form.about,
+                isPublic: form.isPublic,
+                photos: form.photos.addedData
+            )
+            try store.throwIfFailed(newParty != nil)
+            if let newParty {
+                store.currentParty = newParty
+                onCreated?(newParty)
             }
         }
     }

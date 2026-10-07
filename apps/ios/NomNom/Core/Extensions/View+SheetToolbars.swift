@@ -1,8 +1,10 @@
 import SwiftUI
 
-// Sheet chrome (AGENTS.md §5). The leading close is always an AppButton
-// `secondary soft` icon-only xmark on `.topBarLeading`, alone; primary actions sit on
-// `.topBarTrailing`. Implementations live in `View+SheetToolbarModifiers.swift`.
+// Sheet chrome (AGENTS.md §5). The leading close is a system xmark on `.topBarLeading`,
+// alone; primary actions sit on `.topBarTrailing`. Edit sheets take a `FormSession` and
+// sit behind `.editorSheet` (`View+EditorSheet.swift`); the commit and "Next" toolbars
+// can't be used without one. Implementations live in `View+SheetToolbarModifiers.swift`
+// and `View+SheetCommitToolbars.swift`.
 
 extension View {
     /// The BottomSheet presentation: `sheet` ground, `radius-4xl` top corners and the
@@ -24,48 +26,39 @@ extension View {
             .environment(\.isProSheet, pro)
     }
 
-    /// Form, editor, rating and filter sheets: leading close (discards the draft)
-    /// and a trailing checkmark (or a spinner while saving). Interactive dismissal
-    /// is disabled while `isSaving`.
-    func sheetCommitToolbar(
-        isSaving: Bool = false,
-        canSave: Bool = true,
-        onCancel: (() -> Void)? = nil,
-        onSave: @escaping () -> Void
+    /// Form, editor, rating and filter sheets: leading close and a trailing checkmark
+    /// (a spinner while saving), enabled by `session.canCommit`. Close asks "Discard
+    /// changes?" when the form changed. The checkmark closes an unchanged edit as is;
+    /// otherwise it runs `save` through `session.save` and closes the whole sheet when it
+    /// succeeds. Needs `.editorSheet(session)` on the sheet's NavigationStack.
+    func sheetCommitToolbar<Form: SheetForm>(
+        _ session: FormSession<Form>,
+        save: @escaping (Form) async throws -> Void
     ) -> some View {
-        modifier(SheetCommitToolbarModifier(
-            isSaving: isSaving,
-            canSave: canSave,
-            onCancel: onCancel,
-            onSave: onSave
-        ))
+        modifier(SessionCommitToolbarModifier(session: session, title: nil, showsClose: true, save: save))
     }
 
-    /// The first step of a multi-step sheet: leading close and a trailing text
-    /// action ("Next") that is disabled until `canProceed`.
-    func sheetNextToolbar(
+    /// The first step of a multi-step sheet: leading close (asks first when the form
+    /// changed) and a trailing text action ("Next") that is disabled until `canProceed`.
+    /// Needs `.editorSheet(session)` on the sheet's NavigationStack.
+    func sheetNextToolbar<Form: SheetForm>(
+        _ session: FormSession<Form>,
         title: String = "Next",
-        canProceed: Bool = true,
-        onCancel: (() -> Void)? = nil,
+        canProceed: Bool,
         onNext: @escaping () -> Void
     ) -> some View {
-        modifier(SheetNextToolbarModifier(
-            title: title,
-            canProceed: canProceed,
-            onCancel: onCancel,
-            onNext: onNext
-        ))
+        modifier(SessionNextToolbarModifier(session: session, title: title, canProceed: canProceed, onNext: onNext))
     }
 
-    /// A pushed later step of a multi-step sheet (it keeps the navigation back
-    /// button): a trailing checkmark, or a spinner while saving. Interactive
-    /// dismissal is disabled while `isSaving`.
-    func stepCommitToolbar(
-        isSaving: Bool = false,
-        canSave: Bool = true,
-        onSave: @escaping () -> Void
+    /// A pushed last step of a multi-step sheet (it keeps the navigation back button): a
+    /// trailing checkmark, or a spinner while saving, that works like
+    /// `sheetCommitToolbar`'s. `title` replaces the checkmark with a text action.
+    func stepCommitToolbar<Form: SheetForm>(
+        _ session: FormSession<Form>,
+        title: String? = nil,
+        save: @escaping (Form) async throws -> Void
     ) -> some View {
-        modifier(StepCommitToolbarModifier(isSaving: isSaving, canSave: canSave, onSave: onSave))
+        modifier(SessionCommitToolbarModifier(session: session, title: title, showsClose: false, save: save))
     }
 
     /// A pushed middle step of a multi-step sheet (it keeps the navigation back

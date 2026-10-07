@@ -18,7 +18,7 @@ struct NoteEditorSheet: View {
     var bulleted: Bool
 
     @Environment(\.dismiss) private var dismiss
-    @State private var draft: String
+    @State private var session: FormSession<NoteForm>
     @State private var confirmDelete = false
     @FocusState private var isFocused: Bool
 
@@ -28,18 +28,11 @@ struct NoteEditorSheet: View {
         self._text = text
         self.maxLength = maxLength
         self.bulleted = bulleted
-        let start = text.wrappedValue
-        self._draft = State(initialValue: bulleted && start.isEmpty ? BulletList.marker : start)
+        let form = NoteForm(text.wrappedValue, maxLength: maxLength, bulleted: bulleted)
+        self._session = State(initialValue: FormSession(form))
     }
 
     private var hadText: Bool { !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
-    /// The draft as saved: a lone bullet with nothing after it counts as empty.
-    private var committed: String {
-        let trimmed = draft.trimmingCharacters(in: .whitespacesAndNewlines)
-        return trimmed == BulletList.marker.trimmingCharacters(in: .whitespaces) ? "" : draft
-    }
-
-    private var isOver: Bool { maxLength.map { draft.count > $0 } ?? false }
 
     var body: some View {
         NavigationStack {
@@ -48,7 +41,7 @@ struct NoteEditorSheet: View {
                     ScrollView {
                         TextArea(
                             placeholder,
-                            text: $draft,
+                            text: $session.form.text,
                             lineLimit: 1...Int.max,
                             appearance: .plain,
                             maxLength: maxLength,
@@ -67,7 +60,7 @@ struct NoteEditorSheet: View {
                     // when there is a saved note); the full-width Delete note returns
                     // when the keyboard goes down.
                     NoteFormatBar(onDelete: hadText ? { confirmDelete = true } : nil) {
-                        draft = BulletList.toggled(draft)
+                        session.form.text = BulletList.toggled(session.form.text)
                     }
                 } else if hadText {
                     AppButton(
@@ -87,10 +80,7 @@ struct NoteEditorSheet: View {
             .padding(.bottom, DS.Spacing.s4)
             .background(DS.Color.sheet)
             .screenTitle(title, displayMode: .inline)
-            .sheetCommitToolbar(canSave: committed != text && !isOver) {
-                text = committed
-                dismiss()
-            }
+            .sheetCommitToolbar(session) { text = $0.committed }
             .confirmationDialog("Delete this note?", isPresented: $confirmDelete, titleVisibility: .visible) {
                 Button("Delete note", role: .destructive) {
                     text = ""
@@ -100,12 +90,12 @@ struct NoteEditorSheet: View {
             } message: {
                 Text("It\u{2019}s removed from the recipe for everyone in the party.")
             }
-            .onChange(of: draft) { old, new in
+            .onChange(of: session.form.text) { old, new in
                 let continued = BulletList.continuing(old, into: new)
-                if continued != new { draft = continued }
+                if continued != new { session.form.text = continued }
             }
         }
-        .dsSheet()
+        .editorSheet(session)
         .onAppear { isFocused = true }
     }
 }
