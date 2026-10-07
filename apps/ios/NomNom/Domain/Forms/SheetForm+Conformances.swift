@@ -12,3 +12,7 @@ extension RatingAnswers: SheetForm {
 }
 
 extension RecipeFilterCriteria: SheetForm {}
+
+extension RecipeIngredient: SheetForm {
+    var isValid: Bool { !trimmedIngredient.isEmpty }
+}
