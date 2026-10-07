@@ -26,4 +26,14 @@ for f in "${FILES[@]}"; do
   fi
 done
 
+# Point `gh pr create` at the newest release/* branch instead of main (AGENTS.md §11).
+# Offline or no release branch: gh keeps its default and setup carries on.
+git fetch -q origin '+refs/heads/release/*:refs/remotes/origin/release/*' 2>/dev/null || true
+release=$(git for-each-ref --format='%(refname:lstrip=3)' 'refs/remotes/origin/release/*' | sort -V | tail -n 1)
+branch=$(git branch --show-current)
+if [ -n "$release" ] && [ -n "$branch" ]; then
+  git config "branch.$branch.gh-merge-base" "$release"
+  echo "PRs from $branch target $release"
+fi
+
 pnpm install --frozen-lockfile
