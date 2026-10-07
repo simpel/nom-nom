@@ -298,7 +298,17 @@ Only these specific system-level APIs are exempt from `AppButton`:
 
 ---
 
-## 11. Summary Checklist Before Creating or Modifying Code
+## 11. Branching & Releases
+
+- **Feature PRs target the newest `release/*` branch, never `main`.** Find it with `git branch -r --list 'origin/release/*' | sort -V | tail -n 1`. New Superset workspaces set this as `gh pr create`'s default base (`.superset/setup.sh`); otherwise pass `--base release/<version>`.
+- **Only release PRs (`release/*` → `main`) go into `main`.** The `Release gate` check fails anything else (Dependabot excepted).
+- **No direct pushes** to `main` or `release/*`; GitHub rulesets require a PR for both.
+- **CodeQL runs on release branches and `main` only**, not on feature PRs. The Swift job takes about 30 min, so a release PR into `main` waits for it.
+- When a workspace needs work that is on the release branch but not yet on `main`, create it from the release branch (`superset ws create … --base-branch release/<version>`).
+
+---
+
+## 12. Summary Checklist Before Creating or Modifying Code
 
 - [ ] Will this change cause the file to exceed ~200–250 lines? If yes, extract a component first.
 - [ ] Is this new component or subview located in the correct `Components/` folder rather than inlined in a parent view?
