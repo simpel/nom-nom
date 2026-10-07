@@ -1,8 +1,7 @@
 import SwiftUI
 
-/// Main tab — Recipes ("Nom Nom iOS" canvas): a ScreenHeader with no action (the tab is
-/// for finding recipes; "New recipe" lives in the PageMenu and on My recipes), then the
-/// Pro party card (AI picks, else safe bets), My favourites, My recipes, Popular recipes
+/// Main tab — Recipes ("Nom Nom iOS" canvas): a ScreenHeader with "New recipe" (as Meals
+/// has "Log a meal"; also in the PageMenu and on My recipes), then the Pro party card (AI picks, else safe bets), My favourites, My recipes, Popular recipes
 /// and the cuisine categories.
 struct RecipesView: View {
     @Environment(FoodStore.self) private var store
@@ -16,7 +15,8 @@ struct RecipesView: View {
                     ScreenHeader(
                         "Recipes",
                         summary: "Find something to cook, from party picks to what everyone loves.",
-                        role: .tabRoot
+                        role: .tabRoot,
+                        actions: [ScreenHeaderAction(title: "New recipe") { showingCreateSheet = true }]
                     )
                     .padding(.horizontal, DS.Spacing.gutter)
 
