@@ -94,7 +94,7 @@ struct NoteEditorSheet: View {
                 text = committed
                 dismiss()
             }
-            .confirmationDialog(onRemove != nil ? "Remove this?" : "Delete this note?", isPresented: $confirmDelete, titleVisibility: .visible) {
+            .alert(onRemove != nil ? "Remove this?" : "Delete this note?", isPresented: $confirmDelete) {
                 Button(onRemove != nil ? "Remove" : "Delete note", role: .destructive) {
                     if let onRemove {
                         onRemove()
