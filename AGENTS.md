@@ -325,11 +325,11 @@ Only these specific system-level APIs are exempt from `AppButton`:
 
 ## 11. Branching & Releases
 
-- **Feature PRs target the newest `release/*` branch, never `main`.** Find it with `git branch -r --list 'origin/release/*' | sort -V | tail -n 1`. New Superset workspaces set this as `gh pr create`'s default base (`.superset/setup.sh`); otherwise pass `--base release/<version>`.
+- **Feature PRs target the newest `release/*` branch, never `main`.** Find it with `git branch -r --list 'origin/release/*' | sort -V | tail -n 1`. Superset workspaces start from the base picked at creation (`--base-branch` or the app's base picker; `main` or none means the newest `release/*`), and setup sets it as `gh pr create`'s default base (`.superset/setup.sh`). Otherwise branch from it and pass `--base release/<version>`.
 - **Only release PRs (`release/*` → `main`) go into `main`.** The `Release gate` check fails anything else (Dependabot excepted).
 - **No direct pushes** to `main` or `release/*`; GitHub rulesets require a PR for both.
 - **CodeQL runs on release branches and `main` only**, not on feature PRs. The Swift job takes about 30 min, so a release PR into `main` waits for it.
-- When a workspace needs work that is on the release branch but not yet on `main`, create it from the release branch (`superset ws create … --base-branch release/<version>`).
+- With several releases open, pick the one per workspace: `superset ws create … --base-branch release/<version>`. Setup fast-forwards a fresh branch to `origin/<base>`; a branch with its own commits is never moved.
 
 ---
 
