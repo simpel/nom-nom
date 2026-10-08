@@ -331,6 +331,19 @@ Only these specific system-level APIs are exempt from `AppButton`:
 - **CodeQL runs on release branches and `main` only**, not on feature PRs. The Swift job takes about 30 min, so a release PR into `main` waits for it.
 - With several releases open, pick the one per workspace: `superset ws create … --base-branch release/<version>`. Setup fast-forwards a fresh branch to `origin/<base>`; a branch with its own commits is never moved.
 
+### Superset workspaces (git worktrees)
+
+`.superset/` holds setup, run and teardown. Know what each workspace owns and what it shares:
+
+| Per workspace | Shared by every workspace |
+| :--- | :--- |
+| Web port: claimed once from 3060 up and kept in `.superset/.web-port` (`.superset/web-port.sh` prints it) | Local Supabase stack (`supabase_db_food`, ports 5434x) |
+| `node_modules`, Xcode DerivedData (teardown deletes it) | The booted simulator and InjectionNext (`run.sh` stops another workspace's iOS session) |
+| Env files: symlinks to the root checkout's, so edit them there | Signing files and `.claude/settings.local.json`: copied at setup, so re-run setup after changing them |
+
+- **The database is shared, so its schema can be another branch's.** `run.sh` runs `scripts/db-drift.sh`, which lists migrations this branch has that aren't applied, and applied ones this branch lacks. Run it before trusting a schema-related bug, and fix with `./scripts/seed.sh` (apply missing) or `./scripts/seed.sh --reset` (drop the other branch's).
+- Never hardcode the web port or the Supabase container name; read `.superset/.web-port` and `project_id` in `apps/supabase/config.toml`.
+
 ---
 
 ## 12. Summary Checklist Before Creating or Modifying Code
