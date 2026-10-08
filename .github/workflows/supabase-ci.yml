@@ -1,7 +1,18 @@
 name: Supabase CI (Verify Migrations & RLS)
 
+# Feature PRs target release/* and skip this check (same pattern as CodeQL).
+# It runs on each push to a release branch and on the release PR into main,
+# so a broken migration is caught before the Supabase integration deploys main.
 on:
+  push:
+    branches:
+      - "release/**"
+    paths:
+      - 'apps/supabase/**'
+      - '.github/workflows/supabase-*.yml'
   pull_request:
+    branches:
+      - main
     paths:
       - 'apps/supabase/**'
       - '.github/workflows/supabase-*.yml'
