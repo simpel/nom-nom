@@ -5,9 +5,25 @@ set -euo pipefail
 : "${SUPERSET_ROOT_PATH:?SUPERSET_ROOT_PATH is not set}"
 
 # Untracked files the app needs (secrets, signing assets). Missing ones are skipped.
-FILES=(
+# Env files are symlinked so a key rotated in the root reaches every workspace.
+LINKS=(
   "apps/web/.env.local"
   "apps/supabase/functions/.env"
+)
+for f in "${LINKS[@]}"; do
+  src="$SUPERSET_ROOT_PATH/$f"
+  if [ -f "$src" ]; then
+    mkdir -p "$(dirname "$f")"
+    ln -sfn "$src" "$f"
+    echo "linked $f"
+  else
+    echo "skipped $f (not in root)"
+  fi
+done
+
+# Copied, not linked: Xcode and codesign don't follow symlinks reliably, and
+# Claude Code rewrites settings.local.json in place of the link.
+FILES=(
   "apps/ios/NomNom.mobileprovision"
   ".claude/settings.local.json"
 )
@@ -47,3 +63,5 @@ if [ -n "$base" ] && [ -n "$branch" ] && git rev-parse -q --verify "origin/$base
 fi
 
 pnpm install --frozen-lockfile
+
+.superset/web-port.sh >/dev/null

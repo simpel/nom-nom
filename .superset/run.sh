@@ -1,17 +1,16 @@
 #!/usr/bin/env bash
-# Starts the web dev server on a free port so parallel workspaces don't collide,
-# and the iOS app in the simulator (scripts/ios-run.sh).
+# Starts the web dev server on this workspace's own port (.superset/web-port.sh) so
+# parallel workspaces don't collide, and the iOS app in the simulator (scripts/ios-run.sh).
 set -euo pipefail
 
 cd "$(dirname "$0")/.."
 
-port_free() { ! lsof -nP -iTCP:"$1" -sTCP:LISTEN >/dev/null 2>&1; }
-
-PORT="${WEB_PORT:-3060}"
-while ! port_free "$PORT"; do PORT=$((PORT + 1)); done
-
-echo "$PORT" > .superset/.web-port
+PORT="$(.superset/web-port.sh)"
 echo "Web dev server: http://localhost:$PORT"
+
+# The local Supabase stack is shared by every workspace: say so when its schema
+# doesn't match this branch. Never blocks the run.
+scripts/db-drift.sh || true
 
 # iOS: build, install and launch in the simulator next to the web server.
 # A failed iOS build doesn't stop the web server.
