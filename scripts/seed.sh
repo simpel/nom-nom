@@ -37,7 +37,8 @@ if [[ ! -f "$SEED_FILE" ]]; then
 fi
 
 # 2. Check if Docker container for Supabase Postgres is running
-CONTAINER_NAME=$(docker ps --filter "name=supabase_db_food" --format "{{.Names}}" | head -n 1)
+PROJECT_ID=$(sed -n 's/^project_id = "\(.*\)"/\1/p' "$WORKSPACE_ROOT/apps/supabase/config.toml")
+CONTAINER_NAME=$(docker ps --filter "name=^supabase_db_${PROJECT_ID}$" --format "{{.Names}}" | head -n 1)
 
 if [[ -z "$CONTAINER_NAME" ]]; then
     echo -e "${RED}Error: Local Supabase database container is not running.${NC}"

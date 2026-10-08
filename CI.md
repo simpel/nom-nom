@@ -40,8 +40,8 @@ Backend deployment no longer needs any GitHub secret — see below.
 
 Backend changes are handled in two places:
 
-1. **`supabase-ci.yml` (Pull Request Validation)** — a GitHub Actions workflow:
-   - Triggers on any PR touching `supabase/**`.
+1. **`supabase-ci.yml` (Release Validation)** — a GitHub Actions workflow:
+   - Triggers on pushes to `release/**` and on the release PR into `main`, when `apps/supabase/**` changed. Feature PRs into a release branch skip it (same pattern as CodeQL); run it on demand with `workflow_dispatch`.
    - Spins up a local Supabase instance in CI.
    - Runs `supabase db reset` to verify that all SQL migrations execute cleanly from scratch.
    - Executes `python3 supabase/tests/rls_test.py` to test Row Level Security policies and triggers.
