@@ -9,6 +9,7 @@ struct CreateRecipeSheet: View {
     @State private var session: FormSession<RecipeForm>
     @State private var navigateToDetails = false
     @State private var showingScanner = false
+    @State private var scanNotice: String?
 
     init(initialName: String = "", initialCuisine: String? = nil, onCreated: ((Recipe) -> Void)? = nil) {
         self.initialName = initialName
@@ -49,7 +50,7 @@ struct CreateRecipeSheet: View {
                 navigateToDetails = true
             }
             .navigationDestination(isPresented: $navigateToDetails) {
-                RecipeDetailsStepView(session: session, onCreated: onCreated)
+                RecipeDetailsStepView(session: session, onCreated: onCreated, scanNotice: $scanNotice)
             }
             .sheet(isPresented: $showingScanner) {
                 RecipeScannerSheet { result, photoDataList in
@@ -61,6 +62,7 @@ struct CreateRecipeSheet: View {
     }
 
     private func applyParsedRecipe(_ result: ParsedRecipeResult, photos: [Data]) {
+        scanNotice = result.extractionWarning
         if !result.name.isEmpty {
             session.form.name = result.name
         }
@@ -90,6 +92,8 @@ struct CreateRecipeSheet: View {
             session.form.recipe.addPhotoData(photo)
         }
 
-        navigateToDetails = true
+        // The checkmark on the details step needs a name. Without one, stay on the
+        // basics step (scanned ingredients are kept) so the name can be typed first.
+        navigateToDetails = session.form.isValid
     }
 }
