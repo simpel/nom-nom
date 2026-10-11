@@ -54,6 +54,22 @@ jobs:
           languages: ${{ matrix.language }}
           build-mode: ${{ matrix.build-mode }}
 
+      # Cache only the resolved package checkouts, keyed on Package.resolved. Never cache
+      # DerivedData: CodeQL traces the compiler, so a warm incremental build would skip
+      # compiling our own code and the analysis would silently cover almost none of it.
+      # Saved with `if: always()` so a failed build still warms the cache.
+      - name: Restore Swift build cache
+        id: swift-cache
+        if: matrix.language == 'swift'
+        uses: actions/cache/restore@v4
+        with:
+          path: |
+            ${{ runner.temp }}/SourcePackages
+          key: swift-codeql-${{ runner.os }}-${{ hashFiles('apps/ios/NomNom.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved') }}-${{ github.sha }}
+          restore-keys: |
+            swift-codeql-${{ runner.os }}-${{ hashFiles('apps/ios/NomNom.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved') }}-
+            swift-codeql-${{ runner.os }}-
+
       - name: Build Swift project
         if: matrix.language == 'swift'
         run: |
@@ -70,9 +86,19 @@ jobs:
             -destination 'generic/platform=iOS Simulator' \
             -skipMacroValidation \
             -skipPackagePluginValidation \
+            -derivedDataPath "$RUNNER_TEMP/DerivedData" \
+            -clonedSourcePackagesDirPath "$RUNNER_TEMP/SourcePackages" \
             ARCHS=arm64 ONLY_ACTIVE_ARCH=YES \
             COMPILER_INDEX_STORE_ENABLE=NO \
             CODE_SIGNING_ALLOWED=NO build
+
+      - name: Save Swift build cache
+        if: always() && matrix.language == 'swift' && steps.swift-cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: |
+            ${{ runner.temp }}/SourcePackages
+          key: swift-codeql-${{ runner.os }}-${{ hashFiles('apps/ios/NomNom.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved') }}-${{ github.sha }}
 
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@v4
