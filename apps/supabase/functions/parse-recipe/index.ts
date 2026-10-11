@@ -89,7 +89,28 @@ Extract the recipe into a single JSON object matching this schema:
 Classification Guidelines:
 - Cuisine: Make wide umbrella picks. For example: soy sauce/ginger -> 'asian', oregano/feta/olive oil -> 'greek' or 'mediterranean', cumin/chili -> 'mexican', pasta/parmesan -> 'italian', dill/salmon -> 'nordic'. Do not invent crossover or hyphenated cuisines.
 - Health Index: Score based on nutrient density (whole grains, vegetables, lean protein, healthy fats vs. high sodium, sugar, saturated fats) and cooking technique (fresh/steamed/baked vs. deep-fried/excess oil).
+- Multiple photos are ONE recipe: return exactly one JSON object, never an array.
 - Return ONLY valid JSON. No conversational intro or markdown outside JSON.`;
+
+// Models return quantities as numbers and fields as null; treat both as strings.
+const looseString = z.preprocess(
+  (v) => (v == null ? "" : typeof v === "number" ? String(v) : v),
+  z.string(),
+);
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function mergeRecipeFragments(items: any[]): Record<string, unknown> {
+  const objs = items.filter((i) => i && typeof i === "object" && !Array.isArray(i));
+  const merged: Record<string, unknown> = { ...(objs[0] ?? {}) };
+  merged.ingredients = objs.flatMap((o) => (Array.isArray(o.ingredients) ? o.ingredients : []));
+  merged.instructions = objs.flatMap((o) => (Array.isArray(o.instructions) ? o.instructions : []));
+  for (const o of objs) {
+    for (const [k, v] of Object.entries(o)) {
+      if (merged[k] == null && v != null) merged[k] = v;
+    }
+  }
+  return merged;
+}
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -232,8 +253,6 @@ Deno.serve(async (req) => {
     }
     sanitizedJson = sanitizedJson.trim();
 
-    await logger.success(rawContent);
-
     let parsedData;
     try {
       parsedData = JSON.parse(sanitizedJson);
@@ -241,35 +260,44 @@ Deno.serve(async (req) => {
       throw new Error('Response is not valid JSON');
     }
 
+    // The model sometimes wraps the recipe in an array (one entry per photo/page).
+    // Merge entries into one recipe instead of failing the scan.
+    if (Array.isArray(parsedData)) {
+      parsedData = mergeRecipeFragments(parsedData);
+    } else if (parsedData && Array.isArray(parsedData.recipes)) {
+      parsedData = mergeRecipeFragments(parsedData.recipes);
+    }
+
     const RecipeSchema = z.object({
-      name: z.string(),
-      serves: z.number().nullable().optional(),
+      name: looseString.default(""),
+      serves: z.number().nullable().optional().catch(null),
       cuisine: z.string().nullable().optional(),
       cooking_method: z.string().nullable().optional(),
       dish_kind: z.string().nullable().optional(),
       effort: z.number().nullable().optional(),
       ingredients: z.array(z.object({
-        quantity: z.string(),
-        measurement: z.string(),
-        ingredient: z.string()
+        quantity: looseString,
+        measurement: looseString,
+        ingredient: looseString
       })).default([]),
       instructions: z.array(z.string()).default([]),
       health_score: z.number().nullable().optional(),
       health_verdict: z.string().nullable().optional(),
       health_rationale: z.string().nullable().optional(),
       health_breakdown: z.object({
-        positives: z.array(z.string()),
-        cooking_impact: z.string(),
+        positives: z.array(z.string()).default([]),
+        cooking_impact: z.string().default(""),
         macros: z.object({
           calories: z.number(),
           protein_g: z.number(),
           carbs_g: z.number(),
           fat_g: z.number(),
-        })
-      }).nullable().optional()
+        }).nullable().optional().catch(undefined)
+      }).nullable().optional().catch(null)
     });
 
     const parsed: ParsedRecipe = RecipeSchema.parse(parsedData) as unknown as ParsedRecipe;
+    await logger.success(rawContent);
 
     // Validate enum boundaries securely
     if (parsed.health_score != null) {
