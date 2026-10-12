@@ -107,6 +107,10 @@ struct PersonDetailView: View {
                     meals: meals,
                     raterRef: raterRef
                 )
+
+                if isCurrentUser {
+                    AccountActionsSection()
+                }
             }
             .padding(.horizontal, DS.Spacing.gutter)
             .padding(.top, DS.Spacing.s5)

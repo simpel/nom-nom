@@ -1,7 +1,7 @@
 // DS-GAP: pending design system — see Core/Design/DS-GAPS.md
 import SwiftUI
 
-/// Account actions at the foot of Settings, outside of any Card:
+/// Account actions at the foot of the profile, outside of any Card:
 /// "Sign out" (destructive ghost) and "Delete account" (destructive outline) with
 /// a footnote. Owns the confirmation alerts (`View+AccountConfirmations.swift`).
 struct AccountActionsSection: View {
