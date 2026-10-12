@@ -1,25 +1,14 @@
 import SwiftUI
 
-/// App settings: my profile link, profile fields, notifications, debug tools, and account actions.
+/// App settings: notifications, debug tools, and account actions.
 struct SettingsView: View {
-    var showsProfileLink: Bool = true
-
     @Environment(FoodStore.self) private var store
 
     @State private var isSeeding = false
 
-    private var profileName: String {
-        let name = store.myProfile?.shownName.trimmingCharacters(in: .whitespaces) ?? ""
-        return name.isEmpty ? "My profile" : name
-    }
-
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: DS.Spacing.s8) {
-                if showsProfileLink {
-                    myProfileSection
-                }
-                ProfileSettingsSection()
                 NotificationPreferencesSection()
                 #if DEBUG
                 sampleDataSection
@@ -32,29 +21,6 @@ struct SettingsView: View {
         }
         .background(DS.Color.bg)
         .screenTitle("Settings")
-    }
-
-    // MARK: - My Profile Link
-
-    private var myProfileSection: some View {
-        Card(layout: .list) {
-            NavigationLink {
-                PersonDetailView(raterRef: .account(store.userID))
-            } label: {
-                ListRow(
-                    profileName,
-                    meta: "View taste profile and history",
-                    leading: .avatar(Avatar(
-                        name: profileName,
-                        photoPath: store.myProfile?.photoPath,
-                        size: .sm,
-                        decorative: true
-                    )),
-                    chevron: true
-                )
-            }
-            .buttonStyle(ListRowButtonStyle())
-        }
     }
 
     #if DEBUG

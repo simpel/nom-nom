@@ -119,11 +119,7 @@ struct PersonDetailView: View {
         .screenTitle("", displayMode: .inline)
         .modifier(SheetToolbarConditional(isSheet: isSheet))
         .sheet(isPresented: $showingEditProfile) {
-            NavigationStack {
-                SettingsView(showsProfileLink: false)
-                    .sheetCloseToolbar()
-            }
-            .dsSheet()
+            ProfileSheetView()
         }
         .alert("Couldn't Save Photo", isPresented: Binding(
             get: { photoError != nil },
