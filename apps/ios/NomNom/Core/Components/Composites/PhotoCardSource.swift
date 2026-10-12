@@ -10,7 +10,7 @@ enum PhotoCardSource {
     case image(UIImage)
     /// Raw image bytes (a PhotosPicker draft); nil falls back to the cuisine photo.
     case data(Data?, cuisine: String? = nil)
-    /// A recipe: its meal photos, then its recipe photos, then its cuisine (RecipeImageView's order).
+    /// A recipe: its own photos, then its cuisine.
     case recipe(Recipe)
     /// A meal: its first photo, then its dish's cuisine.
     case meal(Meal)
@@ -44,10 +44,12 @@ enum PhotoCardSource {
                 isGenerating: isGenerating
             )
         case .meal(let meal):
+            let isGenerating = meal.photoPaths.isEmpty && store?.generatingPhotoMealIDs.contains(meal.id) == true
             return PhotoCardResolvedSource(
                 path: meal.photoPaths.first,
                 bucket: SupabaseConfig.photoBucket,
-                cuisine: store?.dish(meal.dishID)?.cuisine
+                cuisine: store?.dish(meal.dishID)?.cuisine,
+                isGenerating: isGenerating
             )
         case .none(let cuisine):
             return PhotoCardResolvedSource(cuisine: cuisine)

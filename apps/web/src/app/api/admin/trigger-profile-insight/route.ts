@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@/utils/supabase/server';
 import { createClient as createSupabaseClient } from '@supabase/supabase-js';
 import { z } from 'zod';
+import { getFeatureModel } from '@/utils/ai-config';
 
 export const maxDuration = 60; // 1 minute max duration
 
@@ -46,7 +47,12 @@ export async function POST(request: Request) {
 
     const aiGatewayUrl = process.env.AI_GATEWAY_BASE_URL || 'https://ai-gateway.vercel.sh/v1';
     const apiKey = process.env.VERCEL_AI_GATEWAY || process.env.VERCEL_AI_GATEWAY_KEY;
-    const model = process.env.AI_GATEWAY_MODEL || 'google/gemini-2.5-flash';
+    let model: string;
+    try {
+        model = await getFeatureModel(adminSupabase, 'profile-insights');
+    } catch (err) {
+        return NextResponse.json({ error: (err as Error).message }, { status: 500 });
+    }
 
     try {
         const { data: profile, error: profileError } = await adminSupabase

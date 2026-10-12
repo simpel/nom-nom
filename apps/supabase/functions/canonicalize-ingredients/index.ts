@@ -108,7 +108,7 @@ Deno.serve(async (req) => {
       });
     }
     const admin = createClient(url, serviceKey);
-    const model = await getFeatureModel(admin, "canonicalize-ingredients");
+    const model = await getFeatureModel(admin, "canonicalize-ingredients", "text");
 
     const userMessage = rawIngredients.map((r) => `- ${r}`).join("\n");
 

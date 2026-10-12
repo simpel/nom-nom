@@ -28,6 +28,8 @@ final class FoodStore {
     
     /// Recipes currently having AI photos generated in the background.
     var generatingPhotoRecipeIDs: Set<UUID> = []
+    /// Meals currently having AI photos generated in the background.
+    var generatingPhotoMealIDs: Set<UUID> = []
 
     // Dinner Parties
     var parties: [Party] = []

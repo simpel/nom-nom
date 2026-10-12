@@ -4,19 +4,14 @@ import AiConfigForm from './AiConfigForm'
 export const dynamic = 'force-dynamic'
 
 async function getAvailableModels() {
-  const apiKey = process.env.AI_GATEWAY_API_KEY || process.env.VERCEL_OIDC_TOKEN || ''
-  
-  if (!apiKey) {
-    console.warn('No AI_GATEWAY_API_KEY found in environment.')
-    return []
-  }
+  // The model list is public; the key (same names the rest of the web app reads) is optional.
+  const apiKey = process.env.VERCEL_AI_GATEWAY || process.env.VERCEL_AI_GATEWAY_KEY
+    || process.env.AI_GATEWAY_API_KEY || process.env.VERCEL_OIDC_TOKEN
 
   try {
     const res = await fetch('https://ai-gateway.vercel.sh/v1/models', {
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-      },
-      next: { revalidate: 3600 } // cache for an hour
+      headers: apiKey ? { Authorization: `Bearer ${apiKey}` } : {},
+      cache: 'no-store', // always the Gateway's current list
     })
 
     if (!res.ok) {
@@ -36,7 +31,7 @@ export default async function AiConfigPage() {
   const supabase = await createClient()
 
   // 1. Fetch current configs from Postgres
-  const { data: configs } = await supabase
+  const { data: configs, error: configError } = await supabase
     .from('ai_feature_configs')
     .select('*')
 
@@ -51,6 +46,17 @@ export default async function AiConfigPage() {
           Map specific AI models to app features.
         </p>
       </div>
+
+      {configError && (
+        <div className="mb-6 rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+          Could not read the current configuration ({configError.message}). Sign in again before saving.
+        </div>
+      )}
+      {availableModels.length === 0 && (
+        <div className="mb-6 rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+          Could not load the model list from the AI Gateway; only saved models are shown.
+        </div>
+      )}
 
       <AiConfigForm 
         availableModels={availableModels} 

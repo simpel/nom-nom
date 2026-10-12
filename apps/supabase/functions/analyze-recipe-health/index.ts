@@ -167,7 +167,7 @@ Deno.serve(async (req) => {
 
   const logger = GenerationLogger.fromEnv();
   const admin = logger.client;
-  const model = await getFeatureModel(admin, "analyze-recipe-health");
+  const model = await getFeatureModel(admin, "analyze-recipe-health", "text");
   const gatewayBaseUrl =
     Deno.env.get("AI_GATEWAY_BASE_URL") || "https://ai-gateway.vercel.sh/v1";
 

@@ -1,9 +1,22 @@
-// Edge function to generate editorial recipe and category photographs using Vercel AI Gateway.
-// Resolves dish elements and garnish for single recipes, or multi-dish spreads for categories/kitchens,
-// adhering strictly to matching stoneware coupe plates and seamless oak surface specifications.
+// Edge function to generate editorial photographs using Vercel AI Gateway, in three modes that
+// share one setting (oak table, overhead camera, daylight; see prompts.ts):
+// - recipe:   the plate alone, saved to recipe-photos and dishes.photo_paths (recipe_id)
+// - meal:     the plate laid with cutlery, a napkin and a drink, saved to meal-photos and
+//             meals.photo_paths (meal_id; name/ingredients come from the meal's recipe)
+// - category: a spread of the category's signature dishes, saved to category-photos
+// A text model first turns the input into a food description (and a drink for meals).
 
 import { GenerationLogger } from "../_shared/generation-logger.ts";
 import { getFeatureModel } from "../_shared/ai-config.ts";
+import { encodeBase64 } from "jsr:@std/encoding@1/base64";
+import {
+  categoryPhotoPrompt,
+  detectImageFormat,
+  imageSizeFor,
+  mealPhotoPrompt,
+  recipePhotoPrompt,
+} from "./prompts.ts";
+import { attachRowPhoto, saveCategoryPhoto } from "./storage.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -18,8 +31,9 @@ interface IngredientInput {
 }
 
 interface RequestPayload {
-  mode?: "recipe" | "category";
+  mode?: "recipe" | "meal" | "category";
   recipe_id?: string;
+  meal_id?: string;
   name?: string;
   cuisine?: string | null;
   category?: string;
@@ -31,6 +45,7 @@ interface RecipeResolutionResult {
   resolved_dish: string;
   resolved_elements: string;
   resolved_garnish: string;
+  resolved_beverage?: string;
 }
 
 interface CategoryResolutionResult {
@@ -47,7 +62,8 @@ Rules:
 2. Distinct Textures & Garnishes: Each dish should feature distinct textured components (e.g. braised, roasted, fresh, sauced) and classic culinary garnishes.
 3. Category-Specific Traditional Vessels: If this culinary category has traditional, iconic plates or serving vessels strongly associated with its heritage (for example: a shallow rustic terracotta cazuela in Mexican or Spanish cuisine, a dark textured Japanese ceramic yakimono or tenmoku plate, an Indian hammered brass/earthenware handi, a Korean stone ttukbaegi bowl, or a French enameled cast-iron gratin dish), replace 1 or 2 of the plates in the picture with these authentic traditional vessels to better portray the category. The remaining dishes should stay on round stoneware coupe plates. If no unique traditional vessel is customary, use matching stoneware coupe plates throughout.
 4. Strict Exclusion Rules: No Cutlery or Utensils (no forks, knives, spoons, chopsticks, skewers). No Table Props (no glasses, cups, napkins, ramekins, side bowls, condiment bottles, placemats). Never Render Empty Plates: every plate or vessel in the spread must be filled with food — no bare, unfilled, or empty dishware anywhere in frame.
-5. Identify:
+5. In resolved_dishes, name each dish and its vessel, but never mention the table, props, the camera or lighting; the photo brief sets those.
+6. Identify:
    - resolved_category: Canonical display name of the kitchen/category (e.g. "Mexican Kitchen").
    - resolved_dishes: A descriptive narrative detailing the 3 to 4 dishes plated across the spread, explicitly specifying the plate or vessel each dish is served on (e.g. "a central round stoneware coupe plate of slow-braised cochinita pibil; a second dish of charred street-style elote served in an authentic shallow rustic Mexican terracotta cazuela; and a third coupe plate of fresh citrus ceviche").
    - vessels_narrative: Concise summary of the plating vessels (e.g. "two round stoneware coupe plates and one traditional rustic Mexican terracotta cazuela").
@@ -64,17 +80,21 @@ Analyze the following recipe details provided by the user:
 
 Rules:
 1. Input Resolution: If only dish or cuisine is provided, automatically select an iconic, visually distinct dish with 2–3 textured components and a classic garnish.
-2. Strict Exclusion Rules: No Cutlery or Utensils (no forks, knives, spoons, chopsticks, skewers). No Table Props (no glasses, cups, napkins, ramekins, side bowls, condiment bottles, placemats). Single Subject Only (exactly one centered plate containing one dish). Never Render Empty Plates: the plate must be filled with food — never a bare, unfilled, or empty plate.
-3. Identify:
+2. One serving of one dish, generously portioned.
+3. Describe only the food itself (components, textures, colours, garnish). Never mention plates, the table, props, the camera or lighting; the photo brief sets those.
+4. Pick one drink that suits the dish and its cuisine, described as it looks from above in its glass or cup (e.g. "a stemmed glass of chilled white wine", "a tumbler of sparkling water with a lemon slice", "a small cup of green tea").
+5. Identify:
    - resolved_dish: Name of the dish (e.g. "Crispy Pan-Seared Salmon").
    - resolved_elements: 2 to 3 textured components reflecting the ingredients and cooking method (e.g. "a golden seared salmon fillet with flaky layers, accompanied by charred tender asparagus spears and silky parsnip puree").
    - resolved_garnish: Classic culinary garnish (e.g. "a delicate drizzle of extra virgin olive oil and micro-chives").
+   - resolved_beverage: The drink from rule 4.
 
 Return ONLY valid JSON matching:
 {
   "resolved_dish": "string",
   "resolved_elements": "string",
-  "resolved_garnish": "string"
+  "resolved_garnish": "string",
+  "resolved_beverage": "string"
 }`;
 
 Deno.serve(async (req) => {
@@ -144,6 +164,7 @@ Deno.serve(async (req) => {
   }
 
   const isCategoryMode = payload.mode === "category" || (Boolean(payload.category) && !payload.recipe_id && !payload.name);
+  const isMealMode = payload.mode === "meal";
 
   if (!isCategoryMode && !payload.name && !payload.cuisine) {
     return new Response(
@@ -169,8 +190,8 @@ Deno.serve(async (req) => {
   const admin = logger.client;
 
   const gatewayBaseUrl = Deno.env.get("AI_GATEWAY_BASE_URL") || "https://ai-gateway.vercel.sh/v1";
-  const textModel = Deno.env.get("AI_GATEWAY_TEXT_MODEL") || "google/gemini-2.5-flash";
-  const imageModel = await getFeatureModel(admin, "generate-dish-photo", "bfl/flux-2-pro");
+  const textModel = await getFeatureModel(admin, "dish-photo-brief", "text");
+  const imageModel = await getFeatureModel(admin, "generate-dish-photo", "image");
 
   let imagePrompt: string;
   let resolvedCategory: string | undefined;
@@ -178,6 +199,7 @@ Deno.serve(async (req) => {
   let resolvedDish: string | undefined;
   let resolvedElements: string | undefined;
   let resolvedGarnish: string | undefined;
+  let resolvedBeverage: string | undefined;
 
   if (isCategoryMode) {
     // =========================================================================
@@ -228,15 +250,11 @@ Deno.serve(async (req) => {
       console.warn("Category input resolution fallback used:", err);
     }
 
-    const platingContext = vesselsNarrative
-      ? `The dishes are plated across ${vesselsNarrative}, harmoniously paired with round stoneware coupe plates (20–28cm in diameter) with shallow curved wells (~1.5–2cm deep) and low uniform raised rims (~1.5–2cm wide) with subtly hand-thrown edge profiles in a matte beige/off-white glaze with fine brown-to-charcoal reactive speckles, where 1 or 2 plates are replaced by authentic traditional serving vessels deeply characteristic of ${resolvedCategory} (such as rustic earthenware, terracotta cazuela, or textured artisan ceramic)`
-      : `Each dish is neatly plated on round stoneware coupe plates of varying sizes (20–28cm in diameter) with shallow curved wells (~1.5–2cm deep) and low uniform raised rims (~1.5–2cm wide) with subtly hand-thrown edge profiles — matte beige/off-white glaze with fine brown-to-charcoal reactive speckles, where 1 or 2 plates may be replaced by authentic traditional serving vessels deeply characteristic of ${resolvedCategory}`;
-
-    imagePrompt = `Directly overhead bird's-eye food photograph, camera mounted on an overhead rig pointing straight down at the tabletop at exactly 90 degrees — a perfect right angle straight down (true top-down flat-lay perspective, like looking down through the ceiling) — absolutely NOT eye-level, NOT a low angle, NOT a 3/4 angle, NOT a front-on or side-on view; the viewer sees the tops of the plates as full circles/ovals with no vertical rim walls visible on the near side. A professional editorial food photograph showcasing the essence of ${resolvedCategory}, featuring a curated spread of ${resolvedDishes}. ${platingContext}. All vessels sit harmoniously arranged together on a single continuous, seamless slab of natural oak — one uninterrupted pale warm honey-beige wood surface — a consistent light tan/blonde oak color, exactly like fresh natural European white oak flooring; the color must NEVER shift toward dark, reddish, orange, amber, walnut, or rustic-distressed tones, and must show zero visible knots, zero dark mineral streaks, and zero patchy color variation anywhere on the surface — with absolutely no plank boards, no joints, no seams, no grooves, and no gaps anywhere; the grain of the wood runs perfectly horizontal, parallel to the bottom edge of the frame, flowing left-to-right — the grain lines must never point toward or away from the camera, must never run vertically (top-to-bottom), and must never run diagonally; fine, flat, straight-to-gently-wavy grain lines flowing horizontally from left to right only, with no change in surface height and no shadow lines suggesting a board edge, like one solid sanded panel. Finish is raw/lightly-oiled matte — no gloss, scratches, stains, or props. The seamless oak wood tabletop completely fills the entire background of the frame from edge to edge with no table edges, no room, no walls, no windows, no curtains, and no horizon line visible anywhere — strictly wood surface and plates only. Shot straight down from directly overhead (true top-down bird's-eye view, camera parallel to the tabletop), cohesive multi-plate spread composition occupying 75% of the frame with clean wood negative space around it; every plate and vessel must be fully contained within the frame with a clear margin of wood on all sides — no plate or vessel may touch, overlap, extend past, or be cropped by any edge of the frame. A single large, heavily diffused natural daylight source enters from the upper-left at roughly a 45-degree angle (off-frame diffused daylight, no visible light source, no visible window, no curtains) — broad and wraparound, with shadow edges that fade gradually rather than cutting a hard line, and shadows that stay open and detailed, never going fully black. Exposure is medium-bright and evenly balanced, with no clipped white highlights and no crushed blacks; neutral-to-warm color temperature, no artificial color cast. This creates gentle, low-intensity specular highlights on glossy or oiled surfaces and smooth, soft tonal falloff on matte surfaces, with soft-edged, low-to-medium contrast contact shadows falling diagonally to the lower-right of each vessel and food element. No backlight, no top light, no fill light, no rim light, no spotlighting, no harsh direct sun, no hard-edged shadows, no blown highlights, no crushed shadows. Critical sharp focus on food surface textures, shallow depth of field softly blurring the background wood into clean negative space. Minimalist food styling, absolutely no cutlery, no forks, no knives, no spoons, no chopsticks, no napkins, no glasses, no side bowls, curated dish vessels on wood only. Every plate and vessel in the spread must be generously filled with food — never render an empty, bare, or unfilled plate or vessel anywhere in frame. --ar 1:1 --no cutlery, forks, knives, spoons, chopsticks, napkins, glassware, cups, bottles, wood seams, plank lines, grooves, panel joints, vertical wood grain, vertical grain, diagonal wood grain, table edges, walls, windows, curtains, room, background furniture, empty plate, empty plates, bare plate, unfilled plate, empty vessel, empty bowl, eye-level angle, eye level shot, low angle, front-on angle, side view, straight-on angle, 3/4 angle, oblique angle, dark wood, reddish wood, orange wood, amber wood, walnut, rustic wood, distressed wood, weathered wood, wood knots, mineral streaks, uneven wood color, patchy wood color, cropped plate, plate cut off, plate touching frame edge, plate extending past frame, plate bleeding off edge --style raw --v 6.1`;
+    imagePrompt = categoryPhotoPrompt(resolvedCategory, resolvedDishes, vesselsNarrative);
 
   } else {
     // =========================================================================
-    // RECIPE MODE: Single serving on exactly one centered plate
+    // RECIPE / MEAL MODE: one serving on one plate (a meal adds cutlery, napkin and a drink)
     // =========================================================================
     const ingredientsList = (payload.ingredients || [])
       .map((ing) => {
@@ -257,6 +275,7 @@ Cooking Method / Instructions: ${instructionsList || "None specified"}`;
     resolvedDish = payload.name || "Gourmet Dish";
     resolvedElements = "succulent main dish with complementary roasted textures";
     resolvedGarnish = "a delicate garnish of fresh microgreens";
+    resolvedBeverage = "a tumbler of sparkling water with a slice of lemon";
 
     try {
       const textRes = await fetch(`${gatewayBaseUrl}/chat/completions`, {
@@ -288,20 +307,23 @@ Cooking Method / Instructions: ${instructionsList || "None specified"}`;
           if (parsed.resolved_dish) resolvedDish = parsed.resolved_dish;
           if (parsed.resolved_elements) resolvedElements = parsed.resolved_elements;
           if (parsed.resolved_garnish) resolvedGarnish = parsed.resolved_garnish;
+          if (parsed.resolved_beverage) resolvedBeverage = parsed.resolved_beverage;
         }
       }
     } catch (err) {
       console.warn("Input resolution fallback used:", err);
     }
 
-    imagePrompt = `Directly overhead bird's-eye food photograph, camera mounted on an overhead rig pointing straight down at the tabletop at exactly 90 degrees — a perfect right angle straight down (true top-down flat-lay perspective, like looking down through the ceiling) — absolutely NOT eye-level, NOT a low angle, NOT a 3/4 angle, NOT a front-on or side-on view; the viewer sees the top of the plate as a full circle with no vertical rim wall visible on the near side. A professional editorial food photograph of a single serving of ${resolvedDish}, featuring ${resolvedElements}, garnished with ${resolvedGarnish}. Neatly plated in the center of exactly one round stoneware coupe plate, 27–28cm in diameter, with a shallow curved well (~1.5–2cm deep) and a low uniform raised rim (~1.5–2cm wide) with a subtly hand-thrown edge profile — matte beige/off-white glaze with fine brown-to-charcoal reactive speckles, denser near the rim, no pattern or glossy sheen. The plate sits completely isolated on a single continuous, seamless slab of natural oak — one uninterrupted pale warm honey-beige wood surface — a consistent light tan/blonde oak color, exactly like fresh natural European white oak flooring; the color must NEVER shift toward dark, reddish, orange, amber, walnut, or rustic-distressed tones, and must show zero visible knots, zero dark mineral streaks, and zero patchy color variation anywhere on the surface — with absolutely no plank boards, no joints, no seams, no grooves, and no gaps anywhere; the grain of the wood runs perfectly horizontal, parallel to the bottom edge of the frame, flowing left-to-right — the grain lines must never point toward or away from the camera, must never run vertically (top-to-bottom), and must never run diagonally; fine, flat, straight-to-gently-wavy grain lines flowing horizontally from left to right only, with no change in surface height and no shadow lines suggesting a board edge, like one solid sanded panel. Finish is raw/lightly-oiled matte — no gloss, scratches, stains, or props. The seamless oak wood tabletop completely fills the entire background of the frame from edge to edge with no table edges, no room, no walls, no windows, no curtains, and no horizon line visible anywhere — strictly wood surface and plate only. Shot straight down from directly overhead (true top-down bird's-eye view, camera parallel to the tabletop), centered single-plate composition occupying 75% of the frame, surrounded by clean wood negative space; the entire plate must be fully contained within the frame with a clear margin of wood on all sides — it must not touch, extend past, or be cropped by any edge of the frame. A single large, heavily diffused natural daylight source enters from the upper-left at roughly a 45-degree angle (off-frame diffused daylight, no visible light source, no visible window, no curtains) — broad and wraparound, with shadow edges that fade gradually rather than cutting a hard line, and shadows that stay open and detailed, never going fully black. Exposure is medium-bright and evenly balanced, with no clipped white highlights and no crushed blacks; neutral-to-warm color temperature, no artificial color cast. This creates gentle, low-intensity specular highlights on glossy or oiled surfaces and smooth, soft tonal falloff on matte surfaces, with soft-edged, low-to-medium contrast contact shadows falling diagonally to the lower-right of the food and plate rim. No backlight, no top light, no fill light, no rim light, no spotlighting, no harsh direct sun, no hard-edged shadows, no blown highlights, no crushed shadows. Critical sharp focus on food surface textures, shallow depth of field softly blurring the background wood into clean negative space. Minimalist food styling, absolutely no cutlery, no forks, no knives, no spoons, no chopsticks, no napkins, no glasses, no side bowls, isolated plate only. The plate must be generously filled with food — never render an empty, bare, or unfilled plate. --ar 1:1 --no cutlery, forks, knives, spoons, chopsticks, napkins, glassware, multiple plates, side bowls, wood seams, plank lines, grooves, panel joints, vertical wood grain, vertical grain, diagonal wood grain, table edges, walls, windows, curtains, room, background furniture, empty plate, empty plates, bare plate, unfilled plate, eye-level angle, eye level shot, low angle, front-on angle, side view, straight-on angle, 3/4 angle, oblique angle, dark wood, reddish wood, orange wood, amber wood, walnut, rustic wood, distressed wood, weathered wood, wood knots, mineral streaks, uneven wood color, patchy wood color, cropped plate, plate cut off, plate touching frame edge, plate extending past frame, plate bleeding off edge --style raw --v 6.1`;
+    imagePrompt = isMealMode
+      ? mealPhotoPrompt(resolvedDish, resolvedElements, resolvedGarnish, resolvedBeverage)
+      : recipePhotoPrompt(resolvedDish, resolvedElements, resolvedGarnish);
   }
 
   // Step 3: Image Generation via Vercel AI Gateway
-  // Determine entity ID. Use recipe_id if available, otherwise the nil UUID for categories since entity_id is uuid.
+  // entity_id is a uuid: the meal or recipe, or the nil UUID for categories.
   await logger.start({
     type: "dish_photo",
-    entityId: payload.recipe_id || '00000000-0000-0000-0000-000000000000',
+    entityId: payload.meal_id || payload.recipe_id || '00000000-0000-0000-0000-000000000000',
     prompt: imagePrompt,
     model: imageModel,
   });
@@ -317,7 +339,7 @@ Cooking Method / Instructions: ${instructionsList || "None specified"}`;
         model: imageModel,
         prompt: imagePrompt,
         n: 1,
-        size: "1024x1024",
+        size: imageSizeFor(imageModel),
       }),
     });
 
@@ -351,7 +373,8 @@ Cooking Method / Instructions: ${instructionsList || "None specified"}`;
       const fetchImg = await fetch(firstItem.url);
       const buffer = await fetchImg.arrayBuffer();
       imageBytes = new Uint8Array(buffer);
-      b64Image = btoa(String.fromCharCode(...imageBytes));
+      // Spreading a ~1 MB image into String.fromCharCode overflows the stack.
+      b64Image = encodeBase64(imageBytes);
     } else {
       await logger.failure("Invalid image format in response");
       return new Response(
@@ -364,86 +387,17 @@ Cooking Method / Instructions: ${instructionsList || "None specified"}`;
 
     // Step 4: Storage Persistence
     let storagePath: string | null = null;
+    const format = detectImageFormat(imageBytes);
 
     if (admin) {
       try {
         if (isCategoryMode) {
-          const categorySlug = (payload.category || payload.cuisine || payload.name || "category")
-            .toLowerCase()
-            .replace(/[^a-z0-9]+/g, "-")
-            .replace(/^-+|-+$/g, "");
-          const targetPath = `${categorySlug}.jpg`;
-
-          const { error: uploadErr } = await admin.storage
-            .from("category-photos")
-            .upload(targetPath, imageBytes, {
-              contentType: "image/jpeg",
-              upsert: true,
-            });
-
-          if (uploadErr) {
-            console.error("Failed to upload category image to storage:", uploadErr);
-          } else {
-            storagePath = targetPath;
-            console.log(`Successfully persisted category photo to ${targetPath}`);
-
-            const categoryName = (payload.category || payload.cuisine || payload.name || categorySlug).trim();
-            const { error: dbErr } = await admin
-              .from("categories")
-              .upsert(
-                {
-                  slug: categorySlug,
-                  name: categoryName,
-                  photo_path: targetPath,
-                  updated_at: new Date().toISOString(),
-                },
-                { onConflict: "slug" }
-              );
-
-            if (dbErr) {
-              console.error("Failed to update categories table:", dbErr);
-            } else {
-              console.log(`Successfully updated categories table for ${categorySlug}`);
-            }
-          }
+          const categoryName = payload.category || payload.cuisine || payload.name || "category";
+          storagePath = await saveCategoryPhoto(admin, categoryName, imageBytes, format);
+        } else if (isMealMode && payload.meal_id) {
+          storagePath = await attachRowPhoto(admin, { bucket: "meal-photos", table: "meals", id: payload.meal_id }, imageBytes, format);
         } else if (payload.recipe_id) {
-          const photoUUID = crypto.randomUUID().toLowerCase();
-          const targetPath = `${payload.recipe_id.toLowerCase()}/${photoUUID}.jpg`;
-
-          const { error: uploadErr } = await admin.storage
-            .from("recipe-photos")
-            .upload(targetPath, imageBytes, {
-              contentType: "image/jpeg",
-              upsert: true,
-            });
-
-          if (uploadErr) {
-            console.error("Failed to upload image to storage:", uploadErr);
-          } else {
-            storagePath = targetPath;
-
-            const { data: currentDish } = await admin
-              .from("dishes")
-              .select("photo_paths")
-              .eq("id", payload.recipe_id)
-              .single();
-
-            const existingPaths: string[] = currentDish?.photo_paths || [];
-            const updatedPaths = existingPaths.includes(targetPath)
-              ? existingPaths
-              : [targetPath, ...existingPaths];
-
-            const { error: dbErr } = await admin
-              .from("dishes")
-              .update({ photo_paths: updatedPaths })
-              .eq("id", payload.recipe_id);
-
-            if (dbErr) {
-              console.error("Failed to update dishes table with generated photo path:", dbErr);
-            } else {
-              console.log(`Successfully attached generated photo to dish ${payload.recipe_id}`);
-            }
-          }
+          storagePath = await attachRowPhoto(admin, { bucket: "recipe-photos", table: "dishes", id: payload.recipe_id }, imageBytes, format);
         }
       } catch (storageErr) {
         console.error("Storage persistence error:", storageErr);
@@ -460,6 +414,7 @@ Cooking Method / Instructions: ${instructionsList || "None specified"}`;
         resolved_dish: resolvedDish,
         resolved_elements: resolvedElements,
         resolved_garnish: resolvedGarnish,
+        resolved_beverage: resolvedBeverage,
       }),
       {
         status: 200,

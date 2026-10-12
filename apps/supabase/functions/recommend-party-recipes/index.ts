@@ -165,7 +165,7 @@ Deno.serve(async (req) => {
     })),
   });
 
-  const model = await getFeatureModel(db, "party-recommendations");
+  const model = await getFeatureModel(db, "party-recommendations", "text");
   const logger = GenerationLogger.fromEnv();
   await logger.start({ type: "party_recommendation", entityId: partyId, model, prompt: userMessage });
 

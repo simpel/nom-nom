@@ -177,7 +177,7 @@ Deno.serve(async (req) => {
     })),
   });
 
-  const model = await getFeatureModel(db, "recipe-tweaks");
+  const model = await getFeatureModel(db, "recipe-tweaks", "text");
   const logger = GenerationLogger.fromEnv();
   await logger.start({ type: "recipe_tweaks", entityId: mealId, targetId: partyId, model, prompt: userMessage });
 
