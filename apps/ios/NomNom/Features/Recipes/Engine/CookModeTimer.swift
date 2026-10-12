@@ -10,6 +10,9 @@ final class CookModeTimer {
     /// The step (index) the timer belongs to.
     private(set) var stepIndex: Int?
 
+    /// The pending schedule request, kept so `stop()` can cancel it before it lands.
+    private var scheduling: Task<Void, Never>?
+
     private static let requestID = "cook-mode-timer"
 
     var isRunning: Bool { endsAt.map { $0 > .now } ?? false }
@@ -26,13 +29,17 @@ final class CookModeTimer {
         let trigger = UNTimeIntervalNotificationTrigger(timeInterval: TimeInterval(minutes * 60), repeats: false)
         let center = UNUserNotificationCenter.current()
         center.removePendingNotificationRequests(withIdentifiers: [Self.requestID])
-        Task {
+        scheduling?.cancel()
+        scheduling = Task {
             _ = try? await center.requestAuthorization(options: [.alert, .sound])
+            guard !Task.isCancelled else { return }
             try? await center.add(UNNotificationRequest(identifier: Self.requestID, content: content, trigger: trigger))
         }
     }
 
     func stop() {
+        scheduling?.cancel()
+        scheduling = nil
         endsAt = nil
         stepIndex = nil
         UNUserNotificationCenter.current().removePendingNotificationRequests(withIdentifiers: [Self.requestID])

@@ -12,10 +12,15 @@ struct AppleSignInButton: View {
 
     var body: some View {
         SignInWithAppleButton(.signIn) { request in
-            let rawNonce = generateNonce()
-            currentNonce = rawNonce
             request.requestedScopes = [.fullName, .email]
-            request.nonce = sha256(rawNonce)
+            do {
+                let rawNonce = try generateNonce()
+                currentNonce = rawNonce
+                request.nonce = sha256(rawNonce)
+            } catch {
+                currentNonce = nil
+                auth.errorMessage = "Sign in with Apple is unavailable right now. Please try again."
+            }
         } onCompletion: { result in
             handleCompletion(result)
         }
@@ -76,12 +81,14 @@ struct AppleSignInButton: View {
 
     // MARK: - Crypto Nonce Helpers
 
-    private func generateNonce(length: Int = 32) -> String {
+    private struct NonceError: Error { let status: OSStatus }
+
+    private func generateNonce(length: Int = 32) throws -> String {
         precondition(length > 0)
         var randomBytes = [UInt8](repeating: 0, count: length)
         let errorCode = SecRandomCopyBytes(kSecRandomDefault, randomBytes.count, &randomBytes)
         if errorCode != errSecSuccess {
-            fatalError("Unable to generate nonce: \(errorCode)")
+            throw NonceError(status: errorCode)
         }
         let charset: [Character] =
             Array("0123456789ABCDEFGHIJKLMNOPQRSTUVXYZabcdefghijklmnopqrstuvwxyz-._")
