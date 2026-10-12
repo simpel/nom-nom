@@ -1,7 +1,8 @@
 name: CodeQL
 
-# Feature PRs target release/* and skip CodeQL. Swift uses build-mode none: the traced
-# xcodebuild could not produce the swift-case-paths macro binary (CasePathsMacros).
+# Feature PRs target release/* and skip CodeQL. Swift is not analysed: the traced
+# xcodebuild cannot produce the swift-case-paths macro binary (CasePathsMacros) and the
+# Swift extractor has no build-mode none. Re-add it with a working manual build.
 # It runs on the release PR into main (not also on the release branch push, which
 # would double every run) and on pushes to main.
 on:
@@ -25,7 +26,7 @@ permissions:
 jobs:
   analyze:
     name: Analyze (${{ matrix.language }})
-    runs-on: ${{ matrix.language == 'swift' && 'macos-15' || 'ubuntu-latest' }}
+    runs-on: ubuntu-latest
     timeout-minutes: 60
     permissions:
       security-events: write
@@ -36,8 +37,6 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - language: swift
-            build-mode: none
           - language: python
             build-mode: none
           - language: javascript-typescript
