@@ -2,25 +2,31 @@
 
 import { useState, useTransition } from 'react'
 import { updateAiConfig } from './actions'
-
-type GatewayModel = {
-  id: string
-  name: string
-  owned_by: string
-}
+import { ALL_FEATURES, DEFAULTS } from './features'
+import ModelSelect, { type GatewayModel } from './ModelSelect'
 
 type Config = {
   feature_id: string
-  model_name: string
+  model_name: string | null
 }
 
-const ALL_FEATURES = [
-  { id: 'analyze-recipe-health', name: 'Recipe Health Analysis', description: 'Scores ingredients and generates health verdicts.' },
-  { id: 'parse-recipe', name: 'Recipe Parsing from Photos', description: 'Extracts structured data from uploaded recipe photos.' },
-  { id: 'canonicalize-ingredients', name: 'Ingredient Canonicalization', description: 'Maps raw ingredients to standard database entities.' },
-  { id: 'party-insights', name: 'Party Taste Profiles', description: 'Generates group taste recommendations.' },
-  { id: 'generate-dish-photo', name: 'Category / Recipe Photo Generation', description: 'Generates cover images (requires image model).' }
-]
+function Row({ name, description, meta, children }: {
+  name: string
+  description: string
+  meta?: React.ReactNode
+  children: React.ReactNode
+}) {
+  return (
+    <li className="px-6 py-5 flex items-start justify-between gap-x-6">
+      <div className="min-w-0 flex-1">
+        <p className="text-sm font-semibold leading-6 text-gray-900">{name}</p>
+        <p className="mt-1 flex text-xs leading-5 text-gray-500">{description}</p>
+        {meta}
+      </div>
+      <div className="flex-shrink-0 w-96">{children}</div>
+    </li>
+  )
+}
 
 export default function AiConfigForm({
   availableModels,
@@ -44,20 +50,16 @@ export default function AiConfigForm({
     })
   }
 
-  // Group models by provider
-  const modelsByProvider = availableModels.reduce((acc, model) => {
-    const provider = model.owned_by || 'Other'
-    if (!acc[provider]) acc[provider] = []
-    acc[provider].push(model)
-    return acc
-  }, {} as Record<string, GatewayModel[]>)
+  const saved = (id: string) => currentConfigs.find(c => c.feature_id === id)?.model_name || ''
 
   return (
     <form action={handleAction} className="bg-white border rounded-xl shadow-sm overflow-hidden">
       <div className="px-6 py-5 border-b bg-gray-50 flex items-center justify-between">
         <div>
           <h2 className="text-base font-semibold leading-6 text-gray-900">Feature Configurations</h2>
-          <p className="mt-1 text-sm text-gray-500">Select the AI model used for each feature in the app.</p>
+          <p className="mt-1 text-sm text-gray-500">
+            Models come live from the AI Gateway. A feature without its own model uses the default for its kind.
+          </p>
         </div>
         <button
           type="submit"
@@ -74,46 +76,38 @@ export default function AiConfigForm({
         </div>
       )}
 
+      <h3 className="px-6 pt-5 text-xs font-semibold uppercase tracking-wide text-gray-500">Defaults</h3>
+      <ul className="divide-y divide-gray-100 border-b">
+        {DEFAULTS.map(d => (
+          <Row key={d.id} name={d.name} description={d.description}>
+            <ModelSelect name={`model-${d.id}`} kind={d.kind} value={saved(d.id)} models={availableModels} />
+          </Row>
+        ))}
+      </ul>
+
+      <h3 className="px-6 pt-5 text-xs font-semibold uppercase tracking-wide text-gray-500">Features</h3>
       <ul className="divide-y divide-gray-100">
         {ALL_FEATURES.map((feature) => {
-          const currentConfig = currentConfigs.find(c => c.feature_id === feature.id)
-          const defaultValue = currentConfig?.model_name || ''
-
+          const fallback = saved(`default-${feature.kind}`)
           return (
-            <li key={feature.id} className="px-6 py-5 flex items-start justify-between gap-x-6">
-              <div className="min-w-0 flex-1">
-                <p className="text-sm font-semibold leading-6 text-gray-900">{feature.name}</p>
-                <p className="mt-1 flex text-xs leading-5 text-gray-500">{feature.description}</p>
+            <Row
+              key={feature.id}
+              name={feature.name}
+              description={feature.description}
+              meta={<>
                 <code className="mt-2 inline-block text-xs text-gray-400 bg-gray-50 px-2 py-0.5 rounded border">{feature.id}</code>
-              </div>
-              <div className="flex-shrink-0 w-72">
-                <select
-                  name={`model-${feature.id}`}
-                  defaultValue={defaultValue}
-                  className="block w-full rounded-md border-0 py-1.5 pl-3 pr-10 text-gray-900 ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-black sm:text-sm sm:leading-6"
-                >
-                  <option value="" disabled>Select a model</option>
-                  
-                  {/* We always include Jev option prominently if available, or just from the list */}
-                  {Object.entries(modelsByProvider).sort(([a], [b]) => a.localeCompare(b)).map(([provider, models]) => (
-                    <optgroup key={provider} label={provider.toUpperCase()}>
-                      {models.map(model => (
-                        <option key={model.id} value={model.id}>
-                          {model.name || model.id}
-                        </option>
-                      ))}
-                    </optgroup>
-                  ))}
-                  
-                  {/* Fallback option in case current DB value isn't in API list */}
-                  {defaultValue && !availableModels.some(m => m.id === defaultValue) && (
-                    <optgroup label="CURRENT (Not in Gateway)">
-                      <option value={defaultValue}>{defaultValue}</option>
-                    </optgroup>
-                  )}
-                </select>
-              </div>
-            </li>
+                <span className="ml-2 text-xs text-gray-400">{feature.source}</span>
+              </>}
+            >
+              <ModelSelect
+                name={`model-${feature.id}`}
+                kind={feature.kind}
+                needsVision={feature.needsVision}
+                value={saved(feature.id)}
+                models={availableModels}
+                fallbackLabel={`Use default (${fallback || 'not set'})`}
+              />
+            </Row>
           )
         })}
       </ul>

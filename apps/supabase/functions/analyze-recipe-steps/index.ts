@@ -80,7 +80,7 @@ Deno.serve(async (req) => {
     const admin = createClient(url, serviceKey);
 
     logger = GenerationLogger.fromEnv();
-    const model = await getFeatureModel(admin, "analyze-recipe-steps");
+    const model = await getFeatureModel(admin, "analyze-recipe-steps", "text");
 
     const ingredientList = ingredients
       .map((ing, i) => {

@@ -1,5 +1,6 @@
 import { createClient as createSupabaseClient } from '@supabase/supabase-js';
 import { z } from 'zod';
+import { getFeatureModel } from '@/utils/ai-config';
 
 const InsightSchema = z.object({
     summary_sentence: z.string(),
@@ -69,7 +70,12 @@ export async function generatePartyInsightsForParty(
     const adminSupabase = getAdminSupabase();
     const aiGatewayUrl = process.env.AI_GATEWAY_BASE_URL || 'https://ai-gateway.vercel.sh/v1';
     const apiKey = process.env.VERCEL_AI_GATEWAY || process.env.VERCEL_AI_GATEWAY_KEY;
-    const model = process.env.AI_GATEWAY_MODEL || 'google/gemini-2.5-flash';
+    let model: string;
+    try {
+        model = await getFeatureModel(adminSupabase, 'party-insights');
+    } catch (err) {
+        return { success: false, error: (err as Error).message };
+    }
 
     if (!apiKey) {
         return { success: false, error: 'Missing VERCEL_AI_GATEWAY credentials' };

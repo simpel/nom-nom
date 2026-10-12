@@ -41,7 +41,7 @@ export async function suggestRatingTraits({
 
   if (apiKey) {
     try {
-      const model = await getFeatureModel(client, "taxonomy-traits");
+      const model = await getFeatureModel(client, "taxonomy-traits", "text");
       const res = await fetch(`${gatewayBaseUrl}/chat/completions`, {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${apiKey}` },
