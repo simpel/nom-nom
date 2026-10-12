@@ -192,8 +192,6 @@ struct SuggestionEngine {
     }
 
     private static func weekdayName(for date: Date) -> String {
-        let formatter = DateFormatter()
-        formatter.setLocalizedDateFormatFromTemplate("EEEE")
-        return formatter.string(from: date)
+        date.formatted(.dateTime.weekday(.wide))
     }
 }
