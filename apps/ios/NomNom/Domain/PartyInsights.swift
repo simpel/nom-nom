@@ -98,13 +98,13 @@ struct PartyInsightRecommendation: Identifiable, Hashable, Decodable {
     let title: String
     let description: String
     let cuisine: String?
-    let dishID: UUID?
+    let recipeID: UUID?
 
     enum CodingKeys: String, CodingKey {
         case title
         case description
         case cuisine
-        case dishID = "dish_id"
+        case recipeID = "recipe_id"
     }
 }
 

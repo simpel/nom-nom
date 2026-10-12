@@ -22,7 +22,7 @@ struct SuggestedPartyRow: View {
         store.meals(forParty: party.id)
             .sorted { $0.eatenOn > $1.eatenOn }
             .prefix(8)
-            .map { PartyCardMeal(id: $0.id, source: .meal($0), title: store.dishName(forMeal: $0), date: $0.eatenOn) }
+            .map { PartyCardMeal(id: $0.id, source: .meal($0), title: store.recipeName(forMeal: $0), date: $0.eatenOn) }
     }
 
     var body: some View {

@@ -8,7 +8,7 @@ extension FoodStore {
         cuisine: String? = nil,
         cuisineID: UUID? = nil,
         cookingMethodID: UUID? = nil,
-        dishKindID: UUID? = nil,
+        recipeKindID: UUID? = nil,
         serves: Int? = nil,
         isPublic: Bool = true
     ) async throws -> Recipe {
@@ -20,7 +20,7 @@ extension FoodStore {
 
         do {
             let created: Recipe = try await supabase
-                .from("dishes")
+                .from("recipes")
                 .insert(NewRecipe(
                     ownerID: userID,
                     name: name,
@@ -28,7 +28,7 @@ extension FoodStore {
                     cuisineID: cuisineID,
                     cookingMethodID: cookingMethodID,
                     serves: serves,
-                    dishKindID: dishKindID,
+                    recipeKindID: recipeKindID,
                     isPublic: isPublic
                 ))
                 .select()
@@ -40,7 +40,7 @@ extension FoodStore {
             return created
         } catch let error as PostgrestError where error.code == "23505" {
             let raced: Recipe = try await supabase
-                .from("dishes")
+                .from("recipes")
                 .select()
                 .eq("owner_id", value: userID.uuidString)
                 .eq("normalized_name", value: key)
@@ -58,7 +58,7 @@ extension FoodStore {
         guard !trimmed.isEmpty, trimmed != recipe.name else { return }
         do {
             let updated: Recipe = try await supabase
-                .from("dishes")
+                .from("recipes")
                 .update(RecipeNamePatch(name: trimmed))
                 .eq("id", value: recipe.id.uuidString)
                 .select()
@@ -111,7 +111,7 @@ extension FoodStore {
 
         let cuisineIDToSave = draft.cuisineID ?? recipe.cuisineID
         let cookingMethodIDToSave = draft.cookingMethodID ?? recipe.cookingMethodID
-        let dishKindIDToSave = draft.dishKindID ?? recipe.dishKindID
+        let recipeKindIDToSave = draft.recipeKindID ?? recipe.recipeKindID
 
         guard ingredientsChanged ||
               recipe.recipePhotoPaths != newPaths ||
@@ -119,12 +119,12 @@ extension FoodStore {
               recipe.cuisine != cuisineToSave ||
               recipe.cuisineID != cuisineIDToSave ||
               recipe.cookingMethodID != cookingMethodIDToSave ||
-              recipe.dishKindID != dishKindIDToSave ||
+              recipe.recipeKindID != recipeKindIDToSave ||
               recipe.serves != servesToSave ||
               recipe.isPublic != isPublicToSave else { return }
 
         let updated: Recipe = try await supabase
-            .from("dishes")
+            .from("recipes")
             .update(RecipeContentPatch(
                 ingredients: cleanIngredients,
                 instructions: cleanInstructions,
@@ -139,7 +139,7 @@ extension FoodStore {
                 healthVerdict: healthVerdictToSave,
                 healthRationale: healthRationaleToSave,
                 healthBreakdown: healthBreakdownToSave,
-                dishKindID: dishKindIDToSave
+                recipeKindID: recipeKindIDToSave
             ))
             .eq("id", value: recipe.id.uuidString)
             .select()
@@ -191,7 +191,7 @@ extension FoodStore {
 
         if newPaths != recipe.photoPaths {
             let updated: Recipe = try await supabase
-                .from("dishes")
+                .from("recipes")
                 .update(RecipePhotosPatch(photo_paths: newPaths))
                 .eq("id", value: recipe.id.uuidString)
                 .select()
@@ -223,7 +223,7 @@ extension FoodStore {
     func delete(recipe: Recipe) async {
         guard recipe.ownerID == userID else { return }
         do {
-            try await supabase.from("dishes").update(["is_deleted": true]).eq("id", value: recipe.id.uuidString).execute()
+            try await supabase.from("recipes").update(["is_deleted": true]).eq("id", value: recipe.id.uuidString).execute()
             
             // Soft-delete locally
             if let index = recipes.firstIndex(where: { $0.id == recipe.id }) {
@@ -236,19 +236,5 @@ extension FoodStore {
         } catch {
             errorMessage = Self.describe(error)
         }
-    }
-
-    // MARK: - Compatibility Wrappers
-
-    func findOrCreateDish(named name: String) async throws -> Recipe {
-        try await findOrCreateRecipe(named: name)
-    }
-
-    func rename(dish: Recipe, to newName: String) async {
-        await rename(recipe: dish, to: newName)
-    }
-
-    func delete(dish: Recipe) async {
-        await delete(recipe: dish)
     }
 }

@@ -5,11 +5,11 @@ import {
   ANY_TRAIT, COOKED_TRAIT, DIMENSION_LABELS, TRAITS, loadRatingModel, tagTraitId, traitTerms,
 } from '@/utils/rating-model'
 
-// Every option in the rating model and how it connects: dish kinds and cooking methods
+// Every option in the rating model and how it connects: recipe kinds and cooking methods
 // carry traits, traits decide which tags a meal offers.
 export default async function RatingModelPage() {
   await requireAdmin()
-  const { terms, tags, dishCounts, tagUsage } = await loadRatingModel()
+  const { terms, tags, recipeCounts, tagUsage } = await loadRatingModel()
   const carriers = traitTerms(terms)
   const traitNodes = [...TRAITS, COOKED_TRAIT, ANY_TRAIT]
 
@@ -38,7 +38,7 @@ export default async function RatingModelPage() {
     <ModelPage
       eyebrow="Ratings"
       title="Rating model"
-      subtitle="Dish kinds and cooking methods carry traits; traits decide which “what stood out” tags a meal offers. Click any box."
+      subtitle="Recipe kinds and cooking methods carry traits; traits decide which “what stood out” tags a meal offers. Click any box."
       back={null}
     >
       <RelationGraph nodes={nodes} edges={edges} height={720} maxRows={10} />
@@ -66,10 +66,10 @@ export default async function RatingModelPage() {
 
         <Panel title="Terms without traits" trailing={`${untraited.length}`}>
           {untraited.length === 0 ? (
-            <p className="text-sm text-gray-500">Every dish kind and cooking method has traits.</p>
+            <p className="text-sm text-gray-500">Every recipe kind and cooking method has traits.</p>
           ) : (
             <>
-              <p className="mb-3 text-sm text-gray-500">These only offer the tags for any dish and any cooked dish.</p>
+              <p className="mb-3 text-sm text-gray-500">These only offer the tags for any recipe and any cooked recipe.</p>
               <div className="flex flex-wrap gap-2">
                 {untraited.map(t => <Chip key={t.id} href={modelHref.term(t.id)}>{t.name}</Chip>)}
               </div>
@@ -111,7 +111,7 @@ export default async function RatingModelPage() {
                     <Link href={modelHref.term(t.id)} className="hover:underline">{t.name}</Link>
                     <span className="flex flex-wrap justify-end gap-1">
                       {t.rating_traits.map(tr => <Chip key={tr} tone="indigo">{tr}</Chip>)}
-                      <span className="tabular-nums text-gray-500">{dishCounts.get(t.id) ?? 0}</span>
+                      <span className="tabular-nums text-gray-500">{recipeCounts.get(t.id) ?? 0}</span>
                     </span>
                   </li>
                 ))}

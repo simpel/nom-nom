@@ -13,7 +13,7 @@ const corsHeaders = {
 };
 
 const CACHE_TTL_MS = 24 * 60 * 60 * 1000;
-const MIN_RATED_DISHES = 2;
+const MIN_RATED_RECIPES = 2;
 const MAX_PICKS = 8;
 
 const SYSTEM_PROMPT = `You recommend dinner recipes for a group of people who eat together.
@@ -23,10 +23,10 @@ Pick ${MAX_PICKS} candidates at most that this specific group is most likely to 
 that resembles what a member disliked. Prefer variety over near-duplicates.
 For each pick write one short, concrete reason (max 90 characters) tied to the group's tastes.
 Use only candidate ids from the list. Respond with JSON only:
-{"picks":[{"dish_id":"<uuid>","reason":"<text>"}]}`;
+{"picks":[{"recipe_id":"<uuid>","reason":"<text>"}]}`;
 
 interface Pick {
-  dish_id: string;
+  recipe_id: string;
   reason: string;
 }
 
@@ -71,7 +71,7 @@ Deno.serve(async (req) => {
   // Rating history for the party, one row per (meal, rater).
   const { data: partyMeals, error: histErr } = await db
     .from("meal_parties")
-    .select("meals(id, dish_id, dishes(name, cuisine), meal_ratings(score, rater_id, eater_id, updated_at))")
+    .select("meals(id, recipe_id, recipes(name, cuisine), meal_ratings(score, rater_id, eater_id, updated_at))")
     .eq("party_id", partyId);
   if (histErr) return json({ error: histErr.message }, 500);
 
@@ -83,32 +83,32 @@ Deno.serve(async (req) => {
 
   // Cache hit?
   const { data: cached } = await db
-    .from("party_recommendations").select("dish_id, reason, generated_at").eq("party_id", partyId).order("rank");
+    .from("party_recommendations").select("recipe_id, reason, generated_at").eq("party_id", partyId).order("rank");
   if (!force && cached && cached.length > 0) {
     const generatedAt = Math.max(...cached.map((c: any) => Date.parse(c.generated_at)));
     if (Date.now() - generatedAt < CACHE_TTL_MS && latestRating <= generatedAt) {
-      return json({ recommendations: cached.map((c: any) => ({ dish_id: c.dish_id, reason: c.reason })), cached: true });
+      return json({ recommendations: cached.map((c: any) => ({ recipe_id: c.recipe_id, reason: c.reason })), cached: true });
     }
   }
 
-  // Per-dish scores and per-member taste.
-  const ratedDishes = new Set<string>();
-  const dishScores = new Map<string, { name: string; scores: number[] }>();
+  // Per-recipe scores and per-member taste.
+  const ratedRecipes = new Set<string>();
+  const recipeScores = new Map<string, { name: string; scores: number[] }>();
   const raterIds = new Set<string>();
   const eaterIds = new Set<string>();
   for (const m of meals) {
     for (const r of m.meal_ratings ?? []) {
-      ratedDishes.add(m.dish_id);
-      const entry = dishScores.get(m.dish_id) ?? { name: m.dishes?.name ?? "Unknown", scores: [] };
+      ratedRecipes.add(m.recipe_id);
+      const entry = recipeScores.get(m.recipe_id) ?? { name: m.recipes?.name ?? "Unknown", scores: [] };
       entry.scores.push(Number(r.score) * 100);
-      dishScores.set(m.dish_id, entry);
+      recipeScores.set(m.recipe_id, entry);
       if (r.rater_id) raterIds.add(r.rater_id);
       if (r.eater_id) eaterIds.add(r.eater_id);
     }
   }
 
   const clearCache = async () => { await db.from("party_recommendations").delete().eq("party_id", partyId); };
-  if (ratedDishes.size < MIN_RATED_DISHES) {
+  if (ratedRecipes.size < MIN_RATED_RECIPES) {
     await clearCache();
     return json({ recommendations: [], cached: false, reason: "not-enough-history" });
   }
@@ -137,15 +137,15 @@ Deno.serve(async (req) => {
     for (const r of m.meal_ratings ?? []) {
       const who = names.get(r.rater_id ?? r.eater_id) ?? "Someone";
       const entry = members.get(who) ?? { liked: new Set(), disliked: new Set() };
-      const dish = m.dishes?.name ?? "Unknown";
-      if (Number(r.score) >= 0.5) entry.liked.add(dish);
-      if (Number(r.score) < 0.3) entry.disliked.add(dish);
+      const recipe = m.recipes?.name ?? "Unknown";
+      if (Number(r.score) >= 0.5) entry.liked.add(recipe);
+      if (Number(r.score) < 0.3) entry.disliked.add(recipe);
       members.set(who, entry);
     }
   }
 
   const avg = (xs: number[]) => xs.reduce((a, b) => a + b, 0) / xs.length;
-  const history = [...dishScores.values()]
+  const history = [...recipeScores.values()]
     .map((d) => ({ name: d.name, avg: Math.round(avg(d.scores)) }))
     .sort((a, b) => b.avg - a.avg)
     .slice(0, 20);
@@ -156,7 +156,7 @@ Deno.serve(async (req) => {
       name, liked: [...v.liked].slice(0, 8), disliked: [...v.disliked].slice(0, 8),
     })),
     candidates: candidates.map((c: any) => ({
-      dish_id: c.id,
+      recipe_id: c.id,
       name: c.name,
       cuisine: c.cuisine,
       ingredients: Array.isArray(c.ingredients) ? c.ingredients.map((i: any) => i.ingredient).filter(Boolean).slice(0, 12) : [],
@@ -196,9 +196,9 @@ Deno.serve(async (req) => {
     const seen = new Set<string>();
     const picks: Pick[] = [];
     for (const p of parsed.picks ?? []) {
-      if (!allowed.has(p?.dish_id) || seen.has(p.dish_id)) continue;
-      seen.add(p.dish_id);
-      picks.push({ dish_id: p.dish_id, reason: String(p.reason ?? "").slice(0, 140) });
+      if (!allowed.has(p?.recipe_id) || seen.has(p.recipe_id)) continue;
+      seen.add(p.recipe_id);
+      picks.push({ recipe_id: p.recipe_id, reason: String(p.reason ?? "").slice(0, 140) });
       if (picks.length === MAX_PICKS) break;
     }
     if (picks.length === 0) {
@@ -208,7 +208,7 @@ Deno.serve(async (req) => {
 
     await clearCache();
     const { error: insertErr } = await db.from("party_recommendations").insert(
-      picks.map((p, i) => ({ party_id: partyId, dish_id: p.dish_id, rank: i, reason: p.reason })),
+      picks.map((p, i) => ({ party_id: partyId, recipe_id: p.recipe_id, rank: i, reason: p.reason })),
     );
     if (insertErr) {
       await logger.failure(insertErr.message);

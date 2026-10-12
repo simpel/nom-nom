@@ -5,7 +5,7 @@
 // and both defaults are set on /admin/ai-config.
 //
 // Embeddings (text-embedding-3-small) are deliberately not here: stored vectors only compare
-// with vectors from the same model, so switching it means re-embedding every dish and
+// with vectors from the same model, so switching it means re-embedding every recipe and
 // ingredient. Change it in code with a backfill, not from a dropdown.
 
 export type FeatureKind = 'text' | 'image'
@@ -40,10 +40,11 @@ export const ALL_FEATURES: AiFeature[] = [
   { id: 'analyze-recipe-steps', name: 'Cook Mode Steps', description: 'Splits instructions into steps with timers and ingredients.', kind: 'text', source: 'analyze-recipe-steps' },
   { id: 'recipe-tweaks', name: 'Recipe Tweaks', description: 'Suggests tweaks to a recipe based on how it was rated.', kind: 'text', source: 'suggest-recipe-tweaks' },
   { id: 'canonicalize-ingredients', name: 'Ingredient Canonicalization', description: 'Maps raw ingredients to standard database entities.', kind: 'text', source: 'canonicalize-ingredients' },
-  { id: 'taxonomy-traits', name: 'Rating Traits', description: 'Describes the taste traits of cuisines and dish kinds for the rating model.', kind: 'text', source: '_shared/rating-traits' },
+  { id: 'taxonomy-traits', name: 'Rating Traits', description: 'Describes the taste traits of cuisines and recipe kinds for the rating model.', kind: 'text', source: '_shared/rating-traits' },
   { id: 'party-recommendations', name: 'Party Recipe Recommendations', description: 'Recommends recipes for a dinner party.', kind: 'text', source: 'recommend-party-recipes' },
   { id: 'party-insights', name: 'Party Taste Profiles', description: 'Generates group taste summaries and member matches.', kind: 'text', source: 'web: utils/party-insights' },
   { id: 'profile-insights', name: 'Personal Taste Profiles', description: "Summarises one person's tastes and suggests meals.", kind: 'text', source: 'web: api/admin/trigger-profile-insight' },
-  { id: 'dish-photo-brief', name: 'Photo Brief', description: 'Turns a recipe or category into the food description the photo model draws.', kind: 'text', source: 'generate-dish-photo' },
-  { id: 'generate-dish-photo', name: 'Recipe / Category Photo', description: 'Generates cover photos. The prompt is written for Meta Muse Image; other models may need prompt changes.', kind: 'image', source: 'generate-dish-photo' },
+  { id: 'recipe-photo-brief', name: 'Photo Brief', description: 'Turns a recipe or category into the food description the photo model draws. Used for recipe, category and meal photos.', kind: 'text', source: 'generate-recipe-photo, generate-meal-photo' },
+  { id: 'generate-recipe-photo', name: 'Recipe / Category Photo', description: 'Generates cover photos. The prompt is written for Meta Muse Image; other models may need prompt changes.', kind: 'image', source: 'generate-recipe-photo' },
+  { id: 'generate-meal-photo', name: 'Meal Photo', description: 'Generates the photo of a meal: the recipe plated and laid for eating. Follows the image default unless set.', kind: 'image', source: 'generate-meal-photo' },
 ]

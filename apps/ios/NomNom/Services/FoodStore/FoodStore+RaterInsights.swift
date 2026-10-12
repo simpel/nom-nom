@@ -1,7 +1,7 @@
 import Foundation
 
 /// On-device, deterministic "why did they score it that way" analysis. No LLM call —
-/// evaluates deviations from the rater's own baseline across normalized dish kinds,
+/// evaluates deviations from the rater's own baseline across normalized recipe kinds,
 /// ingredients, cuisines, and overall scoring patterns.
 extension FoodStore {
 
@@ -20,8 +20,8 @@ extension FoodStore {
         return Array(mealSet.values).sorted { $0.eatenOn > $1.eatenOn }
     }
 
-    /// Dish kind affinities where this rater's scores notably deviate from their own average.
-    func dishKindAffinities(for rater: RaterRef) -> [RaterTagAffinity] {
+    /// Recipe kind affinities where this rater's scores notably deviate from their own average.
+    func recipeKindAffinities(for rater: RaterRef) -> [RaterTagAffinity] {
         let raterRatings = ratings(for: rater)
         guard raterRatings.count >= minAffinitySampleSize else { return [] }
 
@@ -30,8 +30,8 @@ extension FoodStore {
         var scoresByKindID: [UUID: [Double]] = [:]
         for rating in raterRatings {
             guard let meal = meal(rating.mealID),
-                  let recipe = recipe(meal.dishID),
-                  let kindID = recipe.dishKindID else { continue }
+                  let recipe = recipe(meal.recipeID),
+                  let kindID = recipe.recipeKindID else { continue }
             scoresByKindID[kindID, default: []].append(rating.score)
         }
 
@@ -39,10 +39,10 @@ extension FoodStore {
             guard scores.count >= minAffinitySampleSize else { return nil }
             let average = scores.reduce(0, +) / Double(scores.count)
             guard abs(average - overallAverage) >= minAffinityDelta else { return nil }
-            let name = taxonomyTerms[kindID]?.name ?? "this dish kind"
+            let name = taxonomyTerms[kindID]?.name ?? "this recipe kind"
             let slug = taxonomyTerms[kindID]?.slug ?? kindID.uuidString
             return RaterTagAffinity(
-                kind: .dishKind(name: name),
+                kind: .recipeKind(name: name),
                 tag: slug,
                 raterAverage: average,
                 raterOverallAverage: overallAverage,
@@ -62,7 +62,7 @@ extension FoodStore {
         var scoresByMethodID: [UUID: [Double]] = [:]
         for rating in raterRatings {
             guard let meal = meal(rating.mealID),
-                  let recipe = recipe(meal.dishID),
+                  let recipe = recipe(meal.recipeID),
                   let methodID = recipe.cookingMethodID else { continue }
             scoresByMethodID[methodID, default: []].append(rating.score)
         }
@@ -93,7 +93,7 @@ extension FoodStore {
 
         var scoresByIngredient: [String: [Double]] = [:]
         for rating in raterRatings {
-            guard let meal = meal(rating.mealID), let recipe = recipe(meal.dishID) else { continue }
+            guard let meal = meal(rating.mealID), let recipe = recipe(meal.recipeID) else { continue }
             for ing in canonicalIngredients(for: recipe) {
                 scoresByIngredient[ing, default: []].append(rating.score)
             }
@@ -124,7 +124,7 @@ extension FoodStore {
         var scoresByCuisine: [String: [Double]] = [:]
         for rating in raterRatings {
             guard let meal = meal(rating.mealID),
-                  let recipe = recipe(meal.dishID),
+                  let recipe = recipe(meal.recipeID),
                   let cuisine = recipe.cuisine, !cuisine.isEmpty else { continue }
             for part in Cuisine.parseMultiple(from: cuisine) {
                 scoresByCuisine[part.lowercased(), default: []].append(rating.score)
@@ -147,15 +147,15 @@ extension FoodStore {
     }
 
     /// Synthesizes factors explaining one specific meal's verdict for a rater.
-    /// Prioritizes dish kind deviation, cooking method, ingredient affinities, cuisine affinities,
+    /// Prioritizes recipe kind deviation, cooking method, ingredient affinities, cuisine affinities,
     /// and baseline score deviation.
     func raterExplanation(for rater: RaterRef, meal: Meal) -> [RaterTagAffinity] {
-        guard let recipe = recipe(meal.dishID) else { return [] }
+        guard let recipe = recipe(meal.recipeID) else { return [] }
         var explanations: [RaterTagAffinity] = []
 
-        // 1. Dish Kind factor
-        if let kind = dishKind(for: recipe) {
-            let kindAffinities = dishKindAffinities(for: rater)
+        // 1. Recipe Kind factor
+        if let kind = recipeKind(for: recipe) {
+            let kindAffinities = recipeKindAffinities(for: rater)
             if let matched = kindAffinities.first(where: { $0.tag == kind.slug }) {
                 explanations.append(matched)
             }

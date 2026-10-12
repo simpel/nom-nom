@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// Key-value details for a recipe: who created it and dish kind. Cuisine,
+/// Key-value details for a recipe: who created it and recipe kind. Cuisine,
 /// cooking time and method live in the ScreenHeader eyebrow and RecipeDetailFacts;
 /// servings sit with the ingredients.
 struct RecipeDetailInfoCard: View {
@@ -29,8 +29,8 @@ struct RecipeDetailInfoCard: View {
                     }
                 }
 
-                if let kind = store.dishKind(for: recipe) {
-                    ListRow("Dish kind", value: kind.name)
+                if let kind = store.recipeKind(for: recipe) {
+                    ListRow("Recipe kind", value: kind.name)
                 }
             }
         }

@@ -121,7 +121,7 @@ for (const cuisine of CUISINES) {
         recipes.push({ id: rId, name, cuisine, ingredients: recipeIngredients });
 
         sql.push(`
-insert into public.dishes (id, name, normalized_name, owner_id, is_public, cuisine, ingredients, instructions)
+insert into public.recipes (id, name, normalized_name, owner_id, is_public, cuisine, ingredients, instructions)
 values (
     '${rId}', 
     '${name.replace(/'/g, "''")}', 
@@ -183,7 +183,7 @@ for (const p of PARTIES) {
         const date = randomDate(START_DATE, END_DATE);
         
         sql.push(`
-insert into public.meals (id, dish_id, created_by, eaten_on)
+insert into public.meals (id, recipe_id, created_by, eaten_on)
 values ('${mealId}', '${recipe.id}', '${USERS[0].id}', '${date.toISOString()}');
         `);
 

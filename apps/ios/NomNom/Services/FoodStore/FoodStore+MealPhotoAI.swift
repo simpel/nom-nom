@@ -3,7 +3,6 @@ import Supabase
 
 extension FoodStore {
     struct GenerateMealImagePayload: Encodable {
-        let mode = "meal"
         let meal_id: String
         let name: String
         let cuisine: String?
@@ -11,7 +10,7 @@ extension FoodStore {
         let instructions: [String]
     }
 
-    /// Invokes `generate-dish-photo` in meal mode: the meal's recipe plated and laid for eating
+    /// Invokes `generate-meal-photo`: the meal's recipe plated and laid for eating
     /// (cutlery, a napkin and a drink) on the same oak table as recipe photos. The function
     /// saves it to `meal-photos` and puts it first in `meals.photo_paths`.
     @discardableResult
@@ -29,7 +28,7 @@ extension FoodStore {
         )
 
         let result: GenerateRecipeImageResult = try await supabase.functions.invoke(
-            "generate-dish-photo",
+            "generate-meal-photo",
             options: FunctionInvokeOptions(body: payload)
         )
 

@@ -10,9 +10,9 @@ import SwiftUI
 /// favourite, delete (owner only).
 struct RecipeCard<Footer: View>: View {
     let recipe: Recipe
-    /// Overrides the eyebrow (otherwise cuisine → dish kind → method → "Recipe").
+    /// Overrides the eyebrow (otherwise cuisine → recipe kind → method → "Recipe").
     var category: String?
-    /// Normalised 0–1 score for the verdict Badge; defaults to the dish's average.
+    /// Normalised 0–1 score for the verdict Badge; defaults to the recipe's average.
     var score: Double?
     var footer: Footer
 
@@ -41,7 +41,7 @@ struct RecipeCard<Footer: View>: View {
     private var eyebrow: String {
         if let category, !category.isEmpty { return category }
         if let cuisine = Cuisine.formatDisplayName(recipe.cuisine) { return cuisine }
-        if let kind = store.dishKind(for: recipe) { return kind.name }
+        if let kind = store.recipeKind(for: recipe) { return kind.name }
         if let method = store.cookingMethod(for: recipe) { return method.name }
         return "Recipe"
     }
@@ -54,7 +54,7 @@ struct RecipeCard<Footer: View>: View {
     }
 
     private var resolvedScore: Double? {
-        score ?? store.averageScore(forDish: recipe.id)
+        score ?? store.averageScore(forRecipe: recipe.id)
     }
 
     private var isFavorite: Bool { store.isFavorite(recipe: recipe) }
@@ -127,7 +127,7 @@ struct RecipeCard<Footer: View>: View {
             }
         }
         .sheet(isPresented: $showingCreateMeal) {
-            MealEditorView(mealID: nil, prefilledDishID: recipe.id)
+            MealEditorView(mealID: nil, prefilledRecipeID: recipe.id)
         }
         .alert("Delete Recipe?", isPresented: $confirmDelete) {
             Button("Cancel", role: .cancel) {}

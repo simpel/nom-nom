@@ -8,10 +8,10 @@ import UIKit
 ///
 /// Writes to whichever Supabase the build points at — the local stack, in a debug
 /// build. Batched rather than looped through `FoodStore.save`, because seeding ten
-/// dishes one meal at a time is dozens of round trips for something that should
+/// recipes one meal at a time is dozens of round trips for something that should
 /// take three.
 ///
-/// Safe to run twice: existing household members are reused and dishes already
+/// Safe to run twice: existing household members are reused and recipes already
 /// present are skipped, so it tops up rather than duplicating.
 enum SampleData {
 
@@ -33,7 +33,7 @@ enum SampleData {
     static func populate(_ store: FoodStore) async {
         do {
             let kids = try await ensureKids(store)
-            try await seedDishes(store, kids: kids)
+            try await seedRecipes(store, kids: kids)
             await store.load()
         } catch {
             store.errorMessage = FoodStore.describe(error)
@@ -64,13 +64,13 @@ enum SampleData {
     }
 
     @MainActor
-    private static func seedDishes(_ store: FoodStore, kids: [Eater]) async throws {
-        let known = Set(store.myDishes.map(\.normalizedName))
+    private static func seedRecipes(_ store: FoodStore, kids: [Eater]) async throws {
+        let known = Set(store.myRecipes.map(\.normalizedName))
         let todo = plan.filter { !known.contains($0.0.normalizedForMatching) }
         guard !todo.isEmpty else { return }
 
-        let dishes: [Dish] = try await supabase
-            .from("dishes")
+        let recipes: [Recipe] = try await supabase
+            .from("recipes")
             .insert(todo.map { NewRecipe(ownerID: store.userID, name: $0.0, cuisine: $0.1) })
             .select()
             .execute()
@@ -79,20 +79,20 @@ enum SampleData {
         // Match the inserted rows back to the plan by folded name rather than by
         // position: PostgREST returns rows for a bulk insert without promising the
         // order they were sent in.
-        let byKey = Dictionary(dishes.map { ($0.normalizedName, $0) }, uniquingKeysWith: { first, _ in first })
+        let byKey = Dictionary(recipes.map { ($0.normalizedName, $0) }, uniquingKeysWith: { first, _ in first })
 
         var newMeals: [NewMeal] = []
         /// Which plan entry each meal came from, so verdicts can be attached once
         /// the meals come back with their ids.
-        var provenance: [(dishKey: String, day: Date, verdicts: [Reaction])] = []
+        var provenance: [(recipeKey: String, day: Date, verdicts: [Reaction])] = []
 
         for (name, _, daysAgoList, verdicts) in todo {
             let key = name.normalizedForMatching
-            guard let dish = byKey[key] else { continue }
+            guard let recipe = byKey[key] else { continue }
             for (index, daysAgo) in daysAgoList.enumerated() {
                 let day = Calendar.current.date(byAdding: .day, value: -daysAgo, to: .now) ?? .now
-                newMeals.append(NewMeal(dishID: dish.id, createdBy: store.userID, eatenOn: day, notes: ""))
-                provenance.append((dishKey: key,
+                newMeals.append(NewMeal(recipeID: recipe.id, createdBy: store.userID, eatenOn: day, notes: ""))
+                provenance.append((recipeKey: key,
                                    day: Calendar.current.startOfDay(for: day),
                                    verdicts: index < verdicts.count ? verdicts[index] : []))
             }
@@ -107,16 +107,16 @@ enum SampleData {
             .execute()
             .value
 
-        // Same ordering caveat, so pair on (dish, day) — unique within this fixture.
+        // Same ordering caveat, so pair on (recipe, day) — unique within this fixture.
         var mealLookup: [String: UUID] = [:]
         for meal in meals {
-            guard let dish = dishes.first(where: { $0.id == meal.dishID }) else { continue }
-            mealLookup[pairKey(dish.normalizedName, meal.eatenOn)] = meal.id
+            guard let recipe = recipes.first(where: { $0.id == meal.recipeID }) else { continue }
+            mealLookup[pairKey(recipe.normalizedName, meal.eatenOn)] = meal.id
         }
 
         var newRatings: [NewRating] = []
         for entry in provenance {
-            guard let mealID = mealLookup[pairKey(entry.dishKey, entry.day)] else { continue }
+            guard let mealID = mealLookup[pairKey(entry.recipeKey, entry.day)] else { continue }
             // Only the cook's own verdict: nobody rates for anybody else (RLS).
             if let reaction = entry.verdicts.first {
                 newRatings.append(NewRating(mealID: mealID, raterID: store.userID, reaction: reaction))
@@ -127,10 +127,10 @@ enum SampleData {
             try await supabase.from("meal_ratings").insert(newRatings).execute()
         }
 
-        try await attachPhotos(to: meals, dishes: dishes)
+        try await attachPhotos(to: meals, recipes: recipes)
     }
 
-    /// Gives the most recent serving of each dish a drawn-on-the-spot photo.
+    /// Gives the most recent serving of each recipe a drawn-on-the-spot photo.
     ///
     /// Worth doing rather than leaving the placeholders: it's the only thing in the
     /// seed that exercises the storage path end to end — upload under
@@ -138,13 +138,13 @@ enum SampleData {
     /// the authenticated download — and it's the thumbnail the list and the calendar
     /// actually reach for.
     @MainActor
-    private static func attachPhotos(to meals: [Meal], dishes: [Dish]) async throws {
-        let newestPerDish = Dictionary(grouping: meals, by: \.dishID)
+    private static func attachPhotos(to meals: [Meal], recipes: [Recipe]) async throws {
+        let newestPerRecipe = Dictionary(grouping: meals, by: \.recipeID)
             .compactMapValues { $0.max { $0.eatenOn < $1.eatenOn } }
 
-        for (dishID, meal) in newestPerDish {
-            guard let dish = dishes.first(where: { $0.id == dishID }),
-                  let data = card(for: dish.name) else { continue }
+        for (recipeID, meal) in newestPerRecipe {
+            guard let recipe = recipes.first(where: { $0.id == recipeID }),
+                  let data = card(for: recipe.name) else { continue }
             let path = "\(meal.id.uuidString.lowercased())/\(UUID().uuidString.lowercased()).jpg"
             _ = try await supabase.storage
                 .from(SupabaseConfig.photoBucket)
@@ -158,8 +158,8 @@ enum SampleData {
         }
     }
 
-    /// A flat colour card with the dish's initials, standing in for a photo. The
-    /// hue is derived from the name so the same dish keeps the same colour.
+    /// A flat colour card with the recipe's initials, standing in for a photo. The
+    /// hue is derived from the name so the same recipe keeps the same colour.
     private static func card(for name: String) -> Data? {
         let size = CGSize(width: 800, height: 800)
         let hue = Double(abs(name.normalizedForMatching.hashValue) % 360) / 360
@@ -192,8 +192,8 @@ enum SampleData {
         return PhotoTools.prepare(image)
     }
 
-    private static func pairKey(_ dishKey: String, _ day: Date) -> String {
-        "\(dishKey)|\(PostgresDate.string(from: day))"
+    private static func pairKey(_ recipeKey: String, _ day: Date) -> String {
+        "\(recipeKey)|\(PostgresDate.string(from: day))"
     }
 }
 #endif

@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// Duration required to prep and cook the dish (0–15, 15–30, 30–60, 60+ min).
+/// Duration required to prep and cook the recipe (0–15, 15–30, 30–60, 60+ min).
 enum EffortLevel: Int, Codable, CaseIterable, Identifiable, Hashable, TactilePickerOption {
     case zeroTo15 = 0
     case fifteenTo30 = 1
@@ -48,7 +48,7 @@ enum EffortLevel: Int, Codable, CaseIterable, Identifiable, Hashable, TactilePic
     var systemImage: String { icon ?? "" }
 }
 
-/// How frequently the household wants this dish in regular rotation.
+/// How frequently the household wants this recipe in regular rotation.
 enum RotationGoal: Int, Codable, CaseIterable, Identifiable, Hashable, TactilePickerOption {
     case oneAndDone = 0
     case sometimes = 1

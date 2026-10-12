@@ -1,11 +1,11 @@
-// Edge function that resolves a dish's raw ingredient lines to entries in the
+// Edge function that resolves a recipe's raw ingredient lines to entries in the
 // shared public.ingredient_vocabulary table, so "loved/polarizing" stats can be
 // computed on atomic, categorized, language-independent flavor entities instead of
 // raw recipe text. Triggered by the canonicalize_ingredients_webhook DB trigger on
-// dishes insert/update (see migrations/20260915162000_canonicalize_ingredients_webhook.sql).
+// recipes insert/update (see migrations/20260915162000_canonicalize_ingredients_webhook.sql).
 //
 // Two-step resolution, because an LLM call alone can't guarantee two different
-// dishes converge on the identical string for the same entity:
+// recipes converge on the identical string for the same entity:
 //   1. LLM decomposes + translates + categorizes each raw ingredient line.
 //   2. Each proposed canonical name is embedded and matched against existing
 //      vocabulary via cosine similarity — a match reuses the existing row (and
@@ -40,7 +40,7 @@ sesame or truffle oil).
 Return a single JSON object: { "items": [{ "raw_text": "...", "canonical_name": "...", "category": "..." }, ...] }
 Return ONLY valid JSON, no markdown fences or commentary.`;
 
-interface DishRow {
+interface RecipeRow {
   id: string;
   ingredients: { quantity?: string; measurement?: string; ingredient: string }[] | null;
 }
@@ -48,8 +48,8 @@ interface DishRow {
 interface WebhookPayload {
   type: "INSERT" | "UPDATE";
   table: string;
-  record: DishRow;
-  old_record: DishRow | null;
+  record: RecipeRow;
+  old_record: RecipeRow | null;
 }
 
 const ExtractionSchema = z.object({
@@ -76,8 +76,8 @@ Deno.serve(async (req) => {
 
   try {
     const payload: WebhookPayload = await req.json();
-    const dish = payload.record;
-    const rawIngredients = (dish.ingredients || []).map((i) => i.ingredient).filter(Boolean);
+    const recipe = payload.record;
+    const rawIngredients = (recipe.ingredients || []).map((i) => i.ingredient).filter(Boolean);
 
     if (rawIngredients.length === 0) {
       return new Response(JSON.stringify({ skipped: "no-ingredients" }), {
@@ -113,7 +113,7 @@ Deno.serve(async (req) => {
     const userMessage = rawIngredients.map((r) => `- ${r}`).join("\n");
 
     logger = GenerationLogger.fromEnv();
-    await logger.start({ type: "ingredient_canonicalize", entityId: dish.id, prompt: userMessage, model });
+    await logger.start({ type: "ingredient_canonicalize", entityId: recipe.id, prompt: userMessage, model });
 
     const completionRes = await fetch(`${gatewayBaseUrl}/chat/completions`, {
       method: "POST",
@@ -145,7 +145,7 @@ Deno.serve(async (req) => {
     await logger.success(raw);
 
     if (parsed.items.length === 0) {
-      return new Response(JSON.stringify({ success: true, dish_id: dish.id, items: 0 }), {
+      return new Response(JSON.stringify({ success: true, recipe_id: recipe.id, items: 0 }), {
         headers: { "Content-Type": "application/json" },
       });
     }
@@ -180,7 +180,7 @@ Deno.serve(async (req) => {
 
     if (!embedRes.ok) {
       const errText = await embedRes.text();
-      console.error(`Embedding error for dish ${dish.id}:`, errText);
+      console.error(`Embedding error for recipe ${recipe.id}:`, errText);
       return new Response(JSON.stringify({ error: errText }), { status: 502 });
     }
 
@@ -220,7 +220,7 @@ Deno.serve(async (req) => {
           .single();
 
         if (insertErr || !inserted) {
-          // Likely a race with another concurrent dish resolving the same new name
+          // Likely a race with another concurrent recipe resolving the same new name
           // (canonical_name is unique) — fall back to reading the row it created.
           const { data: existing } = await admin
             .from("ingredient_vocabulary")
@@ -234,23 +234,23 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Replace this dish's canonical ingredient rows.
-    await admin.from("dish_ingredients_canonical").delete().eq("dish_id", dish.id);
+    // Replace this recipe's canonical ingredient rows.
+    await admin.from("recipe_ingredients_canonical").delete().eq("recipe_id", recipe.id);
 
     const rows = parsed.items
       .map((item) => ({
-        dish_id: dish.id,
+        recipe_id: recipe.id,
         raw_text: item.raw_text,
         canonical_ingredient_id: nameToVocabId.get(item.canonical_name),
       }))
       .filter((r) => r.canonical_ingredient_id);
 
     if (rows.length > 0) {
-      const { error: insertRowsErr } = await admin.from("dish_ingredients_canonical").insert(rows);
-      if (insertRowsErr) console.error(`Failed to insert canonical ingredients for dish ${dish.id}:`, insertRowsErr);
+      const { error: insertRowsErr } = await admin.from("recipe_ingredients_canonical").insert(rows);
+      if (insertRowsErr) console.error(`Failed to insert canonical ingredients for recipe ${recipe.id}:`, insertRowsErr);
     }
 
-    return new Response(JSON.stringify({ success: true, dish_id: dish.id, items: rows.length }), {
+    return new Response(JSON.stringify({ success: true, recipe_id: recipe.id, items: rows.length }), {
       headers: { "Content-Type": "application/json" },
     });
   } catch (err: any) {

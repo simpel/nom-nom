@@ -19,7 +19,7 @@ enum RatingTagGroup: String, CaseIterable, Identifiable, Decodable, Sendable {
 }
 
 /// One "what stood out" tag, from the `rating_tags` catalogue. A tag is offered for the
-/// verdicts it names, on dishes whose kind or cooking method carries its trait
+/// verdicts it names, on recipes whose kind or cooking method carries its trait
 /// (`taxonomy_terms.rating_traits`). Good tags lift a score and problem tags lower it,
 /// computed by `meal_rating_score` in the database; unscored tags only explain.
 struct RatingTagOption: Identifiable, Hashable, Decodable, Sendable {
@@ -32,7 +32,7 @@ struct RatingTagOption: Identifiable, Hashable, Decodable, Sendable {
     let group: RatingTagGroup
     let sort: Int
 
-    /// The trait every dish without `raw` has: cooking problems need a cooked dish.
+    /// The trait every recipe without `raw` has: cooking problems need a cooked recipe.
     static let cookedTrait = "cooked"
     static let rawTrait = "raw"
 

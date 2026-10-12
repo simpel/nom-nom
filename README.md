@@ -1,7 +1,7 @@
 # Nom Nom
 
 An iOS app for keeping track of what you cooked, whether the kids ate it, and what
-to cook next. Supabase is the source of truth: dishes, meals, household members and
+to cook next. Supabase is the source of truth: recipes, meals, household members and
 verdicts live in Postgres, photos in a private storage bucket. One person can cook
 and invite others to rate it.
 
@@ -145,21 +145,21 @@ flag is Debug-only. Checked rather than assumed — a release build has no
 ## Keeping the names consistent
 
 The thing that makes the rest work is that "Tacos" cooked in March and "tacos"
-cooked in June are the same dish. Three mechanisms, in
-[`DishRepository.swift`](apps/ios/NomNom/Features/Suggestions/Engine/DishRepository.swift) and
+cooked in June are the same recipe. Three mechanisms, in
+[`RecipeRepository.swift`](apps/ios/NomNom/Features/Suggestions/Engine/RecipeRepository.swift) and
 [`String+Matching.swift`](apps/ios/NomNom/Core/Extensions/String+Matching.swift):
 
 1. **Ranked autofill** under the title field — exact match, then whole-name prefix,
    then word prefix ("kött" → "Köttbullar"), then substring, then near-typo. Ties
-   break towards dishes you cook often and recently.
+   break towards recipes you cook often and recently.
 2. **Inline ghost completion** — the rest of the best prefix match appears greyed
    out; tap the arrow to accept it.
 3. **"Did you mean …?"** — if what you typed is one or two edits from an existing
-   dish, the app offers to use the existing name instead. This is the safety net
+   recipe, the app offers to use the existing name instead. This is the safety net
    for the case where you skipped the suggestions and typed "Pancaks".
 
 Matching is done on a folded key (lowercased, accents stripped, punctuation
-collapsed), so `Köttbullar & mos` and `kottbullar mos` land on the same dish.
+collapsed), so `Köttbullar & mos` and `kottbullar mos` land on the same recipe.
 
 The client's find-or-create is the friendly path, not the guarantee: that is
 `unique (owner_id, normalized_name)` in the database. Two devices logging "Tacos" at
@@ -173,18 +173,18 @@ which is deliberately free of SwiftData and SwiftUI so it can be reasoned about 
 its own. [`SuggestionEngine.swift`](apps/ios/NomNom/Features/Suggestions/Engine/SuggestionEngine.swift)
 adapts the models onto it, applies the filters, and writes the explanation chips.
 
-Each dish gets five numbers:
+Each recipe gets five numbers:
 
 | Term | Meaning |
 | --- | --- |
-| **like** | Recency-weighted mean verdict, 0–1. Each verdict decays with a 180-day half-life, so a dish they hated 18 months ago isn't condemned forever. |
-| **readiness** | `1 − exp(−days / τ)`, where τ is the dish's *own* average gap between servings (clamped 4–60 days). A weekly staple feels overdue after a week; something you make twice a year does not. |
-| **exploration** | `1 / √(1 + verdicts)` — a UCB-flavoured bonus for dishes you know least about, so ratings get more reliable over time instead of the same five meals circling forever. |
+| **like** | Recency-weighted mean verdict, 0–1. Each verdict decays with a 180-day half-life, so a recipe they hated 18 months ago isn't condemned forever. |
+| **readiness** | `1 − exp(−days / τ)`, where τ is the recipe's *own* average gap between servings (clamped 4–60 days). A weekly staple feels overdue after a week; something you make twice a year does not. |
+| **exploration** | `1 / √(1 + verdicts)` — a UCB-flavoured bonus for recipes you know least about, so ratings get more reliable over time instead of the same five meals circling forever. |
 | **weekday** | Share of servings that landed on today's weekday, so taco Friday surfaces on Fridays. |
-| **dislike** | Ramps 0 → 1 as the *least* happy eater's score falls from "ok" to "nope". Subtracted, so one kid's hard no can sink an otherwise popular dish. |
+| **dislike** | Ramps 0 → 1 as the *least* happy eater's score falls from "ok" to "nope". Subtracted, so one kid's hard no can sink an otherwise popular recipe. |
 
-A dish with no verdicts scores a neutral 0.5 on *like* rather than 0 — it isn't
-punished for being unknown. A dish never cooked gets readiness 0.7, not 1.0:
+A recipe with no verdicts scores a neutral 0.5 on *like* rather than 0 — it isn't
+punished for being unknown. A recipe never cooked gets readiness 0.7, not 1.0:
 without any history it isn't overdue, it's just available, and letting both
 readiness and exploration max out would double-count novelty.
 
@@ -196,19 +196,19 @@ Same five numbers, different weights — that's all a mode is.
 | --- | --- |
 | **Balanced** | Liked food you haven't had lately, with a small nudge towards the barely-tried. |
 | **Favourites** | Almost pure popularity; ignores exploration entirely and doubles the dislike penalty. |
-| **Overdue** | Rotation first, even for merely-ok dishes. |
-| **Adventurous** | The dishes you know least about. |
+| **Overdue** | Rotation first, even for merely-ok recipes. |
+| **Adventurous** | The recipes you know least about. |
 
 ### The filters
 
-- **Must be liked by** — per kid, keeps only dishes whose recent verdicts from that
+- **Must be liked by** — per kid, keeps only recipes whose recent verdicts from that
   person average out to a yes (≥ 0.55).
 - **Not eaten for at least N days** — a hard rotation floor on top of the soft
   readiness curve.
-- **Hide dishes somebody disliked** (on by default) — drops anything where the
+- **Hide recipes somebody disliked** (on by default) — drops anything where the
   worst verdict is below "ok"; catches both a named kid's no and an unnamed
   "nobody liked it".
-- **Include dishes we've never rated** — off means known quantities only.
+- **Include recipes we've never rated** — off means known quantities only.
 - **Tags** — free-form, entered on the meal (`quick`, `oven`, `veggie`, `friday`…).
 
 Every row carries chips saying *why* it's there ("Everyone's happy", "Overdue — 34
@@ -237,7 +237,7 @@ apps/ios/NomNom/
 ```
 
 Auth lives in `Features/Auth` (`AuthController`, `Dev/DevSelfCheck`); recipe-name
-matching (`DishRepository`, `String+Matching`) lives in `Features/Suggestions/Engine`
+matching (`RecipeRepository`, `String+Matching`) lives in `Features/Suggestions/Engine`
 and `Core/Extensions` respectively — see [Keeping the names consistent](#keeping-the-names-consistent).
 
 Each row type has a matching insert or patch struct (`NewMeal`, `MealPatch`, …)
@@ -245,13 +245,13 @@ rather than being `Encodable` itself, because the database fills in `id` and
 `created_at` and sending our own would fight the defaults.
 
 `FoodStore` holds the whole visible dataset in memory. That fits the problem rather
-than ducking it: the ranking needs every serving of every dish to work out a
+than ducking it: the ranking needs every serving of every recipe to work out a
 rotation rhythm, so there is no useful partial load, and a household's few hundred
 meals is nothing. One fetch on sign-in, then the arrays are patched as writes
 succeed.
 
 RLS decides what a plain `select()` returns, so those arrays hold my rows *plus*
-the meals other people invited me to. The `myDishes` / `myMeals` accessors draw that
+the meals other people invited me to. The `myRecipes` / `myMeals` accessors draw that
 line for the views — the diary should show what I cooked, not somebody else's
 dinner.
 
@@ -303,9 +303,9 @@ before RLS is even consulted. `authenticated` is untouched.
 ## Verifying the ranking
 
 `RankingCore.swift` has no framework dependencies, so it can be exercised directly
-against a frozen `now` — feed it a fixture of dishes and check the four modes order
+against a frozen `now` — feed it a fixture of recipes and check the four modes order
 them the way you'd expect. That's how the weights above were tuned: the first pass
-put a never-cooked dish above the kids' favourites in Balanced mode, which is what
+put a never-cooked recipe above the kids' favourites in Balanced mode, which is what
 surfaced the readiness/exploration double-count.
 
 ## Not done yet
@@ -313,7 +313,7 @@ surfaced the readiness/exploration double-count.
 - **No offline mode.** Every read and write goes to Postgres, so the app needs a
   connection and shows an error without one. Nothing is queued or retried. Going
   offline-capable means a local cache and a sync story, and the schema has no
-  support for the hard part — no `updated_at` on `dishes` or `meals`, no tombstones,
+  support for the hard part — no `updated_at` on `recipes` or `meals`, no tombstones,
   so there is nothing to resolve a conflict with.
 - **No test target in the project file.** `RankingCore` is written to be testable and
   the RLS suite runs against the API, but there is no XCUITest target, so no
@@ -384,8 +384,8 @@ existing account, so the client never has to know which case it is in.
 | Table | Purpose |
 | --- | --- |
 | `profiles` | Public face of an auth user — display name, emoji. Created automatically by a trigger on `auth.users`. |
-| `dishes` | Canonical dish name per owner. `unique (owner_id, normalized_name)` is what stops "Tacos" and "tacos" splitting in two. |
-| `meals` | One occasion of eating a dish. |
+| `recipes` | Canonical recipe name per owner. `unique (owner_id, normalized_name)` is what stops "Tacos" and "tacos" splitting in two. |
+| `meals` | One occasion of eating a recipe. |
 | `eaters` | Household members with no account — the kids. |
 | `meal_invites` | Who was asked to rate a meal. `invitee_id` is null until that person signs up. |
 | `meal_ratings` | One verdict per rater per meal, `reaction` 0–2 matching the client's `Reaction` enum. |
@@ -423,7 +423,7 @@ and more common order: inviting somebody who already has an account. That invite
 - `notify_invitee` returns early, so no notification is ever created,
 - `meal_invites_select` (`invitee_id = auth.uid()`) never matches, so the invitee
   cannot see the invite,
-- `is_meal_participant` is false, so they cannot read the meal or the dish,
+- `is_meal_participant` is false, so they cannot read the meal or the recipe,
 - `meal_ratings_insert` refuses their rating with `42501`.
 
 The invite was accepted by the database and then silently did nothing. Once two
@@ -473,7 +473,7 @@ both covered:
   function sees the snapshot from the *start* of the statement, so during
   `INSERT ... RETURNING` it cannot see the new row. The select policies therefore
   check the owning column directly *before* falling back to the helper —
-  `owner_id = auth.uid() or public.can_read_dish(id)`. Without that first branch
+  `owner_id = auth.uid() or public.can_read_recipe(id)`. Without that first branch
   every create from the app fails, because supabase-swift's `.insert().select()`
   uses `Prefer: return=representation`.
 
@@ -485,7 +485,7 @@ Reusing it cost more than it saved, and the schema you see is shaped by that.
 
 Six stray tables were dropped early on: `users`, `groups`, `group_members`,
 `invite_codes`, `ratings` and, awkwardly, **`meals`**. The old `meals` had
-`(id, name, created_by, created_at)` and none of `dish_id`, `eaten_on`, `notes` or
+`(id, name, created_by, created_at)` and none of `recipe_id`, `eaten_on`, `notes` or
 `photo_path`. The schema migration originally said `create table if not exists`,
 which would have quietly kept that table and then failed on every insert and
 foreign key downstream.
@@ -532,7 +532,7 @@ cd apps/supabase && npx supabase start && npx supabase db reset
 python3 tests/rls_test.py
 ```
 
-33 checks, covering: an outsider can read neither the meal nor the dish and cannot
+33 checks, covering: an outsider can read neither the meal nor the recipe and cannot
 rate it; a guest cannot rate as somebody else, nor on behalf of the cook's kid; a
 rating cannot claim both sources at once; signing up claims a pending email invite
 and produces exactly one notification.
@@ -585,7 +585,7 @@ Verified end-to-end against the local stack, through the app:
 
 - the email-code sign-in, including account creation on first use;
 - all four tabs rendering real data pulled over PostgREST;
-- writes: 10 dishes, 21 meals, 42 verdicts and 9 photos created by app code, checked
+- writes: 10 recipes, 21 meals, 42 verdicts and 9 photos created by app code, checked
   in Postgres afterwards;
 - photo upload, authenticated download, and removal from the bucket;
 - reading another account's meal through RLS, and the invite that grants it.

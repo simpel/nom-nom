@@ -51,7 +51,7 @@ struct MealExplanationTarget: Identifiable {
 
     private static func heading(for affinity: RaterTagAffinity) -> String {
         switch affinity.kind {
-        case .dishKind(let name): return "Dish kind: \(name)"
+        case .recipeKind(let name): return "Recipe kind: \(name)"
         case .cookingMethod(let name): return "Cooking method: \(name.capitalized)"
         case .ingredient(let name): return "Ingredient: \(name.capitalized)"
         case .cuisine(let name): return "Cuisine: \(name.capitalized)"

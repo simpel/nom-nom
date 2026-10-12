@@ -1,4 +1,4 @@
-// Image prompts for generate-dish-photo, written for Meta Muse Image (meta/muse-image-1.0).
+// Image prompts for generate-recipe-photo and generate-meal-photo, written for Meta Muse Image (meta/muse-image-1.0).
 //
 // Muse plans the layout before it renders, so each prompt is a shoot brief in the order a
 // photographer settles it: deliverable, subject, plating, surface, camera, light, style, and
@@ -10,7 +10,7 @@
 //
 // Three subjects share one SETTING (same oak table, same overhead camera, same light):
 // - recipe:   the plate alone, the cleanest shot of the food.
-// - meal:     the same plate laid for eating: cutlery, a napkin and a drink beside it.
+// - meal:     the same plate as eaten at home: cutlery, a napkin and a drink, casually placed.
 // - category: a spread of the category's signature dishes.
 
 const PLATE =
@@ -19,13 +19,21 @@ const PLATE =
 const SURFACE =
   "one seamless slab of pale, lightly oiled European white oak with fine grain running left to right";
 
-/** Everything every photo shares, so recipes, meals and categories read as one set. */
-const SETTING = [
+/** Table, camera and light that every photo shares, so recipes, meals and categories read as one set. */
+const SETTING_BASE = [
   `Everything sits on ${SURFACE}, and the oak fills the whole frame.`,
   "Shot from directly overhead with the camera pointing straight down, so plates and glasses read as full circles.",
   "Soft, diffused daylight comes from the upper left and casts gentle, open shadows toward the lower right; a soft ray of warm sunshine may fall across the wood, always with soft, blurred edges, never hard or harsh; exposure is bright and even, with neutral-warm colour.",
   "Sharp focus across all the food.",
-  "Photoreal editorial food photography, natural colour, minimal styling.",
+];
+
+/** Recipe and category photos are styled like editorial food photography. */
+const SETTING = [...SETTING_BASE, "Photoreal editorial food photography, natural colour, minimal styling."].join(" ");
+
+/** Meal photos look like a home meal: tidy but not styled by a professional. */
+const MEAL_SETTING = [
+  ...SETTING_BASE,
+  "Photoreal, natural photograph of an everyday home meal, natural colour, not styled by a professional.",
 ].join(" ");
 
 /** One serving of one recipe, alone on one plate. */
@@ -39,16 +47,19 @@ export function recipePhotoPrompt(dish: string, elements: string, garnish: strin
   ].join("\n\n");
 }
 
-/** One serving as it was eaten: the plate laid with cutlery, a napkin and a drink. */
+/**
+ * One serving as eaten at home: the plate laid with cutlery, a napkin and a drink.
+ * Tidy but lived-in, nothing a food stylist would arrange.
+ */
 export function mealPhotoPrompt(dish: string, elements: string, garnish: string, beverage: string): string {
   return [
     `A square photograph of a meal at the table in a dinner diary app: one serving of ${dish}: ${elements}, finished with ${garnish}, laid for one person and ready to eat.`,
-    `The food is generously plated on exactly one ${PLATE}, about 28 cm across, just left of centre.`,
-    "To the right of the plate lie a fork and a knife on a folded natural linen napkin in an oatmeal tone.",
+    `The food is served on exactly one ${PLATE}, about 28 cm across, just left of centre. It is home-served: a generous, slightly uneven portion with soft, natural edges, not arranged with tweezers or neatly wiped, and with no more than a light sprinkle of garnish.`,
+    "To the right of the plate lie a fork and a knife, set down casually and not perfectly parallel, on a natural linen napkin in an oatmeal tone that is folded roughly with a soft crease or two.",
     `At the upper right of the plate stands ${beverage}.`,
     "The plate, napkin and drink together span about four fifths of the frame, with bare wood showing around them.",
-    SETTING,
-    "Only these four things are on the table: the plate, the cutlery, the napkin and the drink. No other dishes, loose ingredients, crumbs or text.",
+    MEAL_SETTING,
+    "The table looks lived-in but tidy: a faint sauce smear on the plate rim is fine, but no spills, crumbs, mess, other dishes, loose ingredients or text. Only these four things are on the table: the plate, the cutlery, the napkin and the drink.",
   ].join("\n\n");
 }
 

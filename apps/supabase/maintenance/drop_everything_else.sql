@@ -17,11 +17,11 @@
 do $$
 declare
     keep_tables text[] := array[
-        'device_tokens','dishes','eaters','meal_invites',
+        'device_tokens','recipes','eaters','meal_invites',
         'meal_ratings','meals','notifications','profiles'
     ];
     keep_routines text[] := array[
-        'can_read_dish','handle_new_user','is_meal_participant',
+        'can_read_recipe','handle_new_user','is_meal_participant',
         'notify_invitee','notify_rating','touch_updated_at'
     ];
     keep_types text[] := array['invite_status'];

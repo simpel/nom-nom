@@ -13,7 +13,7 @@ struct RateMealSheet: View {
     @State private var path: [RateStep] = []
 
     private var eyebrow: String {
-        store.meal(mealID).map { store.dishName(forMeal: $0) } ?? "Meal"
+        store.meal(mealID).map { store.recipeName(forMeal: $0) } ?? "Meal"
     }
 
     var body: some View {

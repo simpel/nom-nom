@@ -36,7 +36,7 @@ struct RecipeLeaderboardRow: View {
 #Preview {
     NomNomPreview { store in
         Card(layout: .list) {
-            ForEach(Array(store.myDishes.prefix(4).enumerated()), id: \.element.id) { index, recipe in
+            ForEach(Array(store.myRecipes.prefix(4).enumerated()), id: \.element.id) { index, recipe in
                 RecipeLeaderboardRow(rank: index + 1, recipe: recipe, score: 0.8, reaction: .great)
             }
         }

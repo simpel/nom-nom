@@ -40,8 +40,8 @@ interface ParsedRecipe {
   cuisine_id?: string | null;
   cooking_method?: string | null;
   cooking_method_id?: string | null;
-  dish_kind?: string | null;
-  dish_kind_id?: string | null;
+  recipe_kind?: string | null;
+  recipe_kind_id?: string | null;
   effort: number | null;
   ingredients: ParsedIngredient[];
   instructions: string[];
@@ -54,11 +54,11 @@ interface ParsedRecipe {
 const SYSTEM_PROMPT = `Analyze the provided photo(s) of a recipe (which may span across multiple cookbook pages, recipe cards, or notes).
 Extract the recipe into a single JSON object matching this schema:
 {
-  "name": "string (dish title)",
+  "name": "string (recipe title)",
   "serves": integer or null (e.g. 4),
   "cuisine": "string or null - Identify the culinary tradition with a wide, canonical category (e.g. 'asian', 'mexican', 'italian', 'nordic', 'mediterranean', 'indian', 'middle_eastern', 'american', 'french', 'japanese', 'thai', 'korean', 'greek', 'spanish', 'chinese', 'vietnamese', 'moroccan'). Never use compound, crossover, or hyperspecific variants (e.g. use 'mexican', NEVER 'mexican crossover' or 'mexican/south american'). If no specific kitchen category clearly fits, set to null.",
   "cooking_method": "string or null - Primary cooking method (e.g. 'baking', 'grilling', 'slow_cooking', 'roasting', 'steaming', 'frying', 'sauteing', 'simmering', 'raw_cured', 'smoking'). If none clearly dominates, set to null.",
-  "dish_kind": "string or null - The culinary format/kind of the dish (e.g. 'stew', 'casserole', 'soup', 'bbq', 'pasta', 'pizza', 'curry', 'salad', 'roast', 'stir_fry', 'sandwich', 'pie', 'tacos', 'risotto'). If ambiguous, set to null.",
+  "recipe_kind": "string or null - The culinary format/kind of the recipe (e.g. 'stew', 'casserole', 'soup', 'bbq', 'pasta', 'pizza', 'curry', 'salad', 'roast', 'stir_fry', 'sandwich', 'pie', 'tacos', 'risotto'). If ambiguous, set to null.",
   "effort": integer or null (1 for quick/simple <=30m, 2 for medium 30-60m, 3 for elaborate >60m),
   "ingredients": [
     {
@@ -273,7 +273,7 @@ Deno.serve(async (req) => {
       serves: z.number().nullable().optional().catch(null),
       cuisine: z.string().nullable().optional(),
       cooking_method: z.string().nullable().optional(),
-      dish_kind: z.string().nullable().optional(),
+      recipe_kind: z.string().nullable().optional(),
       effort: z.number().nullable().optional(),
       ingredients: z.array(z.object({
         quantity: looseString,
@@ -319,21 +319,21 @@ Deno.serve(async (req) => {
 
     const admin = logger.client;
     if (admin) {
-      if (parsed.dish_kind) {
+      if (parsed.recipe_kind) {
         try {
           const resolved = await resolveTaxonomyTerm({
             client: admin,
-            dimension: "dish_kind",
-            proposedTerm: parsed.dish_kind,
+            dimension: "recipe_kind",
+            proposedTerm: parsed.recipe_kind,
             apiKey,
             gatewayBaseUrl,
           });
           if (resolved) {
-            parsed.dish_kind_id = resolved.id;
-            parsed.dish_kind = resolved.name;
+            parsed.recipe_kind_id = resolved.id;
+            parsed.recipe_kind = resolved.name;
           }
         } catch (e) {
-          console.warn("Failed to resolve dish_kind:", e);
+          console.warn("Failed to resolve recipe_kind:", e);
         }
       }
 

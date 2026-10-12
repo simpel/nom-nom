@@ -15,7 +15,7 @@ extension FoodStore {
     /// The party's AI picks that resolve to a recipe the store knows, in rank order.
     func pickedRecipes(forParty partyID: UUID) -> [(recipe: Recipe, reason: String)] {
         (partyRecommendations[partyID] ?? []).compactMap { pick in
-            recipe(pick.dishID).map { ($0, pick.reason) }
+            recipe(pick.recipeID).map { ($0, pick.reason) }
         }
     }
 

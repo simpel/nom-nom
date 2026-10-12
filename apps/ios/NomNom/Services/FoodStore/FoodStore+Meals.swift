@@ -3,7 +3,7 @@ import Supabase
 
 extension FoodStore {
 
-    /// Fetches a single meal (plus its dish, ratings and invites) directly by
+    /// Fetches a single meal (plus its recipe, ratings and invites) directly by
     /// ID when it isn't in the local cache — e.g. a "rate this meal" push or
     /// email deep link tapped after the last full `load()`, most commonly
     /// right after `askToRate`/`invite(email:toMeal:)` just made this meal
@@ -18,16 +18,16 @@ extension FoodStore {
                 .single()
                 .execute()
                 .value
-            async let fetchedDish: [Dish] = supabase
-                .from("dishes").select().eq("id", value: fetched.dishID.uuidString).execute().value
+            async let fetchedRecipe: [Recipe] = supabase
+                .from("recipes").select().eq("id", value: fetched.recipeID.uuidString).execute().value
             async let fetchedRatings: [MealRating] = supabase
                 .from("meal_ratings").select().eq("meal_id", value: id.uuidString).execute().value
             async let fetchedInvites: [MealInvite] = supabase
                 .from("meal_invites").select().eq("meal_id", value: id.uuidString).execute().value
 
             meals.append(fetched)
-            for dish in (try? await fetchedDish) ?? [] where dishByID[dish.id] == nil {
-                dishes.append(dish)
+            for recipe in (try? await fetchedRecipe) ?? [] where recipeByID[recipe.id] == nil {
+                recipes.append(recipe)
             }
             for rating in (try? await fetchedRatings) ?? [] where !ratings.contains(where: { $0.id == rating.id }) {
                 ratings.append(rating)
@@ -189,7 +189,7 @@ extension FoodStore {
         var cuisine: String? = nil
         var cuisineID: UUID? = nil
         var cookingMethodID: UUID? = nil
-        var dishKindID: UUID? = nil
+        var recipeKindID: UUID? = nil
         var serves: Int? = nil
         var isPublic: Bool = true
 
@@ -218,7 +218,7 @@ extension FoodStore {
         }
 
         var hasContent: Bool {
-            if effort != nil || cuisine != nil || serves != nil || !isPublic || dishKindID != nil || cookingMethodID != nil { return true }
+            if effort != nil || cuisine != nil || serves != nil || !isPublic || recipeKindID != nil || cookingMethodID != nil { return true }
             let hasIngredients = ingredients.contains { !$0.isEmpty }
             let hasInstructions = instructions.contains { !$0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
             return hasIngredients || hasInstructions || totalPhotosCount > 0
@@ -227,10 +227,10 @@ extension FoodStore {
 
     struct MealDraft: Equatable {
         var mealID: UUID?
-        var dishName: String
+        var recipeName: String
         /// Optional name for this serving; blank means the recipe's name is used.
         var mealTitle: String = ""
-        var linkedDishID: UUID?
+        var linkedRecipeID: UUID?
         var eatenOn: Date
         var notes: String
         var photos: PhotosDraft = PhotosDraft()
@@ -243,25 +243,25 @@ extension FoodStore {
     @discardableResult
     func save(_ draft: MealDraft) async -> Bool {
         do {
-            let dish: Dish
-            if let linked = draft.linkedDishID,
-               let existing = dishByID[linked],
+            let recipe: Recipe
+            if let linked = draft.linkedRecipeID,
+               let existing = recipeByID[linked],
                existing.ownerID == userID,
-               existing.normalizedName == draft.dishName.normalizedForMatching {
-                dish = existing
+               existing.normalizedName == draft.recipeName.normalizedForMatching {
+                recipe = existing
             } else {
-                dish = try await findOrCreateRecipe(named: draft.dishName)
+                recipe = try await findOrCreateRecipe(named: draft.recipeName)
             }
 
-            if let recipeDraft = draft.recipe, dish.ownerID == userID {
-                try await applyRecipe(recipeDraft, to: dish)
+            if let recipeDraft = draft.recipe, recipe.ownerID == userID {
+                try await applyRecipe(recipeDraft, to: recipe)
             }
 
             let meal: Meal
             if let id = draft.mealID {
                 meal = try await supabase
                     .from("meals")
-                    .update(MealPatch(dishID: dish.id, title: draft.mealTitle.nilIfBlank, eatenOn: draft.eatenOn, notes: draft.notes, effort: draft.effort, repeatDesire: draft.repeatDesire))
+                    .update(MealPatch(recipeID: recipe.id, title: draft.mealTitle.nilIfBlank, eatenOn: draft.eatenOn, notes: draft.notes, effort: draft.effort, repeatDesire: draft.repeatDesire))
                     .eq("id", value: id.uuidString)
                     .select()
                     .single()
@@ -270,7 +270,7 @@ extension FoodStore {
             } else {
                 meal = try await supabase
                     .from("meals")
-                    .insert(NewMeal(dishID: dish.id,
+                    .insert(NewMeal(recipeID: recipe.id,
                                     title: draft.mealTitle.nilIfBlank,
                                     createdBy: userID,
                                     eatenOn: draft.eatenOn,
@@ -287,7 +287,7 @@ extension FoodStore {
             try await applyPhotos(draft.photos, to: meal)
             // A new meal logged without a photo gets an AI one (the plate laid for eating).
             if draft.mealID == nil, self.meal(meal.id)?.photoPaths.isEmpty ?? meal.photoPaths.isEmpty {
-                Task { try? await generateMealImage(for: meal, recipe: dish) }
+                Task { try? await generateMealImage(for: meal, recipe: recipe) }
             }
             if let servedParties = draft.servedParties {
                 try await applyMealParties(servedParties, to: meal.id)

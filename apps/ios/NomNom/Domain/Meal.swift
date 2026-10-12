@@ -6,10 +6,6 @@ struct Meal: Identifiable, Hashable, Decodable {
     var recipeID: UUID
     /// Optional name for this serving; the recipe's name is shown when it is nil.
     var title: String?
-    var dishID: UUID {
-        get { recipeID }
-        set { recipeID = newValue }
-    }
     /// Whoever cooked it. Only this person may edit the meal or invite others.
     var createdBy: UUID?
     /// Calendar day, at local midnight — the column is a `date`, so there is no
@@ -29,7 +25,7 @@ struct Meal: Identifiable, Hashable, Decodable {
 
     enum CodingKeys: String, CodingKey {
         case id
-        case recipeID = "dish_id"
+        case recipeID = "recipe_id"
         case title
         case createdBy = "created_by"
         case eatenOn = "eaten_on"
@@ -97,7 +93,7 @@ struct Meal: Identifiable, Hashable, Decodable {
 // MARK: - Writes
 
 struct NewMeal: Encodable {
-    let dish_id: UUID
+    let recipe_id: UUID
     let title: String?
     let created_by: UUID?
     let eaten_on: String
@@ -107,7 +103,7 @@ struct NewMeal: Encodable {
     let repeat_desire: Int?
 
     init(recipeID: UUID, title: String? = nil, createdBy: UUID, eatenOn: Date, notes: String, photoPaths: [String] = [], effort: EffortLevel? = nil, repeatDesire: RotationGoal? = nil) {
-        self.dish_id = recipeID
+        self.recipe_id = recipeID
         self.title = title
         self.created_by = createdBy
         self.eaten_on = PostgresDate.string(from: eatenOn)
@@ -116,14 +112,10 @@ struct NewMeal: Encodable {
         self.effort = effort?.rawValue
         self.repeat_desire = repeatDesire?.rawValue
     }
-
-    init(dishID: UUID, title: String? = nil, createdBy: UUID, eatenOn: Date, notes: String, photoPaths: [String] = [], effort: EffortLevel? = nil, repeatDesire: RotationGoal? = nil) {
-        self.init(recipeID: dishID, title: title, createdBy: createdBy, eatenOn: eatenOn, notes: notes, photoPaths: photoPaths, effort: effort, repeatDesire: repeatDesire)
-    }
 }
 
 struct MealPatch: Encodable {
-    let dish_id: UUID
+    let recipe_id: UUID
     let title: String?
     let eaten_on: String
     let notes: String
@@ -131,7 +123,7 @@ struct MealPatch: Encodable {
     let repeat_desire: Int?
 
     init(recipeID: UUID, title: String? = nil, eatenOn: Date, notes: String, effort: EffortLevel? = nil, repeatDesire: RotationGoal? = nil) {
-        self.dish_id = recipeID
+        self.recipe_id = recipeID
         self.title = title
         self.eaten_on = PostgresDate.string(from: eatenOn)
         self.notes = notes
@@ -139,16 +131,12 @@ struct MealPatch: Encodable {
         self.repeat_desire = repeatDesire?.rawValue
     }
 
-    init(dishID: UUID, title: String? = nil, eatenOn: Date, notes: String, effort: EffortLevel? = nil, repeatDesire: RotationGoal? = nil) {
-        self.init(recipeID: dishID, title: title, eatenOn: eatenOn, notes: notes, effort: effort, repeatDesire: repeatDesire)
-    }
-
-    enum CodingKeys: String, CodingKey { case dish_id, title, eaten_on, notes, effort, repeat_desire }
+    enum CodingKeys: String, CodingKey { case recipe_id, title, eaten_on, notes, effort, repeat_desire }
 
     /// `title` is always sent, as null when cleared, so an edit can remove a custom name.
     func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
-        try container.encode(dish_id, forKey: .dish_id)
+        try container.encode(recipe_id, forKey: .recipe_id)
         try container.encode(title, forKey: .title)
         try container.encode(eaten_on, forKey: .eaten_on)
         try container.encode(notes, forKey: .notes)

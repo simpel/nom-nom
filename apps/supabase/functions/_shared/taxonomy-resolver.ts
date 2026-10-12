@@ -1,4 +1,4 @@
-// Shared universal taxonomy resolver across culinary dimensions (dish_kind, cooking_method, cuisine, etc.).
+// Shared universal taxonomy resolver across culinary dimensions (recipe_kind, cooking_method, cuisine, etc.).
 // Performs exact alias/slug lookup, then vector embedding semantic matching (threshold ~0.82),
 // or dynamically registers a new canonical term with a permanent UUID and human-readable name.
 

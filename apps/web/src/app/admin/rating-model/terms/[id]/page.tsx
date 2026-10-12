@@ -3,17 +3,17 @@ import RelationGraph, { type GraphEdge, type GraphNode } from '@/components/admi
 import { Chip, ModelPage, Panel, TagChip, modelHref, requireAdmin } from '@/components/admin/rating-model/ModelUI'
 import {
   ANY_TRAIT, COOKED_TRAIT, DIMENSION_LABELS, TRAIT_DIMENSIONS, VERDICTS,
-  loadRatingModel, loadTermDishes, tagFitsTraits, tagTraitId, traitInfo,
+  loadRatingModel, loadTermRecipes, tagFitsTraits, tagTraitId, traitInfo,
 } from '@/utils/rating-model'
 
-const MAX_DISHES_IN_GRAPH = 20
+const MAX_RECIPES_IN_GRAPH = 20
 
 // One taxonomy term: the recipes that use it, the traits it carries, and the tags a
 // meal of it offers per verdict (on its own; a recipe adds its other term's traits).
 export default async function TermPage({ params }: { params: Promise<{ id: string }> }) {
   await requireAdmin()
   const { id } = await params
-  const [{ terms, tags }, dishes] = await Promise.all([loadRatingModel(), loadTermDishes(id)])
+  const [{ terms, tags }, recipes] = await Promise.all([loadRatingModel(), loadTermRecipes(id)])
   const term = terms.find(t => t.id === id)
   if (!term) notFound()
 
@@ -24,8 +24,8 @@ export default async function TermPage({ params }: { params: Promise<{ id: strin
   const offered = carriesTraits ? tags.filter(t => tagFitsTraits(t, term.rating_traits)) : []
 
   const nodes: GraphNode[] = [
-    ...dishes.slice(0, MAX_DISHES_IN_GRAPH).map(d => ({
-      id: `dish:${d.id}`, label: d.name, kind: 'dish' as const, column: 0, href: modelHref.dish(d.id),
+    ...recipes.slice(0, MAX_RECIPES_IN_GRAPH).map(d => ({
+      id: `recipe:${d.id}`, label: d.name, kind: 'recipe' as const, column: 0, href: modelHref.recipe(d.id),
     })),
     { id: `term:${id}`, label: term.name, sub: DIMENSION_LABELS[term.dimension], kind: 'term', column: 1, focus: true },
     ...traitIds.map(tr => ({
@@ -38,7 +38,7 @@ export default async function TermPage({ params }: { params: Promise<{ id: strin
     })),
   ]
   const edges: GraphEdge[] = [
-    ...dishes.slice(0, MAX_DISHES_IN_GRAPH).map(d => ({ from: `dish:${d.id}`, to: `term:${id}` })),
+    ...recipes.slice(0, MAX_RECIPES_IN_GRAPH).map(d => ({ from: `recipe:${d.id}`, to: `term:${id}` })),
     ...traitIds.map(tr => ({ from: `term:${id}`, to: `trait:${tr}` })),
     ...offered.map(t => ({ from: `trait:${tagTraitId(t)}`, to: `tag:${t.id}` })),
   ]
@@ -56,19 +56,19 @@ export default async function TermPage({ params }: { params: Promise<{ id: strin
           {!carriesTraits ? (
             <p className="text-sm text-gray-500">Cuisines carry no traits: they never change which tags a meal offers.</p>
           ) : term.rating_traits.length === 0 ? (
-            <p className="text-sm text-gray-500">None. Meals of it offer only the tags for any dish and any cooked dish.</p>
+            <p className="text-sm text-gray-500">None. Meals of it offer only the tags for any recipe and any cooked recipe.</p>
           ) : (
             <div className="flex flex-wrap gap-2">
               {term.rating_traits.map(tr => <Chip key={tr} tone="indigo" href={modelHref.trait(tr)}>{traitInfo(tr)?.label ?? tr}</Chip>)}
             </div>
           )}
         </Panel>
-        <Panel title="Recipes" trailing={`${dishes.length}`}>
-          {dishes.length === 0 ? (
+        <Panel title="Recipes" trailing={`${recipes.length}`}>
+          {recipes.length === 0 ? (
             <p className="text-sm text-gray-500">No recipe uses this term yet.</p>
           ) : (
             <div className="flex flex-wrap gap-2">
-              {dishes.map(d => <Chip key={d.id} href={modelHref.dish(d.id)}>{d.name}</Chip>)}
+              {recipes.map(d => <Chip key={d.id} href={modelHref.recipe(d.id)}>{d.name}</Chip>)}
             </div>
           )}
         </Panel>

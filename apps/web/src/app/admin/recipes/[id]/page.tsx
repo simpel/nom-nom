@@ -19,7 +19,7 @@ export default async function RecipeDetailPage({ params }: { params: Promise<{ i
   const adminSupabase = createSupabaseClient(supabaseUrl, supabaseServiceKey)
 
   const { data: recipe, error } = await adminSupabase
-    .from('dishes')
+    .from('recipes')
     .select('*')
     .eq('id', id)
     .single()

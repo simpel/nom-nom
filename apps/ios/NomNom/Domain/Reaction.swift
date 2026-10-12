@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// How an eater reacted to a dish on a scale of -1 to 5:
+/// How an eater reacted to a recipe on a scale of -1 to 5:
 /// - `-1`: Can't eat
 /// - `1`: Bad
 /// - `2`: Meh

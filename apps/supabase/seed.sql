@@ -470,8 +470,8 @@ set confirmation_token = coalesce(confirmation_token, ''),
     created_at = coalesce(created_at, now()),
     updated_at = coalesce(updated_at, now());
 
--- 3. Clean up any existing sample test parties, meals, and dishes
--- Remove orphan test parties, meals, and dishes not in our seed list
+-- 3. Clean up any existing sample test parties, meals, and recipes
+-- Remove orphan test parties, meals, and recipes not in our seed list
 delete from public.parties where id not in (
     'd1111111-1111-1111-1111-111111111111',
     'd2222222-2222-2222-2222-222222222222',
@@ -480,7 +480,7 @@ delete from public.parties where id not in (
     'd5555555-5555-5555-5555-555555555555'
 );
 delete from public.meals where id::text not like 'ba000000-%';
-delete from public.dishes where id::text not like 'e0000000-%';
+delete from public.recipes where id::text not like 'e0000000-%';
 
 -- 4. 5 Dinner Parties, Members & Followers
 -- Party 1: The Friday Feast Club (Public, Joel is creator & member)
@@ -642,251 +642,251 @@ on conflict (party_id, user_id) do nothing;
 
 
 -- 5. 40 Recipes across 13 cuisines
-insert into public.dishes (id, owner_id, name, normalized_name, cuisine, effort, is_public, ingredients, instructions)
+insert into public.recipes (id, owner_id, name, normalized_name, cuisine, effort, is_public, ingredients, instructions)
 values ('e0000000-0000-0000-0000-000000000001', 'f917e487-1f8c-4d3c-b42a-d77f1c19bceb', 'Classic Margherita Pizza', 'margherita pizza', 'italian', 2, true,
     '[{"quantity": "500", "measurement": "g", "ingredient": "pizza flour (Tipo 00)"}, {"quantity": "325", "measurement": "ml", "ingredient": "warm water"}, {"quantity": "3", "measurement": "g", "ingredient": "dry yeast"}, {"quantity": "10", "measurement": "g", "ingredient": "salt"}, {"quantity": "400", "measurement": "g", "ingredient": "San Marzano tomatoes, crushed"}, {"quantity": "250", "measurement": "g", "ingredient": "fresh mozzarella"}, {"quantity": "", "measurement": "", "ingredient": "Fresh basil leaves & extra virgin olive oil"}]'::jsonb,
     array['Combine flour, water, yeast, and salt. Knead for 10 min until smooth. Proof for 8-24 hours.', 'Stretch dough into thin rounds.', 'Spread seasoned tomato sauce, top with torn mozzarella.', 'Bake at 250°C (or pizza oven at 450°C) until blistered and bubbling.', 'Finish with fresh basil and a drizzle of olive oil.'])
 on conflict (id) do nothing;
 
-insert into public.dishes (id, owner_id, name, normalized_name, cuisine, effort, is_public, ingredients, instructions)
+insert into public.recipes (id, owner_id, name, normalized_name, cuisine, effort, is_public, ingredients, instructions)
 values ('e0000000-0000-0000-0000-000000000002', 'f917e487-1f8c-4d3c-b42a-d77f1c19bceb', 'Creamy Tagliatelle Carbonara', 'tagliatelle carbonara', 'italian', 1, true,
     '[{"quantity": "400", "measurement": "g", "ingredient": "fresh tagliatelle"}, {"quantity": "200", "measurement": "g", "ingredient": "guanciale (or pancetta), diced"}, {"quantity": "4", "measurement": "", "ingredient": "egg yolks + 1 whole egg"}, {"quantity": "80", "measurement": "g", "ingredient": "Pecorino Romano, freshly grated"}, {"quantity": "", "measurement": "", "ingredient": "Freshly cracked black pepper"}]'::jsonb,
     array['Crisp guanciale in a wide skillet over medium heat until golden. Remove from heat.', 'Whisk egg yolks, whole egg, grated Pecorino, and abundant black pepper into a smooth paste.', 'Boil tagliatelle in salted water until al dente.', 'Toss hot pasta with guanciale and a ladle of starchy pasta water.', 'Remove skillet from heat, stir in egg mixture quickly to form a creamy, glossy emulsion.'])
 on conflict (id) do nothing;
 
-insert into public.dishes (id, owner_id, name, normalized_name, cuisine, effort, is_public, ingredients, instructions)
+insert into public.recipes (id, owner_id, name, normalized_name, cuisine, effort, is_public, ingredients, instructions)
 values ('e0000000-0000-0000-0000-000000000003', 'f917e487-1f8c-4d3c-b42a-d77f1c19bceb', 'Slow-Cooked Bolognese Ragu', 'bolognese ragu', 'italian', 3, true,
     '[{"quantity": "500", "measurement": "g", "ingredient": "ground beef chuck & 250g ground pork"}, {"quantity": "1", "measurement": "", "ingredient": "finely diced onion, carrot, and celery stalk"}, {"quantity": "150", "measurement": "g", "ingredient": "diced pancetta"}, {"quantity": "200", "measurement": "ml", "ingredient": "dry white wine"}, {"quantity": "200", "measurement": "ml", "ingredient": "whole milk"}, {"quantity": "600", "measurement": "g", "ingredient": "canned crushed tomatoes"}, {"quantity": "", "measurement": "", "ingredient": "Salt, pepper & fresh nutmeg"}]'::jsonb,
     array['Brown pancetta in a heavy Dutch oven, then soften soffritto vegetables.', 'Brown minced meats breaking up clumps.', 'Pour in white wine and simmer until evaporated.', 'Add milk and simmer until absorbed.', 'Stir in tomatoes, cover loosely, and simmer on lowest heat for 3-4 hours until dark, velvety, and rich.'])
 on conflict (id) do nothing;
 
-insert into public.dishes (id, owner_id, name, normalized_name, cuisine, effort, is_public, ingredients, instructions)
+insert into public.recipes (id, owner_id, name, normalized_name, cuisine, effort, is_public, ingredients, instructions)
 values ('e0000000-0000-0000-0000-000000000004', 'f917e487-1f8c-4d3c-b42a-d77f1c19bceb', 'Fresh Basil Pesto Penne', 'basil pesto penne', 'italian', 0, true,
     '[{"quantity": "400", "measurement": "g", "ingredient": "penne rigate"}, {"quantity": "2", "measurement": "large bunches", "ingredient": "fresh basil"}, {"quantity": "50", "measurement": "g", "ingredient": "toasted pine nuts"}, {"quantity": "60", "measurement": "g", "ingredient": "Parmigiano-Reggiano"}, {"quantity": "1", "measurement": "", "ingredient": "garlic clove"}, {"quantity": "100", "measurement": "ml", "ingredient": "cold-pressed extra virgin olive oil"}, {"quantity": "", "measurement": "", "ingredient": "Flaky sea salt"}]'::jsonb,
     array['Pound garlic, pine nuts, and salt into a coarse paste in a mortar or pulse in a food processor.', 'Add basil leaves and gently crush.', 'Fold in grated parmesan and stream in olive oil until emulsified.', 'Boil penne until al dente. Toss warm pasta with pesto and a splash of cooking water.'])
 on conflict (id) do nothing;
 
-insert into public.dishes (id, owner_id, name, normalized_name, cuisine, effort, is_public, ingredients, instructions)
+insert into public.recipes (id, owner_id, name, normalized_name, cuisine, effort, is_public, ingredients, instructions)
 values ('e0000000-0000-0000-0000-000000000005', 'f917e487-1f8c-4d3c-b42a-d77f1c19bceb', 'Wild Mushroom & Truffle Risotto', 'wild mushroom risotto', 'italian', 2, true,
     '[{"quantity": "350", "measurement": "g", "ingredient": "Carnaroli or Arborio rice"}, {"quantity": "300", "measurement": "g", "ingredient": "mixed wild mushrooms (chanterelles, cremini, porcini)"}, {"quantity": "1", "measurement": "liter", "ingredient": "rich vegetable or chicken broth"}, {"quantity": "1", "measurement": "", "ingredient": "shallot, minced"}, {"quantity": "150", "measurement": "ml", "ingredient": "dry white wine"}, {"quantity": "50", "measurement": "g", "ingredient": "unsalted butter & 60g Parmigiano"}, {"quantity": "", "measurement": "", "ingredient": "Truffle oil to finish"}]'::jsonb,
     array['Sauté sliced mushrooms in olive oil until golden; set aside.', 'Sweat shallots in butter, add rice and toast 2 minutes until translucent.', 'Deglaze with white wine.', 'Add hot stock ladle by ladle, stirring steadily until rice is creamy and tender (approx. 18 min).', 'Mantecare: stir in butter, parmesan, sautéed mushrooms, and drizzle with truffle oil.'])
 on conflict (id) do nothing;
 
-insert into public.dishes (id, owner_id, name, normalized_name, cuisine, effort, is_public, ingredients, instructions)
+insert into public.recipes (id, owner_id, name, normalized_name, cuisine, effort, is_public, ingredients, instructions)
 values ('e0000000-0000-0000-0000-000000000006', 'f917e487-1f8c-4d3c-b42a-d77f1c19bceb', 'Birria Beef Tacos', 'birria beef tacos', 'mexican', 3, true,
     '[{"quantity": "1", "measurement": "kg", "ingredient": "beef chuck roast"}, {"quantity": "4", "measurement": "", "ingredient": "dried guajillo & 2 ancho chiles, stemmed and seeded"}, {"quantity": "1", "measurement": "", "ingredient": "onion, 4 garlic cloves, 1 cinnamon stick, Mexican oregano"}, {"quantity": "500", "measurement": "ml", "ingredient": "beef broth"}, {"quantity": "", "measurement": "", "ingredient": "Corn tortillas & Oaxaca cheese"}, {"quantity": "", "measurement": "", "ingredient": "Diced white onion & cilantro"}]'::jsonb,
     array['Toast and soak chiles, then blend with roasted onion, garlic, spices, and broth into a smooth adobo.', 'Sear beef chuck roast in a Dutch oven, pour over chile broth.', 'Braise covered at 150°C for 3.5 hours until falling apart tender.', 'Shred beef. Dip corn tortillas in braising fat, sear on flat grill with cheese and shredded beef.', 'Fold crisp tacos and serve with bowls of hot consommé for dipping.'])
 on conflict (id) do nothing;
 
-insert into public.dishes (id, owner_id, name, normalized_name, cuisine, effort, is_public, ingredients, instructions)
+insert into public.recipes (id, owner_id, name, normalized_name, cuisine, effort, is_public, ingredients, instructions)
 values ('e0000000-0000-0000-0000-000000000007', 'f917e487-1f8c-4d3c-b42a-d77f1c19bceb', 'Baja Crispy Fish Tacos', 'baja fish tacos', 'mexican', 2, true,
     '[{"quantity": "500", "measurement": "g", "ingredient": "firm white fish fillets (cod or mahi-mahi)"}, {"quantity": "150", "measurement": "g", "ingredient": "flour, 1 tsp baking powder, Mexican spices"}, {"quantity": "200", "measurement": "ml", "ingredient": "cold lager beer"}, {"quantity": "", "measurement": "", "ingredient": "Shredded red cabbage & lime juice"}, {"quantity": "", "measurement": "", "ingredient": "Chipotle crema: sour cream, adobo, lime, garlic"}, {"quantity": "", "measurement": "", "ingredient": "Small corn tortillas"}]'::jsonb,
     array['Whisk beer into flour and spices to make a crisp batter.', 'Toss cabbage with lime juice and salt.', 'Dip fish strips into batter and fry in hot oil (180°C) until deep golden and crunchy (3-4 min).', 'Warm tortillas on a dry skillet.', 'Assemble tacos with crispy fish, lime slaw, and smoky chipotle crema drizzle.'])
 on conflict (id) do nothing;
 
-insert into public.dishes (id, owner_id, name, normalized_name, cuisine, effort, is_public, ingredients, instructions)
+insert into public.recipes (id, owner_id, name, normalized_name, cuisine, effort, is_public, ingredients, instructions)
 values ('e0000000-0000-0000-0000-000000000008', 'f917e487-1f8c-4d3c-b42a-d77f1c19bceb', 'Smoky Chicken Tinga Bowls', 'chicken tinga bowls', 'mexican', 2, true,
     '[{"quantity": "600", "measurement": "g", "ingredient": "chicken breasts or thighs, poached and shredded"}, {"quantity": "1", "measurement": "can", "ingredient": "chipotle peppers in adobo"}, {"quantity": "400", "measurement": "g", "ingredient": "fire-roasted crushed tomatoes"}, {"quantity": "1", "measurement": "", "ingredient": "sliced onion & 2 minced garlic cloves"}, {"quantity": "", "measurement": "", "ingredient": "Warm cilantro-lime rice"}, {"quantity": "", "measurement": "", "ingredient": "Black beans, avocado slices, and cotija cheese"}]'::jsonb,
     array['Blend tomatoes, chipotles, garlic, and Mexican oregano until smooth.', 'Sauté sliced onions in oil until caramelized and soft.', 'Pour in tinga sauce and simmer 10 minutes.', 'Stir in shredded chicken and cook until sauce coats the meat richly.', 'Serve over cilantro-lime rice topped with black beans, fresh avocado, and crumbled cotija.'])
 on conflict (id) do nothing;
 
-insert into public.dishes (id, owner_id, name, normalized_name, cuisine, effort, is_public, ingredients, instructions)
+insert into public.recipes (id, owner_id, name, normalized_name, cuisine, effort, is_public, ingredients, instructions)
 values ('e0000000-0000-0000-0000-000000000009', 'f917e487-1f8c-4d3c-b42a-d77f1c19bceb', 'Black Bean & Corn Enchiladas', 'black bean enchiladas', 'mexican', 2, true,
     '[{"quantity": "12", "measurement": "", "ingredient": "small corn tortillas"}, {"quantity": "2", "measurement": "cans", "ingredient": "black beans, rinsed"}, {"quantity": "200", "measurement": "g", "ingredient": "sweet corn kernels"}, {"quantity": "1", "measurement": "bunch", "ingredient": "scallions & 1 tsp cumin"}, {"quantity": "400", "measurement": "ml", "ingredient": "red enchilada sauce"}, {"quantity": "200", "measurement": "g", "ingredient": "Monterey Jack and Cheddar cheese"}]'::jsonb,
-    array['Warm enchilada sauce in a skillet. Briefly dip tortillas to soften.', 'Mix black beans, corn, scallions, cumin, and half the cheese.', 'Roll filling tightly inside tortillas and arrange seam-side down in a baking dish.', 'Pour remaining sauce over top and cover with remaining shredded cheese.', 'Bake at 190°C for 20-25 minutes until bubbly and edges are crisp.'])
+    array['Warm enchilada sauce in a skillet. Briefly dip tortillas to soften.', 'Mix black beans, corn, scallions, cumin, and half the cheese.', 'Roll filling tightly inside tortillas and arrange seam-side down in a baking recipe.', 'Pour remaining sauce over top and cover with remaining shredded cheese.', 'Bake at 190°C for 20-25 minutes until bubbly and edges are crisp.'])
 on conflict (id) do nothing;
 
-insert into public.dishes (id, owner_id, name, normalized_name, cuisine, effort, is_public, ingredients, instructions)
+insert into public.recipes (id, owner_id, name, normalized_name, cuisine, effort, is_public, ingredients, instructions)
 values ('e0000000-0000-0000-0000-000000000010', 'f917e487-1f8c-4d3c-b42a-d77f1c19bceb', 'Authentic Guacamole & Fresh Pico', 'guacamole and pico', 'mexican', 0, true,
     '[{"quantity": "4", "measurement": "", "ingredient": "ripe Hass avocados"}, {"quantity": "4", "measurement": "", "ingredient": "ripe plum tomatoes, diced"}, {"quantity": "1", "measurement": "", "ingredient": "small red onion, finely chopped"}, {"quantity": "1", "measurement": "", "ingredient": "jalapeño, seeded and minced"}, {"quantity": "1", "measurement": "", "ingredient": "large bunch fresh cilantro, chopped"}, {"quantity": "3", "measurement": "", "ingredient": "juicy limes & flaky sea salt"}, {"quantity": "", "measurement": "", "ingredient": "Crispy tortilla chips"}]'::jsonb,
     array['For pico de gallo: toss diced tomatoes, red onion, jalapeño, half the cilantro, lime juice, and salt.', 'Mash avocados coarsely with a fork leaving chunks.', 'Fold lime juice, salt, and remaining cilantro into avocado.', 'Top guacamole with a spoonful of fresh pico.', 'Serve immediately with warm tortilla chips.'])
 on conflict (id) do nothing;
 
-insert into public.dishes (id, owner_id, name, normalized_name, cuisine, effort, is_public, ingredients, instructions)
+insert into public.recipes (id, owner_id, name, normalized_name, cuisine, effort, is_public, ingredients, instructions)
 values ('e0000000-0000-0000-0000-000000000011', 'a1111111-1111-1111-1111-111111111111', 'Swedish Meatballs with Cream Sauce', 'swedish meatballs', 'nordic', 2, true,
     '[{"quantity": "300", "measurement": "g", "ingredient": "ground beef & 300g ground pork"}, {"quantity": "1", "measurement": "", "ingredient": "onion, finely grated and sweated"}, {"quantity": "50", "measurement": "g", "ingredient": "breadcrumbs soaked in 100ml cream"}, {"quantity": "1", "measurement": "", "ingredient": "egg, allspice, white pepper & salt"}, {"quantity": "", "measurement": "", "ingredient": "Cream sauce: butter, flour, beef stock, heavy cream, soy sauce"}, {"quantity": "", "measurement": "", "ingredient": "Boiled buttery potatoes & stirred lingonberries"}]'::jsonb,
     array['Combine meats, soaked breadcrumbs, egg, grated onion, and spices. Roll into small meatballs.', 'Fry in butter over medium-high heat until deeply browned and cooked through. Remove.', 'Deglaze skillet with beef stock, whisk in flour/butter roux and heavy cream. Simmer until velvety.', 'Return meatballs to the sauce.', 'Serve with silky mashed potatoes, pickled cucumbers, and tart lingonberries.'])
 on conflict (id) do nothing;
 
-insert into public.dishes (id, owner_id, name, normalized_name, cuisine, effort, is_public, ingredients, instructions)
+insert into public.recipes (id, owner_id, name, normalized_name, cuisine, effort, is_public, ingredients, instructions)
 values ('e0000000-0000-0000-0000-000000000012', 'a1111111-1111-1111-1111-111111111111', 'Pan-Seared Salmon with Dill Potatoes', 'salmon with dill potatoes', 'nordic', 1, true,
     '[{"quantity": "4", "measurement": "", "ingredient": "skin-on fresh salmon fillets"}, {"quantity": "600", "measurement": "g", "ingredient": "baby new potatoes"}, {"quantity": "1", "measurement": "", "ingredient": "large bunch fresh dill, chopped"}, {"quantity": "50", "measurement": "g", "ingredient": "butter"}, {"quantity": "1", "measurement": "", "ingredient": "lemon, halved"}, {"quantity": "", "measurement": "", "ingredient": "Flaky sea salt & cracked black pepper"}]'::jsonb,
     array['Boil baby potatoes in salted water until fork-tender (15 min). Drain and toss with butter and dill.', 'Season salmon skin with sea salt.', 'Sear salmon skin-side down in a hot pan for 4-5 min until skin is shatteringly crisp.', 'Flip and cook 1-2 min until center is tender and just translucent.', 'Squeeze fresh lemon juice over fillets and serve with warm dill potatoes.'])
 on conflict (id) do nothing;
 
-insert into public.dishes (id, owner_id, name, normalized_name, cuisine, effort, is_public, ingredients, instructions)
+insert into public.recipes (id, owner_id, name, normalized_name, cuisine, effort, is_public, ingredients, instructions)
 values ('e0000000-0000-0000-0000-000000000013', 'a1111111-1111-1111-1111-111111111111', 'Creamy Chanterelle Mushroom Toast', 'chanterelle toast', 'nordic', 0, true,
     '[{"quantity": "300", "measurement": "g", "ingredient": "fresh wild chanterelles, cleaned"}, {"quantity": "2", "measurement": "", "ingredient": "thick slices sourdough country bread"}, {"quantity": "40", "measurement": "g", "ingredient": "butter"}, {"quantity": "1", "measurement": "", "ingredient": "shallot, minced"}, {"quantity": "75", "measurement": "ml", "ingredient": "heavy cream"}, {"quantity": "", "measurement": "", "ingredient": "Fresh parsley, salt & white pepper"}]'::jsonb,
     array['Dry sauté chanterelles in a hot skillet until liquid evaporates.', 'Add butter and minced shallot; sauté until mushrooms are golden and aromatic.', 'Pour in heavy cream and simmer until reduced to a rich coating.', 'Toast thick sourdough slices in butter until golden.', 'Spoon creamed chanterelles generously over toasts and garnish with fresh parsley.'])
 on conflict (id) do nothing;
 
-insert into public.dishes (id, owner_id, name, normalized_name, cuisine, effort, is_public, ingredients, instructions)
+insert into public.recipes (id, owner_id, name, normalized_name, cuisine, effort, is_public, ingredients, instructions)
 values ('e0000000-0000-0000-0000-000000000014', 'a2222222-2222-2222-2222-222222222222', 'Yellow Thai Coconut Chicken Curry', 'yellow coconut curry', 'thai', 1, true,
     '[{"quantity": "500", "measurement": "g", "ingredient": "chicken thighs, sliced"}, {"quantity": "3", "measurement": "tbsp", "ingredient": "yellow Thai curry paste"}, {"quantity": "1", "measurement": "can", "ingredient": "(400ml) full-fat coconut milk"}, {"quantity": "200", "measurement": "g", "ingredient": "baby potatoes, quartered"}, {"quantity": "1", "measurement": "", "ingredient": "red bell pepper & 1 onion, chopped"}, {"quantity": "1", "measurement": "tbsp", "ingredient": "fish sauce & 1 tbsp palm sugar"}, {"quantity": "", "measurement": "", "ingredient": "Fresh Thai basil & jasmine rice"}]'::jsonb,
     array['Fry curry paste in 2 tbsp coconut cream until fragrant and oil begins to separate.', 'Add sliced chicken thighs and sear lightly.', 'Pour in remaining coconut milk, potatoes, and onion. Simmer 15 min until potatoes are tender.', 'Add bell peppers, fish sauce, and palm sugar. Cook 3 more minutes.', 'Stir in Thai basil leaves and ladle over steamed fragrant jasmine rice.'])
 on conflict (id) do nothing;
 
-insert into public.dishes (id, owner_id, name, normalized_name, cuisine, effort, is_public, ingredients, instructions)
+insert into public.recipes (id, owner_id, name, normalized_name, cuisine, effort, is_public, ingredients, instructions)
 values ('e0000000-0000-0000-0000-000000000015', 'a2222222-2222-2222-2222-222222222222', 'Pad Thai with Tiger Prawns', 'pad thai prawns', 'thai', 1, true,
     '[{"quantity": "250", "measurement": "g", "ingredient": "flat rice noodles (soak 30 min in warm water)"}, {"quantity": "200", "measurement": "g", "ingredient": "peeled tiger prawns"}, {"quantity": "2", "measurement": "", "ingredient": "eggs, lightly beaten"}, {"quantity": "100", "measurement": "g", "ingredient": "firm tofu, cubed"}, {"quantity": "", "measurement": "", "ingredient": "Sauce: tamarind paste, fish sauce, palm sugar"}, {"quantity": "", "measurement": "", "ingredient": "Bean sprouts, Chinese chives, crushed roasted peanuts & lime"}]'::jsonb,
     array['Sear prawns and tofu in a very hot wok with peanut oil. Push to side.', 'Scramble eggs in center until soft curd.', 'Add drained noodles and pad thai sauce. Toss vigorously over high heat until noodles absorb sauce.', 'Toss in fresh bean sprouts and chives for 30 seconds.', 'Serve immediately with crushed peanuts, chili flakes, and fresh lime wedges.'])
 on conflict (id) do nothing;
 
-insert into public.dishes (id, owner_id, name, normalized_name, cuisine, effort, is_public, ingredients, instructions)
+insert into public.recipes (id, owner_id, name, normalized_name, cuisine, effort, is_public, ingredients, instructions)
 values ('e0000000-0000-0000-0000-000000000016', 'a2222222-2222-2222-2222-222222222222', 'Spicy Tom Yum Goong', 'tom yum goong', 'thai', 1, true,
     '[{"quantity": "300", "measurement": "g", "ingredient": "large prawns, shells reserved for stock"}, {"quantity": "1", "measurement": "liter", "ingredient": "water or chicken stock"}, {"quantity": "2", "measurement": "stalks", "ingredient": "lemongrass, bruised"}, {"quantity": "4", "measurement": "", "ingredient": "kaffir lime leaves, torn"}, {"quantity": "3", "measurement": "slices", "ingredient": "galangal"}, {"quantity": "150", "measurement": "g", "ingredient": "straw mushrooms or oyster mushrooms"}, {"quantity": "2", "measurement": "tbsp", "ingredient": "Thai chili paste (nam prik pao), fish sauce & lime juice"}]'::jsonb,
     array['Simmer prawn shells in water for 10 min to make a rich broth; strain.', 'Bring broth to boil with lemongrass, galangal, and kaffir lime leaves.', 'Add mushrooms and chili paste. Simmer 3 minutes.', 'Add prawns and cook 2 minutes until pink and tender.', 'Take off heat, stir in fish sauce and fresh lime juice. Garnish with fresh cilantro and bird''''s eye chilies.'])
 on conflict (id) do nothing;
 
-insert into public.dishes (id, owner_id, name, normalized_name, cuisine, effort, is_public, ingredients, instructions)
+insert into public.recipes (id, owner_id, name, normalized_name, cuisine, effort, is_public, ingredients, instructions)
 values ('e0000000-0000-0000-0000-000000000017', 'a2222222-2222-2222-2222-222222222222', 'Rich Tonkotsu Pork Ramen', 'tonkotsu ramen', 'japanese', 3, true,
     '[{"quantity": "", "measurement": "", "ingredient": "Fresh ramen noodles"}, {"quantity": "1", "measurement": "kg", "ingredient": "pork neck bones & pork trotters"}, {"quantity": "", "measurement": "", "ingredient": "Aromatics: ginger, garlic, scallions, shallots"}, {"quantity": "", "measurement": "", "ingredient": "Chashu pork belly slices"}, {"quantity": "", "measurement": "", "ingredient": "Ramen eggs (ajitsuke tamago)"}, {"quantity": "", "measurement": "", "ingredient": "Menma (bamboo shoots), nori & green onions"}]'::jsonb,
     array['Blanch bones in boiling water, scrub clean, then boil vigorously for 8-10 hours until opaque and creamy milky white.', 'Strain broth and season with soy sauce-mirin tare.', 'Cook ramen noodles for 90 seconds in boiling water; drain thoroughly.', 'Place noodles in pre-warmed bowls, ladle steaming hot tonkotsu broth over top.', 'Garnish with rolled chashu pork, marinated soft-boiled egg halves, green onions, and nori sheets.'])
 on conflict (id) do nothing;
 
-insert into public.dishes (id, owner_id, name, normalized_name, cuisine, effort, is_public, ingredients, instructions)
+insert into public.recipes (id, owner_id, name, normalized_name, cuisine, effort, is_public, ingredients, instructions)
 values ('e0000000-0000-0000-0000-000000000018', 'a2222222-2222-2222-2222-222222222222', 'Crispy Chicken Katsu Curry', 'chicken katsu curry', 'japanese', 2, true,
     '[{"quantity": "4", "measurement": "", "ingredient": "chicken cutlets, pounded even"}, {"quantity": "", "measurement": "", "ingredient": "Flour, egg, and Japanese panko breadcrumbs"}, {"quantity": "", "measurement": "", "ingredient": "Japanese curry roux block"}, {"quantity": "1", "measurement": "", "ingredient": "onion, 1 carrot, 1 potato, cubed"}, {"quantity": "600", "measurement": "ml", "ingredient": "water"}, {"quantity": "", "measurement": "", "ingredient": "Steamed Japanese short-grain rice & fukujinzuke pickles"}]'::jsonb,
     array['Sauté onions, carrots, and potatoes in a saucepan. Add water, bring to boil, and simmer 15 min.', 'Turn off heat, dissolve curry roux cubes, then simmer on low until thick and glossy.', 'Dredge chicken in flour, dip in beaten egg, and coat thickly with panko.', 'Deep fry cutlets in 170°C oil until golden brown and super crunchy (5-6 min). Slice into strips.', 'Plate rice, arrange sliced katsu, and ladle hot aromatic curry sauce generously alongside.'])
 on conflict (id) do nothing;
 
-insert into public.dishes (id, owner_id, name, normalized_name, cuisine, effort, is_public, ingredients, instructions)
+insert into public.recipes (id, owner_id, name, normalized_name, cuisine, effort, is_public, ingredients, instructions)
 values ('e0000000-0000-0000-0000-000000000019', 'a2222222-2222-2222-2222-222222222222', 'Teriyaki Salmon Rice Bowls', 'teriyaki salmon bowls', 'japanese', 1, true,
     '[{"quantity": "4", "measurement": "", "ingredient": "salmon fillets"}, {"quantity": "", "measurement": "", "ingredient": "Homemade teriyaki: 3 tbsp soy sauce, 3 tbsp mirin, 2 tbsp sake, 1.5 tbsp sugar"}, {"quantity": "2", "measurement": "cups", "ingredient": "cooked Japanese sushi rice"}, {"quantity": "", "measurement": "", "ingredient": "Steamed edamame & cucumber slices"}, {"quantity": "", "measurement": "", "ingredient": "Toasted sesame seeds & scallions"}]'::jsonb,
     array['Simmer soy sauce, mirin, sake, and sugar in a small saucepan until reduced to a shiny glaze.', 'Pan-sear salmon fillets in a hot skillet for 3 minutes on each side.', 'Brush glaze generously over salmon in the last minute of cooking until caramelized.', 'Scoop warm sushi rice into bowls.', 'Top with glazed salmon, shelled edamame, cucumber ribbon salad, and sprinkle with sesame seeds.'])
 on conflict (id) do nothing;
 
-insert into public.dishes (id, owner_id, name, normalized_name, cuisine, effort, is_public, ingredients, instructions)
+insert into public.recipes (id, owner_id, name, normalized_name, cuisine, effort, is_public, ingredients, instructions)
 values ('e0000000-0000-0000-0000-000000000020', 'a2222222-2222-2222-2222-222222222222', 'Miso-Glazed Roasted Eggplant', 'miso roasted eggplant', 'japanese', 1, true,
     '[{"quantity": "2", "measurement": "", "ingredient": "medium Japanese or Italian eggplants, halved lengthwise"}, {"quantity": "", "measurement": "", "ingredient": "Glaze: 3 tbsp white miso, 2 tbsp mirin, 1 tbsp sake, 1 tbsp brown sugar"}, {"quantity": "2", "measurement": "tbsp", "ingredient": "sesame oil"}, {"quantity": "", "measurement": "", "ingredient": "Toasted white and black sesame seeds & finely sliced scallions"}]'::jsonb,
     array['Score eggplant flesh in a diamond pattern without piercing the skin.', 'Brush cut sides generously with sesame oil.', 'Pan sear eggplant cut-side down in an ovenproof pan until browned (3-4 min).', 'Whisk miso, mirin, sake, and sugar until silky smooth.', 'Flip eggplant, spoon thick glaze over scored flesh, and broil in oven at 200°C for 8-10 min until bubbling and caramelized.'])
 on conflict (id) do nothing;
 
-insert into public.dishes (id, owner_id, name, normalized_name, cuisine, effort, is_public, ingredients, instructions)
+insert into public.recipes (id, owner_id, name, normalized_name, cuisine, effort, is_public, ingredients, instructions)
 values ('e0000000-0000-0000-0000-000000000021', 'a3333333-3333-3333-3333-333333333333', 'Sichuan Kung Pao Chicken', 'kung pao chicken', 'asian', 1, true,
     '[{"quantity": "450", "measurement": "g", "ingredient": "boneless chicken thighs, diced"}, {"quantity": "10-12", "measurement": "", "ingredient": "whole dried red chilies, cut"}, {"quantity": "1", "measurement": "tsp", "ingredient": "Sichuan peppercorns"}, {"quantity": "1/2", "measurement": "cup", "ingredient": "roasted unsalted peanuts"}, {"quantity": "3", "measurement": "", "ingredient": "scallions, cut into inch batons"}, {"quantity": "", "measurement": "", "ingredient": "Kung Pao sauce: Chinkiang black vinegar, soy sauce, Shaoxing wine, sugar, cornstarch"}]'::jsonb,
     array['Marinate chicken with light soy sauce and cornstarch for 15 min.', 'Heat oil in a hot wok. Stir fry dried chilies and Sichuan peppercorns until fragrant and darkened.', 'Add chicken pieces and sear over high heat until browned.', 'Stir in minced ginger, garlic, and scallion whites.', 'Pour in sauce, toss until glossy and clinging to chicken, then fold in roasted peanuts.'])
 on conflict (id) do nothing;
 
-insert into public.dishes (id, owner_id, name, normalized_name, cuisine, effort, is_public, ingredients, instructions)
+insert into public.recipes (id, owner_id, name, normalized_name, cuisine, effort, is_public, ingredients, instructions)
 values ('e0000000-0000-0000-0000-000000000022', 'a3333333-3333-3333-3333-333333333333', 'Cantonese Beef & Broccoli Stir-Fry', 'beef and broccoli', 'asian', 1, true,
     '[{"quantity": "400", "measurement": "g", "ingredient": "flank steak, sliced thin across the grain"}, {"quantity": "1", "measurement": "", "ingredient": "large head broccoli, cut into florets"}, {"quantity": "2", "measurement": "cloves", "ingredient": "garlic & 1 tbsp grated ginger"}, {"quantity": "", "measurement": "", "ingredient": "Sauce: oyster sauce, dark soy sauce, Shaoxing wine, sesame oil, broth, cornstarch"}, {"quantity": "", "measurement": "", "ingredient": "Steamed jasmine rice"}]'::jsonb,
     array['Velveting: toss beef with soy sauce, Shaoxing wine, and cornstarch for 15 min.', 'Blanch broccoli florets in boiling water for 60 seconds until bright green; drain.', 'Sear marinated beef in a smoking hot wok in single layer (90 seconds); remove.', 'Sauté garlic and ginger in wok, return beef and broccoli.', 'Pour in sauce and toss 1 minute until sauce thickens to a glossy coat.'])
 on conflict (id) do nothing;
 
-insert into public.dishes (id, owner_id, name, normalized_name, cuisine, effort, is_public, ingredients, instructions)
+insert into public.recipes (id, owner_id, name, normalized_name, cuisine, effort, is_public, ingredients, instructions)
 values ('e0000000-0000-0000-0000-000000000023', 'a3333333-3333-3333-3333-333333333333', 'Steamed Pork & Chive Dumplings', 'pork chive dumplings', 'asian', 2, true,
     '[{"quantity": "40", "measurement": "", "ingredient": "dumpling wrappers"}, {"quantity": "400", "measurement": "g", "ingredient": "ground pork"}, {"quantity": "150", "measurement": "g", "ingredient": "Chinese garlic chives, finely chopped"}, {"quantity": "1", "measurement": "tbsp", "ingredient": "grated ginger, 2 tbsp light soy sauce, 1 tbsp Shaoxing wine, 1 tbsp sesame oil"}, {"quantity": "", "measurement": "", "ingredient": "Dipping sauce: black vinegar, chili oil, garlic"}]'::jsonb,
     array['Mix pork, chives, ginger, soy, wine, and sesame oil vigorously in one direction until sticky.', 'Place 1 tbsp filling in center of each wrapper, wet edges, and pleat tightly.', 'Line bamboo steamer with parchment paper and arrange dumplings.', 'Steam over boiling water for 8-10 minutes until skins are translucent and cooked.', 'Serve immediately with spicy Chinkiang vinegar dipping sauce.'])
 on conflict (id) do nothing;
 
-insert into public.dishes (id, owner_id, name, normalized_name, cuisine, effort, is_public, ingredients, instructions)
+insert into public.recipes (id, owner_id, name, normalized_name, cuisine, effort, is_public, ingredients, instructions)
 values ('e0000000-0000-0000-0000-000000000024', 'a3333333-3333-3333-3333-333333333333', 'Korean Bulgogi Beef Bowls', 'bulgogi beef bowls', 'korean', 1, true,
     '[{"quantity": "500", "measurement": "g", "ingredient": "ribeye or sirloin, sliced paper thin"}, {"quantity": "", "measurement": "", "ingredient": "Marinade: grated Asian pear, soy sauce, brown sugar, sesame oil, minced garlic, ginger"}, {"quantity": "1", "measurement": "", "ingredient": "sweet onion, sliced"}, {"quantity": "", "measurement": "", "ingredient": "Cooked rice, kimchi, and toasted sesame seeds"}, {"quantity": "", "measurement": "", "ingredient": "Crisp romaine lettuce cups for wrapping"}]'::jsonb,
     array['Blend Asian pear, soy sauce, sugar, garlic, and sesame oil.', 'Marinate beef and sliced onion for at least 30 min (or overnight).', 'Heat a cast iron skillet or grill pan screaming hot.', 'Cook beef in a single layer for 2-3 minutes until charred on edges and caramelized.', 'Serve over warm rice bowls with fresh kimchi and crisp lettuce wraps.'])
 on conflict (id) do nothing;
 
-insert into public.dishes (id, owner_id, name, normalized_name, cuisine, effort, is_public, ingredients, instructions)
+insert into public.recipes (id, owner_id, name, normalized_name, cuisine, effort, is_public, ingredients, instructions)
 values ('e0000000-0000-0000-0000-000000000025', 'a3333333-3333-3333-3333-333333333333', 'Crispy Kimchi Fried Rice', 'kimchi fried rice', 'korean', 0, true,
     '[{"quantity": "3", "measurement": "cups", "ingredient": "day-old cold cooked white rice"}, {"quantity": "1", "measurement": "cup", "ingredient": "well-fermented kimchi, chopped (plus 3 tbsp kimchi juice)"}, {"quantity": "100", "measurement": "g", "ingredient": "bacon or pork belly, diced"}, {"quantity": "1", "measurement": "tbsp", "ingredient": "gochujang (Korean chili paste)"}, {"quantity": "1", "measurement": "tbsp", "ingredient": "sesame oil"}, {"quantity": "", "measurement": "", "ingredient": "Fried sunny-side eggs & toasted nori strips"}]'::jsonb,
     array['Crisp bacon in a wide skillet or wok.', 'Add chopped kimchi and stir fry 3 minutes until softened and translucent.', 'Stir in gochujang and kimchi juice.', 'Add cold rice, breaking up grains, tossing over high heat for 3-4 minutes.', 'Drizzle sesame oil, top with runny fried eggs and shredded toasted seaweed.'])
 on conflict (id) do nothing;
 
-insert into public.dishes (id, owner_id, name, normalized_name, cuisine, effort, is_public, ingredients, instructions)
+insert into public.recipes (id, owner_id, name, normalized_name, cuisine, effort, is_public, ingredients, instructions)
 values ('e0000000-0000-0000-0000-000000000026', 'b1111111-1111-1111-1111-111111111111', 'Murgh Makhani Butter Chicken', 'butter chicken', 'indian', 2, true,
     '[{"quantity": "600", "measurement": "g", "ingredient": "chicken thighs in yogurt, ginger, garlic, garam masala marinade"}, {"quantity": "50", "measurement": "g", "ingredient": "butter & 1 tbsp oil"}, {"quantity": "1", "measurement": "", "ingredient": "finely chopped onion"}, {"quantity": "400", "measurement": "g", "ingredient": "tomato puree"}, {"quantity": "150", "measurement": "ml", "ingredient": "heavy cream & 1 tbsp kasuri methi (fenugreek leaves)"}, {"quantity": "", "measurement": "", "ingredient": "Warm basmati rice & garlic naan"}]'::jsonb,
     array['Broil or grill marinated chicken chunks on high heat until lightly charred; set aside.', 'Melt butter in pan, sauté onions until golden.', 'Add tomato puree, ginger-garlic paste, chili powder, and garam masala; simmer 15 min.', 'Puree sauce until velvety smooth.', 'Stir in cream, crushed fenugreek leaves, and grilled chicken. Simmer 5 min.'])
 on conflict (id) do nothing;
 
-insert into public.dishes (id, owner_id, name, normalized_name, cuisine, effort, is_public, ingredients, instructions)
+insert into public.recipes (id, owner_id, name, normalized_name, cuisine, effort, is_public, ingredients, instructions)
 values ('e0000000-0000-0000-0000-000000000027', 'b1111111-1111-1111-1111-111111111111', 'Chicken Tikka Masala', 'chicken tikka masala', 'indian', 2, true,
     '[{"quantity": "600", "measurement": "g", "ingredient": "chicken breast cubes marinated in spiced yogurt"}, {"quantity": "2", "measurement": "", "ingredient": "onions, finely diced"}, {"quantity": "3", "measurement": "cloves", "ingredient": "garlic & 2 tbsp ginger paste"}, {"quantity": "", "measurement": "", "ingredient": "Ground coriander, cumin, turmeric, Kashmiri chili"}, {"quantity": "400", "measurement": "g", "ingredient": "crushed canned tomatoes"}, {"quantity": "100", "measurement": "ml", "ingredient": "heavy cream & fresh cilantro"}]'::jsonb,
     array['Skewer marinated chicken and broil at 230°C until edges are blackened.', 'Sauté onions, ginger, and garlic in ghee until caramelized.', 'Add dry spices and bloom for 1 minute.', 'Add crushed tomatoes and simmer into a thick aromatic gravy.', 'Fold in cream and roasted chicken pieces. Simmer 5 minutes, garnish with fresh chopped cilantro.'])
 on conflict (id) do nothing;
 
-insert into public.dishes (id, owner_id, name, normalized_name, cuisine, effort, is_public, ingredients, instructions)
+insert into public.recipes (id, owner_id, name, normalized_name, cuisine, effort, is_public, ingredients, instructions)
 values ('e0000000-0000-0000-0000-000000000028', 'b1111111-1111-1111-1111-111111111111', 'Spiced Red Lentil Dal with Garlic Naan', 'red lentil dal', 'indian', 1, true,
     '[{"quantity": "250", "measurement": "g", "ingredient": "split red lentils (masoor dal), rinsed"}, {"quantity": "1", "measurement": "tsp", "ingredient": "turmeric, 1 tsp ground cumin, salt"}, {"quantity": "750", "measurement": "ml", "ingredient": "water or broth"}, {"quantity": "", "measurement": "", "ingredient": "Tadka tempering: 2 tbsp ghee, 1 tsp cumin seeds, 3 cloves sliced garlic, dried red chilies"}, {"quantity": "", "measurement": "", "ingredient": "Fresh cilantro & warm garlic naan"}]'::jsonb,
     array['Simmer rinsed lentils with water, turmeric, and salt for 20 minutes until creamy and collapsed.', 'Whisk dal lightly to achieve desired smooth texture.', 'In a small frying pan, heat ghee until hot. Add cumin seeds, sliced garlic, and chilies.', 'Fry until garlic is golden brown and fragrant (60 seconds).', 'Pour sizzling tadka directly over the lentils with a hiss. Stir in fresh cilantro.'])
 on conflict (id) do nothing;
 
-insert into public.dishes (id, owner_id, name, normalized_name, cuisine, effort, is_public, ingredients, instructions)
+insert into public.recipes (id, owner_id, name, normalized_name, cuisine, effort, is_public, ingredients, instructions)
 values ('e0000000-0000-0000-0000-000000000029', 'b1111111-1111-1111-1111-111111111111', 'Greek Lemon Oregano Roast Chicken', 'lemon oregano chicken', 'greek', 2, true,
     '[{"quantity": "1.5", "measurement": "kg", "ingredient": "bone-in chicken thighs and drumsticks"}, {"quantity": "800", "measurement": "g", "ingredient": "Yukon gold potatoes, cut into wedges"}, {"quantity": "", "measurement": "", "ingredient": "Juice of 3 large lemons"}, {"quantity": "100", "measurement": "ml", "ingredient": "Greek extra virgin olive oil"}, {"quantity": "4", "measurement": "cloves", "ingredient": "garlic, crushed"}, {"quantity": "2", "measurement": "tbsp", "ingredient": "dried wild oregano & sea salt"}]'::jsonb,
     array['Toss chicken and potatoes in a roasting pan with lemon juice, olive oil, garlic, oregano, and salt.', 'Pour 150ml chicken broth into the pan around the edges.', 'Roast at 200°C for 50-60 minutes, turning potatoes once halfway.', 'Chicken skin should be golden crisp and potatoes creamy inside with crispy lemon edges.', 'Garnish with more wild oregano and serve with crusty bread.'])
 on conflict (id) do nothing;
 
-insert into public.dishes (id, owner_id, name, normalized_name, cuisine, effort, is_public, ingredients, instructions)
+insert into public.recipes (id, owner_id, name, normalized_name, cuisine, effort, is_public, ingredients, instructions)
 values ('e0000000-0000-0000-0000-000000000030', 'b1111111-1111-1111-1111-111111111111', 'Souvlaki Skewers with Homemade Tzatziki', 'souvlaki skewers', 'greek', 1, true,
     '[{"quantity": "600", "measurement": "g", "ingredient": "pork tenderloin or chicken breast, cubed"}, {"quantity": "", "measurement": "", "ingredient": "Marinade: olive oil, lemon juice, garlic, oregano, thyme, salt"}, {"quantity": "", "measurement": "", "ingredient": "Wooden skewers soaked in water"}, {"quantity": "", "measurement": "", "ingredient": "Tzatziki: grated cucumber (squeezed dry), Greek yogurt, garlic, dill, olive oil"}, {"quantity": "", "measurement": "", "ingredient": "Warm pita flatbreads"}]'::jsonb,
     array['Thread marinated meat cubes snugly onto skewers.', 'Whisk drained grated cucumber, Greek yogurt, crushed garlic, olive oil, and dill.', 'Grill skewers over hot charcoal or cast iron grill for 3-4 min per side until charred and juicy.', 'Warm pita flatbreads over grill.', 'Assemble pitas with skewers, tomatoes, red onions, and abundant cool tzatziki.'])
 on conflict (id) do nothing;
 
-insert into public.dishes (id, owner_id, name, normalized_name, cuisine, effort, is_public, ingredients, instructions)
+insert into public.recipes (id, owner_id, name, normalized_name, cuisine, effort, is_public, ingredients, instructions)
 values ('e0000000-0000-0000-0000-000000000031', 'a1111111-1111-1111-1111-111111111111', 'Traditional Spanish Seafood Paella', 'spanish seafood paella', 'spanish', 3, true,
     '[{"quantity": "400", "measurement": "g", "ingredient": "Bomba paella rice"}, {"quantity": "12", "measurement": "", "ingredient": "mussels & 12 clams, scrubbed"}, {"quantity": "8", "measurement": "", "ingredient": "large tiger prawns"}, {"quantity": "200", "measurement": "g", "ingredient": "calamari rings"}, {"quantity": "1", "measurement": "liter", "ingredient": "rich fish stock infused with a pinch of saffron"}, {"quantity": "", "measurement": "", "ingredient": "Sofrito: grated tomatoes, onions, garlic, sweet smoked paprika"}]'::jsonb,
     array['Sear prawns in olive oil in a 36cm paella pan; set aside.', 'Build sofrito in remaining oil until dark and jammy (10 min).', 'Stir in Bomba rice to coat with sofrito. Pour in hot saffron fish stock.', 'Cook over medium-high heat for 10 min without stirring, then lower heat.', 'Arrange seafood on top, cover with foil, cook 8 min until rice forms a crispy bottom socarrat crust.'])
 on conflict (id) do nothing;
 
-insert into public.dishes (id, owner_id, name, normalized_name, cuisine, effort, is_public, ingredients, instructions)
+insert into public.recipes (id, owner_id, name, normalized_name, cuisine, effort, is_public, ingredients, instructions)
 values ('e0000000-0000-0000-0000-000000000032', 'a1111111-1111-1111-1111-111111111111', 'Sizzling Gambas al Ajillo', 'gambas al ajillo', 'spanish', 0, true,
     '[{"quantity": "400", "measurement": "g", "ingredient": "raw peeled prawns"}, {"quantity": "8", "measurement": "", "ingredient": "garlic cloves, thinly sliced"}, {"quantity": "1", "measurement": "", "ingredient": "dried red chili pepper, sliced"}, {"quantity": "100", "measurement": "ml", "ingredient": "Spanish extra virgin olive oil"}, {"quantity": "2", "measurement": "tbsp", "ingredient": "dry sherry or white wine"}, {"quantity": "", "measurement": "", "ingredient": "Chopped flat-leaf parsley & crusty baguette"}]'::jsonb,
     array['Heat olive oil in a shallow clay cazuela or skillet over medium-low heat.', 'Add sliced garlic and chili, cooking gently until garlic turns pale golden (do not burn).', 'Raise heat to high, add prawns, and sauté 2 minutes until pink and curled.', 'Splash in dry sherry and toss with chopped fresh parsley.', 'Serve immediately while oil is still vigorously sizzling with fresh crusty bread for dipping.'])
 on conflict (id) do nothing;
 
-insert into public.dishes (id, owner_id, name, normalized_name, cuisine, effort, is_public, ingredients, instructions)
+insert into public.recipes (id, owner_id, name, normalized_name, cuisine, effort, is_public, ingredients, instructions)
 values ('e0000000-0000-0000-0000-000000000033', 'a3333333-3333-3333-3333-333333333333', 'Mediterranean Shakshuka with Feta', 'mediterranean shakshuka', 'mediterranean', 1, true,
     '[{"quantity": "1", "measurement": "", "ingredient": "sliced red bell pepper & 1 yellow bell pepper"}, {"quantity": "1", "measurement": "", "ingredient": "onion & 3 garlic cloves"}, {"quantity": "1", "measurement": "tsp", "ingredient": "cumin, 1 tsp smoked paprika"}, {"quantity": "600", "measurement": "g", "ingredient": "ripe crushed tomatoes"}, {"quantity": "4-5", "measurement": "", "ingredient": "fresh large eggs"}, {"quantity": "100", "measurement": "g", "ingredient": "Greek feta cheese, crumbled"}, {"quantity": "", "measurement": "", "ingredient": "Fresh cilantro or parsley & toasted sourdough"}]'::jsonb,
     array['Sauté peppers and onions in olive oil until sweet and tender (10 min).', 'Add garlic and ground spices; cook 1 minute until fragrant.', 'Pour in crushed tomatoes, season with salt and pepper, and simmer 10 min into a thick sauce.', 'Make small wells in the sauce with a spoon and crack an egg into each well.', 'Cover pan and cook on low heat 5-7 minutes until whites are set but yolks are runny. Crumble feta over top.'])
 on conflict (id) do nothing;
 
-insert into public.dishes (id, owner_id, name, normalized_name, cuisine, effort, is_public, ingredients, instructions)
+insert into public.recipes (id, owner_id, name, normalized_name, cuisine, effort, is_public, ingredients, instructions)
 values ('e0000000-0000-0000-0000-000000000034', 'a3333333-3333-3333-3333-333333333333', 'Crispy Falafel & Hummus Mezze', 'falafel hummus mezze', 'middle_eastern', 2, true,
     '[{"quantity": "250", "measurement": "g", "ingredient": "dried chickpeas (soaked overnight, NOT canned)"}, {"quantity": "1", "measurement": "cup", "ingredient": "fresh parsley & cilantro"}, {"quantity": "4", "measurement": "cloves", "ingredient": "garlic, 1 onion, 1 tbsp cumin, 1 tbsp coriander"}, {"quantity": "1", "measurement": "tsp", "ingredient": "baking powder & 2 tbsp chickpea flour"}, {"quantity": "", "measurement": "", "ingredient": "Hummus, pickled turnips, tahini sauce, warm pita"}]'::jsonb,
     array['Pulse soaked drained chickpeas, herbs, onion, garlic, and spices in food processor to a coarse meal.', 'Chill mixture 30 min, then stir in baking powder.', 'Form into small walnut-sized balls.', 'Deep fry in 180°C oil for 3-4 minutes until deep golden brown and crunchy.', 'Serve atop creamy hummus drizzled with tahini, warm pita, and pickles.'])
 on conflict (id) do nothing;
 
-insert into public.dishes (id, owner_id, name, normalized_name, cuisine, effort, is_public, ingredients, instructions)
+insert into public.recipes (id, owner_id, name, normalized_name, cuisine, effort, is_public, ingredients, instructions)
 values ('e0000000-0000-0000-0000-000000000035', 'a3333333-3333-3333-3333-333333333333', 'Slow-Roasted Lamb Shawarma', 'lamb shawarma', 'middle_eastern', 3, true,
     '[{"quantity": "1.5", "measurement": "kg", "ingredient": "bone-in lamb shoulder"}, {"quantity": "", "measurement": "", "ingredient": "Shawarma rub: cumin, coriander, cardamom, cinnamon, smoked paprika, garlic, lemon juice, olive oil"}, {"quantity": "", "measurement": "", "ingredient": "Diced cucumbers and tomatoes with mint"}, {"quantity": "", "measurement": "", "ingredient": "Garlic toum sauce & warm flatbreads"}]'::jsonb,
     array['Rub lamb shoulder all over with spiced shawarma marinade.', 'Wrap tightly in parchment paper and foil.', 'Slow roast at 140°C for 4.5 hours until bone slips out effortlessly.', 'Unwrap, shred tender succulent meat, and crisp under a hot broiler for 5 minutes.', 'Pile shredded lamb into flatbreads with garlic sauce, pickled red onions, and fresh tomato mint salad.'])
 on conflict (id) do nothing;
 
-insert into public.dishes (id, owner_id, name, normalized_name, cuisine, effort, is_public, ingredients, instructions)
+insert into public.recipes (id, owner_id, name, normalized_name, cuisine, effort, is_public, ingredients, instructions)
 values ('e0000000-0000-0000-0000-000000000036', 'a1111111-1111-1111-1111-111111111111', 'French Boeuf Bourguignon', 'boeuf bourguignon', 'french', 3, true,
     '[{"quantity": "1", "measurement": "kg", "ingredient": "beef chuck, cut into 5cm chunks"}, {"quantity": "150", "measurement": "g", "ingredient": "smoked bacon lardons"}, {"quantity": "1", "measurement": "", "ingredient": "bottle good Burgundy red wine"}, {"quantity": "2", "measurement": "", "ingredient": "carrots, 1 onion, 2 garlic cloves, bouquet garni"}, {"quantity": "250", "measurement": "g", "ingredient": "cremini mushrooms & 15 pearl onions browned in butter"}, {"quantity": "500", "measurement": "ml", "ingredient": "beef stock & 2 tbsp tomato paste"}]'::jsonb,
     array['Sauté lardons in Dutch oven; remove. Pat beef dry and brown deeply in batches.', 'Sauté onions and carrots; stir in tomato paste and flour.', 'Pour in Burgundy wine and beef stock, add bouquet garni and browned meat.', 'Simmer covered in oven at 150°C for 3 hours until meltingly tender.', 'Fold in glazed pearl onions and sautéed mushrooms for the last 15 minutes. Serve with buttered potatoes.'])
 on conflict (id) do nothing;
 
-insert into public.dishes (id, owner_id, name, normalized_name, cuisine, effort, is_public, ingredients, instructions)
+insert into public.recipes (id, owner_id, name, normalized_name, cuisine, effort, is_public, ingredients, instructions)
 values ('e0000000-0000-0000-0000-000000000037', 'a1111111-1111-1111-1111-111111111111', 'Coq au Vin with Pearl Onions', 'coq au vin', 'french', 3, true,
     '[{"quantity": "1.2", "measurement": "kg", "ingredient": "chicken thighs and legs"}, {"quantity": "150", "measurement": "g", "ingredient": "diced thick-cut bacon"}, {"quantity": "750", "measurement": "ml", "ingredient": "dry red wine (Pinot Noir)"}, {"quantity": "250", "measurement": "g", "ingredient": "small button mushrooms"}, {"quantity": "15", "measurement": "", "ingredient": "pearl onions, peeled"}, {"quantity": "2", "measurement": "", "ingredient": "carrots, sliced & 2 cloves garlic"}, {"quantity": "", "measurement": "", "ingredient": "Butter, flour, fresh thyme and bay leaf"}]'::jsonb,
     array['Crisp bacon in a heavy pot; remove. Sear chicken pieces in bacon fat until golden.', 'Brown pearl onions and mushrooms; set aside.', 'Sauté carrots and garlic, sprinkle flour, and pour in red wine and chicken stock.', 'Return chicken and bacon, add fresh thyme and bay leaf.', 'Simmer gently 45 minutes until chicken is tender. Fold in mushrooms and onions; simmer 10 minutes to thicken.'])
 on conflict (id) do nothing;
 
-insert into public.dishes (id, owner_id, name, normalized_name, cuisine, effort, is_public, ingredients, instructions)
+insert into public.recipes (id, owner_id, name, normalized_name, cuisine, effort, is_public, ingredients, instructions)
 values ('e0000000-0000-0000-0000-000000000038', 'a1111111-1111-1111-1111-111111111111', 'Classic Ratatouille Provençale', 'ratatouille', 'french', 2, true,
     '[{"quantity": "2", "measurement": "", "ingredient": "zucchini & 2 yellow summer squash"}, {"quantity": "1", "measurement": "", "ingredient": "large eggplant"}, {"quantity": "4", "measurement": "", "ingredient": "Roma tomatoes"}, {"quantity": "", "measurement": "", "ingredient": "Piperade base: 2 bell peppers, 1 onion, 3 garlic cloves, crushed tomatoes, olive oil, thyme"}]'::jsonb,
-    array['Sauté peppers, onions, garlic, and herbs with crushed tomatoes to make a rich piperade sauce.', 'Spread piperade evenly over bottom of a round baking dish.', 'Thinly slice zucchini, yellow squash, eggplant, and tomatoes into uniform rounds.', 'Arrange alternating vegetable slices in concentric spirals over the sauce.', 'Drizzle with olive oil, sprinkle thyme, cover with parchment, and bake at 180°C for 45 minutes until tender and caramelized.'])
+    array['Sauté peppers, onions, garlic, and herbs with crushed tomatoes to make a rich piperade sauce.', 'Spread piperade evenly over bottom of a round baking recipe.', 'Thinly slice zucchini, yellow squash, eggplant, and tomatoes into uniform rounds.', 'Arrange alternating vegetable slices in concentric spirals over the sauce.', 'Drizzle with olive oil, sprinkle thyme, cover with parchment, and bake at 180°C for 45 minutes until tender and caramelized.'])
 on conflict (id) do nothing;
 
-insert into public.dishes (id, owner_id, name, normalized_name, cuisine, effort, is_public, ingredients, instructions)
+insert into public.recipes (id, owner_id, name, normalized_name, cuisine, effort, is_public, ingredients, instructions)
 values ('e0000000-0000-0000-0000-000000000039', 'f917e487-1f8c-4d3c-b42a-d77f1c19bceb', 'Double Smash Burgers with Secret Sauce', 'smash burgers', 'american', 1, true,
     '[{"quantity": "600", "measurement": "g", "ingredient": "ground beef chuck (80/20 fat ratio), portioned into 8 balls"}, {"quantity": "4", "measurement": "", "ingredient": "potato burger buns, buttered and toasted"}, {"quantity": "8", "measurement": "slices", "ingredient": "American cheese"}, {"quantity": "", "measurement": "", "ingredient": "Thinly shaved sweet white onion"}, {"quantity": "", "measurement": "", "ingredient": "Secret sauce: mayonnaise, yellow mustard, pickle relish, smoked paprika, garlic powder"}, {"quantity": "", "measurement": "", "ingredient": "Dill pickle chips"}]'::jsonb,
     array['Heat a cast iron griddle until smoking hot.', 'Place beef balls on griddle, top with shaved onions, and smash paper-thin with a heavy press.', 'Season heavily with salt and black pepper; cook 2 min until edges are intensely charred and crispy.', 'Flip patties, immediately top each with American cheese, and stack two patties together.', 'Spread secret sauce on toasted buns, add pickle chips, and crown with double cheesy patties.'])
 on conflict (id) do nothing;
 
-insert into public.dishes (id, owner_id, name, normalized_name, cuisine, effort, is_public, ingredients, instructions)
+insert into public.recipes (id, owner_id, name, normalized_name, cuisine, effort, is_public, ingredients, instructions)
 values ('e0000000-0000-0000-0000-000000000040', 'f917e487-1f8c-4d3c-b42a-d77f1c19bceb', '12-Hour Texas Smoked Pulled Pork', 'texas pulled pork', 'american', 3, true,
     '[{"quantity": "2.5", "measurement": "kg", "ingredient": "bone-in pork shoulder (Boston butt)"}, {"quantity": "", "measurement": "", "ingredient": "Texas rub: coarse kosher salt, coarse black pepper, smoked paprika, brown sugar, garlic powder"}, {"quantity": "", "measurement": "", "ingredient": "Apple cider vinegar spritz"}, {"quantity": "", "measurement": "", "ingredient": "Brioche slider buns, coleslaw & tangy BBQ sauce"}]'::jsonb,
     array['Coat pork shoulder evenly with mustard binder and heavy Texas spice rub.', 'Smoke over hickory or oak wood at 110°C (225°F) for 6 hours, spritzing hourly with apple cider vinegar.', 'Wrap tightly in peach butcher paper when dark bark forms.', 'Return to smoker or oven until internal temperature reaches 96°C (approx. 5 more hours).', 'Rest 1 hour, shred into juicy strands, and toss with pan drippings. Serve on toasted brioche with tangy slaw.'])
 on conflict (id) do nothing;
 
 
--- 5b. Link recipes to the canonical taxonomy terms (dish kind, cooking method, cuisine)
+-- 5b. Link recipes to the canonical taxonomy terms (recipe kind, cooking method, cuisine)
 -- seeded by the taxonomy migrations, so rating tags and admin term pages have real data.
-update public.dishes d
-set dish_kind_id = dk.id,
+update public.recipes d
+set recipe_kind_id = dk.id,
     cooking_method_id = cm.id
 from (values
     ('e0000000-0000-0000-0000-000000000001', 'pizza',            'baking'),
@@ -929,12 +929,12 @@ from (values
     ('e0000000-0000-0000-0000-000000000038', 'stew',             'simmering'),
     ('e0000000-0000-0000-0000-000000000039', 'burger',           'frying'),
     ('e0000000-0000-0000-0000-000000000040', 'bbq',              'smoking')
-) as m (dish_id, dish_kind, cooking_method)
-join public.taxonomy_terms dk on dk.dimension = 'dish_kind' and dk.slug = m.dish_kind
+) as m (recipe_id, recipe_kind, cooking_method)
+join public.taxonomy_terms dk on dk.dimension = 'recipe_kind' and dk.slug = m.recipe_kind
 join public.taxonomy_terms cm on cm.dimension = 'cooking_method' and cm.slug = m.cooking_method
-where d.id = m.dish_id::uuid;
+where d.id = m.recipe_id::uuid;
 
-update public.dishes d
+update public.recipes d
 set cuisine_id = t.id
 from public.taxonomy_terms t
 where t.dimension = 'cuisine'
@@ -943,10 +943,10 @@ where t.dimension = 'cuisine'
 
 
 -- 6. Meals & Ratings
-insert into public.meals (id, dish_id, created_by, eaten_on, notes, effort, repeat_desire)
+insert into public.meals (id, recipe_id, created_by, eaten_on, notes, effort, repeat_desire)
 values ('ba000000-0000-0000-0000-000000000001', 'e0000000-0000-0000-0000-000000000001', 'f917e487-1f8c-4d3c-b42a-d77f1c19bceb', '2025-09-05', 'Inaugural Friday feast! Homemade pizza night with extra crispy crust.', 2, 2)
 on conflict (id) do update set
-    dish_id = excluded.dish_id,
+    recipe_id = excluded.recipe_id,
     eaten_on = excluded.eaten_on,
     notes = excluded.notes,
     effort = excluded.effort,
@@ -968,10 +968,10 @@ insert into public.meal_ratings (meal_id, rater_id, reaction)
 values ('ba000000-0000-0000-0000-000000000001', 'a3333333-3333-3333-3333-333333333333', 3)
 on conflict (meal_id, rater_id) where rater_id is not null do update set reaction = excluded.reaction;
 
-insert into public.meals (id, dish_id, created_by, eaten_on, notes, effort, repeat_desire)
+insert into public.meals (id, recipe_id, created_by, eaten_on, notes, effort, repeat_desire)
 values ('ba000000-0000-0000-0000-000000000002', 'e0000000-0000-0000-0000-000000000002', 'f917e487-1f8c-4d3c-b42a-d77f1c19bceb', '2025-09-12', 'Silky carbonara. Marcus brought great wine.', 1, 2)
 on conflict (id) do update set
-    dish_id = excluded.dish_id,
+    recipe_id = excluded.recipe_id,
     eaten_on = excluded.eaten_on,
     notes = excluded.notes,
     effort = excluded.effort,
@@ -1005,10 +1005,10 @@ insert into public.meal_ratings (meal_id, rater_id, reaction)
 values ('ba000000-0000-0000-0000-000000000002', 'b1111111-1111-1111-1111-111111111111', 4)
 on conflict (meal_id, rater_id) where rater_id is not null do update set reaction = excluded.reaction;
 
-insert into public.meals (id, dish_id, created_by, eaten_on, notes, effort, repeat_desire)
+insert into public.meals (id, recipe_id, created_by, eaten_on, notes, effort, repeat_desire)
 values ('ba000000-0000-0000-0000-000000000003', 'e0000000-0000-0000-0000-000000000007', 'f917e487-1f8c-4d3c-b42a-d77f1c19bceb', '2025-09-19', 'Baja fish tacos on the patio before autumn chills set in.', 2, 1)
 on conflict (id) do update set
-    dish_id = excluded.dish_id,
+    recipe_id = excluded.recipe_id,
     eaten_on = excluded.eaten_on,
     notes = excluded.notes,
     effort = excluded.effort,
@@ -1042,10 +1042,10 @@ insert into public.meal_ratings (meal_id, rater_id, reaction)
 values ('ba000000-0000-0000-0000-000000000003', 'b1111111-1111-1111-1111-111111111111', 3)
 on conflict (meal_id, rater_id) where rater_id is not null do update set reaction = excluded.reaction;
 
-insert into public.meals (id, dish_id, created_by, eaten_on, notes, effort, repeat_desire)
+insert into public.meals (id, recipe_id, created_by, eaten_on, notes, effort, repeat_desire)
 values ('ba000000-0000-0000-0000-000000000004', 'e0000000-0000-0000-0000-000000000011', 'a1111111-1111-1111-1111-111111111111', '2025-09-26', 'Classic comfort: Swedish meatballs with extra lingonberries.', 2, 2)
 on conflict (id) do update set
-    dish_id = excluded.dish_id,
+    recipe_id = excluded.recipe_id,
     eaten_on = excluded.eaten_on,
     notes = excluded.notes,
     effort = excluded.effort,
@@ -1079,10 +1079,10 @@ insert into public.meal_ratings (meal_id, rater_id, reaction)
 values ('ba000000-0000-0000-0000-000000000004', 'b1111111-1111-1111-1111-111111111111', 3)
 on conflict (meal_id, rater_id) where rater_id is not null do update set reaction = excluded.reaction;
 
-insert into public.meals (id, dish_id, created_by, eaten_on, notes, effort, repeat_desire)
+insert into public.meals (id, recipe_id, created_by, eaten_on, notes, effort, repeat_desire)
 values ('ba000000-0000-0000-0000-000000000005', 'e0000000-0000-0000-0000-000000000014', 'a2222222-2222-2222-2222-222222222222', '2025-10-03', 'Yellow coconut curry warmed everybody up.', 1, 1)
 on conflict (id) do update set
-    dish_id = excluded.dish_id,
+    recipe_id = excluded.recipe_id,
     eaten_on = excluded.eaten_on,
     notes = excluded.notes,
     effort = excluded.effort,
@@ -1108,10 +1108,10 @@ insert into public.meal_ratings (meal_id, rater_id, reaction)
 values ('ba000000-0000-0000-0000-000000000005', 'a3333333-3333-3333-3333-333333333333', 3)
 on conflict (meal_id, rater_id) where rater_id is not null do update set reaction = excluded.reaction;
 
-insert into public.meals (id, dish_id, created_by, eaten_on, notes, effort, repeat_desire)
+insert into public.meals (id, recipe_id, created_by, eaten_on, notes, effort, repeat_desire)
 values ('ba000000-0000-0000-0000-000000000006', 'e0000000-0000-0000-0000-000000000015', 'a2222222-2222-2222-2222-222222222222', '2025-10-10', 'Pad thai with huge tiger prawns.', 1, 1)
 on conflict (id) do update set
-    dish_id = excluded.dish_id,
+    recipe_id = excluded.recipe_id,
     eaten_on = excluded.eaten_on,
     notes = excluded.notes,
     effort = excluded.effort,
@@ -1133,10 +1133,10 @@ insert into public.meal_ratings (meal_id, rater_id, reaction)
 values ('ba000000-0000-0000-0000-000000000006', 'a2222222-2222-2222-2222-222222222222', 3)
 on conflict (meal_id, rater_id) where rater_id is not null do update set reaction = excluded.reaction;
 
-insert into public.meals (id, dish_id, created_by, eaten_on, notes, effort, repeat_desire)
+insert into public.meals (id, recipe_id, created_by, eaten_on, notes, effort, repeat_desire)
 values ('ba000000-0000-0000-0000-000000000007', 'e0000000-0000-0000-0000-000000000018', 'a2222222-2222-2222-2222-222222222222', '2025-10-17', 'Katsu curry night. Panko was ultra crunchy.', 2, 2)
 on conflict (id) do update set
-    dish_id = excluded.dish_id,
+    recipe_id = excluded.recipe_id,
     eaten_on = excluded.eaten_on,
     notes = excluded.notes,
     effort = excluded.effort,
@@ -1166,10 +1166,10 @@ insert into public.meal_ratings (meal_id, rater_id, reaction)
 values ('ba000000-0000-0000-0000-000000000007', 'e0000000-0000-0000-0000-000000000001', 4)
 on conflict (meal_id, rater_id) where rater_id is not null do update set reaction = excluded.reaction;
 
-insert into public.meals (id, dish_id, created_by, eaten_on, notes, effort, repeat_desire)
+insert into public.meals (id, recipe_id, created_by, eaten_on, notes, effort, repeat_desire)
 values ('ba000000-0000-0000-0000-000000000008', 'e0000000-0000-0000-0000-000000000021', 'a3333333-3333-3333-3333-333333333333', '2025-10-24', 'Spicy kung pao chicken! Lots of Sichuan peppercorns.', 1, 1)
 on conflict (id) do update set
-    dish_id = excluded.dish_id,
+    recipe_id = excluded.recipe_id,
     eaten_on = excluded.eaten_on,
     notes = excluded.notes,
     effort = excluded.effort,
@@ -1203,10 +1203,10 @@ insert into public.meal_ratings (meal_id, rater_id, reaction)
 values ('ba000000-0000-0000-0000-000000000008', 'b1111111-1111-1111-1111-111111111111', 1)
 on conflict (meal_id, rater_id) where rater_id is not null do update set reaction = excluded.reaction;
 
-insert into public.meals (id, dish_id, created_by, eaten_on, notes, effort, repeat_desire)
+insert into public.meals (id, recipe_id, created_by, eaten_on, notes, effort, repeat_desire)
 values ('ba000000-0000-0000-0000-000000000009', 'e0000000-0000-0000-0000-000000000023', 'a3333333-3333-3333-3333-333333333333', '2025-10-31', 'Halloween dumpling folding party! Made over 60 dumplings.', 2, 2)
 on conflict (id) do update set
-    dish_id = excluded.dish_id,
+    recipe_id = excluded.recipe_id,
     eaten_on = excluded.eaten_on,
     notes = excluded.notes,
     effort = excluded.effort,
@@ -1236,10 +1236,10 @@ insert into public.meal_ratings (meal_id, rater_id, reaction)
 values ('ba000000-0000-0000-0000-000000000009', 'b1111111-1111-1111-1111-111111111111', 4)
 on conflict (meal_id, rater_id) where rater_id is not null do update set reaction = excluded.reaction;
 
-insert into public.meals (id, dish_id, created_by, eaten_on, notes, effort, repeat_desire)
+insert into public.meals (id, recipe_id, created_by, eaten_on, notes, effort, repeat_desire)
 values ('ba000000-0000-0000-0000-000000000010', 'e0000000-0000-0000-0000-000000000026', 'b1111111-1111-1111-1111-111111111111', '2025-11-07', 'Butter chicken with homemade garlic naan.', 2, 2)
 on conflict (id) do update set
-    dish_id = excluded.dish_id,
+    recipe_id = excluded.recipe_id,
     eaten_on = excluded.eaten_on,
     notes = excluded.notes,
     effort = excluded.effort,
@@ -1261,10 +1261,10 @@ insert into public.meal_ratings (meal_id, rater_id, reaction)
 values ('ba000000-0000-0000-0000-000000000010', 'a3333333-3333-3333-3333-333333333333', 4)
 on conflict (meal_id, rater_id) where rater_id is not null do update set reaction = excluded.reaction;
 
-insert into public.meals (id, dish_id, created_by, eaten_on, notes, effort, repeat_desire)
+insert into public.meals (id, recipe_id, created_by, eaten_on, notes, effort, repeat_desire)
 values ('ba000000-0000-0000-0000-000000000011', 'e0000000-0000-0000-0000-000000000029', 'b1111111-1111-1111-1111-111111111111', '2025-11-14', 'Greek roast chicken with lots of lemon.', 2, 1)
 on conflict (id) do update set
-    dish_id = excluded.dish_id,
+    recipe_id = excluded.recipe_id,
     eaten_on = excluded.eaten_on,
     notes = excluded.notes,
     effort = excluded.effort,
@@ -1298,10 +1298,10 @@ insert into public.meal_ratings (meal_id, rater_id, reaction)
 values ('ba000000-0000-0000-0000-000000000011', 'b1111111-1111-1111-1111-111111111111', 2)
 on conflict (meal_id, rater_id) where rater_id is not null do update set reaction = excluded.reaction;
 
-insert into public.meals (id, dish_id, created_by, eaten_on, notes, effort, repeat_desire)
+insert into public.meals (id, recipe_id, created_by, eaten_on, notes, effort, repeat_desire)
 values ('ba000000-0000-0000-0000-000000000012', 'e0000000-0000-0000-0000-000000000033', 'a3333333-3333-3333-3333-333333333333', '2025-11-21', 'Cozy Friday brunch-for-dinner shakshuka.', 1, 1)
 on conflict (id) do update set
-    dish_id = excluded.dish_id,
+    recipe_id = excluded.recipe_id,
     eaten_on = excluded.eaten_on,
     notes = excluded.notes,
     effort = excluded.effort,
@@ -1323,10 +1323,10 @@ insert into public.meal_ratings (meal_id, rater_id, reaction)
 values ('ba000000-0000-0000-0000-000000000012', 'a2222222-2222-2222-2222-222222222222', 2)
 on conflict (meal_id, rater_id) where rater_id is not null do update set reaction = excluded.reaction;
 
-insert into public.meals (id, dish_id, created_by, eaten_on, notes, effort, repeat_desire)
+insert into public.meals (id, recipe_id, created_by, eaten_on, notes, effort, repeat_desire)
 values ('ba000000-0000-0000-0000-000000000013', 'e0000000-0000-0000-0000-000000000039', 'f917e487-1f8c-4d3c-b42a-d77f1c19bceb', '2025-11-28', 'Smash burgers on the flat iron. Cheesy and crispy.', 1, 2)
 on conflict (id) do update set
-    dish_id = excluded.dish_id,
+    recipe_id = excluded.recipe_id,
     eaten_on = excluded.eaten_on,
     notes = excluded.notes,
     effort = excluded.effort,
@@ -1364,10 +1364,10 @@ insert into public.meal_ratings (meal_id, rater_id, reaction)
 values ('ba000000-0000-0000-0000-000000000013', 'c1111111-1111-1111-1111-111111111111', 4)
 on conflict (meal_id, rater_id) where rater_id is not null do update set reaction = excluded.reaction;
 
-insert into public.meals (id, dish_id, created_by, eaten_on, notes, effort, repeat_desire)
+insert into public.meals (id, recipe_id, created_by, eaten_on, notes, effort, repeat_desire)
 values ('ba000000-0000-0000-0000-000000000014', 'e0000000-0000-0000-0000-000000000003', 'f917e487-1f8c-4d3c-b42a-d77f1c19bceb', '2025-12-05', 'Slow simmered bolognese ragu after a cold week.', 3, 2)
 on conflict (id) do update set
-    dish_id = excluded.dish_id,
+    recipe_id = excluded.recipe_id,
     eaten_on = excluded.eaten_on,
     notes = excluded.notes,
     effort = excluded.effort,
@@ -1405,10 +1405,10 @@ insert into public.meal_ratings (meal_id, rater_id, reaction)
 values ('ba000000-0000-0000-0000-000000000014', 'c1111111-1111-1111-1111-111111111111', 4)
 on conflict (meal_id, rater_id) where rater_id is not null do update set reaction = excluded.reaction;
 
-insert into public.meals (id, dish_id, created_by, eaten_on, notes, effort, repeat_desire)
+insert into public.meals (id, recipe_id, created_by, eaten_on, notes, effort, repeat_desire)
 values ('ba000000-0000-0000-0000-000000000015', 'e0000000-0000-0000-0000-000000000005', 'f917e487-1f8c-4d3c-b42a-d77f1c19bceb', '2025-12-12', 'Wild mushroom and truffle risotto. Rich and decadent.', 2, 1)
 on conflict (id) do update set
-    dish_id = excluded.dish_id,
+    recipe_id = excluded.recipe_id,
     eaten_on = excluded.eaten_on,
     notes = excluded.notes,
     effort = excluded.effort,
@@ -1430,10 +1430,10 @@ insert into public.meal_ratings (meal_id, rater_id, reaction)
 values ('ba000000-0000-0000-0000-000000000015', 'a2222222-2222-2222-2222-222222222222', 2)
 on conflict (meal_id, rater_id) where rater_id is not null do update set reaction = excluded.reaction;
 
-insert into public.meals (id, dish_id, created_by, eaten_on, notes, effort, repeat_desire)
+insert into public.meals (id, recipe_id, created_by, eaten_on, notes, effort, repeat_desire)
 values ('ba000000-0000-0000-0000-000000000016', 'e0000000-0000-0000-0000-000000000006', 'f917e487-1f8c-4d3c-b42a-d77f1c19bceb', '2025-12-19', 'Pre-holiday birria taco feast! The consommé was so rich.', 3, 2)
 on conflict (id) do update set
-    dish_id = excluded.dish_id,
+    recipe_id = excluded.recipe_id,
     eaten_on = excluded.eaten_on,
     notes = excluded.notes,
     effort = excluded.effort,
@@ -1463,10 +1463,10 @@ insert into public.meal_ratings (meal_id, rater_id, reaction)
 values ('ba000000-0000-0000-0000-000000000016', 'c1111111-1111-1111-1111-111111111111', 4)
 on conflict (meal_id, rater_id) where rater_id is not null do update set reaction = excluded.reaction;
 
-insert into public.meals (id, dish_id, created_by, eaten_on, notes, effort, repeat_desire)
+insert into public.meals (id, recipe_id, created_by, eaten_on, notes, effort, repeat_desire)
 values ('ba000000-0000-0000-0000-000000000017', 'e0000000-0000-0000-0000-000000000012', 'a1111111-1111-1111-1111-111111111111', '2026-01-09', 'First feast of the new year: seared salmon and dill potatoes.', 1, 2)
 on conflict (id) do update set
-    dish_id = excluded.dish_id,
+    recipe_id = excluded.recipe_id,
     eaten_on = excluded.eaten_on,
     notes = excluded.notes,
     effort = excluded.effort,
@@ -1500,10 +1500,10 @@ insert into public.meal_ratings (meal_id, rater_id, reaction)
 values ('ba000000-0000-0000-0000-000000000017', 'b1111111-1111-1111-1111-111111111111', 4)
 on conflict (meal_id, rater_id) where rater_id is not null do update set reaction = excluded.reaction;
 
-insert into public.meals (id, dish_id, created_by, eaten_on, notes, effort, repeat_desire)
+insert into public.meals (id, recipe_id, created_by, eaten_on, notes, effort, repeat_desire)
 values ('ba000000-0000-0000-0000-000000000018', 'e0000000-0000-0000-0000-000000000017', 'a2222222-2222-2222-2222-222222222222', '2026-01-16', 'Tonkotsu ramen night! 10-hour broth was worth every minute.', 3, 2)
 on conflict (id) do update set
-    dish_id = excluded.dish_id,
+    recipe_id = excluded.recipe_id,
     eaten_on = excluded.eaten_on,
     notes = excluded.notes,
     effort = excluded.effort,
@@ -1525,10 +1525,10 @@ insert into public.meal_ratings (meal_id, rater_id, reaction)
 values ('ba000000-0000-0000-0000-000000000018', 'a2222222-2222-2222-2222-222222222222', 4)
 on conflict (meal_id, rater_id) where rater_id is not null do update set reaction = excluded.reaction;
 
-insert into public.meals (id, dish_id, created_by, eaten_on, notes, effort, repeat_desire)
+insert into public.meals (id, recipe_id, created_by, eaten_on, notes, effort, repeat_desire)
 values ('ba000000-0000-0000-0000-000000000019', 'e0000000-0000-0000-0000-000000000024', 'a3333333-3333-3333-3333-333333333333', '2026-01-23', 'Bulgogi beef bowls with extra homemade kimchi.', 1, 2)
 on conflict (id) do update set
-    dish_id = excluded.dish_id,
+    recipe_id = excluded.recipe_id,
     eaten_on = excluded.eaten_on,
     notes = excluded.notes,
     effort = excluded.effort,
@@ -1558,10 +1558,10 @@ insert into public.meal_ratings (meal_id, rater_id, reaction)
 values ('ba000000-0000-0000-0000-000000000019', 'e0000000-0000-0000-0000-000000000001', 3)
 on conflict (meal_id, rater_id) where rater_id is not null do update set reaction = excluded.reaction;
 
-insert into public.meals (id, dish_id, created_by, eaten_on, notes, effort, repeat_desire)
+insert into public.meals (id, recipe_id, created_by, eaten_on, notes, effort, repeat_desire)
 values ('ba000000-0000-0000-0000-000000000020', 'e0000000-0000-0000-0000-000000000027', 'b1111111-1111-1111-1111-111111111111', '2026-02-06', 'Chicken tikka masala and basmati rice.', 2, 2)
 on conflict (id) do update set
-    dish_id = excluded.dish_id,
+    recipe_id = excluded.recipe_id,
     eaten_on = excluded.eaten_on,
     notes = excluded.notes,
     effort = excluded.effort,
@@ -1583,10 +1583,10 @@ insert into public.meal_ratings (meal_id, rater_id, reaction)
 values ('ba000000-0000-0000-0000-000000000020', 'a1111111-1111-1111-1111-111111111111', 4)
 on conflict (meal_id, rater_id) where rater_id is not null do update set reaction = excluded.reaction;
 
-insert into public.meals (id, dish_id, created_by, eaten_on, notes, effort, repeat_desire)
+insert into public.meals (id, recipe_id, created_by, eaten_on, notes, effort, repeat_desire)
 values ('ba000000-0000-0000-0000-000000000021', 'e0000000-0000-0000-0000-000000000030', 'b1111111-1111-1111-1111-111111111111', '2026-02-20', 'Souvlaki skewers with cool cucumber tzatziki.', 1, 1)
 on conflict (id) do update set
-    dish_id = excluded.dish_id,
+    recipe_id = excluded.recipe_id,
     eaten_on = excluded.eaten_on,
     notes = excluded.notes,
     effort = excluded.effort,
@@ -1620,10 +1620,10 @@ insert into public.meal_ratings (meal_id, rater_id, reaction)
 values ('ba000000-0000-0000-0000-000000000021', 'b1111111-1111-1111-1111-111111111111', 3)
 on conflict (meal_id, rater_id) where rater_id is not null do update set reaction = excluded.reaction;
 
-insert into public.meals (id, dish_id, created_by, eaten_on, notes, effort, repeat_desire)
+insert into public.meals (id, recipe_id, created_by, eaten_on, notes, effort, repeat_desire)
 values ('ba000000-0000-0000-0000-000000000022', 'e0000000-0000-0000-0000-000000000036', 'a1111111-1111-1111-1111-111111111111', '2026-03-06', 'Boeuf bourguignon with creamy mash.', 3, 2)
 on conflict (id) do update set
-    dish_id = excluded.dish_id,
+    recipe_id = excluded.recipe_id,
     eaten_on = excluded.eaten_on,
     notes = excluded.notes,
     effort = excluded.effort,
@@ -1661,10 +1661,10 @@ insert into public.meal_ratings (meal_id, rater_id, reaction)
 values ('ba000000-0000-0000-0000-000000000022', 'c1111111-1111-1111-1111-111111111111', 4)
 on conflict (meal_id, rater_id) where rater_id is not null do update set reaction = excluded.reaction;
 
-insert into public.meals (id, dish_id, created_by, eaten_on, notes, effort, repeat_desire)
+insert into public.meals (id, recipe_id, created_by, eaten_on, notes, effort, repeat_desire)
 values ('ba000000-0000-0000-0000-000000000023', 'e0000000-0000-0000-0000-000000000001', 'f917e487-1f8c-4d3c-b42a-d77f1c19bceb', '2026-03-20', 'Friday pizza remake! Cold fermented dough for 48 hours.', 2, 2)
 on conflict (id) do update set
-    dish_id = excluded.dish_id,
+    recipe_id = excluded.recipe_id,
     eaten_on = excluded.eaten_on,
     notes = excluded.notes,
     effort = excluded.effort,
@@ -1686,10 +1686,10 @@ insert into public.meal_ratings (meal_id, rater_id, reaction)
 values ('ba000000-0000-0000-0000-000000000023', 'a1111111-1111-1111-1111-111111111111', 4)
 on conflict (meal_id, rater_id) where rater_id is not null do update set reaction = excluded.reaction;
 
-insert into public.meals (id, dish_id, created_by, eaten_on, notes, effort, repeat_desire)
+insert into public.meals (id, recipe_id, created_by, eaten_on, notes, effort, repeat_desire)
 values ('ba000000-0000-0000-0000-000000000024', 'e0000000-0000-0000-0000-000000000002', 'f917e487-1f8c-4d3c-b42a-d77f1c19bceb', '2026-04-03', 'Carbonara perfection. Perfect glossy sauce.', 1, 2)
 on conflict (id) do update set
-    dish_id = excluded.dish_id,
+    recipe_id = excluded.recipe_id,
     eaten_on = excluded.eaten_on,
     notes = excluded.notes,
     effort = excluded.effort,
@@ -1719,10 +1719,10 @@ insert into public.meal_ratings (meal_id, rater_id, reaction)
 values ('ba000000-0000-0000-0000-000000000024', 'e0000000-0000-0000-0000-000000000001', 4)
 on conflict (meal_id, rater_id) where rater_id is not null do update set reaction = excluded.reaction;
 
-insert into public.meals (id, dish_id, created_by, eaten_on, notes, effort, repeat_desire)
+insert into public.meals (id, recipe_id, created_by, eaten_on, notes, effort, repeat_desire)
 values ('ba000000-0000-0000-0000-000000000025', 'e0000000-0000-0000-0000-000000000008', 'f917e487-1f8c-4d3c-b42a-d77f1c19bceb', '2026-04-17', 'Chicken tinga bowls with pickled onions and avocado.', 2, 1)
 on conflict (id) do update set
-    dish_id = excluded.dish_id,
+    recipe_id = excluded.recipe_id,
     eaten_on = excluded.eaten_on,
     notes = excluded.notes,
     effort = excluded.effort,
@@ -1760,10 +1760,10 @@ insert into public.meal_ratings (meal_id, rater_id, reaction)
 values ('ba000000-0000-0000-0000-000000000025', 'c1111111-1111-1111-1111-111111111111', 2)
 on conflict (meal_id, rater_id) where rater_id is not null do update set reaction = excluded.reaction;
 
-insert into public.meals (id, dish_id, created_by, eaten_on, notes, effort, repeat_desire)
+insert into public.meals (id, recipe_id, created_by, eaten_on, notes, effort, repeat_desire)
 values ('ba000000-0000-0000-0000-000000000026', 'e0000000-0000-0000-0000-000000000014', 'a2222222-2222-2222-2222-222222222222', '2026-05-01', 'Spring curry night with sugar snap peas.', 1, 1)
 on conflict (id) do update set
-    dish_id = excluded.dish_id,
+    recipe_id = excluded.recipe_id,
     eaten_on = excluded.eaten_on,
     notes = excluded.notes,
     effort = excluded.effort,
@@ -1793,10 +1793,10 @@ insert into public.meal_ratings (meal_id, rater_id, reaction)
 values ('ba000000-0000-0000-0000-000000000026', 'b1111111-1111-1111-1111-111111111111', 3)
 on conflict (meal_id, rater_id) where rater_id is not null do update set reaction = excluded.reaction;
 
-insert into public.meals (id, dish_id, created_by, eaten_on, notes, effort, repeat_desire)
+insert into public.meals (id, recipe_id, created_by, eaten_on, notes, effort, repeat_desire)
 values ('ba000000-0000-0000-0000-000000000027', 'e0000000-0000-0000-0000-000000000019', 'a2222222-2222-2222-2222-222222222222', '2026-05-15', 'Teriyaki salmon bowls with edamame.', 1, 1)
 on conflict (id) do update set
-    dish_id = excluded.dish_id,
+    recipe_id = excluded.recipe_id,
     eaten_on = excluded.eaten_on,
     notes = excluded.notes,
     effort = excluded.effort,
@@ -1834,10 +1834,10 @@ insert into public.meal_ratings (meal_id, rater_id, reaction)
 values ('ba000000-0000-0000-0000-000000000027', 'c1111111-1111-1111-1111-111111111111', 3)
 on conflict (meal_id, rater_id) where rater_id is not null do update set reaction = excluded.reaction;
 
-insert into public.meals (id, dish_id, created_by, eaten_on, notes, effort, repeat_desire)
+insert into public.meals (id, recipe_id, created_by, eaten_on, notes, effort, repeat_desire)
 values ('ba000000-0000-0000-0000-000000000028', 'e0000000-0000-0000-0000-000000000022', 'a3333333-3333-3333-3333-333333333333', '2026-05-29', 'Cantonese beef and broccoli stir fry.', 1, 1)
 on conflict (id) do update set
-    dish_id = excluded.dish_id,
+    recipe_id = excluded.recipe_id,
     eaten_on = excluded.eaten_on,
     notes = excluded.notes,
     effort = excluded.effort,
@@ -1859,10 +1859,10 @@ insert into public.meal_ratings (meal_id, rater_id, reaction)
 values ('ba000000-0000-0000-0000-000000000028', 'a3333333-3333-3333-3333-333333333333', 1)
 on conflict (meal_id, rater_id) where rater_id is not null do update set reaction = excluded.reaction;
 
-insert into public.meals (id, dish_id, created_by, eaten_on, notes, effort, repeat_desire)
+insert into public.meals (id, recipe_id, created_by, eaten_on, notes, effort, repeat_desire)
 values ('ba000000-0000-0000-0000-000000000029', 'e0000000-0000-0000-0000-000000000031', 'a1111111-1111-1111-1111-111111111111', '2026-06-12', 'Seafood paella in the garden. Got the socarrat crust just right.', 3, 2)
 on conflict (id) do update set
-    dish_id = excluded.dish_id,
+    recipe_id = excluded.recipe_id,
     eaten_on = excluded.eaten_on,
     notes = excluded.notes,
     effort = excluded.effort,
@@ -1900,10 +1900,10 @@ insert into public.meal_ratings (meal_id, rater_id, reaction)
 values ('ba000000-0000-0000-0000-000000000029', 'c1111111-1111-1111-1111-111111111111', 4)
 on conflict (meal_id, rater_id) where rater_id is not null do update set reaction = excluded.reaction;
 
-insert into public.meals (id, dish_id, created_by, eaten_on, notes, effort, repeat_desire)
+insert into public.meals (id, recipe_id, created_by, eaten_on, notes, effort, repeat_desire)
 values ('ba000000-0000-0000-0000-000000000030', 'e0000000-0000-0000-0000-000000000039', 'f917e487-1f8c-4d3c-b42a-d77f1c19bceb', '2026-06-26', 'Midsummer weekend smash burger cookout.', 1, 2)
 on conflict (id) do update set
-    dish_id = excluded.dish_id,
+    recipe_id = excluded.recipe_id,
     eaten_on = excluded.eaten_on,
     notes = excluded.notes,
     effort = excluded.effort,
@@ -1933,10 +1933,10 @@ insert into public.meal_ratings (meal_id, rater_id, reaction)
 values ('ba000000-0000-0000-0000-000000000030', 'e0000000-0000-0000-0000-000000000001', 4)
 on conflict (meal_id, rater_id) where rater_id is not null do update set reaction = excluded.reaction;
 
-insert into public.meals (id, dish_id, created_by, eaten_on, notes, effort, repeat_desire)
+insert into public.meals (id, recipe_id, created_by, eaten_on, notes, effort, repeat_desire)
 values ('ba000000-0000-0000-0000-000000000031', 'e0000000-0000-0000-0000-000000000007', 'f917e487-1f8c-4d3c-b42a-d77f1c19bceb', '2026-07-13', 'Summer retreat day 1: Baja crispy fish tacos.', 2, 2)
 on conflict (id) do update set
-    dish_id = excluded.dish_id,
+    recipe_id = excluded.recipe_id,
     eaten_on = excluded.eaten_on,
     notes = excluded.notes,
     effort = excluded.effort,
@@ -1974,10 +1974,10 @@ insert into public.meal_ratings (meal_id, rater_id, reaction)
 values ('ba000000-0000-0000-0000-000000000031', 'c1111111-1111-1111-1111-111111111111', 3)
 on conflict (meal_id, rater_id) where rater_id is not null do update set reaction = excluded.reaction;
 
-insert into public.meals (id, dish_id, created_by, eaten_on, notes, effort, repeat_desire)
+insert into public.meals (id, recipe_id, created_by, eaten_on, notes, effort, repeat_desire)
 values ('ba000000-0000-0000-0000-000000000032', 'e0000000-0000-0000-0000-000000000010', 'f917e487-1f8c-4d3c-b42a-d77f1c19bceb', '2026-07-14', 'Summer retreat day 2: Fresh guacamole and pico bar.', 0, 1)
 on conflict (id) do update set
-    dish_id = excluded.dish_id,
+    recipe_id = excluded.recipe_id,
     eaten_on = excluded.eaten_on,
     notes = excluded.notes,
     effort = excluded.effort,
@@ -2015,10 +2015,10 @@ insert into public.meal_ratings (meal_id, rater_id, reaction)
 values ('ba000000-0000-0000-0000-000000000032', 'c1111111-1111-1111-1111-111111111111', 3)
 on conflict (meal_id, rater_id) where rater_id is not null do update set reaction = excluded.reaction;
 
-insert into public.meals (id, dish_id, created_by, eaten_on, notes, effort, repeat_desire)
+insert into public.meals (id, recipe_id, created_by, eaten_on, notes, effort, repeat_desire)
 values ('ba000000-0000-0000-0000-000000000033', 'e0000000-0000-0000-0000-000000000032', 'a1111111-1111-1111-1111-111111111111', '2026-07-15', 'Summer retreat day 3: Sizzling gambas al ajillo with crusty bread.', 0, 1)
 on conflict (id) do update set
-    dish_id = excluded.dish_id,
+    recipe_id = excluded.recipe_id,
     eaten_on = excluded.eaten_on,
     notes = excluded.notes,
     effort = excluded.effort,
@@ -2044,10 +2044,10 @@ insert into public.meal_ratings (meal_id, rater_id, reaction)
 values ('ba000000-0000-0000-0000-000000000033', 'a3333333-3333-3333-3333-333333333333', 3)
 on conflict (meal_id, rater_id) where rater_id is not null do update set reaction = excluded.reaction;
 
-insert into public.meals (id, dish_id, created_by, eaten_on, notes, effort, repeat_desire)
+insert into public.meals (id, recipe_id, created_by, eaten_on, notes, effort, repeat_desire)
 values ('ba000000-0000-0000-0000-000000000034', 'e0000000-0000-0000-0000-000000000039', 'f917e487-1f8c-4d3c-b42a-d77f1c19bceb', '2026-07-16', 'Summer retreat day 4: Double smash burgers on the grill.', 1, 2)
 on conflict (id) do update set
-    dish_id = excluded.dish_id,
+    recipe_id = excluded.recipe_id,
     eaten_on = excluded.eaten_on,
     notes = excluded.notes,
     effort = excluded.effort,
@@ -2077,10 +2077,10 @@ insert into public.meal_ratings (meal_id, rater_id, reaction)
 values ('ba000000-0000-0000-0000-000000000034', 'c1111111-1111-1111-1111-111111111111', 3)
 on conflict (meal_id, rater_id) where rater_id is not null do update set reaction = excluded.reaction;
 
-insert into public.meals (id, dish_id, created_by, eaten_on, notes, effort, repeat_desire)
+insert into public.meals (id, recipe_id, created_by, eaten_on, notes, effort, repeat_desire)
 values ('ba000000-0000-0000-0000-000000000035', 'e0000000-0000-0000-0000-000000000012', 'a1111111-1111-1111-1111-111111111111', '2026-07-17', 'Summer retreat day 5: Pan-seared salmon with fresh garden dill.', 1, 2)
 on conflict (id) do update set
-    dish_id = excluded.dish_id,
+    recipe_id = excluded.recipe_id,
     eaten_on = excluded.eaten_on,
     notes = excluded.notes,
     effort = excluded.effort,
@@ -2114,10 +2114,10 @@ insert into public.meal_ratings (meal_id, rater_id, reaction)
 values ('ba000000-0000-0000-0000-000000000035', 'b1111111-1111-1111-1111-111111111111', 3)
 on conflict (meal_id, rater_id) where rater_id is not null do update set reaction = excluded.reaction;
 
-insert into public.meals (id, dish_id, created_by, eaten_on, notes, effort, repeat_desire)
+insert into public.meals (id, recipe_id, created_by, eaten_on, notes, effort, repeat_desire)
 values ('ba000000-0000-0000-0000-000000000036', 'e0000000-0000-0000-0000-000000000004', 'f917e487-1f8c-4d3c-b42a-d77f1c19bceb', '2026-08-07', 'Fresh basil pesto penne from homegrown basil.', 0, 2)
 on conflict (id) do update set
-    dish_id = excluded.dish_id,
+    recipe_id = excluded.recipe_id,
     eaten_on = excluded.eaten_on,
     notes = excluded.notes,
     effort = excluded.effort,
@@ -2147,10 +2147,10 @@ insert into public.meal_ratings (meal_id, rater_id, reaction)
 values ('ba000000-0000-0000-0000-000000000036', 'e0000000-0000-0000-0000-000000000001', 3)
 on conflict (meal_id, rater_id) where rater_id is not null do update set reaction = excluded.reaction;
 
-insert into public.meals (id, dish_id, created_by, eaten_on, notes, effort, repeat_desire)
+insert into public.meals (id, recipe_id, created_by, eaten_on, notes, effort, repeat_desire)
 values ('ba000000-0000-0000-0000-000000000037', 'e0000000-0000-0000-0000-000000000006', 'f917e487-1f8c-4d3c-b42a-d77f1c19bceb', '2026-08-21', 'Birria tacos return. Everyone''s favorite crowd-pleaser.', 3, 2)
 on conflict (id) do update set
-    dish_id = excluded.dish_id,
+    recipe_id = excluded.recipe_id,
     eaten_on = excluded.eaten_on,
     notes = excluded.notes,
     effort = excluded.effort,
@@ -2172,10 +2172,10 @@ insert into public.meal_ratings (meal_id, rater_id, reaction)
 values ('ba000000-0000-0000-0000-000000000037', 'a3333333-3333-3333-3333-333333333333', 4)
 on conflict (meal_id, rater_id) where rater_id is not null do update set reaction = excluded.reaction;
 
-insert into public.meals (id, dish_id, created_by, eaten_on, notes, effort, repeat_desire)
+insert into public.meals (id, recipe_id, created_by, eaten_on, notes, effort, repeat_desire)
 values ('ba000000-0000-0000-0000-000000000038', 'e0000000-0000-0000-0000-000000000001', 'f917e487-1f8c-4d3c-b42a-d77f1c19bceb', '2026-08-28', 'End of summer pizza night on the deck.', 2, 2)
 on conflict (id) do update set
-    dish_id = excluded.dish_id,
+    recipe_id = excluded.recipe_id,
     eaten_on = excluded.eaten_on,
     notes = excluded.notes,
     effort = excluded.effort,
@@ -2205,10 +2205,10 @@ insert into public.meal_ratings (meal_id, rater_id, reaction)
 values ('ba000000-0000-0000-0000-000000000038', 'b1111111-1111-1111-1111-111111111111', 4)
 on conflict (meal_id, rater_id) where rater_id is not null do update set reaction = excluded.reaction;
 
-insert into public.meals (id, dish_id, created_by, eaten_on, notes, effort, repeat_desire)
+insert into public.meals (id, recipe_id, created_by, eaten_on, notes, effort, repeat_desire)
 values ('ba000000-0000-0000-0000-000000000039', 'e0000000-0000-0000-0000-000000000003', 'f917e487-1f8c-4d3c-b42a-d77f1c19bceb', '2025-09-14', 'First Sunday supper: slow-simmered bolognese.', 3, 2)
 on conflict (id) do update set
-    dish_id = excluded.dish_id,
+    recipe_id = excluded.recipe_id,
     eaten_on = excluded.eaten_on,
     notes = excluded.notes,
     effort = excluded.effort,
@@ -2238,10 +2238,10 @@ insert into public.meal_ratings (meal_id, rater_id, reaction)
 values ('ba000000-0000-0000-0000-000000000039', 'a2222222-2222-2222-2222-222222222222', 3)
 on conflict (meal_id, rater_id) where rater_id is not null do update set reaction = excluded.reaction;
 
-insert into public.meals (id, dish_id, created_by, eaten_on, notes, effort, repeat_desire)
+insert into public.meals (id, recipe_id, created_by, eaten_on, notes, effort, repeat_desire)
 values ('ba000000-0000-0000-0000-000000000040', 'e0000000-0000-0000-0000-000000000011', 'a1111111-1111-1111-1111-111111111111', '2025-10-05', 'Sunday meatballs with mash and pickled cucumbers.', 2, 2)
 on conflict (id) do update set
-    dish_id = excluded.dish_id,
+    recipe_id = excluded.recipe_id,
     eaten_on = excluded.eaten_on,
     notes = excluded.notes,
     effort = excluded.effort,
@@ -2271,10 +2271,10 @@ insert into public.meal_ratings (meal_id, rater_id, reaction)
 values ('ba000000-0000-0000-0000-000000000040', 'e0000000-0000-0000-0000-000000000001', 4)
 on conflict (meal_id, rater_id) where rater_id is not null do update set reaction = excluded.reaction;
 
-insert into public.meals (id, dish_id, created_by, eaten_on, notes, effort, repeat_desire)
+insert into public.meals (id, recipe_id, created_by, eaten_on, notes, effort, repeat_desire)
 values ('ba000000-0000-0000-0000-000000000041', 'e0000000-0000-0000-0000-000000000037', 'a1111111-1111-1111-1111-111111111111', '2025-10-26', 'Classic coq au vin with pearl onions and red wine.', 3, 2)
 on conflict (id) do update set
-    dish_id = excluded.dish_id,
+    recipe_id = excluded.recipe_id,
     eaten_on = excluded.eaten_on,
     notes = excluded.notes,
     effort = excluded.effort,
@@ -2312,10 +2312,10 @@ insert into public.meal_ratings (meal_id, rater_id, reaction)
 values ('ba000000-0000-0000-0000-000000000041', 'e0000000-0000-0000-0000-000000000001', 4)
 on conflict (meal_id, rater_id) where rater_id is not null do update set reaction = excluded.reaction;
 
-insert into public.meals (id, dish_id, created_by, eaten_on, notes, effort, repeat_desire)
+insert into public.meals (id, recipe_id, created_by, eaten_on, notes, effort, repeat_desire)
 values ('ba000000-0000-0000-0000-000000000042', 'e0000000-0000-0000-0000-000000000005', 'f917e487-1f8c-4d3c-b42a-d77f1c19bceb', '2025-11-16', 'Truffle risotto on a chilly Sunday evening.', 2, 1)
 on conflict (id) do update set
-    dish_id = excluded.dish_id,
+    recipe_id = excluded.recipe_id,
     eaten_on = excluded.eaten_on,
     notes = excluded.notes,
     effort = excluded.effort,
@@ -2345,10 +2345,10 @@ insert into public.meal_ratings (meal_id, rater_id, reaction)
 values ('ba000000-0000-0000-0000-000000000042', 'a1111111-1111-1111-1111-111111111111', 2)
 on conflict (meal_id, rater_id) where rater_id is not null do update set reaction = excluded.reaction;
 
-insert into public.meals (id, dish_id, created_by, eaten_on, notes, effort, repeat_desire)
+insert into public.meals (id, recipe_id, created_by, eaten_on, notes, effort, repeat_desire)
 values ('ba000000-0000-0000-0000-000000000043', 'e0000000-0000-0000-0000-000000000036', 'a1111111-1111-1111-1111-111111111111', '2025-12-07', 'Boeuf bourguignon cooked all afternoon.', 3, 2)
 on conflict (id) do update set
-    dish_id = excluded.dish_id,
+    recipe_id = excluded.recipe_id,
     eaten_on = excluded.eaten_on,
     notes = excluded.notes,
     effort = excluded.effort,
@@ -2382,10 +2382,10 @@ insert into public.meal_ratings (meal_id, rater_id, reaction)
 values ('ba000000-0000-0000-0000-000000000043', 'a2222222-2222-2222-2222-222222222222', 4)
 on conflict (meal_id, rater_id) where rater_id is not null do update set reaction = excluded.reaction;
 
-insert into public.meals (id, dish_id, created_by, eaten_on, notes, effort, repeat_desire)
+insert into public.meals (id, recipe_id, created_by, eaten_on, notes, effort, repeat_desire)
 values ('ba000000-0000-0000-0000-000000000044', 'e0000000-0000-0000-0000-000000000040', 'f917e487-1f8c-4d3c-b42a-d77f1c19bceb', '2025-12-28', 'Smoked pulled pork sliders for post-holiday gathering.', 3, 2)
 on conflict (id) do update set
-    dish_id = excluded.dish_id,
+    recipe_id = excluded.recipe_id,
     eaten_on = excluded.eaten_on,
     notes = excluded.notes,
     effort = excluded.effort,
@@ -2423,10 +2423,10 @@ insert into public.meal_ratings (meal_id, rater_id, reaction)
 values ('ba000000-0000-0000-0000-000000000044', 'e0000000-0000-0000-0000-000000000001', 4)
 on conflict (meal_id, rater_id) where rater_id is not null do update set reaction = excluded.reaction;
 
-insert into public.meals (id, dish_id, created_by, eaten_on, notes, effort, repeat_desire)
+insert into public.meals (id, recipe_id, created_by, eaten_on, notes, effort, repeat_desire)
 values ('ba000000-0000-0000-0000-000000000045', 'e0000000-0000-0000-0000-000000000017', 'a2222222-2222-2222-2222-222222222222', '2026-01-18', 'Sunday ramen night. Deep, comforting tonkotsu broth.', 3, 2)
 on conflict (id) do update set
-    dish_id = excluded.dish_id,
+    recipe_id = excluded.recipe_id,
     eaten_on = excluded.eaten_on,
     notes = excluded.notes,
     effort = excluded.effort,
@@ -2464,10 +2464,10 @@ insert into public.meal_ratings (meal_id, rater_id, reaction)
 values ('ba000000-0000-0000-0000-000000000045', 'e0000000-0000-0000-0000-000000000001', 4)
 on conflict (meal_id, rater_id) where rater_id is not null do update set reaction = excluded.reaction;
 
-insert into public.meals (id, dish_id, created_by, eaten_on, notes, effort, repeat_desire)
+insert into public.meals (id, recipe_id, created_by, eaten_on, notes, effort, repeat_desire)
 values ('ba000000-0000-0000-0000-000000000046', 'e0000000-0000-0000-0000-000000000026', 'b1111111-1111-1111-1111-111111111111', '2026-02-08', 'Butter chicken with fragrant cumin rice.', 2, 2)
 on conflict (id) do update set
-    dish_id = excluded.dish_id,
+    recipe_id = excluded.recipe_id,
     eaten_on = excluded.eaten_on,
     notes = excluded.notes,
     effort = excluded.effort,
@@ -2497,10 +2497,10 @@ insert into public.meal_ratings (meal_id, rater_id, reaction)
 values ('ba000000-0000-0000-0000-000000000046', 'e0000000-0000-0000-0000-000000000001', 4)
 on conflict (meal_id, rater_id) where rater_id is not null do update set reaction = excluded.reaction;
 
-insert into public.meals (id, dish_id, created_by, eaten_on, notes, effort, repeat_desire)
+insert into public.meals (id, recipe_id, created_by, eaten_on, notes, effort, repeat_desire)
 values ('ba000000-0000-0000-0000-000000000047', 'e0000000-0000-0000-0000-000000000029', 'b1111111-1111-1111-1111-111111111111', '2026-03-01', 'Greek lemon roast chicken and potatoes.', 2, 1)
 on conflict (id) do update set
-    dish_id = excluded.dish_id,
+    recipe_id = excluded.recipe_id,
     eaten_on = excluded.eaten_on,
     notes = excluded.notes,
     effort = excluded.effort,
@@ -2538,10 +2538,10 @@ insert into public.meal_ratings (meal_id, rater_id, reaction)
 values ('ba000000-0000-0000-0000-000000000047', 'e0000000-0000-0000-0000-000000000001', 2)
 on conflict (meal_id, rater_id) where rater_id is not null do update set reaction = excluded.reaction;
 
-insert into public.meals (id, dish_id, created_by, eaten_on, notes, effort, repeat_desire)
+insert into public.meals (id, recipe_id, created_by, eaten_on, notes, effort, repeat_desire)
 values ('ba000000-0000-0000-0000-000000000048', 'e0000000-0000-0000-0000-000000000038', 'a1111111-1111-1111-1111-111111111111', '2026-03-22', 'Classic layered ratatouille provençale.', 2, 1)
 on conflict (id) do update set
-    dish_id = excluded.dish_id,
+    recipe_id = excluded.recipe_id,
     eaten_on = excluded.eaten_on,
     notes = excluded.notes,
     effort = excluded.effort,
@@ -2579,10 +2579,10 @@ insert into public.meal_ratings (meal_id, rater_id, reaction)
 values ('ba000000-0000-0000-0000-000000000048', 'e0000000-0000-0000-0000-000000000001', 2)
 on conflict (meal_id, rater_id) where rater_id is not null do update set reaction = excluded.reaction;
 
-insert into public.meals (id, dish_id, created_by, eaten_on, notes, effort, repeat_desire)
+insert into public.meals (id, recipe_id, created_by, eaten_on, notes, effort, repeat_desire)
 values ('ba000000-0000-0000-0000-000000000049', 'e0000000-0000-0000-0000-000000000031', 'a1111111-1111-1111-1111-111111111111', '2026-04-12', 'Sunday seafood paella with fresh mussels and prawns.', 3, 2)
 on conflict (id) do update set
-    dish_id = excluded.dish_id,
+    recipe_id = excluded.recipe_id,
     eaten_on = excluded.eaten_on,
     notes = excluded.notes,
     effort = excluded.effort,
@@ -2604,10 +2604,10 @@ insert into public.meal_ratings (meal_id, rater_id, reaction)
 values ('ba000000-0000-0000-0000-000000000049', 'b3333333-3333-3333-3333-333333333333', 4)
 on conflict (meal_id, rater_id) where rater_id is not null do update set reaction = excluded.reaction;
 
-insert into public.meals (id, dish_id, created_by, eaten_on, notes, effort, repeat_desire)
+insert into public.meals (id, recipe_id, created_by, eaten_on, notes, effort, repeat_desire)
 values ('ba000000-0000-0000-0000-000000000050', 'e0000000-0000-0000-0000-000000000009', 'f917e487-1f8c-4d3c-b42a-d77f1c19bceb', '2026-05-03', 'Black bean and sweet corn enchiladas.', 2, 1)
 on conflict (id) do update set
-    dish_id = excluded.dish_id,
+    recipe_id = excluded.recipe_id,
     eaten_on = excluded.eaten_on,
     notes = excluded.notes,
     effort = excluded.effort,
@@ -2637,10 +2637,10 @@ insert into public.meal_ratings (meal_id, rater_id, reaction)
 values ('ba000000-0000-0000-0000-000000000050', 'a2222222-2222-2222-2222-222222222222', -1)
 on conflict (meal_id, rater_id) where rater_id is not null do update set reaction = excluded.reaction;
 
-insert into public.meals (id, dish_id, created_by, eaten_on, notes, effort, repeat_desire)
+insert into public.meals (id, recipe_id, created_by, eaten_on, notes, effort, repeat_desire)
 values ('ba000000-0000-0000-0000-000000000051', 'e0000000-0000-0000-0000-000000000035', 'a3333333-3333-3333-3333-333333333333', '2026-05-24', 'Slow-roasted lamb shawarma feast.', 3, 2)
 on conflict (id) do update set
-    dish_id = excluded.dish_id,
+    recipe_id = excluded.recipe_id,
     eaten_on = excluded.eaten_on,
     notes = excluded.notes,
     effort = excluded.effort,
@@ -2678,10 +2678,10 @@ insert into public.meal_ratings (meal_id, rater_id, reaction)
 values ('ba000000-0000-0000-0000-000000000051', 'e0000000-0000-0000-0000-000000000001', 4)
 on conflict (meal_id, rater_id) where rater_id is not null do update set reaction = excluded.reaction;
 
-insert into public.meals (id, dish_id, created_by, eaten_on, notes, effort, repeat_desire)
+insert into public.meals (id, recipe_id, created_by, eaten_on, notes, effort, repeat_desire)
 values ('ba000000-0000-0000-0000-000000000052', 'e0000000-0000-0000-0000-000000000018', 'a2222222-2222-2222-2222-222222222222', '2026-06-14', 'Chicken katsu curry with Japanese pickles.', 2, 2)
 on conflict (id) do update set
-    dish_id = excluded.dish_id,
+    recipe_id = excluded.recipe_id,
     eaten_on = excluded.eaten_on,
     notes = excluded.notes,
     effort = excluded.effort,
@@ -2711,10 +2711,10 @@ insert into public.meal_ratings (meal_id, rater_id, reaction)
 values ('ba000000-0000-0000-0000-000000000052', 'e0000000-0000-0000-0000-000000000001', 4)
 on conflict (meal_id, rater_id) where rater_id is not null do update set reaction = excluded.reaction;
 
-insert into public.meals (id, dish_id, created_by, eaten_on, notes, effort, repeat_desire)
+insert into public.meals (id, recipe_id, created_by, eaten_on, notes, effort, repeat_desire)
 values ('ba000000-0000-0000-0000-000000000053', 'e0000000-0000-0000-0000-000000000039', 'f917e487-1f8c-4d3c-b42a-d77f1c19bceb', '2026-07-19', 'Summer Sunday smash burgers in the backyard.', 1, 2)
 on conflict (id) do update set
-    dish_id = excluded.dish_id,
+    recipe_id = excluded.recipe_id,
     eaten_on = excluded.eaten_on,
     notes = excluded.notes,
     effort = excluded.effort,
@@ -2748,10 +2748,10 @@ insert into public.meal_ratings (meal_id, rater_id, reaction)
 values ('ba000000-0000-0000-0000-000000000053', 'a2222222-2222-2222-2222-222222222222', 3)
 on conflict (meal_id, rater_id) where rater_id is not null do update set reaction = excluded.reaction;
 
-insert into public.meals (id, dish_id, created_by, eaten_on, notes, effort, repeat_desire)
+insert into public.meals (id, recipe_id, created_by, eaten_on, notes, effort, repeat_desire)
 values ('ba000000-0000-0000-0000-000000000054', 'e0000000-0000-0000-0000-000000000003', 'f917e487-1f8c-4d3c-b42a-d77f1c19bceb', '2026-08-23', 'End of summer bolognese tradition.', 3, 2)
 on conflict (id) do update set
-    dish_id = excluded.dish_id,
+    recipe_id = excluded.recipe_id,
     eaten_on = excluded.eaten_on,
     notes = excluded.notes,
     effort = excluded.effort,
@@ -2789,10 +2789,10 @@ insert into public.meal_ratings (meal_id, rater_id, reaction)
 values ('ba000000-0000-0000-0000-000000000054', 'e0000000-0000-0000-0000-000000000001', 4)
 on conflict (meal_id, rater_id) where rater_id is not null do update set reaction = excluded.reaction;
 
-insert into public.meals (id, dish_id, created_by, eaten_on, notes, effort, repeat_desire)
+insert into public.meals (id, recipe_id, created_by, eaten_on, notes, effort, repeat_desire)
 values ('ba000000-0000-0000-0000-000000000055', 'e0000000-0000-0000-0000-000000000006', 'f917e487-1f8c-4d3c-b42a-d77f1c19bceb', '2025-10-18', 'Autumn taco feast: slow braised birria beef tacos with rich consommé.', 3, 2)
 on conflict (id) do update set
-    dish_id = excluded.dish_id,
+    recipe_id = excluded.recipe_id,
     eaten_on = excluded.eaten_on,
     notes = excluded.notes,
     effort = excluded.effort,
@@ -2830,10 +2830,10 @@ insert into public.meal_ratings (meal_id, rater_id, reaction)
 values ('ba000000-0000-0000-0000-000000000055', 'e0000000-0000-0000-0000-000000000001', 4)
 on conflict (meal_id, rater_id) where rater_id is not null do update set reaction = excluded.reaction;
 
-insert into public.meals (id, dish_id, created_by, eaten_on, notes, effort, repeat_desire)
+insert into public.meals (id, recipe_id, created_by, eaten_on, notes, effort, repeat_desire)
 values ('ba000000-0000-0000-0000-000000000056', 'e0000000-0000-0000-0000-000000000033', 'a3333333-3333-3333-3333-333333333333', '2026-01-24', 'Winter tapas session: spicy shakshuka and warm flatbread.', 1, 1)
 on conflict (id) do update set
-    dish_id = excluded.dish_id,
+    recipe_id = excluded.recipe_id,
     eaten_on = excluded.eaten_on,
     notes = excluded.notes,
     effort = excluded.effort,
@@ -2867,10 +2867,10 @@ insert into public.meal_ratings (meal_id, rater_id, reaction)
 values ('ba000000-0000-0000-0000-000000000056', 'a1111111-1111-1111-1111-111111111111', 2)
 on conflict (meal_id, rater_id) where rater_id is not null do update set reaction = excluded.reaction;
 
-insert into public.meals (id, dish_id, created_by, eaten_on, notes, effort, repeat_desire)
+insert into public.meals (id, recipe_id, created_by, eaten_on, notes, effort, repeat_desire)
 values ('ba000000-0000-0000-0000-000000000057', 'e0000000-0000-0000-0000-000000000032', 'a1111111-1111-1111-1111-111111111111', '2026-04-25', 'Spring tapas night: sizzling gambas al ajillo and crusty baguettes.', 0, 1)
 on conflict (id) do update set
-    dish_id = excluded.dish_id,
+    recipe_id = excluded.recipe_id,
     eaten_on = excluded.eaten_on,
     notes = excluded.notes,
     effort = excluded.effort,
@@ -2908,10 +2908,10 @@ insert into public.meal_ratings (meal_id, rater_id, reaction)
 values ('ba000000-0000-0000-0000-000000000057', 'e0000000-0000-0000-0000-000000000001', 3)
 on conflict (meal_id, rater_id) where rater_id is not null do update set reaction = excluded.reaction;
 
-insert into public.meals (id, dish_id, created_by, eaten_on, notes, effort, repeat_desire)
+insert into public.meals (id, recipe_id, created_by, eaten_on, notes, effort, repeat_desire)
 values ('ba000000-0000-0000-0000-000000000058', 'e0000000-0000-0000-0000-000000000031', 'a1111111-1111-1111-1111-111111111111', '2026-07-25', 'Summer grand paella: seafood paella cooked over outdoor burner.', 3, 2)
 on conflict (id) do update set
-    dish_id = excluded.dish_id,
+    recipe_id = excluded.recipe_id,
     eaten_on = excluded.eaten_on,
     notes = excluded.notes,
     effort = excluded.effort,
@@ -2972,5 +2972,5 @@ on conflict (meal_id, party_id) do nothing;
 update public.notifications set read_at = now() where read_at is null;
 
 -- 8. Servings on the seeded recipes (local data only; the column comes from
--- 20260907210000_add_dish_serves.sql, so no migration is needed)
-update public.dishes set serves = 4 where serves is null;
+-- 20260907210000_add_recipe_serves.sql, so no migration is needed)
+update public.recipes set serves = 4 where serves is null;

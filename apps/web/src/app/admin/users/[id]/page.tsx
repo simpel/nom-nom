@@ -38,13 +38,13 @@ export default async function UserDetailPage({ params }: { params: Promise<{ id:
 
   const { data: loggedMeals } = await adminSupabase
     .from('meals')
-    .select('id, eaten_on, dishes ( name, cuisine, effort, health_score )')
+    .select('id, eaten_on, recipes ( name, cuisine, effort, health_score )')
     .eq('created_by', id)
     .order('eaten_on', { ascending: false })
 
   const { data: myRatings } = await adminSupabase
     .from('meal_ratings')
-    .select('meal_id, score, created_at, meals ( eaten_on, dishes ( name, cuisine, effort, ingredients, health_score ) )')
+    .select('meal_id, score, created_at, meals ( eaten_on, recipes ( name, cuisine, effort, ingredients, health_score ) )')
     .eq('rater_id', id)
     .order('created_at', { ascending: false })
 
@@ -64,7 +64,7 @@ export default async function UserDetailPage({ params }: { params: Promise<{ id:
 
   const { data: favorites } = await adminSupabase
     .from('recipe_favorites')
-    .select('recipe_id, dishes ( id, name, cuisine )')
+    .select('recipe_id, recipes ( id, name, cuisine )')
     .eq('user_id', id)
 
   const { data: insight } = await adminSupabase
@@ -101,7 +101,7 @@ export default async function UserDetailPage({ params }: { params: Promise<{ id:
     mealsPerWeek,
     isOnboarded,
     isAtRisk,
-    healthScores: (loggedMeals || []).map(m => (m as any).dishes?.health_score).filter((s: any) => s != null)
+    healthScores: (loggedMeals || []).map(m => (m as any).recipes?.health_score).filter((s: any) => s != null)
   }
 
   // --- Taste profile & pickiness ---
@@ -121,17 +121,17 @@ export default async function UserDetailPage({ params }: { params: Promise<{ id:
   for (const r of myRatings || []) {
     const userScore = ratingScore(r.score)
     if (userScore === null) continue
-    const dish = (r as any).meals?.dishes
-    if (!dish) continue
+    const recipe = (r as any).meals?.recipes
+    if (!recipe) continue
 
-    if (dish.cuisine) {
-      const key = dish.cuisine.trim()
+    if (recipe.cuisine) {
+      const key = recipe.cuisine.trim()
       if (!cuisineStats[key]) cuisineStats[key] = []
       cuisineStats[key].push(userScore)
     }
-    if (dish.effort !== null && dish.effort !== undefined) {
-      if (!effortStats[dish.effort]) effortStats[dish.effort] = []
-      effortStats[dish.effort].push(userScore)
+    if (recipe.effort !== null && recipe.effort !== undefined) {
+      if (!effortStats[recipe.effort]) effortStats[recipe.effort] = []
+      effortStats[recipe.effort].push(userScore)
     }
 
     const consensus = consensusByMeal.get(r.meal_id)
@@ -150,7 +150,7 @@ export default async function UserDetailPage({ params }: { params: Promise<{ id:
     .sort((a, b) => b.count - a.count)
 
   // Ingredient flavor profile: server-aggregated over canonicalized ingredients
-  // (see get_flavor_profile / dish_ingredients_canonical) instead of raw-text stats.
+  // (see get_flavor_profile / recipe_ingredients_canonical) instead of raw-text stats.
   const { data: flavorProfile } = await adminSupabase
     .rpc('get_flavor_profile', { p_scope: 'person', p_id: id })
 
@@ -214,7 +214,7 @@ export default async function UserDetailPage({ params }: { params: Promise<{ id:
     engagement,
     tasteProfile,
     parties,
-    favorites: (favorites || []).map((f: any) => f.dishes).filter(Boolean),
+    favorites: (favorites || []).map((f: any) => f.recipes).filter(Boolean),
     insight,
     insightNeedsRefresh,
     logs: logs || []

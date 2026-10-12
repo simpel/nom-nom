@@ -11,7 +11,7 @@ extension AppNotification {
         if let party = matchedParty(in: store) {
             return .avatar(Avatar(party: party, size: .sm, decorative: true))
         }
-        if let dishID, let recipe = store.dish(dishID) {
+        if let recipeID, let recipe = store.recipe(recipeID) {
             return .photo(.recipe(recipe))
         }
         return .icon(symbol)

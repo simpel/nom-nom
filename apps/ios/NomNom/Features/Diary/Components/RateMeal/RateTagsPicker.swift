@@ -2,7 +2,7 @@ import SwiftUI
 
 /// What stood out, as TagToggles grouped under SectionHeaders (Flavour, Texture,
 /// Cooking, Feel; Why for Can't eat). The options already fit the verdict and the
-/// dish (`FoodStore.ratingTagOptions`), in order.
+/// recipe (`FoodStore.ratingTagOptions`), in order.
 struct RateTagsPicker: View {
     @Binding var tags: Set<String>
     let options: [RatingTagOption]

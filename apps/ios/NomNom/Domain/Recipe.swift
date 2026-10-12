@@ -18,7 +18,7 @@ struct Recipe: Identifiable, Hashable, Decodable {
     var instructions: [String]
     /// Cook mode's per-step timers and ingredients, aligned with `instructions`.
     var instructionDetails: [RecipeStepDetail]?
-    /// Paths to dish cover photos in `recipe-photos` storage bucket.
+    /// Paths to recipe cover photos in `recipe-photos` storage bucket.
     var photoPaths: [String]
     /// Primary cover photo path.
     var photoPath: String? { photoPaths.first }
@@ -45,8 +45,8 @@ struct Recipe: Identifiable, Hashable, Decodable {
     /// LLM-normalized core ingredient categories from the health analysis pass (see
     /// `HealthIndex.canonicalIngredients`). Empty until the recipe has been analyzed.
     var canonicalIngredients: [String]
-    /// Universal taxonomy reference to dish_kind (e.g. stew, soup, pasta).
-    var dishKindID: UUID?
+    /// Universal taxonomy reference to recipe_kind (e.g. stew, soup, pasta).
+    var recipeKindID: UUID?
     /// Whether the recipe is public and visible to other dinner parties.
     var isPublic: Bool
     var isDeleted: Bool
@@ -85,7 +85,7 @@ struct Recipe: Identifiable, Hashable, Decodable {
         case healthRationale = "health_rationale"
         case healthBreakdown = "health_breakdown"
         case canonicalIngredients = "canonical_ingredients"
-        case dishKindID = "dish_kind_id"
+        case recipeKindID = "recipe_kind_id"
         case isPublic = "is_public"
         case isDeleted = "is_deleted"
         case createdAt = "created_at"
@@ -116,7 +116,7 @@ struct Recipe: Identifiable, Hashable, Decodable {
         healthRationale = try container.decodeIfPresent(String.self, forKey: .healthRationale)
         healthBreakdown = try container.decodeIfPresent(HealthBreakdown.self, forKey: .healthBreakdown)
         canonicalIngredients = try container.decodeIfPresent([String].self, forKey: .canonicalIngredients) ?? []
-        dishKindID = try container.decodeIfPresent(UUID.self, forKey: .dishKindID)
+        recipeKindID = try container.decodeIfPresent(UUID.self, forKey: .recipeKindID)
         isPublic = try container.decodeIfPresent(Bool.self, forKey: .isPublic) ?? true
         isDeleted = try container.decodeIfPresent(Bool.self, forKey: .isDeleted) ?? false
         createdAt = try container.decodeTimestamp(.createdAt)
@@ -141,7 +141,7 @@ struct Recipe: Identifiable, Hashable, Decodable {
         healthRationale: String? = nil,
         healthBreakdown: HealthBreakdown? = nil,
         canonicalIngredients: [String] = [],
-        dishKindID: UUID? = nil,
+        recipeKindID: UUID? = nil,
         isPublic: Bool = true,
         isDeleted: Bool = false,
         createdAt: Date = .now
@@ -164,7 +164,7 @@ struct Recipe: Identifiable, Hashable, Decodable {
         self.healthRationale = healthRationale
         self.healthBreakdown = healthBreakdown
         self.canonicalIngredients = canonicalIngredients
-        self.dishKindID = dishKindID
+        self.recipeKindID = recipeKindID
         self.isPublic = isPublic
         self.isDeleted = isDeleted
         self.createdAt = createdAt
@@ -177,5 +177,4 @@ struct Recipe: Identifiable, Hashable, Decodable {
     var hasRecipe: Bool { hasInstructions }
 }
 
-typealias Dish = Recipe
 

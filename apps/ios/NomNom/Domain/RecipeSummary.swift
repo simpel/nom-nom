@@ -1,9 +1,9 @@
 import Foundation
 
-/// A one-line summary of how a dish lands with the household, combining taste,
-/// effort and rotation goal (the design system's "Dish summary" badge recipe).
+/// A one-line summary of how a recipe lands with the household, combining taste,
+/// effort and rotation goal (the design system's "Recipe summary" badge recipe).
 /// Pure domain logic: the view layer maps `role` to colours.
-struct DishSummary: Equatable {
+struct RecipeSummary: Equatable {
     /// The colour role the badge is painted in.
     enum Role: Equatable {
         case primary
@@ -46,7 +46,7 @@ struct DishSummary: Equatable {
         } else if negative > 0 && positive == 0 {
             self.init("Needs revision", "wrench.and.screwdriver.fill", .secondary)
         } else if total > 0 {
-            self.init("Solid dish", "checkmark.circle.fill", .primary)
+            self.init("Solid recipe", "checkmark.circle.fill", .primary)
         } else {
             return nil
         }

@@ -1,17 +1,17 @@
 import SwiftUI
 
-/// Sheet to view and edit recipe for a dish in meal editor. Works on a copy and writes
+/// Sheet to view and edit recipe for a recipe in meal editor. Works on a copy and writes
 /// the name and recipe back to the meal editor only when saved.
-struct DishRecipeEditSheet: View {
-    @Binding var dishName: String
+struct MealRecipeEditSheet: View {
+    @Binding var recipeName: String
     @Binding var recipeDraft: FoodStore.RecipeDraft
 
     @State private var session: FormSession<RecipeForm>
 
-    init(dishName: Binding<String>, recipeDraft: Binding<FoodStore.RecipeDraft>) {
-        self._dishName = dishName
+    init(recipeName: Binding<String>, recipeDraft: Binding<FoodStore.RecipeDraft>) {
+        self._recipeName = recipeName
         self._recipeDraft = recipeDraft
-        let form = RecipeForm(name: dishName.wrappedValue, recipe: recipeDraft.wrappedValue)
+        let form = RecipeForm(name: recipeName.wrappedValue, recipe: recipeDraft.wrappedValue)
         self._session = State(initialValue: FormSession(form))
     }
 
@@ -35,7 +35,7 @@ struct DishRecipeEditSheet: View {
             .background(DS.Color.sheet)
             .screenTitle("Edit Recipe", displayMode: .inline)
             .sheetCommitToolbar(session) { form in
-                dishName = form.name
+                recipeName = form.name
                 recipeDraft = form.recipe
             }
         }

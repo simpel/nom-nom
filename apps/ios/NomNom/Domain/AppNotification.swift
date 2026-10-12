@@ -23,7 +23,7 @@ struct AppNotification: Identifiable, Hashable, Decodable {
     var userID: UUID
     var mealID: UUID?
     var partyID: UUID?
-    var dishID: UUID?
+    var recipeID: UUID?
     var kind: Kind
     var title: String
     var body: String
@@ -35,7 +35,7 @@ struct AppNotification: Identifiable, Hashable, Decodable {
         case userID = "user_id"
         case mealID = "meal_id"
         case partyID = "party_id"
-        case dishID = "dish_id"
+        case recipeID = "recipe_id"
         case kind
         case title
         case body
@@ -49,7 +49,7 @@ struct AppNotification: Identifiable, Hashable, Decodable {
         userID = try container.decode(UUID.self, forKey: .userID)
         mealID = try container.decodeIfPresent(UUID.self, forKey: .mealID)
         partyID = try container.decodeIfPresent(UUID.self, forKey: .partyID)
-        dishID = try container.decodeIfPresent(UUID.self, forKey: .dishID)
+        recipeID = try container.decodeIfPresent(UUID.self, forKey: .recipeID)
         let rawKind = try container.decode(String.self, forKey: .kind)
         kind = Kind(rawValue: rawKind) ?? .other
         title = try container.decode(String.self, forKey: .title)

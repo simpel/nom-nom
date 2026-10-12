@@ -41,7 +41,7 @@ enum RecipeFilterEngine {
             })
             sorted = RecipePopularityEngine.sort(
                 recipes: result,
-                servingsByRecipe: store.mealsByDish,
+                servingsByRecipe: store.mealsByRecipe,
                 mealScores: allScores
             )
 

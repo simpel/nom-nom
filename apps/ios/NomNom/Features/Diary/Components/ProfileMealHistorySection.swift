@@ -30,7 +30,7 @@ struct ProfileMealHistorySection: View {
 
     private func row(for meal: Meal) -> ListRow {
         ListRow(
-            store.dishName(forMeal: meal),
+            store.recipeName(forMeal: meal),
             meta: meal.eatenOn.formatted(.dateTime.day().month(.abbreviated).year()),
             leading: .photo(.meal(meal)),
             trailing: userScore(for: meal).map { .score($0) },

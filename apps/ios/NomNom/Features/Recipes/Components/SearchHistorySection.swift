@@ -34,7 +34,7 @@ struct SearchHistorySection: View {
         } else if showsEmptyState {
             EmptyState(
                 "Search your recipes",
-                message: "Find dishes by name, cuisine or ingredient.",
+                message: "Find recipes by name, cuisine or ingredient.",
                 icon: "magnifyingglass"
             )
             .padding(.horizontal, DS.Spacing.gutter)

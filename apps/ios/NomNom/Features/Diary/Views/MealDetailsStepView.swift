@@ -12,7 +12,7 @@ struct MealDetailsStepView: View {
                     "Name this meal",
                     label: "Name (optional)",
                     text: $draft.mealTitle,
-                    hint: "Leave blank to use \(draft.dishName)."
+                    hint: "Leave blank to use \(draft.recipeName)."
                 )
 
                 AssetPhotosPickerSection(draft: $draft.photos)

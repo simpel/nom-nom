@@ -6,9 +6,9 @@ struct RecipeLeaderboardSheet: View {
     @Environment(\.dismiss) private var dismiss
 
     private var rankedRecipes: [(recipe: Recipe, score: Double, reaction: Reaction)] {
-        store.myDishes.compactMap { recipe in
-            if let score = store.averageScore(forDish: recipe.id),
-               let reaction = store.averageReaction(forDish: recipe.id) {
+        store.myRecipes.compactMap { recipe in
+            if let score = store.averageScore(forRecipe: recipe.id),
+               let reaction = store.averageReaction(forRecipe: recipe.id) {
                 return (recipe, score, reaction)
             }
             return nil
@@ -38,8 +38,8 @@ struct RecipeLeaderboardSheet: View {
 
     private var rankedList: some View {
         DSSection(
-            "Ranked dishes",
-            trailing: "\(rankedRecipes.count) \(rankedRecipes.count == 1 ? "dish" : "dishes")"
+            "Ranked recipes",
+            trailing: "\(rankedRecipes.count) \(rankedRecipes.count == 1 ? "recipe" : "recipes")"
         ) {
             Card(layout: .list) {
                 ForEach(Array(rankedRecipes.enumerated()), id: \.element.recipe.id) { index, item in

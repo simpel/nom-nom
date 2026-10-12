@@ -149,7 +149,7 @@ private struct PartyCardGallery: View {
                 VStack(spacing: DS.Spacing.s4) {
                     if let party = store.parties.first {
                         let meals = store.meals(forParty: party.id).prefix(4).map { meal in
-                            PartyCardMeal(id: meal.id, source: .meal(meal), title: store.dishName(forMeal: meal), date: meal.eatenOn)
+                            PartyCardMeal(id: meal.id, source: .meal(meal), title: store.recipeName(forMeal: meal), date: meal.eatenOn)
                         }
                         PartyCard(party: party, score: 0.82, memberCount: 4, meta: "12 meals", recentMeals: Array(meals)) {
                             Text(party.name)

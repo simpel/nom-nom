@@ -36,7 +36,7 @@ struct NotificationPreferencesSection: View {
             DSSection("Notifications") {
                 Card(layout: .list) {
                     row("Meal invitations", meta: "Someone asks you to rate a meal", isOn: $mealInvite)
-                    row("Ratings on your meals", meta: "Someone rates a dish you cooked", isOn: $mealRating)
+                    row("Ratings on your meals", meta: "Someone rates a recipe you cooked", isOn: $mealRating)
                     row("Dinner party invitations", meta: "Someone invites you to a party", isOn: $partyInvite)
                     row("Party activity", meta: "Someone joins or follows your party", isOn: $partyActivity)
                     row("Recipe likes", meta: "Someone likes one of your recipes", isOn: $recipeLike)

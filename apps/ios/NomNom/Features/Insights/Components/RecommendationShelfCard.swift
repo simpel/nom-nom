@@ -13,8 +13,8 @@ struct RecommendationShelfCard: View {
     @Environment(FoodStore.self) private var store
 
     var body: some View {
-        if let dishID = rec.dishID, let recipe = store.recipe(dishID) {
-            NavigationLink(value: InsightsRoute.dish(dishID)) {
+        if let recipeID = rec.recipeID, let recipe = store.recipe(recipeID) {
+            NavigationLink(value: InsightsRoute.recipe(recipeID)) {
                 RecipeCard(recipe: recipe, category: rec.cuisine) { description }
             }
             .buttonStyle(AppPressableButtonStyle())

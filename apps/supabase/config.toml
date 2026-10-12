@@ -457,7 +457,11 @@ verify_jwt = true
 
 # Called by a signed-in user for recipes, or by a database trigger webhook for categories.
 # Uses verify_jwt = false so database triggers over pg_net with x-webhook-secret can invoke it.
-[functions.generate-dish-photo]
+[functions.generate-recipe-photo]
+verify_jwt = false
+
+# Same invocation paths as generate-recipe-photo (the app calls it with the user JWT).
+[functions.generate-meal-photo]
 verify_jwt = false
 
 # Called only by the canonicalize_ingredients_webhook database trigger over pg_net,

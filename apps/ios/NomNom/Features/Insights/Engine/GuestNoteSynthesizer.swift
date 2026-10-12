@@ -14,9 +14,9 @@ struct GuestNoteSegment: Identifiable, Hashable {
 }
 
 /// Synthesizes short dinner-party guest notes for a host:
-/// 1. Likes: [First name] [like-verb] [cuisine(s)] — [liked dish] [time] was a hit.
-/// 2. Avoid: [Avoid-verb] [disliked category]; [disliked dish] [time] [negative-verb].
-/// 3. Suggestion (optional): Next time, [1–2 dishes] would likely work.
+/// 1. Likes: [First name] [like-verb] [cuisine(s)] — [liked recipe] [time] was a hit.
+/// 2. Avoid: [Avoid-verb] [disliked category]; [disliked recipe] [time] [negative-verb].
+/// 3. Suggestion (optional): Next time, [1–2 recipes] would likely work.
 enum GuestNoteSynthesizer {
 
     static func synthesize(
@@ -50,7 +50,7 @@ enum GuestNoteSynthesizer {
 
         // Sentence 1: Likes
         if let bestHit = liked.first {
-            let hitDish = cleanDish(bestHit.recipe.name)
+            let hitRecipe = cleanRecipe(bestHit.recipe.name)
             let hitTime = naturalTime(for: bestHit.meal.eatenOn)
 
             segments.append(.init(text: "\(firstName) loves ", tone: .neutral))
@@ -64,13 +64,13 @@ enum GuestNoteSynthesizer {
                 segments.append(.init(text: "flavorful home-cooked food", tone: .positive))
             }
             segments.append(.init(text: " — the ", tone: .neutral))
-            segments.append(.init(text: hitDish, tone: .positive))
+            segments.append(.init(text: hitRecipe, tone: .positive))
             segments.append(.init(text: " \(hitTime) was a hit.", tone: .neutral))
         }
 
         // Sentence 2: Avoid
         if let miss = disliked.first {
-            let missDish = cleanDish(miss.recipe.name)
+            let missRecipe = cleanRecipe(miss.recipe.name)
             let missTime = naturalTime(for: miss.meal.eatenOn)
             let lower = miss.recipe.name.lowercased()
 
@@ -79,26 +79,26 @@ enum GuestNoteSynthesizer {
             if lower.contains("curry") || lower.contains("tandoori") || lower.contains("spic") || lower.contains("chili") || lower.contains("pepper") {
                 let prefix = segments.isEmpty ? "\(firstName) leans away from " : "Steer clear of "
                 segments.append(.init(text: prefix, tone: .neutral))
-                segments.append(.init(text: "spicy dishes", tone: .negative))
+                segments.append(.init(text: "spicy recipes", tone: .negative))
                 segments.append(.init(text: "; the ", tone: .neutral))
-                segments.append(.init(text: missDish, tone: .negative))
+                segments.append(.init(text: missRecipe, tone: .negative))
                 segments.append(.init(text: " \(missTime) fell flat.", tone: .neutral))
             } else if lower.contains("ratatouille") || lower.contains("stew") {
                 let prefix = segments.isEmpty ? "\(firstName) is not a fan of " : "Not a fan of "
                 segments.append(.init(text: prefix, tone: .neutral))
-                segments.append(.init(text: missDish, tone: .negative))
+                segments.append(.init(text: missRecipe, tone: .negative))
                 segments.append(.init(text: "; the one \(missTime) fell flat.", tone: .neutral))
             } else if let c = miss.recipe.cuisine, let formatted = Cuisine.formatDisplayName(c), !topCuisines.contains(formatted) {
                 let prefix = segments.isEmpty ? "\(firstName) tends to avoid " : "Steer clear of "
                 segments.append(.init(text: prefix, tone: .neutral))
-                segments.append(.init(text: "\(formatted.lowercased()) dishes", tone: .negative))
+                segments.append(.init(text: "\(formatted.lowercased()) recipes", tone: .negative))
                 segments.append(.init(text: "; the ", tone: .neutral))
-                segments.append(.init(text: missDish, tone: .negative))
+                segments.append(.init(text: missRecipe, tone: .negative))
                 segments.append(.init(text: " \(missTime) didn't land.", tone: .neutral))
             } else {
                 let prefix = segments.isEmpty ? "\(firstName) is not a fan of " : "Not a fan of "
                 segments.append(.init(text: prefix, tone: .neutral))
-                segments.append(.init(text: missDish, tone: .negative))
+                segments.append(.init(text: missRecipe, tone: .negative))
                 segments.append(.init(text: "; the one \(missTime) didn't land.", tone: .neutral))
             }
         }
@@ -106,11 +106,11 @@ enum GuestNoteSynthesizer {
         // Sentence 3: Suggestion (only if history has >= 2 entries)
         if ratedMeals.count >= 2, !topCuisines.isEmpty {
             var suggestions: [String] = []
-            let dislikedDishNames = disliked.map { cleanDish($0.recipe.name) }
+            let dislikedRecipeNames = disliked.map { cleanRecipe($0.recipe.name) }
             for r in candidateRecipes {
                 guard let c = r.cuisine, let formatted = Cuisine.formatDisplayName(c), topCuisines.contains(formatted) else { continue }
-                let cleaned = cleanDish(r.name)
-                if dislikedDishNames.contains(where: { cleaned.contains($0) || $0.contains(cleaned) }) { continue }
+                let cleaned = cleanRecipe(r.name)
+                if dislikedRecipeNames.contains(where: { cleaned.contains($0) || $0.contains(cleaned) }) { continue }
                 if !suggestions.contains(cleaned) {
                     suggestions.append(cleaned)
                     if suggestions.count == 2 { break }
@@ -149,8 +149,8 @@ enum GuestNoteSynthesizer {
         return "last year"
     }
 
-    private static func cleanDish(_ dishName: String) -> String {
-        var s = dishName
+    private static func cleanRecipe(_ recipeName: String) -> String {
+        var s = recipeName
         for prefix in ["Classic ", "classic ", "Traditional ", "traditional ", "Delicious ", "delicious "] {
             if s.hasPrefix(prefix) { s = String(s.dropFirst(prefix.count)) }
         }

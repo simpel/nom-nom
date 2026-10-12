@@ -1,7 +1,7 @@
 'use client'
 
 import { useMemo, useState } from 'react'
-import { backfillDishEmbeddingsAction, backfillHealthScoresAction, linkTaxonomyAction } from '../actions'
+import { backfillRecipeEmbeddingsAction, backfillHealthScoresAction, linkTaxonomyAction } from '../actions'
 import { toast } from 'sonner'
 
 type RecipeData = {
@@ -32,10 +32,10 @@ export default function RecipesListClient({ initialData }: { initialData: Recipe
 
   const handleBackfillEmbeddings = () => {
     toast.promise(
-      backfillDishEmbeddingsAction(),
+      backfillRecipeEmbeddingsAction(),
       {
         loading: 'Backfilling embeddings...',
-        success: (res) => res.message || `Updated ${res.updated} dish(es)`,
+        success: (res) => res.message || `Updated ${res.updated} recipe(es)`,
         error: (err) => `Failed to backfill embeddings: ${err.message}`
       }
     )
@@ -46,7 +46,7 @@ export default function RecipesListClient({ initialData }: { initialData: Recipe
       backfillHealthScoresAction(),
       {
         loading: 'Generating health scores...',
-        success: (res) => res.message || `Scored ${res.updated} dish(es)${res.failed ? `, ${res.failed} skipped` : ''}`,
+        success: (res) => res.message || `Scored ${res.updated} recipe(es)${res.failed ? `, ${res.failed} skipped` : ''}`,
         error: (err) => `Failed to generate health scores: ${err.message}`
       }
     )
@@ -57,7 +57,7 @@ export default function RecipesListClient({ initialData }: { initialData: Recipe
       linkTaxonomyAction(),
       {
         loading: 'Linking taxonomy terms...',
-        success: (res) => res.message || `Linked ${res.updated} dish(es)${res.failed ? `, ${res.failed} skipped` : ''}`,
+        success: (res) => res.message || `Linked ${res.updated} recipe(es)${res.failed ? `, ${res.failed} skipped` : ''}`,
         error: (err) => `Failed to link taxonomy: ${err.message}`
       }
     )

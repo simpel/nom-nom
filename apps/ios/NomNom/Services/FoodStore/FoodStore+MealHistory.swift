@@ -1,6 +1,6 @@
 import Foundation
 
-/// How a meal compares with the last time the same group had the dish, and how a
+/// How a meal compares with the last time the same group had the recipe, and how a
 /// rater compares with their own usual. The one copy of the history and trend
 /// logic behind Meal Detail, its score breakdown and the historical scores card.
 extension FoodStore {
@@ -24,7 +24,7 @@ extension FoodStore {
         return currentParty?.name ?? "You"
     }
 
-    /// Earlier and later servings of this meal's dish by the same group (sharing a
+    /// Earlier and later servings of this meal's recipe by the same group (sharing a
     /// party; for a party-less meal, other party-less servings), newest first. The
     /// meal itself is excluded.
     func partyHistory(for meal: Meal) -> [Meal] {

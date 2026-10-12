@@ -37,7 +37,7 @@ private struct SheetCardGallery: View {
             provenance: "AI summary of Joel\u{2019}s 54 past ratings",
             reasons: [
                 SheetReason(title: "Crispy crust", text: "He rates wood-fired pizza 12 points above his usual."),
-                SheetReason(title: "Fresh basil", text: "Herb-forward dishes are his most consistent favourites."),
+                SheetReason(title: "Fresh basil", text: "Herb-forward recipes are his most consistent favourites."),
                 SheetReason(title: "Shared outdoors", text: "Meals on the deck score higher across the household."),
             ]
         )

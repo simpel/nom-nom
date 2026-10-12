@@ -1,7 +1,7 @@
 import SwiftUI
 
 /// One screen of the rate flow, one purpose: a ScreenHeader asking the question (the
-/// dish as eyebrow) over its control. "Next" sits top-right; single-choice questions
+/// recipe as eyebrow) over its control. "Next" sits top-right; single-choice questions
 /// also move on by themselves a beat after a pick. Optional questions get "Skip"
 /// pinned to the bottom, which clears that answer and moves on. RateMealSheet adds the
 /// toolbar: the first question is the sheet's root (`.sheetNextToolbar`, close), pushed

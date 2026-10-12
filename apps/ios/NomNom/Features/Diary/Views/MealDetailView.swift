@@ -1,8 +1,8 @@
 import SwiftUI
 
-/// One meal on the design system's detail layout (see MealDetailContent): the dish
+/// One meal on the design system's detail layout (see MealDetailContent): the recipe
 /// and the table's verdict, photos, the score vs last time, the recipe, who rated, the
-/// cook's note and every time this group had the dish.
+/// cook's note and every time this group had the recipe.
 ///
 /// The native navigation bar carries the back button (or, presented modally with
 /// `showCloseButton`, the sheet close button) and the PageMenu with this meal's
@@ -122,13 +122,13 @@ struct MealDetailView: View {
                 ToolbarItem(placement: .topBarTrailing) {
                     if let meal {
                         if let shareImage {
-                            ShareLink(item: meal.shareURL, subject: Text(store.dishName(forMeal: meal)), preview: SharePreview(store.dishName(forMeal: meal), image: shareImage)) {
+                            ShareLink(item: meal.shareURL, subject: Text(store.recipeName(forMeal: meal)), preview: SharePreview(store.recipeName(forMeal: meal), image: shareImage)) {
                                 Image(systemName: "square.and.arrow.up").fontWeight(.semibold)
                             }
                             .accessibilityLabel("Share meal")
                             .barItemStyle()
                         } else {
-                            ShareLink(item: meal.shareURL, subject: Text(store.dishName(forMeal: meal)), preview: SharePreview(store.dishName(forMeal: meal))) {
+                            ShareLink(item: meal.shareURL, subject: Text(store.recipeName(forMeal: meal)), preview: SharePreview(store.recipeName(forMeal: meal))) {
                                 Image(systemName: "square.and.arrow.up").fontWeight(.semibold)
                             }
                             .accessibilityLabel("Share meal")
@@ -142,7 +142,7 @@ struct MealDetailView: View {
             }
         if showCloseButton {
             page
-                .screenTitle(meal.map { store.dishName(forMeal: $0) } ?? "Meal", displayMode: .inline)
+                .screenTitle(meal.map { store.recipeName(forMeal: $0) } ?? "Meal", displayMode: .inline)
                 .sheetCloseToolbar()
         } else {
             page.screenTitle("", displayMode: .inline)

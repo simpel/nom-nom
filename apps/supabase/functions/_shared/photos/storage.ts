@@ -5,12 +5,12 @@ import { SupabaseClient } from "jsr:@supabase/supabase-js@2";
 type ImageFormat = { extension: string; contentType: string };
 
 /**
- * A photo for one row that keeps a `photo_paths` array (dishes = recipes, meals): uploaded to
+ * A photo for one row that keeps a `photo_paths` array (recipes, meals): uploaded to
  * `<bucket>/<id>/<uuid>.<ext>` and put first in the row's photo_paths. Returns the path.
  */
 export async function attachRowPhoto(
   admin: SupabaseClient,
-  target: { bucket: string; table: "dishes" | "meals"; id: string },
+  target: { bucket: string; table: "recipes" | "meals"; id: string },
   bytes: Uint8Array,
   format: ImageFormat,
 ): Promise<string | null> {

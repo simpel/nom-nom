@@ -2,7 +2,7 @@ import Foundation
 
 /// A recipe while it is created or edited: its name, cover photos and the recipe
 /// itself. Edited by CreateRecipeSheet and RecipeEditSheet (then RecipeDetailsStepView),
-/// and by DishRecipeEditSheet inside the meal editor.
+/// and by MealRecipeEditSheet inside the meal editor.
 struct RecipeForm: SheetForm {
     var name: String = ""
     var coverPhotos = FoodStore.PhotosDraft()
@@ -32,7 +32,7 @@ extension RecipeForm {
             cuisine: recipe.cuisine,
             cuisineID: recipe.cuisineID,
             cookingMethodID: recipe.cookingMethodID,
-            dishKindID: recipe.dishKindID,
+            recipeKindID: recipe.recipeKindID,
             isPublic: recipe.isPublic
         )
     }

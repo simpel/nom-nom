@@ -16,8 +16,8 @@ export default async function RecipesListPage() {
   const adminSupabase = createSupabaseClient(supabaseUrl, supabaseServiceKey)
 
   const { data: recipes, error } = await adminSupabase
-    .from('dishes')
-    .select('id, name, cuisine, effort, serves, embedding, health_score, health_verdict, dish_kind_id, cooking_method_id, created_at, updated_at')
+    .from('recipes')
+    .select('id, name, cuisine, effort, serves, embedding, health_score, health_verdict, recipe_kind_id, cooking_method_id, created_at, updated_at')
     .order('created_at', { ascending: false })
 
   if (error) {
@@ -26,12 +26,12 @@ export default async function RecipesListPage() {
 
   const { data: meals } = await adminSupabase
     .from('meals')
-    .select('dish_id')
+    .select('recipe_id')
 
   const mealCountMap = new Map<string, number>()
   if (meals) {
     meals.forEach(m => {
-      mealCountMap.set(m.dish_id, (mealCountMap.get(m.dish_id) || 0) + 1)
+      mealCountMap.set(m.recipe_id, (mealCountMap.get(m.recipe_id) || 0) + 1)
     })
   }
 
@@ -44,7 +44,7 @@ export default async function RecipesListPage() {
     hasEmbedding: r.embedding !== null,
     healthScore: r.health_score,
     healthVerdict: r.health_verdict,
-    hasTaxonomy: r.dish_kind_id !== null && r.cooking_method_id !== null,
+    hasTaxonomy: r.recipe_kind_id !== null && r.cooking_method_id !== null,
     createdAt: r.created_at,
     updatedAt: r.updated_at,
     mealCount: mealCountMap.get(r.id) || 0,

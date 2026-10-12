@@ -567,7 +567,7 @@
   letter-spacing: 0.03em;
 }
 
-.preview-dish-title {
+.preview-recipe-title {
   font-family: var(--font-serif-stack);
   font-size: 1.75rem;
   font-weight: 500;
@@ -576,7 +576,7 @@
   margin-bottom: var(--space-sm);
 }
 
-.preview-dish-notes {
+.preview-recipe-notes {
   font-size: 0.9375rem;
   color: var(--color-text-secondary);
   line-height: 1.5;

@@ -49,7 +49,7 @@ struct RecipeDetailsStepView: View {
                 cuisine: draft.cuisine,
                 cuisineID: draft.cuisineID,
                 cookingMethodID: draft.cookingMethodID,
-                dishKindID: draft.dishKindID,
+                recipeKindID: draft.recipeKindID,
                 serves: draft.serves,
                 isPublic: draft.isPublic
             )
