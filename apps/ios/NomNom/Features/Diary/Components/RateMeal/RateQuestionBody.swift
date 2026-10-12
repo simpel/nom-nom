@@ -2,6 +2,7 @@ import SwiftUI
 
 /// The control for one rate question, bound to the shared draft. Used by the step
 /// screens and by the single-answer sheet on the review screen.
+// ds-coverage: delegates to RateTasteGrid, RateTagsPicker, RatePlateGrid, RateAgainGrid
 struct RateQuestionBody: View {
     let question: RateQuestion
     @Binding var answers: RatingAnswers
