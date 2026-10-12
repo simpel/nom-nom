@@ -1,11 +1,18 @@
 import SwiftUI
 
-/// Dedicated sheet forwarding to SettingsView for editing personal profile information and preferences.
+/// Sheet for editing the signed-in person's photo and name.
 struct ProfileSheetView: View {
     var body: some View {
         NavigationStack {
-            SettingsView(showsProfileLink: false)
-                .sheetCloseToolbar()
+            ScrollView {
+                ProfileSettingsSection()
+                    .padding(.horizontal, DS.Spacing.gutter)
+                    .padding(.top, DS.Spacing.s5)
+                    .padding(.bottom, DS.Spacing.s11)
+            }
+            .background(DS.Color.bg)
+            .screenTitle("Edit profile", displayMode: .inline)
+            .sheetCloseToolbar()
         }
         .dsSheet()
     }
