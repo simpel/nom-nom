@@ -44,14 +44,13 @@ struct RecipeFilterCriteria: Equatable {
 /// Cards (native menu pickers in the trailing slot, a Toggle for favourites), and a
 /// reset when anything differs from the defaults.
 struct RecipeFilterSheet: View {
-    @Environment(\.dismiss) private var dismiss
     @Binding var criteria: RecipeFilterCriteria
 
-    @State private var draft: RecipeFilterCriteria
+    @State private var session: FormSession<RecipeFilterCriteria>
 
     init(criteria: Binding<RecipeFilterCriteria>) {
         self._criteria = criteria
-        self._draft = State(initialValue: criteria.wrappedValue)
+        self._session = State(initialValue: FormSession(criteria.wrappedValue))
     }
 
     var body: some View {
@@ -59,7 +58,7 @@ struct RecipeFilterSheet: View {
             SheetBody {
                 DSSection("Sort order") {
                     Card(layout: .list) {
-                        pickerRow("Sort by", selection: $draft.sort) {
+                        pickerRow("Sort by", selection: $session.form.sort) {
                             ForEach(RecipeFilterCriteria.SortOption.allCases) { option in
                                 Text(option.rawValue).tag(option)
                             }
@@ -69,39 +68,31 @@ struct RecipeFilterSheet: View {
 
                 DSSection("Filters") {
                     Card(layout: .list) {
-                        pickerRow("Effort", selection: $draft.effort) {
+                        pickerRow("Effort", selection: $session.form.effort) {
                             Text("Any effort").tag(EffortLevel?.none)
                             ForEach(EffortLevel.allCases) { level in
                                 Text(level.label).tag(Optional(level))
                             }
                         }
-                        pickerRow("Minimum rating", selection: $draft.scoreThreshold) {
+                        pickerRow("Minimum rating", selection: $session.form.scoreThreshold) {
                             ForEach(RecipeFilterCriteria.ScoreThreshold.allCases) { threshold in
                                 Text(threshold.rawValue).tag(threshold)
                             }
                         }
-                        ListRow("Favourites only", trailing: .toggle($draft.onlyFavorites))
+                        ListRow("Favourites only", trailing: .toggle($session.form.onlyFavorites))
                     }
                 }
 
-                if !draft.isDefault {
+                if !session.form.isDefault {
                     AppButton("Reset to defaults", variant: .secondary, appearance: .ghost, fullWidth: true) {
-                        draft = RecipeFilterCriteria()
+                        session.form = RecipeFilterCriteria()
                     }
                 }
             }
             .screenTitle("Sort and filter", displayMode: .inline)
-            .sheetCommitToolbar(
-                isSaving: false,
-                canSave: true,
-                onCancel: { dismiss() },
-                onSave: {
-                    criteria = draft
-                    dismiss()
-                }
-            )
+            .sheetCommitToolbar(session) { criteria = $0 }
         }
-        .dsSheet()
+        .editorSheet(session)
     }
 
     /// A ListRow whose trailing slot is a native menu picker (a system menu, like

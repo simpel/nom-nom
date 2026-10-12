@@ -45,3 +45,7 @@ build/
 *.tsbuildinfo
 NomNom.mobileprovision
 docs/SETUP_APPLE_KEYS.md
+
+# Superset
+.superset/.web-port
+.superset/config.local.json

@@ -35,72 +35,6 @@ struct SheetLeadingCloseItem: ToolbarContent {
     }
 }
 
-/// `.topBarTrailing` checkmark, or a small spinner while saving.
-private struct SheetSaveItem: ToolbarContent {
-    let isSaving: Bool
-    let canSave: Bool
-    let onSave: () -> Void
-
-    var body: some ToolbarContent {
-        ToolbarItem(placement: .topBarTrailing) {
-            if isSaving {
-                ProgressView().controlSize(.small)
-            } else {
-                Button(action: onSave) {
-                    Image(systemName: "checkmark").fontWeight(.semibold)
-                }
-                .disabled(!canSave)
-                .accessibilityLabel("Save")
-                .barItemStyle()
-            }
-        }
-    }
-}
-
-struct SheetCommitToolbarModifier: ViewModifier {
-    @Environment(\.dismiss) private var dismiss
-
-    let isSaving: Bool
-    let canSave: Bool
-    let onCancel: (() -> Void)?
-    let onSave: () -> Void
-
-    func body(content: Content) -> some View {
-        content
-            .toolbar {
-                SheetLeadingCloseItem(accessibilityLabel: "Cancel", isDisabled: isSaving) {
-                    if let onCancel { onCancel() } else { dismiss() }
-                }
-                SheetSaveItem(isSaving: isSaving, canSave: canSave, onSave: onSave)
-            }
-            .interactiveDismissDisabled(isSaving)
-    }
-}
-
-struct SheetNextToolbarModifier: ViewModifier {
-    @Environment(\.dismiss) private var dismiss
-
-    let title: String
-    let canProceed: Bool
-    let onCancel: (() -> Void)?
-    let onNext: () -> Void
-
-    func body(content: Content) -> some View {
-        content
-            .toolbar {
-                SheetLeadingCloseItem(accessibilityLabel: "Cancel") {
-                    if let onCancel { onCancel() } else { dismiss() }
-                }
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button(title, action: onNext)
-                        .disabled(!canProceed)
-                        .fontWeight(.semibold)
-                        .barItemStyle()
-                }
-            }
-    }
-}
-
 struct StepNextToolbarModifier: ViewModifier {
     let title: String
     let canProceed: Bool
@@ -119,22 +53,10 @@ struct StepNextToolbarModifier: ViewModifier {
     }
 }
 
-struct StepCommitToolbarModifier: ViewModifier {
-    let isSaving: Bool
-    let canSave: Bool
-    let onSave: () -> Void
-
-    func body(content: Content) -> some View {
-        content
-            .toolbar {
-                SheetSaveItem(isSaving: isSaving, canSave: canSave, onSave: onSave)
-            }
-            .interactiveDismissDisabled(isSaving)
-    }
-}
-
+/// Inside a `.discardGuard` (the recipe scanner) the close asks first when there are changes.
 struct SheetCloseToolbarModifier: ViewModifier {
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.editorSheetActions) private var editorSheet
 
     let accessibilityLabel: String
     let onClose: (() -> Void)?
@@ -142,8 +64,8 @@ struct SheetCloseToolbarModifier: ViewModifier {
     func body(content: Content) -> some View {
         content
             .toolbar {
-                SheetLeadingCloseItem(accessibilityLabel: accessibilityLabel) {
-                    if let onClose { onClose() } else { dismiss() }
+                SheetLeadingCloseItem(accessibilityLabel: accessibilityLabel, isDisabled: editorSheet?.isSaving ?? false) {
+                    if let onClose { onClose() } else if let editorSheet { editorSheet.close() } else { dismiss() }
                 }
             }
     }

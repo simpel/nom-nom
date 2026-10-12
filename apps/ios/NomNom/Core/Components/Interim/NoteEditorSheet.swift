@@ -16,30 +16,26 @@ struct NoteEditorSheet: View {
     @Binding var text: String
     var maxLength: Int?
     var bulleted: Bool
+    var onRemove: (() -> Void)?
 
     @Environment(\.dismiss) private var dismiss
-    @State private var draft: String
+    @State private var session: FormSession<NoteForm>
     @State private var confirmDelete = false
     @FocusState private var isFocused: Bool
 
-    init(title: String, placeholder: String, text: Binding<String>, maxLength: Int? = nil, bulleted: Bool = false) {
+    init(title: String, placeholder: String, text: Binding<String>, maxLength: Int? = nil, bulleted: Bool = false, onRemove: (() -> Void)? = nil) {
         self.title = title
         self.placeholder = placeholder
         self._text = text
         self.maxLength = maxLength
         self.bulleted = bulleted
-        let start = text.wrappedValue
-        self._draft = State(initialValue: bulleted && start.isEmpty ? BulletList.marker : start)
+        self.onRemove = onRemove
+        let form = NoteForm(text.wrappedValue, maxLength: maxLength, bulleted: bulleted)
+        self._session = State(initialValue: FormSession(form))
     }
 
     private var hadText: Bool { !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
-    /// The draft as saved: a lone bullet with nothing after it counts as empty.
-    private var committed: String {
-        let trimmed = draft.trimmingCharacters(in: .whitespacesAndNewlines)
-        return trimmed == BulletList.marker.trimmingCharacters(in: .whitespaces) ? "" : draft
-    }
-
-    private var isOver: Bool { maxLength.map { draft.count > $0 } ?? false }
+    private var canDelete: Bool { hadText || onRemove != nil }
 
     var body: some View {
         NavigationStack {
@@ -48,7 +44,7 @@ struct NoteEditorSheet: View {
                     ScrollView {
                         TextArea(
                             placeholder,
-                            text: $draft,
+                            text: $session.form.text,
                             lineLimit: 1...Int.max,
                             appearance: .plain,
                             maxLength: maxLength,
@@ -66,12 +62,12 @@ struct NoteEditorSheet: View {
                     // Docked above the keyboard, where Notes puts its bar (trash included
                     // when there is a saved note); the full-width Delete note returns
                     // when the keyboard goes down.
-                    NoteFormatBar(onDelete: hadText ? { confirmDelete = true } : nil) {
-                        draft = BulletList.toggled(draft)
+                    NoteFormatBar(onDelete: canDelete ? { confirmDelete = true } : nil) {
+                        session.form.text = BulletList.toggled(session.form.text)
                     }
-                } else if hadText {
+                } else if canDelete {
                     AppButton(
-                        "Delete note",
+                        onRemove != nil ? "Remove" : "Delete note",
                         icon: "trash",
                         variant: .destructive,
                         appearance: .soft,
@@ -87,25 +83,28 @@ struct NoteEditorSheet: View {
             .padding(.bottom, DS.Spacing.s4)
             .background(DS.Color.sheet)
             .screenTitle(title, displayMode: .inline)
-            .sheetCommitToolbar(canSave: committed != text && !isOver) {
-                text = committed
-                dismiss()
-            }
-            .confirmationDialog("Delete this note?", isPresented: $confirmDelete, titleVisibility: .visible) {
-                Button("Delete note", role: .destructive) {
-                    text = ""
+            .sheetCommitToolbar(session) { text = $0.committed }
+            .alert(onRemove != nil ? "Remove this?" : "Delete this note?", isPresented: $confirmDelete) {
+                Button(onRemove != nil ? "Remove" : "Delete note", role: .destructive) {
+                    if let onRemove {
+                        onRemove()
+                    } else {
+                        text = ""
+                    }
                     dismiss()
                 }
                 Button("Cancel", role: .cancel) {}
             } message: {
-                Text("It\u{2019}s removed from the recipe for everyone in the party.")
+                if onRemove == nil {
+                    Text("It\u{2019}s removed from the recipe for everyone in the party.")
+                }
             }
-            .onChange(of: draft) { old, new in
+            .onChange(of: session.form.text) { old, new in
                 let continued = BulletList.continuing(old, into: new)
-                if continued != new { draft = continued }
+                if continued != new { session.form.text = continued }
             }
         }
-        .dsSheet()
+        .editorSheet(session)
         .onAppear { isFocused = true }
     }
 }

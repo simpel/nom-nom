@@ -1,7 +1,13 @@
 name: Supabase CI (Verify Migrations & RLS)
 
+# Feature PRs target release/* and skip this check (same pattern as CodeQL).
+# It runs on the release PR into main only (not also on the release branch push,
+# which would double every run), so a broken migration is caught before the
+# Supabase integration deploys main.
 on:
   pull_request:
+    branches:
+      - main
     paths:
       - 'apps/supabase/**'
       - '.github/workflows/supabase-*.yml'
@@ -22,10 +28,10 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Setup Supabase CLI
-        uses: supabase/setup-cli@v1
+        uses: supabase/setup-cli@v3
         with:
           version: latest
 
@@ -36,7 +42,7 @@ jobs:
         run: cd apps/supabase && supabase db reset
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v7
         with:
           python-version: '3.11'
 

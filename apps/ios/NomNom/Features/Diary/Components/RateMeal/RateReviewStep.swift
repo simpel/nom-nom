@@ -1,12 +1,11 @@
 import SwiftUI
 
 /// The last screen of the rate flow: every answer as a ListRow (tap one to change just
-/// that answer in a small sheet), the eater's own note, and Save top-right.
+/// that answer in a small sheet) and the eater's own note. RateMealSheet puts Save
+/// top-right (`.stepCommitToolbar`).
 struct RateReviewStep: View {
     @Binding var answers: RatingAnswers
     let eyebrow: String
-    let isSaving: Bool
-    let onSave: () -> Void
 
     @State private var editing: RateQuestion?
 
@@ -36,7 +35,6 @@ struct RateReviewStep: View {
             }
         }
         .screenTitle("Rate meal", displayMode: .inline)
-        .stepCommitToolbar(isSaving: isSaving, canSave: answers.reaction != nil, onSave: onSave)
         .sheet(item: $editing) { question in
             RateAnswerSheet(question: question, answers: $answers, eyebrow: eyebrow)
         }

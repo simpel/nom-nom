@@ -5,13 +5,9 @@ struct RecipeEditSheet: View {
     let recipeID: UUID
 
     @Environment(FoodStore.self) private var store
-    @Environment(\.dismiss) private var dismiss
 
-    @State private var name: String = ""
-    @State private var coverPhotosDraft = FoodStore.PhotosDraft()
-    @State private var recipeDraft = FoodStore.RecipeDraft()
+    @State private var session = FormSession(RecipeForm(), isLoaded: false)
     @State private var navigateToDetails = false
-    @State private var didLoad = false
 
     private var recipe: Recipe? { store.recipe(recipeID) }
     private var isOwner: Bool { recipe?.ownerID == store.userID }
@@ -23,10 +19,10 @@ struct RecipeEditSheet: View {
                     if recipe != nil {
                         if isOwner {
                             RecipeBasicsForm(
-                                name: $name,
-                                coverPhotos: $coverPhotosDraft,
-                                effort: $recipeDraft.effort,
-                                cuisine: $recipeDraft.cuisine
+                                name: $session.form.name,
+                                coverPhotos: $session.form.coverPhotos,
+                                effort: $session.form.recipe.effort,
+                                cuisine: $session.form.recipe.cuisine
                             )
                         } else {
                             EmptyState(
@@ -45,41 +41,16 @@ struct RecipeEditSheet: View {
             }
             .background(DS.Color.sheet)
             .screenTitle("Edit Recipe", displayMode: .inline)
-            .sheetNextToolbar(canProceed: !name.trimmedName.isEmpty && isOwner) {
+            .sheetNextToolbar(session, canProceed: session.form.isValid && isOwner) {
                 navigateToDetails = true
             }
             .navigationDestination(isPresented: $navigateToDetails) {
-                RecipeDetailsStepView(
-                    recipeID: recipeID,
-                    name: name,
-                    coverPhotosDraft: coverPhotosDraft,
-                    recipeDraft: $recipeDraft,
-                    onDismiss: { dismiss() }
-                )
+                RecipeDetailsStepView(recipeID: recipeID, session: session)
             }
-            .onAppear(perform: populate)
+            .onAppear {
+                if let recipe { session.load(RecipeForm(recipe)) }
+            }
         }
-        .dsSheet()
-    }
-
-    private func populate() {
-        guard !didLoad, let recipe else { return }
-        didLoad = true
-        name = recipe.name
-        coverPhotosDraft = FoodStore.PhotosDraft(existingPaths: recipe.photoPaths)
-
-        recipeDraft = FoodStore.RecipeDraft(
-            ingredients: recipe.ingredients,
-            instructions: recipe.instructions,
-            existingPhotoPaths: recipe.recipePhotoPaths,
-            addedPhotoData: [],
-            removedPhotoPaths: [],
-            effort: recipe.effort,
-            cuisine: recipe.cuisine,
-            cuisineID: recipe.cuisineID,
-            cookingMethodID: recipe.cookingMethodID,
-            dishKindID: recipe.dishKindID,
-            isPublic: recipe.isPublic
-        )
+        .editorSheet(session, errorTitle: "Couldn\u{2019}t save recipe")
     }
 }

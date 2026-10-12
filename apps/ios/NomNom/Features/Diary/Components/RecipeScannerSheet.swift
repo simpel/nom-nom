@@ -64,10 +64,7 @@ struct RecipeScannerSheet: View {
                 }
             }
             .screenTitle("Scan Recipe", displayMode: .inline)
-            .sheetCancelToolbar {
-                analysisTask?.cancel()
-                dismiss()
-            }
+            .sheetCancelToolbar()
             .sheet(isPresented: $showCamera) {
                 CameraPicker { image in
                     if let prepared = PhotoTools.prepare(image), stagedPhotos.count < maxPhotos {
@@ -88,6 +85,7 @@ struct RecipeScannerSheet: View {
                 Text(errorMessage ?? "")
             }
         }
+        .discardGuard(isDirty: !stagedPhotos.isEmpty, isSaving: isAnalyzing) { analysisTask?.cancel() }
         .dsSheet()
     }
 

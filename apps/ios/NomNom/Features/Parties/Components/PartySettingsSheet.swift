@@ -6,78 +6,39 @@ struct PartySettingsSheet: View {
     var onPartyLeft: (() -> Void)? = nil
 
     @Environment(FoodStore.self) private var store
-    @Environment(\.dismiss) private var dismiss
 
-    @State private var name: String = ""
-    @State private var about: String = ""
-    @State private var isPublic: Bool = false
-    @State private var photoDraft = FoodStore.PhotosDraft()
-    @State private var isSaving = false
-    @State private var didLoad = false
-    @State private var saveError: String?
+    @State private var session: FormSession<PartyForm>
 
-    private var canSave: Bool {
-        !name.trimmedName.isEmpty && !isSaving
+    init(party: Party, onPartyLeft: (() -> Void)? = nil) {
+        self.party = party
+        self.onPartyLeft = onPartyLeft
+        self._session = State(initialValue: FormSession(PartyForm(party)))
     }
 
     var body: some View {
         NavigationStack {
             SheetBody {
-                PartyFormFields(photoDraft: $photoDraft, name: $name, about: $about)
+                PartyFormFields(
+                    photoDraft: $session.form.photos,
+                    name: $session.form.name,
+                    about: $session.form.about
+                )
 
-                VisibilityToggleCard.party(isPublic: $isPublic)
+                VisibilityToggleCard.party(isPublic: $session.form.isPublic)
             }
             .screenTitle("Edit Party", displayMode: .inline)
-            .sheetCommitToolbar(
-                isSaving: isSaving,
-                canSave: canSave,
-                onCancel: { dismiss() },
-                onSave: { save() }
-            )
-            .onAppear(perform: populate)
-            .alert("Couldn't Save", isPresented: Binding(
-                get: { saveError != nil },
-                set: { if !$0 { saveError = nil } }
-            )) {
-                Button("OK") { saveError = nil }
-            } message: {
-                Text(saveError ?? "")
+            .sheetCommitToolbar(session) { form in
+                await store.updateParty(
+                    party,
+                    name: form.name.trimmedName,
+                    about: form.about,
+                    isPublic: form.isPublic,
+                    photos: form.photos
+                )
+                try store.throwIfFailed()
             }
         }
-        .dsSheet()
-    }
-
-    private func populate() {
-        guard !didLoad else { return }
-        didLoad = true
-        name = party.name
-        about = party.about
-        isPublic = party.isPublic
-        photoDraft = FoodStore.PhotosDraft(existingPaths: party.photoPaths)
-    }
-
-    private func save() {
-        let partyName = name.trimmedName
-        guard !partyName.isEmpty else { return }
-        isSaving = true
-        UIImpactFeedbackGenerator(style: .medium).impactOccurred()
-        Task {
-            await store.updateParty(
-                party,
-                name: partyName,
-                about: about,
-                isPublic: isPublic,
-                photos: photoDraft
-            )
-            isSaving = false
-            if store.errorMessage == nil {
-                UINotificationFeedbackGenerator().notificationOccurred(.success)
-                dismiss()
-            } else {
-                saveError = store.errorMessage
-                store.errorMessage = nil
-            }
-        }
+        .editorSheet(session)
     }
 }
 
@@ -88,5 +49,3 @@ struct PartySettingsSheet: View {
         }
     }
 }
-
-

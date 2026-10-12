@@ -5,12 +5,10 @@ import SwiftUI
 /// supporting multi-selection and atomic commit/discard actions.
 struct CuisinePickerSheet: View {
     @Environment(FoodStore.self) private var store
-    @Environment(\.dismiss) private var dismiss
 
     @Binding var selection: String?
 
-    @State private var draftSelection: Set<String>
-    @State private var customText: String
+    @State private var session: FormSession<CuisineSelection>
 
     private let categoryColumns = [
         GridItem(.flexible(), spacing: DS.Spacing.s3),
@@ -19,15 +17,7 @@ struct CuisinePickerSheet: View {
 
     init(selection: Binding<String?>) {
         self._selection = selection
-        let initialParts = Cuisine.parseMultiple(from: selection.wrappedValue)
-        let presetMatches = initialParts.compactMap { part -> String? in
-            guard let matched = Cuisine.matching(from: part) else { return nil }
-            return matched.rawValue.lowercased()
-        }
-        let customMatches = initialParts.filter { Cuisine.matching(from: $0) == nil }
-
-        self._draftSelection = State(initialValue: Set(presetMatches))
-        self._customText = State(initialValue: customMatches.joined(separator: ", "))
+        self._session = State(initialValue: FormSession(CuisineSelection(selection.wrappedValue)))
     }
 
     var body: some View {
@@ -40,66 +30,23 @@ struct CuisinePickerSheet: View {
                             label: category.displayName,
                             meta: CategoryItem.recipeCountText(store.recipeCount(forCategory: category.name)),
                             fillsWidth: true,
-                            selected: draftSelection.contains(category.name.lowercased())
+                            selected: session.form.contains(category.name)
                         ) {
-                            toggleSelection(for: category.name)
+                            session.form.toggle(category.name)
                         }
                     }
                 }
 
                 SectionCard("Other cuisine") {
-                    Input("e.g. Ethiopian, Lebanese, Jamaican", text: $customText, appearance: .plain)
+                    Input("e.g. Ethiopian, Lebanese, Jamaican", text: $session.form.customText, appearance: .plain)
                         .autocorrectionDisabled()
                         .textInputAutocapitalization(.words)
                 }
             }
             .screenTitle("Cuisine", displayMode: .inline)
-            .sheetCommitToolbar(
-                isSaving: false,
-                canSave: true,
-                onCancel: {
-                    dismiss()
-                },
-                onSave: {
-                    saveSelection()
-                    dismiss()
-                }
-            )
+            .sheetCommitToolbar(session) { selection = $0.value }
         }
-        .dsSheet()
-    }
-
-    private func toggleSelection(for name: String) {
-        let key = name.lowercased()
-        if draftSelection.contains(key) {
-            draftSelection.remove(key)
-        } else {
-            draftSelection.insert(key)
-        }
-    }
-
-    private func saveSelection() {
-        var results: [String] = []
-
-        // Maintain canonical ordering according to Cuisine.allCases
-        for cuisine in Cuisine.allCases {
-            if draftSelection.contains(cuisine.rawValue.lowercased()) {
-                results.append(cuisine.rawValue)
-            }
-        }
-
-        let customParts = Cuisine.parseMultiple(from: customText)
-        for part in customParts {
-            if !results.contains(where: { $0.lowercased() == part.lowercased() }) {
-                results.append(part)
-            }
-        }
-
-        if results.isEmpty {
-            selection = nil
-        } else {
-            selection = results.joined(separator: ", ")
-        }
+        .editorSheet(session)
     }
 }
 

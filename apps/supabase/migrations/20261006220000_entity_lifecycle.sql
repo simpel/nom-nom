@@ -373,38 +373,6 @@ as $$
     offset greatest(p_offset, 0);
 $$;
 
--- 10. Update all_insights to not use created_by
-create or replace function public.all_insights(
-    p_since timestamptz default null
-)
-returns table (
-    party_id         uuid,
-    insight_type     text,
-    insight_data     jsonb,
-    created_at       timestamptz,
-    is_new           boolean
-)
-language sql
-stable
-security definer
-set search_path = public, pg_temp
-as $$
-    with my_parties as (
-        select party_id as id from public.party_members where user_id = auth.uid()
-    ),
-    all_rows as (
-        select
-            pi.party_id,
-            pi.insight_type,
-            pi.insight_data,
-            pi.created_at,
-            (p_since is not null and pi.created_at > p_since) as is_new
-        from public.party_insights pi
-        join my_parties mp on mp.id = pi.party_id
-    )
-    select * from all_rows order by created_at desc;
-$$;
-
 -- 11. Restrict public access to deleted dishes
 create or replace function public.can_read_dish(p_dish_id uuid)
     returns boolean

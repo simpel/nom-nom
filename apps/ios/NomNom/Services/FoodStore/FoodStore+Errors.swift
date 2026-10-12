@@ -1,7 +1,27 @@
 import Foundation
 import Supabase
 
+/// A store failure already put into words (`FoodStore.errorMessage`), thrown so a
+/// `FormSession.save` commit can treat every store API the same way.
+struct StoreError: LocalizedError {
+    let errorDescription: String?
+}
+
 extension FoodStore {
+
+    /// Turns the store's last `errorMessage` into a thrown error and clears it, so
+    /// `Bool` / `Void` / optional store APIs can be used inside a `FormSession.save`
+    /// commit. Pass `succeeded: false` when the API reported failure; it then throws
+    /// even if no message was set.
+    func throwIfFailed(_ succeeded: Bool = true) throws {
+        if let message = errorMessage {
+            errorMessage = nil
+            throw StoreError(errorDescription: message)
+        }
+        if !succeeded {
+            throw StoreError(errorDescription: "Something went wrong. Please try again.")
+        }
+    }
 
     static func describe(_ error: Error) -> String {
         if let error = error as? PostgrestError {

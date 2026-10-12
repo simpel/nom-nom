@@ -1,28 +1,32 @@
 import SwiftUI
 
-/// Sheet to view and edit recipe for a dish in meal editor.
+/// Sheet to view and edit recipe for a dish in meal editor. Works on a copy and writes
+/// the name and recipe back to the meal editor only when saved.
 struct DishRecipeEditSheet: View {
     @Binding var dishName: String
     @Binding var recipeDraft: FoodStore.RecipeDraft
 
-    @Environment(\.dismiss) private var dismiss
+    @State private var session: FormSession<RecipeForm>
 
-    @State private var initialDishName: String = ""
-    @State private var initialRecipeDraft = FoodStore.RecipeDraft()
-    @State private var didCaptureInitial = false
+    init(dishName: Binding<String>, recipeDraft: Binding<FoodStore.RecipeDraft>) {
+        self._dishName = dishName
+        self._recipeDraft = recipeDraft
+        let form = RecipeForm(name: dishName.wrappedValue, recipe: recipeDraft.wrappedValue)
+        self._session = State(initialValue: FormSession(form))
+    }
 
     var body: some View {
         NavigationStack {
             ScrollView {
                 VStack(spacing: DS.Spacing.block) {
                     SectionCard("Recipe Name") {
-                        Input("Recipe name", text: $dishName, appearance: .plain)
+                        Input("Recipe name", text: $session.form.name, appearance: .plain)
                             .autocorrectionDisabled()
                     }
 
-                    RecipeEditorSection(draft: $recipeDraft)
+                    RecipeEditorSection(draft: $session.form.recipe)
 
-                    MealEditorCookingTimeSection(effort: $recipeDraft.effort)
+                    MealEditorCookingTimeSection(effort: $session.form.recipe.effort)
                 }
                 .padding(.horizontal, DS.Spacing.gutter)
                 .padding(.top, DS.Spacing.s5)
@@ -30,25 +34,11 @@ struct DishRecipeEditSheet: View {
             }
             .background(DS.Color.sheet)
             .screenTitle("Edit Recipe", displayMode: .inline)
-            .sheetCommitToolbar(
-                canSave: !dishName.trimmedName.isEmpty,
-                onCancel: {
-                    dishName = initialDishName
-                    recipeDraft = initialRecipeDraft
-                    dismiss()
-                },
-                onSave: {
-                    dismiss()
-                }
-            )
-            .onAppear {
-                if !didCaptureInitial {
-                    initialDishName = dishName
-                    initialRecipeDraft = recipeDraft
-                    didCaptureInitial = true
-                }
+            .sheetCommitToolbar(session) { form in
+                dishName = form.name
+                recipeDraft = form.recipe
             }
         }
-        .dsSheet()
+        .editorSheet(session)
     }
 }

@@ -5,44 +5,33 @@ import SwiftUI
 struct CreatePartySheet: View {
     var onCreated: ((Party) -> Void)? = nil
 
-    @Environment(FoodStore.self) private var store
-    @Environment(\.dismiss) private var dismiss
-
-    @State private var name = ""
-    @State private var about = ""
-    @State private var isPublic = false
-    @State private var photoDraft = FoodStore.PhotosDraft()
+    @State private var session = FormSession(PartyForm(), kind: .create)
     @State private var navigateToSetup = false
 
-    private var canProceed: Bool {
-        !name.trimmedName.isEmpty
-    }
+    private var canProceed: Bool { session.form.isValid }
 
     var body: some View {
         NavigationStack {
             SheetBody {
                 ScreenHeader("New dinner party")
 
-                PartyFormFields(photoDraft: $photoDraft, name: $name, about: $about) {
+                PartyFormFields(
+                    photoDraft: $session.form.photos,
+                    name: $session.form.name,
+                    about: $session.form.about
+                ) {
                     if canProceed { navigateToSetup = true }
                 }
             }
             .screenTitle("New party", displayMode: .inline)
-            .sheetNextToolbar(canProceed: canProceed) {
+            .sheetNextToolbar(session, canProceed: canProceed) {
                 navigateToSetup = true
             }
             .navigationDestination(isPresented: $navigateToSetup) {
-                PartySetupStepView(
-                    name: name,
-                    about: about,
-                    photoDraft: photoDraft,
-                    isPublic: $isPublic,
-                    onCreated: onCreated,
-                    onDismiss: { dismiss() }
-                )
+                PartySetupStepView(session: session, onCreated: onCreated)
             }
         }
-        .dsSheet()
+        .editorSheet(session, errorTitle: "Couldn\u{2019}t save dinner party")
     }
 }
 

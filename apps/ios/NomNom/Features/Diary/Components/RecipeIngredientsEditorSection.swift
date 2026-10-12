@@ -1,52 +1,68 @@
 import SwiftUI
+import UniformTypeIdentifiers
 
 /// Section in recipe editors for adding, modifying, and removing ingredients with distinct quantity, unit, and name.
+/// Uses a Master-Detail pattern where rows are sortable, and editing happens in a full-sized sheet.
 struct RecipeIngredientsEditorSection: View {
     @Binding var ingredients: [RecipeIngredient]
 
+    @State private var editingIngredient: RecipeIngredient?
+    @State private var openRowID: UUID?
+
     var body: some View {
-        SectionCard("Ingredients") {
-            VStack(spacing: DS.Spacing.s2_5) {
-                ForEach($ingredients) { $item in
-                    ingredientRow(item: $item)
+        DSSection("Ingredients") {
+            Card(layout: .list) {
+                ForEach(ingredients) { item in
+                    SwipeActionRow(
+                        id: item.id,
+                        openRowID: $openRowID,
+                        trailingIcon: "trash",
+                        trailingColor: DS.Color.destructive,
+                        onTrailingAction: {
+                            withAnimation(DS.Motion.layout) {
+                                ingredients.removeAll { $0.id == item.id }
+                            }
+                        }
+                    ) {
+                        ListRow(
+                            item.trimmedIngredient.isEmpty ? "New ingredient" : item.trimmedIngredient,
+                            value: item.formattedAmount,
+                            leading: .icon("line.3.horizontal"),
+                            action: {
+                                editingIngredient = item
+                            }
+                        )
+                        .valueSemibold()
+                        .titleLines(nil)
+                    }
                 }
 
                 AppButton("Add Ingredient", icon: "plus", appearance: .ghost, size: .sm) {
-                    withAnimation(DS.Motion.layout) {
-                        $ingredients.wrappedValue.append(RecipeIngredient())
-                    }
+                    editingIngredient = RecipeIngredient()
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(.top, ingredients.isEmpty ? DS.Spacing.s0_5 : DS.Spacing.s1)
             }
         }
-    }
-
-    private func ingredientRow(item: Binding<RecipeIngredient>) -> some View {
-        HStack(spacing: DS.Spacing.s2) {
-            Input("Qty", text: item.quantity)
-                .keyboardType(.numbersAndPunctuation)
-                .autocorrectionDisabled()
-                .frame(width: DS.Spacing.s14)
-
-            Input("Unit", text: item.measurement)
-                .textInputAutocapitalization(.never)
-                .autocorrectionDisabled()
-                .frame(width: DS.Spacing.s16)
-
-            Input("Ingredient", text: item.ingredient)
-
-            AppButton(
-                icon: "minus.circle",
-                accessibilityLabel: "Remove ingredient",
-                variant: .destructive,
-                appearance: .ghost
-            ) {
-                withAnimation(DS.Motion.layout) {
-                    let targetID = item.wrappedValue.id
-                    $ingredients.wrappedValue.removeAll { $0.id == targetID }
+        .sheet(item: $editingIngredient) { item in
+            IngredientEditorSheet(
+                initialIngredient: item,
+                isNew: !ingredients.contains(where: { $0.id == item.id }),
+                onSave: { updatedIngredient in
+                    if let index = ingredients.firstIndex(where: { $0.id == updatedIngredient.id }) {
+                        ingredients[index] = updatedIngredient
+                    } else {
+                        withAnimation(DS.Motion.layout) {
+                            ingredients.append(updatedIngredient)
+                        }
+                    }
+                },
+                onRemove: {
+                    withAnimation(DS.Motion.layout) {
+                        ingredients.removeAll { $0.id == item.id }
+                    }
                 }
-            }
+            )
         }
     }
 }
+
