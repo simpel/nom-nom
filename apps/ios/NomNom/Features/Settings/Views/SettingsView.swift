@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// App settings: notifications, debug tools, and account actions.
+/// App settings: notifications and debug tools. Account actions live on the profile.
 struct SettingsView: View {
     @Environment(FoodStore.self) private var store
 
@@ -13,7 +13,6 @@ struct SettingsView: View {
                 #if DEBUG
                 sampleDataSection
                 #endif
-                AccountActionsSection()
             }
             .padding(.horizontal, DS.Spacing.gutter)
             .padding(.top, DS.Spacing.s5)
