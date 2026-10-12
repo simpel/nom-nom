@@ -13,7 +13,7 @@ extension String {
     }
 
     /// Lowercased, accent-folded, punctuation-stripped key used to decide whether
-    /// two typed names mean the same dish.
+    /// two typed names mean the same recipe.
     var normalizedForMatching: String {
         let folded = folding(options: [.diacriticInsensitive, .caseInsensitive, .widthInsensitive],
                              locale: Locale(identifier: "en_US_POSIX"))
@@ -62,7 +62,7 @@ enum Fuzzy {
     }
 
     /// How close two names are allowed to be before we treat them as a probable typo
-    /// of the same dish. Scales with length so "ris"/"ros" isn't flagged.
+    /// of the same recipe. Scales with length so "ris"/"ros" isn't flagged.
     static func isProbableTypo(_ a: String, _ b: String) -> Bool {
         guard a != b, !a.isEmpty, !b.isEmpty else { return false }
         let longest = max(a.count, b.count)

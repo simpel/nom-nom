@@ -75,8 +75,8 @@ struct CreateRecipeSheet: View {
         if let cookingMethodID = result.cookingMethodID {
             session.form.recipe.cookingMethodID = cookingMethodID
         }
-        if let dishKindID = result.dishKindID {
-            session.form.recipe.dishKindID = dishKindID
+        if let recipeKindID = result.recipeKindID {
+            session.form.recipe.recipeKindID = recipeKindID
         }
         if let effort = result.effort, let level = EffortLevel(rawValue: effort) {
             session.form.recipe.effort = level

@@ -82,7 +82,7 @@ extension FoodStore {
             PartyFollower(partyID: publicPartyID, userID: previewUserID)
         ]
 
-        // Recipes / Dishes
+        // Recipes / Recipes
         let recipe1ID = UUID(uuidString: "00000000-0000-0000-0000-000000000101")!
         let recipe2ID = UUID(uuidString: "00000000-0000-0000-0000-000000000102")!
         let recipe3ID = UUID(uuidString: "00000000-0000-0000-0000-000000000103")!
@@ -138,7 +138,7 @@ extension FoodStore {
             effort: .zeroTo15,
             cuisine: "italian"
         )
-        store.dishes = [tacos, salmon, pasta]
+        store.recipes = [tacos, salmon, pasta]
 
         // Meals
         let meal1ID = UUID(uuidString: "00000000-0000-0000-0000-000000000201")!

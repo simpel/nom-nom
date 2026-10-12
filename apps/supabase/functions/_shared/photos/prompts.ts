@@ -1,4 +1,4 @@
-// Image prompts for generate-dish-photo, written for Meta Muse Image (meta/muse-image-1.0).
+// Image prompts for generate-recipe-photo and generate-meal-photo, written for Meta Muse Image (meta/muse-image-1.0).
 //
 // Muse plans the layout before it renders, so each prompt is a shoot brief in the order a
 // photographer settles it: deliverable, subject, plating, surface, camera, light, style, and

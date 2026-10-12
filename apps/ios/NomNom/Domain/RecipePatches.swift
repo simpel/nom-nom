@@ -1,6 +1,6 @@
 import Foundation
 
-/// Insert payload for Supabase `dishes` table.
+/// Insert payload for Supabase `recipes` table.
 struct NewRecipe: Encodable {
     let owner_id: UUID?
     let name: String
@@ -18,7 +18,7 @@ struct NewRecipe: Encodable {
     let health_verdict: String?
     let health_rationale: String?
     let health_breakdown: HealthBreakdown?
-    let dish_kind_id: UUID?
+    let recipe_kind_id: UUID?
     let is_public: Bool
     let is_deleted: Bool
 
@@ -38,7 +38,7 @@ struct NewRecipe: Encodable {
         healthVerdict: String? = nil,
         healthRationale: String? = nil,
         healthBreakdown: HealthBreakdown? = nil,
-        dishKindID: UUID? = nil,
+        recipeKindID: UUID? = nil,
         isPublic: Bool = true,
         isDeleted: Bool = false
     ) {
@@ -58,7 +58,7 @@ struct NewRecipe: Encodable {
         self.health_verdict = healthVerdict
         self.health_rationale = healthRationale
         self.health_breakdown = healthBreakdown
-        self.dish_kind_id = dishKindID
+        self.recipe_kind_id = recipeKindID
         self.is_public = isPublic
         self.is_deleted = isDeleted
     }
@@ -95,7 +95,7 @@ struct RecipeContentPatch: Encodable {
     let health_verdict: String?
     let health_rationale: String?
     let health_breakdown: HealthBreakdown?
-    let dish_kind_id: UUID?
+    let recipe_kind_id: UUID?
 
     init(
         ingredients: [RecipeIngredient],
@@ -112,7 +112,7 @@ struct RecipeContentPatch: Encodable {
         healthVerdict: String? = nil,
         healthRationale: String? = nil,
         healthBreakdown: HealthBreakdown? = nil,
-        dishKindID: UUID? = nil
+        recipeKindID: UUID? = nil
     ) {
         self.ingredients = ingredients
         self.instructions = instructions
@@ -128,7 +128,7 @@ struct RecipeContentPatch: Encodable {
         self.health_verdict = healthVerdict
         self.health_rationale = healthRationale
         self.health_breakdown = healthBreakdown
-        self.dish_kind_id = dishKindID
+        self.recipe_kind_id = recipeKindID
     }
 }
 

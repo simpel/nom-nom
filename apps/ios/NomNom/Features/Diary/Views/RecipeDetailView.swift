@@ -40,13 +40,13 @@ struct RecipeDetailView: View {
         self._fallbackRecipe = State(initialValue: recipe)
     }
 
-    init(dishID: UUID, showCloseButton: Bool = false) {
-        self.init(recipeID: dishID, showCloseButton: showCloseButton)
+    init(recipeID: UUID, showCloseButton: Bool = false) {
+        self.init(recipeID: recipeID, showCloseButton: showCloseButton)
     }
 
     var recipe: Recipe? { store.recipe(recipeID) ?? fallbackRecipe }
 
-    /// Dish photos, then recipe pages, without duplicates (all in the recipe bucket).
+    /// Recipe photos, then recipe pages, without duplicates (all in the recipe bucket).
     var allPhotos: [String] {
         guard let recipe else { return store.photos(for: recipeID) }
         var paths: [String] = []
@@ -71,7 +71,7 @@ struct RecipeDetailView: View {
         }
         .screenTitle(showCloseButton ? (recipe?.name ?? "Recipe") : "", displayMode: .inline)
         .task { await loadRecipeAndHealth() }
-        .task(id: recipeID) { await store.loadPartyRecipeNotes(dishID: recipeID) }
+        .task(id: recipeID) { await store.loadPartyRecipeNotes(recipeID: recipeID) }
         .toolbar { toolbarContent }
         .alert("Delete this recipe?", isPresented: $confirmDeleteRecipe) {
             Button("Cancel", role: .cancel) {}
@@ -91,7 +91,7 @@ struct RecipeDetailView: View {
             RecipeEditSheet(recipeID: recipeID)
         }
         .sheet(isPresented: $showMealEditor) {
-            MealEditorView(mealID: nil, prefilledDishID: recipeID)
+            MealEditorView(mealID: nil, prefilledRecipeID: recipeID)
         }
         .sheet(item: Binding(
             get: { selectedPhotoIndex.map { PhotoIndexWrapper(index: $0) } },
@@ -176,13 +176,13 @@ struct RecipeDetailView: View {
 
     private var partyNoteLoaded: Bool {
         guard let party = store.currentParty else { return false }
-        return store.partyRecipeNote(dishID: recipeID, partyID: party.id) != nil
+        return store.partyRecipeNote(recipeID: recipeID, partyID: party.id) != nil
     }
 }
 
 #Preview {
     NomNomPreview { store in
-        if let firstRecipe = store.dishes.first {
+        if let firstRecipe = store.recipes.first {
             RecipeDetailView(recipeID: firstRecipe.id)
         }
     }

@@ -10,7 +10,7 @@ async function test() {
     .from('meals')
     .select(`
       *,
-      dishes (id, name, cuisine),
+      recipes (id, name, cuisine),
       meal_ratings (
         reaction,
         profiles (first_name, last_name, handle)

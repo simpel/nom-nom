@@ -12,7 +12,7 @@ enum PhotoCardSource {
     case data(Data?, cuisine: String? = nil)
     /// A recipe: its own photos, then its cuisine.
     case recipe(Recipe)
-    /// A meal: its first photo, then its dish's cuisine.
+    /// A meal: its first photo, then its recipe's cuisine.
     case meal(Meal)
     /// No photo: the cuisine photo when one exists, else the no-photo tile.
     case none(cuisine: String? = nil)
@@ -48,7 +48,7 @@ enum PhotoCardSource {
             return PhotoCardResolvedSource(
                 path: meal.photoPaths.first,
                 bucket: SupabaseConfig.photoBucket,
-                cuisine: store?.dish(meal.dishID)?.cuisine,
+                cuisine: store?.recipe(meal.recipeID)?.cuisine,
                 isGenerating: isGenerating
             )
         case .none(let cuisine):

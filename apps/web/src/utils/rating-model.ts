@@ -13,9 +13,9 @@ export const TRAITS = [
   { id: 'smoky', label: 'Smoky', description: 'Smoked or chargrilled flavour' },
 ] as const
 
-// Not stored on terms: how a tag with no trait, or the cooked trait, reaches a dish.
-export const ANY_TRAIT = { id: 'any', label: 'Any dish', description: 'Tags with no trait: offered on every dish' }
-export const COOKED_TRAIT = { id: 'cooked', label: 'Any cooked dish', description: 'Every dish whose terms do not carry raw' }
+// Not stored on terms: how a tag with no trait, or the cooked trait, reaches a recipe.
+export const ANY_TRAIT = { id: 'any', label: 'Any recipe', description: 'Tags with no trait: offered on every recipe' }
+export const COOKED_TRAIT = { id: 'cooked', label: 'Any cooked recipe', description: 'Every recipe whose terms do not carry raw' }
 
 export const VERDICTS = [
   { value: 5, label: 'Amazing', score: 100 },
@@ -26,10 +26,10 @@ export const VERDICTS = [
   { value: -1, label: "Can't eat", score: 0 },
 ] as const
 
-export const TRAIT_DIMENSIONS = ['dish_kind', 'cooking_method'] as const
+export const TRAIT_DIMENSIONS = ['recipe_kind', 'cooking_method'] as const
 
 export const DIMENSION_LABELS: Record<string, string> = {
-  dish_kind: 'Dish kind',
+  recipe_kind: 'Recipe kind',
   cooking_method: 'Cooking method',
   cuisine: 'Cuisine',
 }
@@ -58,8 +58,8 @@ export type RatingTag = {
 export type RatingModel = {
   terms: Term[]
   tags: RatingTag[]
-  /** term id → dishes using it as dish kind, cooking method or cuisine */
-  dishCounts: Map<string, number>
+  /** term id → recipes using it as recipe kind, cooking method or cuisine */
+  recipeCounts: Map<string, number>
   /** tag id → ratings that chose it */
   tagUsage: Map<string, number>
 }
@@ -70,22 +70,22 @@ function adminClient() {
 
 export async function loadRatingModel(): Promise<RatingModel> {
   const db = adminClient()
-  const [termsRes, tagsRes, dishesRes, ratingsRes] = await Promise.all([
+  const [termsRes, tagsRes, recipesRes, ratingsRes] = await Promise.all([
     db.from('taxonomy_terms')
       .select('id, dimension, slug, name, aliases, rating_traits, created_at')
       .order('dimension').order('name'),
     db.from('rating_tags').select('*').order('sort'),
-    db.from('dishes').select('dish_kind_id, cooking_method_id, cuisine_id'),
+    db.from('recipes').select('recipe_kind_id, cooking_method_id, cuisine_id'),
     db.from('meal_ratings').select('tags'),
   ])
-  for (const res of [termsRes, tagsRes, dishesRes, ratingsRes]) {
+  for (const res of [termsRes, tagsRes, recipesRes, ratingsRes]) {
     if (res.error) console.error('loadRatingModel:', res.error)
   }
 
-  const dishCounts = new Map<string, number>()
-  for (const d of dishesRes.data ?? []) {
-    for (const id of [d.dish_kind_id, d.cooking_method_id, d.cuisine_id]) {
-      if (id) dishCounts.set(id, (dishCounts.get(id) ?? 0) + 1)
+  const recipeCounts = new Map<string, number>()
+  for (const d of recipesRes.data ?? []) {
+    for (const id of [d.recipe_kind_id, d.cooking_method_id, d.cuisine_id]) {
+      if (id) recipeCounts.set(id, (recipeCounts.get(id) ?? 0) + 1)
     }
   }
   const tagUsage = new Map<string, number>()
@@ -96,21 +96,21 @@ export async function loadRatingModel(): Promise<RatingModel> {
   return {
     terms: (termsRes.data ?? []) as Term[],
     tags: (tagsRes.data ?? []) as RatingTag[],
-    dishCounts,
+    recipeCounts,
     tagUsage,
   }
 }
 
-export async function loadTermDishes(termId: string) {
+export async function loadTermRecipes(termId: string) {
   const { data } = await adminClient()
-    .from('dishes')
+    .from('recipes')
     .select('id, name')
-    .or(`dish_kind_id.eq.${termId},cooking_method_id.eq.${termId},cuisine_id.eq.${termId}`)
+    .or(`recipe_kind_id.eq.${termId},cooking_method_id.eq.${termId},cuisine_id.eq.${termId}`)
     .order('name')
   return (data ?? []) as { id: string; name: string }[]
 }
 
-/** The trait node a tag hangs off: its trait, or Any dish when it has none. */
+/** The trait node a tag hangs off: its trait, or Any recipe when it has none. */
 export function tagTraitId(tag: RatingTag) {
   return tag.trait ?? ANY_TRAIT.id
 }
@@ -121,14 +121,14 @@ export function traitInfo(id: string) {
   return TRAITS.find(t => t.id === id) ?? null
 }
 
-/** Does a dish with these traits offer this tag (for some verdict)? Mirrors the app. */
+/** Does a recipe with these traits offer this tag (for some verdict)? Mirrors the app. */
 export function tagFitsTraits(tag: RatingTag, traits: string[]) {
   if (tag.trait === null) return true
   if (tag.trait === COOKED_TRAIT.id) return !traits.includes('raw')
   return traits.includes(tag.trait)
 }
 
-/** Trait-carrying terms (dish kinds, cooking methods). */
+/** Trait-carrying terms (recipe kinds, cooking methods). */
 export function traitTerms(terms: Term[]) {
   return terms.filter(t => (TRAIT_DIMENSIONS as readonly string[]).includes(t.dimension))
 }

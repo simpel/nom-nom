@@ -12,7 +12,7 @@ struct RecipePartyInsightsSheet: View {
 
     private var meals: [Meal] { store.partyServings(of: recipe.id, partyID: party.id) }
     private var history: [Meal] { meals.sorted { $0.eatenOn > $1.eatenOn } }
-    private var shares: [RaterRef: Double] { store.scoreShares(forDish: recipe.id, inParty: party.id) }
+    private var shares: [RaterRef: Double] { store.scoreShares(forRecipe: recipe.id, inParty: party.id) }
 
     private var segments: [SegmentedBarSegment] {
         store.barSegments(shares).map { SegmentedBarSegment(label: $0.label ?? "", value: $0.value, ink: $0.ink) }

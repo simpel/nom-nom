@@ -21,7 +21,7 @@ export default async function MealDetailPage({ params }: { params: Promise<{ id:
     .from('meals')
     .select(`
       *,
-      dishes (id, name, cuisine),
+      recipes (id, name, cuisine),
       meal_ratings (
         reaction,
         rater_id,
@@ -72,9 +72,9 @@ export default async function MealDetailPage({ params }: { params: Promise<{ id:
     <div className="p-8 max-w-7xl mx-auto space-y-8">
       <div className="flex justify-between items-center bg-white p-6 rounded-lg shadow-sm border">
         <div>
-          <h1 className="text-3xl font-bold">Meal: {meal.dishes?.name}</h1>
+          <h1 className="text-3xl font-bold">Meal: {meal.recipes?.name}</h1>
           <p className="text-gray-500 mt-1">
-            Eaten on: {meal.eaten_on} | Recipe: <Link href={`/admin/recipes/${meal.dishes?.id}`} className="text-blue-600 hover:underline">{meal.dishes?.name}</Link>
+            Eaten on: {meal.eaten_on} | Recipe: <Link href={`/admin/recipes/${meal.recipes?.id}`} className="text-blue-600 hover:underline">{meal.recipes?.name}</Link>
           </p>
         </div>
         <Link href="/admin">

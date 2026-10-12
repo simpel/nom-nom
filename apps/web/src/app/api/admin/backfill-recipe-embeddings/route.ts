@@ -20,34 +20,34 @@ export async function POST(request: Request) {
     const apiKey = process.env.VERCEL_AI_GATEWAY || process.env.VERCEL_AI_GATEWAY_KEY;
 
     try {
-        const { data: dishes, error } = await adminSupabase
-            .from('dishes')
+        const { data: recipes, error } = await adminSupabase
+            .from('recipes')
             .select('id, name, cuisine, tags, ingredients, instructions')
             .is('embedding', null)
             .limit(100);
 
-        if (error || !dishes) {
-            return NextResponse.json({ error: 'Failed to fetch dishes' }, { status: 500 });
+        if (error || !recipes) {
+            return NextResponse.json({ error: 'Failed to fetch recipes' }, { status: 500 });
         }
 
-        if (dishes.length === 0) {
-            return NextResponse.json({ success: true, message: 'All dishes have embeddings' });
+        if (recipes.length === 0) {
+            return NextResponse.json({ success: true, message: 'All recipes have embeddings' });
         }
 
         let updated = 0;
 
-        for (const dish of dishes) {
-            let inputStr = `${dish.name}`;
-            if (dish.cuisine) inputStr += `\nCuisine: ${dish.cuisine}`;
-            if (dish.tags && dish.tags.length > 0) inputStr += `\nTags: ${dish.tags.join(", ")}`;
+        for (const recipe of recipes) {
+            let inputStr = `${recipe.name}`;
+            if (recipe.cuisine) inputStr += `\nCuisine: ${recipe.cuisine}`;
+            if (recipe.tags && recipe.tags.length > 0) inputStr += `\nTags: ${recipe.tags.join(", ")}`;
             
-            if (dish.ingredients && Array.isArray(dish.ingredients)) {
-                const ingList = dish.ingredients.map((i: any) => i.ingredient).filter(Boolean);
+            if (recipe.ingredients && Array.isArray(recipe.ingredients)) {
+                const ingList = recipe.ingredients.map((i: any) => i.ingredient).filter(Boolean);
                 if (ingList.length > 0) inputStr += `\nIngredients: ${ingList.join(", ")}`;
             }
             
-            if (dish.instructions && dish.instructions.length > 0) {
-                inputStr += `\nInstructions: ${dish.instructions.join(" ")}`;
+            if (recipe.instructions && recipe.instructions.length > 0) {
+                inputStr += `\nInstructions: ${recipe.instructions.join(" ")}`;
             }
 
             const aiResponse = await fetch(`${aiGatewayUrl}/embeddings`, {
@@ -63,7 +63,7 @@ export async function POST(request: Request) {
             });
 
             if (!aiResponse.ok) {
-                console.error(`AI Error for dish ${dish.id}:`, await aiResponse.text());
+                console.error(`AI Error for recipe ${recipe.id}:`, await aiResponse.text());
                 continue;
             }
 
@@ -72,9 +72,9 @@ export async function POST(request: Request) {
 
             if (embedding) {
                 await adminSupabase
-                    .from('dishes')
+                    .from('recipes')
                     .update({ embedding })
-                    .eq('id', dish.id);
+                    .eq('id', recipe.id);
                 updated++;
             }
         }

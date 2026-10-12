@@ -26,7 +26,7 @@ extension FoodStore {
         let name = firstName(for: rater)
         let raterRatings = ratings(for: rater)
         let ratedMeals: [(meal: Meal, rating: MealRating, recipe: Recipe)] = raterRatings.compactMap { rating in
-            guard let m = meal(rating.mealID), let r = recipe(m.dishID) else { return nil }
+            guard let m = meal(rating.mealID), let r = recipe(m.recipeID) else { return nil }
             return (m, rating, r)
         }.sorted { $0.meal.eatenOn > $1.meal.eatenOn }
 
@@ -62,19 +62,19 @@ extension FoodStore {
 
         let raterRatings = ratings(for: rater)
         let ratingsByRecipeID = Dictionary(grouping: raterRatings, by: { rating -> UUID in
-            meal(rating.mealID)?.dishID ?? UUID()
+            meal(rating.mealID)?.recipeID ?? UUID()
         })
 
-        let kindAffinities = Dictionary(uniqueKeysWithValues: dishKindAffinities(for: rater).map { ($0.tag, $0.delta) })
+        let kindAffinities = Dictionary(uniqueKeysWithValues: recipeKindAffinities(for: rater).map { ($0.tag, $0.delta) })
         let cuisineAffs = Dictionary(uniqueKeysWithValues: cuisineAffinities(for: rater).map { ($0.tag, $0.delta) })
 
         let partyMeals = meals(forParty: partyID)
-        var partyScoresByDish: [UUID: [Double]] = [:]
+        var partyScoresByRecipe: [UUID: [Double]] = [:]
         for meal in partyMeals {
             let ratings = ratingsByMeal[meal.id] ?? []
             if !ratings.isEmpty {
                 let avg = ratings.reduce(0.0) { $0 + $1.score } / Double(ratings.count)
-                partyScoresByDish[meal.dishID, default: []].append(avg)
+                partyScoresByRecipe[meal.recipeID, default: []].append(avg)
             }
         }
 
@@ -85,7 +85,7 @@ extension FoodStore {
             if let prior = ratingsByRecipeID[recipe.id]?.first {
                 userScore = prior.score
             } else {
-                if let kind = dishKind(for: recipe), let delta = kindAffinities[kind.slug] {
+                if let kind = recipeKind(for: recipe), let delta = kindAffinities[kind.slug] {
                     userScore += delta * 0.5
                 }
                 if let cuisine = recipe.cuisine, let delta = cuisineAffs[cuisine.lowercased()] {
@@ -95,8 +95,8 @@ extension FoodStore {
             let userFit = max(60, min(99, Int((userScore * 100.0).rounded())))
 
             var partyScore: Double = 0.82
-            if let dishPartyScores = partyScoresByDish[recipe.id], !dishPartyScores.isEmpty {
-                partyScore = dishPartyScores.reduce(0.0, +) / Double(dishPartyScores.count)
+            if let recipePartyScores = partyScoresByRecipe[recipe.id], !recipePartyScores.isEmpty {
+                partyScore = recipePartyScores.reduce(0.0, +) / Double(recipePartyScores.count)
             }
             let partyFit = max(60, min(98, Int((partyScore * 100.0).rounded())))
 
@@ -126,7 +126,7 @@ extension FoodStore {
         for meal in partyMeals {
             let mealRatings = ratingsByMeal[meal.id] ?? []
             guard let rating = mealRatings.first(where: { $0.source == rater }),
-                  let recipe = recipe(meal.dishID) else { continue }
+                  let recipe = recipe(meal.recipeID) else { continue }
 
             let partyAvg = mealRatings.reduce(0.0) { $0 + $1.score } / Double(max(1, mealRatings.count))
             let userScoreInt = Int((rating.score * 100.0).rounded())

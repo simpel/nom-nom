@@ -56,8 +56,8 @@ enum DevSelfCheck {
         // 1. Create a meal with a photo, the way the editor does.
         let created = await store.save(FoodStore.MealDraft(
             mealID: nil,
-            dishName: "Selfcheck Stew",
-            linkedDishID: nil,
+            recipeName: "Selfcheck Stew",
+            linkedRecipeID: nil,
             eatenOn: .now,
             notes: "written by the self check",
             photos: FoodStore.PhotosDraft(addedData: [swatch()])
@@ -65,7 +65,7 @@ enum DevSelfCheck {
         check("save a new meal with a photo", created, store.errorMessage ?? "")
 
         guard let meal = store.myMeals.first(where: {
-            store.dish($0.dishID)?.normalizedName == "selfcheck stew"
+            store.recipe($0.recipeID)?.normalizedName == "selfcheck stew"
         }) else {
             log.error("FAIL  the saved meal is not in the store; stopping")
             return
@@ -134,8 +134,8 @@ enum DevSelfCheck {
         let oldPath = meal.photoPath
         let cleared = await store.save(FoodStore.MealDraft(
             mealID: meal.id,
-            dishName: "Selfcheck Stew",
-            linkedDishID: meal.dishID,
+            recipeName: "Selfcheck Stew",
+            linkedRecipeID: meal.recipeID,
             eatenOn: meal.eatenOn,
             notes: meal.notes,
             photos: FoodStore.PhotosDraft(removedPaths: meal.photoPaths)

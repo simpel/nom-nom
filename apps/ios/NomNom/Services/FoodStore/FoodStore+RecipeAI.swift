@@ -9,8 +9,8 @@ struct ParsedRecipeResult: Decodable {
     let cuisineID: UUID?
     let cookingMethod: String?
     let cookingMethodID: UUID?
-    let dishKind: String?
-    let dishKindID: UUID?
+    let recipeKind: String?
+    let recipeKindID: UUID?
     let effort: Int?
     let ingredients: [RecipeIngredient]
     let instructions: [String]
@@ -33,8 +33,8 @@ struct ParsedRecipeResult: Decodable {
         case cuisineID = "cuisine_id"
         case cookingMethod = "cooking_method"
         case cookingMethodID = "cooking_method_id"
-        case dishKind = "dish_kind"
-        case dishKindID = "dish_kind_id"
+        case recipeKind = "recipe_kind"
+        case recipeKindID = "recipe_kind_id"
         case effort
         case ingredients
         case instructions
@@ -52,8 +52,8 @@ struct ParsedRecipeResult: Decodable {
         cuisineID = try container.decodeIfPresent(UUID.self, forKey: .cuisineID)
         cookingMethod = try container.decodeIfPresent(String.self, forKey: .cookingMethod)
         cookingMethodID = try container.decodeIfPresent(UUID.self, forKey: .cookingMethodID)
-        dishKind = try container.decodeIfPresent(String.self, forKey: .dishKind)
-        dishKindID = try container.decodeIfPresent(UUID.self, forKey: .dishKindID)
+        recipeKind = try container.decodeIfPresent(String.self, forKey: .recipeKind)
+        recipeKindID = try container.decodeIfPresent(UUID.self, forKey: .recipeKindID)
         effort = try container.decodeIfPresent(Int.self, forKey: .effort)
         ingredients = try container.decodeIfPresent([RecipeIngredient].self, forKey: .ingredients) ?? []
         instructions = try container.decodeIfPresent([String].self, forKey: .instructions) ?? []
@@ -119,7 +119,7 @@ extension FoodStore {
         }
     }
 
-    /// Invokes the `generate-dish-photo` Edge Function to create an editorial photo for an unphotographed recipe.
+    /// Invokes the `generate-recipe-photo` Edge Function to create an editorial photo for an unphotographed recipe.
     @discardableResult
     func generateRecipeImage(for recipe: Recipe) async throws -> GenerateRecipeImageResult {
         generatingPhotoRecipeIDs.insert(recipe.id)
@@ -135,7 +135,7 @@ extension FoodStore {
         )
 
         let result: GenerateRecipeImageResult = try await supabase.functions.invoke(
-            "generate-dish-photo",
+            "generate-recipe-photo",
             options: FunctionInvokeOptions(body: payload)
         )
 

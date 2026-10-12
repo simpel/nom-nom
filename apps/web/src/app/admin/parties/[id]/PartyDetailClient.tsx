@@ -112,7 +112,7 @@ export default function PartyDetailClient({ party }: { party: any }) {
               </div>
             </div>
 
-            {/* Taste Match: how well each member's ratings track the dish consensus, and whether their ratings trend up or down */}
+            {/* Taste Match: how well each member's ratings track the recipe consensus, and whether their ratings trend up or down */}
             <div className="space-y-4">
               <h3 className="text-lg font-medium text-gray-800">Taste Match</h3>
               <div className="bg-gray-50 p-4 rounded-md border space-y-3">
@@ -191,21 +191,21 @@ export default function PartyDetailClient({ party }: { party: any }) {
           </p>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-            {recipeSuggestions.map((dish: any) => (
-              <Link key={dish.id} href={`/admin/recipes/${dish.id}`} className="block">
+            {recipeSuggestions.map((recipe: any) => (
+              <Link key={recipe.id} href={`/admin/recipes/${recipe.id}`} className="block">
                 <div className="border p-4 rounded-md hover:bg-gray-50 transition-colors h-full">
-                  <p className="font-semibold">{dish.name}</p>
-                  {dish.cuisine && <p className="text-sm text-gray-500">{dish.cuisine}</p>}
+                  <p className="font-semibold">{recipe.name}</p>
+                  {recipe.cuisine && <p className="text-sm text-gray-500">{recipe.cuisine}</p>}
                   <div className="flex items-center gap-2 mt-2 text-xs text-gray-400">
-                    {dish.effort !== null && dish.effort !== undefined && (
-                      <span>{effortLabels[dish.effort] ?? dish.effort}</span>
+                    {recipe.effort !== null && recipe.effort !== undefined && (
+                      <span>{effortLabels[recipe.effort] ?? recipe.effort}</span>
                     )}
-                    {dish.health_score !== null && dish.health_score !== undefined && (
-                      <span>· {dish.health_score}/100 health</span>
+                    {recipe.health_score !== null && recipe.health_score !== undefined && (
+                      <span>· {recipe.health_score}/100 health</span>
                     )}
                   </div>
                   <span className="inline-flex items-center rounded-full bg-blue-100 text-blue-700 px-2 py-0.5 mt-2 text-xs font-medium">
-                    {Math.round(dish.similarity * 100)}% match
+                    {Math.round(recipe.similarity * 100)}% match
                   </span>
                 </div>
               </Link>
@@ -318,7 +318,7 @@ export default function PartyDetailClient({ party }: { party: any }) {
             {party.meals.map((meal: any) => (
               <Link key={meal.id} href={`/admin/meals/${meal.id}`} className="block">
                 <div className="border p-4 rounded-md hover:bg-gray-50 transition-colors">
-                  <p className="font-semibold">{meal.dishes?.name}</p>
+                  <p className="font-semibold">{meal.recipes?.name}</p>
                   <p className="text-sm text-gray-500">
                     {new Date(meal.eaten_on).toLocaleDateString('en-US')}
                   </p>

@@ -98,7 +98,7 @@ ORDER BY \"Meals Eaten\" DESC;
 
 docker exec -i "$CONTAINER_NAME" psql -U postgres -d postgres -c "
 SELECT 
-    (SELECT COUNT(*) FROM dishes) AS \"Total Recipes\",
+    (SELECT COUNT(*) FROM recipes) AS \"Total Recipes\",
     (SELECT COUNT(*) FROM meals) AS \"Total Meals\",
     (SELECT COUNT(*) FROM meal_ratings) AS \"Total Taste Ratings\",
     (SELECT MIN(eaten_on) FROM meals) AS \"Earliest Meal\",
@@ -109,11 +109,11 @@ echo -e "${CYAN}Peak week verification (July 13–17, 2026):${NC}"
 docker exec -i "$CONTAINER_NAME" psql -U postgres -d postgres -c "
 SELECT 
     m.eaten_on AS \"Date\",
-    d.name AS \"Dish Served\",
+    d.name AS \"Recipe Served\",
     d.cuisine AS \"Cuisine\",
     m.notes AS \"Notes\"
 FROM meals m
-JOIN dishes d ON d.id = m.dish_id
+JOIN recipes d ON d.id = m.recipe_id
 WHERE m.eaten_on BETWEEN '2026-07-13' AND '2026-07-17'
 ORDER BY m.eaten_on ASC;
 "

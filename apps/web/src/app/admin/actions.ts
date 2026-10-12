@@ -92,14 +92,14 @@ export async function generateProfileInsightAction(profileId: string) {
   return { success: true }
 }
 
-export async function backfillDishEmbeddingsAction() {
+export async function backfillRecipeEmbeddingsAction() {
   const host = (await headers()).get('host') || 'localhost:3000'
   const protocol = host.includes('localhost') ? 'http' : 'https'
   const baseUrl = `${protocol}://${host}`
 
   const cookieHeader = (await headers()).get('cookie')
 
-  const res = await fetch(`${baseUrl}/api/admin/backfill-dish-embeddings`, {
+  const res = await fetch(`${baseUrl}/api/admin/backfill-recipe-embeddings`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',

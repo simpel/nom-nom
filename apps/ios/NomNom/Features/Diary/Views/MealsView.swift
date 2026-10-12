@@ -53,8 +53,8 @@ struct MealsView: View {
                                     .contextMenu {
                                         ShareLink(
                                             item: meal.shareURL,
-                                            subject: Text(store.dishName(forMeal: meal)),
-                                            preview: SharePreview(store.dishName(forMeal: meal))
+                                            subject: Text(store.recipeName(forMeal: meal)),
+                                            preview: SharePreview(store.recipeName(forMeal: meal))
                                         ) {
                                             Label("Share meal", systemImage: "square.and.arrow.up")
                                         }

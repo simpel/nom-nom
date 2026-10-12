@@ -1,7 +1,7 @@
 import Foundation
 
 /// One reason a whole table scored a meal the way it did: a "what stood out" tag the
-/// raters picked ("Too spicy", said by 2 of 3), or a pattern in their history (dishes
+/// raters picked ("Too spicy", said by 2 of 3), or a pattern in their history (recipes
 /// with coconut milk run 12 below their usual). Built on device by
 /// `FoodStore.tableExplanation(forMeal:)`.
 struct TableReason: Identifiable, Hashable {

@@ -58,7 +58,7 @@ export default async function PartyDetailPage({ params }: { params: Promise<{ id
         eaten_on,
         effort,
         repeat_desire,
-        dishes (
+        recipes (
           id,
           name,
           cuisine,
@@ -134,14 +134,14 @@ export default async function PartyDetailPage({ params }: { params: Promise<{ id
       }
 
       // 1. Effort
-      const effort = m.effort ?? m.dishes?.effort;
+      const effort = m.effort ?? m.recipes?.effort;
       if (effort !== null && effort !== undefined && effortStats[effort]) {
         effortStats[effort].score += avgScore;
         effortStats[effort].count += 1;
       }
       
       // 4. Cuisine
-      const cuisine = m.dishes?.cuisine?.trim();
+      const cuisine = m.recipes?.cuisine?.trim();
       if (cuisine) {
         if (!cuisineStats[cuisine]) cuisineStats[cuisine] = { count: 0, scores: [] };
         cuisineStats[cuisine].count += 1;
@@ -156,8 +156,8 @@ export default async function PartyDetailPage({ params }: { params: Promise<{ id
     }
     
     // 6. Health
-    if (m.dishes?.health_score) {
-      healthScores.push(m.dishes.health_score);
+    if (m.recipes?.health_score) {
+      healthScores.push(m.recipes.health_score);
     }
     
     return {
@@ -173,7 +173,7 @@ export default async function PartyDetailPage({ params }: { params: Promise<{ id
     count: e.count
   })).filter(e => e.count > 0);
 
-  // Compile Taste Stats: per-member match (own rating vs. dish consensus) and trend (own avg, early vs. late)
+  // Compile Taste Stats: per-member match (own rating vs. recipe consensus) and trend (own avg, early vs. late)
   const TREND_THRESHOLD = 0.05; // normalized-score delta (out of 1.0) to call it up/down vs flat
   const tasteStats = [];
   for (const member of members) {
@@ -208,7 +208,7 @@ export default async function PartyDetailPage({ params }: { params: Promise<{ id
   }
 
   // Ingredient flavor profile: server-aggregated over canonicalized ingredients
-  // (see get_flavor_profile / dish_ingredients_canonical) instead of raw-text stats.
+  // (see get_flavor_profile / recipe_ingredients_canonical) instead of raw-text stats.
   const { data: flavorProfile } = await adminSupabase
     .rpc('get_flavor_profile', { p_scope: 'party', p_id: id })
 

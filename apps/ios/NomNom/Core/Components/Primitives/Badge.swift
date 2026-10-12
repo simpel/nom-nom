@@ -158,8 +158,8 @@ private struct BadgeGallery: View {
                 Badge.verdict(score: 0.9, appearance: .elevated, size: .sm)
                 Badge.verdict(score: 0.4, appearance: .elevated, size: .sm)
             }
-            if let summary = DishSummary(reactions: [.great, .amazing], effort: .zeroTo15) {
-                Badge.dishSummary(summary)
+            if let summary = RecipeSummary(reactions: [.great, .amazing], effort: .zeroTo15) {
+                Badge.recipeSummary(summary)
             }
         }
         .padding(DS.Spacing.gutter)

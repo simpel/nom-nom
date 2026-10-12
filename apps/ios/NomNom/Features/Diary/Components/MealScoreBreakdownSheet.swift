@@ -2,7 +2,7 @@ import SwiftUI
 
 /// How the table scored a meal, as a DS BottomSheet ("Nom Nom iOS" score canvas, board 1):
 /// SheetHero (the average and what changed since last time), the Pro "Why it landed at"
-/// card, and each rater's score. The distribution and the dish's history live in the Pro
+/// card, and each rater's score. The distribution and the recipe's history live in the Pro
 /// breakdown (`MealScoreInsightsSheet`).
 struct MealScoreBreakdownSheet: View {
     let meal: Meal
@@ -21,7 +21,7 @@ struct MealScoreBreakdownSheet: View {
                 MealScoreInsightsCard(meal: meal)
                 memberScores
             }
-            .screenTitle(store.dishName(forMeal: meal), displayMode: .inline)
+            .screenTitle(store.recipeName(forMeal: meal), displayMode: .inline)
             .sheetCloseToolbar()
             .sheet(item: $selectedRater) { target in
                 RaterScoreSheet(meal: meal, rater: target.ref)

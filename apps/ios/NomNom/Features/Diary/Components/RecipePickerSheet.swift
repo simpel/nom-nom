@@ -23,14 +23,14 @@ struct RecipePickerSheet: View {
 
     private var matchingRecipes: [Recipe] {
         guard !trimmedSearch.isEmpty else { return [] }
-        let suggestions = DishRepository.suggestions(
+        let suggestions = RecipeRepository.suggestions(
             for: trimmedSearch,
             in: store.recipes,
-            history: store.dishHistory,
+            history: store.recipeHistory,
             favoriteIDs: store.favoriteRecipeIDs,
             limit: 40
         )
-        let resolved = suggestions.compactMap { store.recipe($0.dishID) }
+        let resolved = suggestions.compactMap { store.recipe($0.recipeID) }
         let favorites = resolved.filter { store.isFavorite(recipe: $0) }
         let nonFavorites = resolved.filter { !store.isFavorite(recipe: $0) }
         return favorites + nonFavorites

@@ -16,7 +16,7 @@ extension FoodStore {
         }
 
         do {
-            async let dishes: [Dish] = supabase.from("dishes").select().execute().value
+            async let recipes: [Recipe] = supabase.from("recipes").select().execute().value
             async let meals: [Meal] = supabase.from("meals").select().execute().value
             async let eaters: [Eater] = supabase.from("eaters").select().execute().value
             async let ratings: [MealRating] = supabase.from("meal_ratings").select().execute().value
@@ -32,7 +32,7 @@ extension FoodStore {
             async let taxonomyTerms: [TaxonomyTermRecord] = supabase.from("taxonomy_terms").select().execute().value
             async let ratingTags: [RatingTagOption] = supabase.from("rating_tags").select().order("sort").execute().value
 
-            self.dishes = try await dishes
+            self.recipes = try await recipes
             self.meals = try await meals
             self.eaters = try await eaters
             self.ratings = try await ratings
@@ -77,7 +77,7 @@ extension FoodStore {
     func loadProfiles() async throws {
         var wanted: Set<UUID> = [userID]
         wanted.formUnion(meals.compactMap(\.createdBy))
-        wanted.formUnion(dishes.compactMap(\.ownerID))
+        wanted.formUnion(recipes.compactMap(\.ownerID))
         wanted.formUnion(invites.map(\.inviterID))
         wanted.formUnion(invites.compactMap(\.inviteeID))
         wanted.formUnion(ratings.compactMap(\.raterID))
@@ -109,12 +109,12 @@ extension FoodStore {
         notifications.sort { $0.createdAt > $1.createdAt }
         parties.sort { $0.name.localizedStandardCompare($1.name) == .orderedAscending }
 
-        dishByID = Dictionary(dishes.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
+        recipeByID = Dictionary(recipes.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
         eaterByID = Dictionary(eaters.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
         mealByID = Dictionary(meals.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
         partyByID = Dictionary(parties.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
 
-        mealsByDish = Dictionary(grouping: meals, by: \.dishID)
+        mealsByRecipe = Dictionary(grouping: meals, by: \.recipeID)
         ratingsByMeal = Dictionary(grouping: ratings, by: \.mealID)
         invitesByMeal = Dictionary(grouping: invites, by: \.mealID)
         mealPartiesByMeal = Dictionary(grouping: mealParties, by: \.mealID)

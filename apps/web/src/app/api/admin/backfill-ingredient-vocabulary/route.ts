@@ -22,19 +22,19 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json().catch(() => ({}));
-    const dishId: string | undefined = body.dish_id;
+    const recipeId: string | undefined = body.recipe_id;
 
     try {
-        let query = adminSupabase.from('dishes').select('id, ingredients');
-        if (dishId) query = query.eq('id', dishId);
+        let query = adminSupabase.from('recipes').select('id, ingredients');
+        if (recipeId) query = query.eq('id', recipeId);
 
-        const { data: dishes, error } = await query;
+        const { data: recipes, error } = await query;
 
-        if (error || !dishes) {
-            return NextResponse.json({ error: 'Failed to fetch dishes' }, { status: 500 });
+        if (error || !recipes) {
+            return NextResponse.json({ error: 'Failed to fetch recipes' }, { status: 500 });
         }
 
-        const withIngredients = dishes.filter(
+        const withIngredients = recipes.filter(
             (d) => Array.isArray(d.ingredients) && d.ingredients.length > 0
         );
 
@@ -42,48 +42,48 @@ export async function POST(request: Request) {
             return NextResponse.json({
                 success: true,
                 updated: 0,
-                message: dishId ? 'Dish not found or has no ingredients' : 'No dishes with ingredients',
+                message: recipeId ? 'Recipe not found or has no ingredients' : 'No recipes with ingredients',
             });
         }
 
-        // Skip dishes already resolved, unless a specific dish was requested (force re-run).
+        // Skip recipes already resolved, unless a specific recipe was requested (force re-run).
         let pending = withIngredients;
-        if (!dishId) {
+        if (!recipeId) {
             const { data: done, error: doneError } = await adminSupabase
-                .from('dish_ingredients_canonical')
-                .select('dish_id');
+                .from('recipe_ingredients_canonical')
+                .select('recipe_id');
 
             if (doneError) {
                 return NextResponse.json({ error: 'Failed to fetch existing canonical rows' }, { status: 500 });
             }
 
-            const doneIds = new Set((done || []).map((r) => r.dish_id));
+            const doneIds = new Set((done || []).map((r) => r.recipe_id));
             pending = withIngredients.filter((d) => !doneIds.has(d.id)).slice(0, 50);
         }
 
         if (pending.length === 0) {
-            return NextResponse.json({ success: true, updated: 0, message: 'All dishes already canonicalized' });
+            return NextResponse.json({ success: true, updated: 0, message: 'All recipes already canonicalized' });
         }
 
         let updated = 0;
         let failed = 0;
         let lastError: string | null = null;
 
-        for (const dish of pending) {
+        for (const recipe of pending) {
             const { error: invokeError } = await adminSupabase.functions.invoke('canonicalize-ingredients', {
                 headers: { 'x-webhook-secret': webhookSecret },
                 body: {
                     type: 'UPDATE',
-                    table: 'dishes',
-                    record: dish,
+                    table: 'recipes',
+                    record: recipe,
                     old_record: null,
                 },
             });
 
             if (invokeError) {
-                console.error(`Canonicalization error for dish ${dish.id}:`, invokeError);
+                console.error(`Canonicalization error for recipe ${recipe.id}:`, invokeError);
                 failed++;
-                lastError = `${dish.id}: ${invokeError.message || 'edge function call failed'}`;
+                lastError = `${recipe.id}: ${invokeError.message || 'edge function call failed'}`;
                 continue;
             }
 

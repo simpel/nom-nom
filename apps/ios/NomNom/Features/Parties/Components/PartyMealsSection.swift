@@ -1,7 +1,7 @@
 import SwiftUI
 
 /// "What they're eating" ("Nom Nom iOS" canvas): the party's five latest meals as
-/// MealRows (photo, dish, date, score) in a list Card, then "See all N meals", which
+/// MealRows (photo, recipe, date, score) in a list Card, then "See all N meals", which
 /// switches to the Meals tab with this party selected. Empty, an EmptyState `card`.
 struct PartyMealsSection: View {
     let party: Party

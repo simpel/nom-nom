@@ -28,7 +28,7 @@ interface NotificationRow {
   user_id: string;
   meal_id: string | null;
   party_id: string | null;
-  dish_id: string | null;
+  recipe_id: string | null;
   kind: string;
   title: string;
   body: string;
@@ -110,7 +110,7 @@ function deepLink(record: NotificationRow): string {
   // a bare nomnom:// scheme link, which does nothing without the app.
   if (record.meal_id) return `https://www.nomnom.casa/invite?meal_id=${record.meal_id}`;
   if (record.party_id) return `https://www.nomnom.casa/invite?party_id=${record.party_id}`;
-  // recipe_liked carries only a dish_id, which has no deep-link target today.
+  // recipe_liked carries only a recipe_id, which has no deep-link target today.
   return "https://www.nomnom.casa";
 }
 
@@ -263,12 +263,12 @@ Deno.serve(async (req) => {
         aps: {
           alert: { title: record.title, body: record.body },
           sound: "default",
-          "thread-id": record.meal_id ?? record.party_id ?? record.dish_id ?? undefined,
+          "thread-id": record.meal_id ?? record.party_id ?? record.recipe_id ?? undefined,
         },
         kind: record.kind,
         mealId: record.meal_id,
         partyId: record.party_id,
-        dishId: record.dish_id,
+        recipeId: record.recipe_id,
       }),
     });
 

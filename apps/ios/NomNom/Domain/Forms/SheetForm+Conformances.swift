@@ -3,7 +3,7 @@ import Foundation
 // Existing values that edit sheets work on directly.
 
 extension FoodStore.MealDraft: SheetForm {
-    var isValid: Bool { !dishName.trimmedName.isEmpty }
+    var isValid: Bool { !recipeName.trimmedName.isEmpty }
 }
 
 extension RatingAnswers: SheetForm {

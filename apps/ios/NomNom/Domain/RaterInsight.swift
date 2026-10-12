@@ -1,11 +1,11 @@
 import Foundation
 
-/// How strongly a rater's scores for dishes carrying a given dish kind, ingredient,
+/// How strongly a rater's scores for recipes carrying a given recipe kind, ingredient,
 /// cuisine, or general baseline deviate from their overall average — the basis for
 /// "why did they score it that way" explanations on meals and taste preferences on profiles.
 struct RaterTagAffinity: Identifiable, Hashable {
     enum Kind: Hashable {
-        case dishKind(name: String)
+        case recipeKind(name: String)
         case cookingMethod(name: String)
         case ingredient(name: String)
         case cuisine(name: String)
@@ -16,7 +16,7 @@ struct RaterTagAffinity: Identifiable, Hashable {
 
     private var kindID: String {
         switch kind {
-        case .dishKind: return "kind"
+        case .recipeKind: return "kind"
         case .cookingMethod: return "meth"
         case .ingredient: return "ing"
         case .cuisine: return "cui"
@@ -50,7 +50,7 @@ struct RaterTagAffinity: Identifiable, Hashable {
     var shortSummary: String {
         let direction = delta < 0 ? "lower" : "higher"
         switch kind {
-        case .dishKind(let name):
+        case .recipeKind(let name):
             return "Rates \(name.lowercased()) \(direction)"
         case .cookingMethod(let name):
             return "Rates \(name.lowercased()) \(direction)"
@@ -71,14 +71,14 @@ struct RaterTagAffinity: Identifiable, Hashable {
         let sampleText = sampleCount == 1 ? "1 past occasion" : "\(sampleCount) past occasions"
 
         switch kind {
-        case .dishKind(let kindName):
-            return "\(name) tends to rate \(kindName.lowercased()) dishes \(direction) " +
+        case .recipeKind(let kindName):
+            return "\(name) tends to rate \(kindName.lowercased()) recipes \(direction) " +
                    "(avg \(avgScore) vs \(overallAvg) overall across \(sampleText))."
         case .cookingMethod(let methodName):
-            return "\(name) tends to rate \(methodName.lowercased()) dishes \(direction) " +
+            return "\(name) tends to rate \(methodName.lowercased()) recipes \(direction) " +
                    "(avg \(avgScore) vs \(overallAvg) overall across \(sampleText))."
         case .ingredient(let ingredientName):
-            return "\(name) tends to rate dishes with \(ingredientName.lowercased()) \(direction) " +
+            return "\(name) tends to rate recipes with \(ingredientName.lowercased()) \(direction) " +
                    "(avg \(avgScore) vs \(overallAvg) overall across \(sampleText))."
         case .cuisine(let cuisineName):
             return "\(name) tends to rate \(cuisineName.capitalized) cuisine \(direction) " +

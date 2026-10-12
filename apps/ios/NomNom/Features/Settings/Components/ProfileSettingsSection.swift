@@ -23,7 +23,7 @@ struct ProfileSettingsSection: View {
                 firstName: $firstName,
                 lastName: $lastName,
                 placeholder: "Required",
-                footnote: "This is the name other dinner party members see when you share meals and rate dishes.",
+                footnote: "This is the name other dinner party members see when you share meals and rate recipes.",
                 onSubmit: saveProfile
             )
         }

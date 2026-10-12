@@ -1,7 +1,7 @@
 import SwiftUI
 
 /// The current dinner party's insights on this recipe, a Pro feature: a ProScoreCard with
-/// the party's score for the dish. With Pro it opens `RecipePartyInsightsSheet`; without
+/// the party's score for the recipe. With Pro it opens `RecipePartyInsightsSheet`; without
 /// it shows the score and an unlock button only. Hidden until the party has eaten the recipe.
 struct RecipePartyInsightsCard: View {
     let recipe: Recipe
@@ -17,7 +17,7 @@ struct RecipePartyInsightsCard: View {
                 ProScoreCard(
                     "\(party.name) insights",
                     score: score,
-                    barSegments: store.barSegments(store.scoreShares(forDish: recipe.id, inParty: party.id)),
+                    barSegments: store.barSegments(store.scoreShares(forRecipe: recipe.id, inParty: party.id)),
                     action: { showInsights = true }
                 )
                 .sheet(isPresented: $showInsights) {

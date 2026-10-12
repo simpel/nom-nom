@@ -1,14 +1,14 @@
 // Edge function for cook mode: for each instruction step, how many minutes it waits
 // on (a timer, or null) and which of the recipe's ingredients it uses.
 // Triggered by the analyze_recipe_steps_webhook DB trigger on
-// dishes insert/update (see migrations/20261006223500_analyze_recipe_steps_webhook.sql).
+// recipes insert/update (see migrations/20261006223500_analyze_recipe_steps_webhook.sql).
 
 import { z } from "npm:zod";
 import { createClient } from "jsr:@supabase/supabase-js@2";
 import { GenerationLogger } from "../_shared/generation-logger.ts";
 import { getFeatureModel } from "../_shared/ai-config.ts";
 
-interface DishRow {
+interface RecipeRow {
   id: string;
   name: string;
   ingredients: { quantity?: string; measurement?: string; ingredient: string }[] | null;
@@ -18,8 +18,8 @@ interface DishRow {
 interface WebhookPayload {
   type: "INSERT" | "UPDATE";
   table: string;
-  record: DishRow;
-  old_record: DishRow | null;
+  record: RecipeRow;
+  old_record: RecipeRow | null;
 }
 
 const SYSTEM_PROMPT = `You prepare recipes for a step-by-step cook mode.
@@ -44,15 +44,15 @@ Deno.serve(async (req) => {
 
   try {
     const payload: WebhookPayload = await req.json();
-    const dish = payload.record;
+    const recipe = payload.record;
     
-    const instructions = (dish.instructions || []).map((s) => s.trim()).filter(Boolean);
-    if (!dish.name || instructions.length === 0) {
+    const instructions = (recipe.instructions || []).map((s) => s.trim()).filter(Boolean);
+    if (!recipe.name || instructions.length === 0) {
       return new Response(JSON.stringify({ skipped: "no-instructions" }), {
         headers: { "Content-Type": "application/json" },
       });
     }
-    const ingredients = dish.ingredients || [];
+    const ingredients = recipe.ingredients || [];
 
     const apiKey =
       Deno.env.get("VERCEL_AI_GATEWAY") ||
@@ -89,9 +89,9 @@ Deno.serve(async (req) => {
       })
       .join("\n");
     const stepList = instructions.map((s, i) => `${i + 1}. ${s}`).join("\n");
-    const userMessage = `Recipe: ${dish.name}\n\nIngredients:\n${ingredientList || "(none listed)"}\n\nSteps:\n${stepList}`;
+    const userMessage = `Recipe: ${recipe.name}\n\nIngredients:\n${ingredientList || "(none listed)"}\n\nSteps:\n${stepList}`;
 
-    await logger.start({ type: "recipe_steps", entityId: dish.id, prompt: userMessage, model });
+    await logger.start({ type: "recipe_steps", entityId: recipe.id, prompt: userMessage, model });
 
     const response = await fetch(`${gatewayBaseUrl}/chat/completions`, {
       method: "POST",
@@ -148,19 +148,19 @@ Deno.serve(async (req) => {
 
     // Update the recipe with the generated step details
     const { error: updateErr } = await admin
-      .from("dishes")
+      .from("recipes")
       .update({ instruction_details: steps })
-      .eq("id", dish.id);
+      .eq("id", recipe.id);
 
     if (updateErr) {
-      console.error(`Failed to update instruction_details for dish ${dish.id}:`, updateErr);
+      console.error(`Failed to update instruction_details for recipe ${recipe.id}:`, updateErr);
       return new Response(JSON.stringify({ error: updateErr.message }), {
         status: 500,
         headers: { "Content-Type": "application/json" },
       });
     }
 
-    return new Response(JSON.stringify({ success: true, dish_id: dish.id }), {
+    return new Response(JSON.stringify({ success: true, recipe_id: recipe.id }), {
       headers: { "Content-Type": "application/json" },
     });
   } catch (err: any) {

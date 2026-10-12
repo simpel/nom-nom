@@ -10,7 +10,7 @@ struct RecipeLinkCard: View {
     var photo: PhotoCardSource
     /// The thumbnail's PhotoCard format; pass `.landscape` for wide photography.
     var format: PhotoCardFormat
-    /// Parts of the meta line (time range, method, dish kind); empty parts are dropped.
+    /// Parts of the meta line (time range, method, recipe kind); empty parts are dropped.
     var meta: [String]
     var eyebrow: String
     let action: () -> Void

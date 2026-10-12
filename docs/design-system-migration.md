@@ -186,7 +186,7 @@ Leave `.red` on destructive actions (`DangerZoneSection`) — that is a system c
 
 | Token | Face | Size / leading |
 |---|---|---|
-| displayXL | `Font.newsreader(size: 32, weight: .regular, relativeTo: .largeTitle)` | dish names, page titles |
+| displayXL | `Font.newsreader(size: 32, weight: .regular, relativeTo: .largeTitle)` | recipe names, page titles |
 | displayL | `Font.newsreader(.title2, weight: .semibold)` | section heroes |
 | displayM | `Font.newsreader(.title3)` | card titles |
 | bodyL / bodyM / bodyS | `Font.inter(.body)` / `.callout` / `.footnote` | prose, meta |
