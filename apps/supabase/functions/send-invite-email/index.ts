@@ -2,7 +2,7 @@
 //
 // When called by a signed-in member, this function:
 // 1. Verifies the caller's JWT.
-// 2. Looks up the party or meal/dish name and inviter's name.
+// 2. Looks up the party or meal/recipe name and inviter's name.
 // 3. Checks if the invited email already has an account or is a new user.
 // 4. Sends a branded email with a clear Call To Action (CTA) button via Resend.
 //
@@ -359,15 +359,15 @@ Deno.serve(async (req) => {
   if (meal_id) {
     const { data: meal } = await admin
       .from("meals")
-      .select("id, dish_id, dishes(name)")
+      .select("id, recipe_id, recipes(name)")
       .eq("id", meal_id)
       .single();
 
-    const dishName = (meal?.dishes as any)?.name || "a delicious meal";
-    itemName = dishName;
+    const recipeName = (meal?.recipes as any)?.name || "a delicious meal";
+    itemName = recipeName;
     itemLabel = "Meal to Rate";
-    subject = `${inviterName} invited you to rate ${dishName} on Nom Nom`;
-    description = `<strong>${inviterName}</strong> cooked / shared <strong>${dishName}</strong> and invited you to rate it on <strong>Nom Nom</strong>.`;
+    subject = `${inviterName} invited you to rate ${recipeName} on Nom Nom`;
+    description = `<strong>${inviterName}</strong> cooked / shared <strong>${recipeName}</strong> and invited you to rate it on <strong>Nom Nom</strong>.`;
     ctaText = "Rate Meal";
     // /invite (not /rate-meal) because that's the only path both the AASA
     // universal-link config and the web landing page actually serve.

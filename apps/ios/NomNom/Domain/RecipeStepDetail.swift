@@ -1,6 +1,6 @@
 import Foundation
 
-/// What cook mode knows about one instruction step (`dishes.instruction_details`, filled
+/// What cook mode knows about one instruction step (`recipes.instruction_details`, filled
 /// by the `analyze-recipe-steps` edge function): how long it waits on, and which of the
 /// recipe's ingredients it uses.
 struct RecipeStepDetail: Hashable, Codable {

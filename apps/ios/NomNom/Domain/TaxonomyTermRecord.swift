@@ -1,15 +1,15 @@
 import Foundation
 
 /// Universal taxonomy term stored in Postgres `taxonomy_terms` table, representing
-/// a standardized culinary entity (e.g. dish kinds, cooking methods, cuisines).
+/// a standardized culinary entity (e.g. recipe kinds, cooking methods, cuisines).
 struct TaxonomyTermRecord: Identifiable, Hashable, Decodable, Sendable {
     let id: UUID
     let dimension: String
     let slug: String
     let name: String
     let aliases: [String]
-    /// What the term says about a dish (`crust`, `saucy`, `raw`, …): decides which
-    /// rating tags a meal offers. Only dish kinds and cooking methods carry them.
+    /// What the term says about a recipe (`crust`, `saucy`, `raw`, …): decides which
+    /// rating tags a meal offers. Only recipe kinds and cooking methods carry them.
     let ratingTraits: [String]
     let createdAt: Date
     let updatedAt: Date

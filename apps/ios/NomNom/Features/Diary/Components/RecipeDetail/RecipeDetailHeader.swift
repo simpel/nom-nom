@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// RecipeDetailView's ScreenHeader: the cuisine as the eyebrow, the dish as the title,
+/// RecipeDetailView's ScreenHeader: the cuisine as the eyebrow, the recipe as the title,
 /// then "Start cooking" (solid, when there are steps) and "Use in a meal" (secondary soft).
 /// Time, method, servings and the rotation goal are RecipeDetailFacts, below the photos.
 struct RecipeDetailHeader: View {

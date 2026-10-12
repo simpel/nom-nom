@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@/utils/supabase/server';
 import { createClient as createSupabaseClient } from '@supabase/supabase-js';
 import { z } from 'zod';
+import { getFeatureModel } from '@/utils/ai-config';
 
 export const maxDuration = 60; // 1 minute max duration
 
@@ -9,7 +10,7 @@ const PROFILE_INSIGHT_SYSTEM_PROMPT = `Analyze the following individual user's c
 Produce a JSON response analyzing their personal food preferences and suggesting new meals for them.
 Output MUST match this JSON schema exactly:
 {
-  "summary_sentence": "A fun, one-sentence summary of this person's tastes, formatted exactly like: '[Name] enjoys [flavor profiles] dishes with a preference for [cuisine/types]. Lately [dish A] and [dish B] have been favorites.'",
+  "summary_sentence": "A fun, one-sentence summary of this person's tastes, formatted exactly like: '[Name] enjoys [flavor profiles] recipes with a preference for [cuisine/types]. Lately [recipe A] and [recipe B] have been favorites.'",
   "recommendations": [
     {
       "title": "Recipe Name",
@@ -46,7 +47,12 @@ export async function POST(request: Request) {
 
     const aiGatewayUrl = process.env.AI_GATEWAY_BASE_URL || 'https://ai-gateway.vercel.sh/v1';
     const apiKey = process.env.VERCEL_AI_GATEWAY || process.env.VERCEL_AI_GATEWAY_KEY;
-    const model = process.env.AI_GATEWAY_MODEL || 'google/gemini-2.5-flash';
+    let model: string;
+    try {
+        model = await getFeatureModel(adminSupabase, 'profile-insights');
+    } catch (err) {
+        return NextResponse.json({ error: (err as Error).message }, { status: 500 });
+    }
 
     try {
         const { data: profile, error: profileError } = await adminSupabase
@@ -67,7 +73,7 @@ export async function POST(request: Request) {
             .from('meals')
             .select(`
                 eaten_on,
-                dishes ( name, cuisine, tags, ingredients )
+                recipes ( name, cuisine, tags, ingredients )
             `)
             .eq('created_by', profile_id)
             .order('eaten_on', { ascending: false })
@@ -77,7 +83,7 @@ export async function POST(request: Request) {
             .from('meal_ratings')
             .select(`
                 score,
-                meals ( eaten_on, dishes ( name, cuisine, tags, ingredients ) )
+                meals ( eaten_on, recipes ( name, cuisine, tags, ingredients ) )
             `)
             .eq('rater_id', profile_id)
             .order('created_at', { ascending: false })
@@ -85,17 +91,17 @@ export async function POST(request: Request) {
 
         const recentMeals = [
             ...(loggedMeals || []).map((row: any) => ({
-                name: row.dishes?.name,
-                cuisine: row.dishes?.cuisine,
-                tags: row.dishes?.tags,
-                ingredients: row.dishes?.ingredients?.map((i: any) => i.ingredient),
+                name: row.recipes?.name,
+                cuisine: row.recipes?.cuisine,
+                tags: row.recipes?.tags,
+                ingredients: row.recipes?.ingredients?.map((i: any) => i.ingredient),
                 user_score: null as number | null
             })),
             ...(ratedMeals || []).map((row: any) => ({
-                name: row.meals?.dishes?.name,
-                cuisine: row.meals?.dishes?.cuisine,
-                tags: row.meals?.dishes?.tags,
-                ingredients: row.meals?.dishes?.ingredients?.map((i: any) => i.ingredient),
+                name: row.meals?.recipes?.name,
+                cuisine: row.meals?.recipes?.cuisine,
+                tags: row.meals?.recipes?.tags,
+                ingredients: row.meals?.recipes?.ingredients?.map((i: any) => i.ingredient),
                 user_score: row.score == null ? null : Number(row.score)
             }))
         ].filter(m => m.name != null);
@@ -217,7 +223,7 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: 'Invalid response format from AI' }, { status: 500 });
         }
 
-        // Add dish_id to recommendations using vector search, same as party insights.
+        // Add recipe_id to recommendations using vector search, same as party insights.
         for (const rec of validated.recommendations) {
             const input = `${rec.title} - ${rec.cuisine || ''} - ${rec.description || ''}`;
             const recAiResponse = await fetch(`${aiGatewayUrl}/embeddings`, {
@@ -234,14 +240,14 @@ export async function POST(request: Request) {
                 const queryEmbedding = recCompletion.data?.[0]?.embedding;
 
                 if (queryEmbedding) {
-                    const { data: matchedDishes, error: matchError } = await adminSupabase.rpc('match_dishes', {
+                    const { data: matchedRecipes, error: matchError } = await adminSupabase.rpc('match_recipes', {
                         query_embedding: queryEmbedding,
                         match_threshold: 0.2,
                         match_count: 1
                     });
 
-                    if (!matchError && matchedDishes && matchedDishes.length > 0) {
-                        (rec as any).dish_id = matchedDishes[0].id;
+                    if (!matchError && matchedRecipes && matchedRecipes.length > 0) {
+                        (rec as any).recipe_id = matchedRecipes[0].id;
                     }
                 }
             }

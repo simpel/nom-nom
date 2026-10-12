@@ -106,7 +106,7 @@ extension FoodStore {
         var trend: [(date: Date, averageHealthScore: Double)] = []
 
         for meal in meals {
-            guard let recipe = dishByID[meal.dishID], let healthIndex = recipe.healthIndex else { continue }
+            guard let recipe = recipeByID[meal.recipeID], let healthIndex = recipe.healthIndex else { continue }
             
             totalHealthScore += healthIndex.score
             healthScoreCount += 1
@@ -189,7 +189,7 @@ extension FoodStore {
                 let totalScore = ratings.reduce(0.0) { $0 + $1.score }
                 mealAvg = totalScore / Double(ratings.count)
             } else {
-                mealAvg = averageScore(forDish: meal.dishID)
+                mealAvg = averageScore(forRecipe: meal.recipeID)
             }
 
             guard let consensus = mealAvg else { continue }

@@ -25,7 +25,7 @@ extension FoodStore {
         })
         return RecipePopularityEngine.sort(
             recipes: recipes.filter { !$0.isDeleted },
-            servingsByRecipe: mealsByDish,
+            servingsByRecipe: mealsByRecipe,
             mealScores: allScores
         )
     }
@@ -35,7 +35,7 @@ extension FoodStore {
     var recommendedRecipes: [Recipe] {
         SuggestionEngine().rank(suggestionInputs, filters: SuggestionFilters())
             .prefix(10)
-            .map(\.dish)
+            .map(\.recipe)
     }
 
     /// Returns all category items (from database + presets + any custom categories present in recipes), with photo paths.
@@ -87,7 +87,7 @@ extension FoodStore {
         })
         return RecipePopularityEngine.sort(
             recipes: matching,
-            servingsByRecipe: mealsByDish,
+            servingsByRecipe: mealsByRecipe,
             mealScores: allScores
         )
     }
@@ -117,7 +117,7 @@ extension FoodStore {
     /// Recipes that have been cooked, ranked by frequency and recency.
     /// Falls back to the user's recently created recipes if no meals have been logged yet.
     var recentAndFrequentRecipes: [Recipe] {
-        let history = dishHistory
+        let history = recipeHistory
         let cooked = recipes.filter { !$0.isDeleted && (history[$0.id]?.timesServed ?? 0) > 0 }
         if !cooked.isEmpty {
             return cooked.sorted { lhs, rhs in
@@ -142,19 +142,19 @@ extension FoodStore {
     /// or explicitly marked as household staples.
     var pastFavoriteRecipes: [Recipe] {
         recipes.filter { recipe in
-            let dishMeals = servings(of: recipe.id)
-            guard !dishMeals.isEmpty else { return false }
-            if dishMeals.contains(where: { $0.repeatDesire == .staple }) {
+            let recipeMeals = servings(of: recipe.id)
+            guard !recipeMeals.isEmpty else { return false }
+            if recipeMeals.contains(where: { $0.repeatDesire == .staple }) {
                 return true
             }
-            let dishScores = dishMeals.compactMap { averageScore(forMeal: $0.id) }
-            guard !dishScores.isEmpty else { return false }
-            let avg = dishScores.reduce(0, +) / Double(dishScores.count)
+            let recipeScores = recipeMeals.compactMap { averageScore(forMeal: $0.id) }
+            guard !recipeScores.isEmpty else { return false }
+            let avg = recipeScores.reduce(0, +) / Double(recipeScores.count)
             return avg >= 0.70
         }
         .sorted { lhs, rhs in
-            let scoreL = averageScore(forDish: lhs.id) ?? 0
-            let scoreR = averageScore(forDish: rhs.id) ?? 0
+            let scoreL = averageScore(forRecipe: lhs.id) ?? 0
+            let scoreR = averageScore(forRecipe: rhs.id) ?? 0
             if abs(scoreL - scoreR) > 0.01 {
                 return scoreL > scoreR
             }

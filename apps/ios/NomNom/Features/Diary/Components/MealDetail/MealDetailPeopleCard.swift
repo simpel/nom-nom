@@ -42,7 +42,7 @@ struct MealDetailPeopleCard: View {
                 }
             }
 
-            if let effort = (meal.effort ?? store.dish(meal.dishID)?.effort)?.label {
+            if let effort = (meal.effort ?? store.recipe(meal.recipeID)?.effort)?.label {
                 ListRow("Cooking time", value: effort)
             }
         }

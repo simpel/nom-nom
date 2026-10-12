@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { generatePartyInsightAction, generateAllPartiesInsightAction, backfillDishEmbeddingsAction } from './actions'
+import { generatePartyInsightAction, generateAllPartiesInsightAction, backfillRecipeEmbeddingsAction } from './actions'
 import { toast } from 'sonner'
 
 type PartyData = {
@@ -45,10 +45,10 @@ export default function AdminDashboardClient({ initialData }: { initialData: Par
 
   const handleBackfillEmbeddings = () => {
     toast.promise(
-      backfillDishEmbeddingsAction(),
+      backfillRecipeEmbeddingsAction(),
       {
         loading: 'Backfilling embeddings...',
-        success: (res) => res.message || `Updated ${res.updated} dish(es)`,
+        success: (res) => res.message || `Updated ${res.updated} recipe(es)`,
         error: (err) => `Failed to backfill embeddings: ${err.message}`
       }
     )
@@ -66,7 +66,7 @@ export default function AdminDashboardClient({ initialData }: { initialData: Par
             onClick={handleBackfillEmbeddings}
             className="bg-gray-100 text-gray-800 px-4 py-2 rounded-md text-sm font-medium hover:bg-gray-200 disabled:opacity-50"
           >
-            Backfill Dish Embeddings
+            Backfill Recipe Embeddings
           </button>
           <button
             onClick={handleTriggerAll}

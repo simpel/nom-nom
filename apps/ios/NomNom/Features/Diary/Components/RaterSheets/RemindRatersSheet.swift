@@ -35,7 +35,7 @@ struct RemindRatersSheet: View {
                 VStack(alignment: .leading, spacing: DS.Spacing.s6) {
                     ScreenHeader(
                         "Remind to rate",
-                        eyebrow: store.dishName(forMeal: meal),
+                        eyebrow: store.recipeName(forMeal: meal),
                         summary: "Each person gets a push, or a note in their inbox. One reminder a day."
                     )
                     Card(layout: .list) {

@@ -110,16 +110,16 @@ Deno.serve(async (req) => {
 
   const { data: meal, error: mealErr } = await db
     .from("meals")
-    .select("id, dish_id, eaten_on, notes, dishes(name, cuisine, ingredients, instructions)")
+    .select("id, recipe_id, eaten_on, notes, recipes(name, cuisine, ingredients, instructions)")
     .eq("id", mealId).maybeSingle();
   if (mealErr) return json({ error: mealErr.message }, 500);
   if (!meal) return json({ error: "Meal not found" }, 404);
 
-  // Every serving of this dish by this party, with its ratings.
+  // Every serving of this recipe by this party, with its ratings.
   const { data: servings, error: servErr } = await db
     .from("meals")
     .select("id, eaten_on, notes, meal_ratings(score, tags, note, rater_id, eater_id, updated_at), meal_parties!inner(party_id)")
-    .eq("dish_id", meal.dish_id)
+    .eq("recipe_id", meal.recipe_id)
     .eq("meal_parties.party_id", partyId)
     .order("eaten_on", { ascending: false })
     .limit(12);
@@ -153,15 +153,15 @@ Deno.serve(async (req) => {
   ]);
   const tagLabels = new Map<string, string>((tags ?? []).map((t: any) => [t.id, t.label]));
 
-  const dish: any = meal.dishes ?? {};
+  const recipe: any = meal.recipes ?? {};
   const userMessage = JSON.stringify({
     recipe: {
-      name: dish.name,
-      cuisine: dish.cuisine,
-      ingredients: Array.isArray(dish.ingredients)
-        ? dish.ingredients.map((i: any) => [i.quantity, i.measurement, i.ingredient].filter(Boolean).join(" ")).slice(0, 30)
+      name: recipe.name,
+      cuisine: recipe.cuisine,
+      ingredients: Array.isArray(recipe.ingredients)
+        ? recipe.ingredients.map((i: any) => [i.quantity, i.measurement, i.ingredient].filter(Boolean).join(" ")).slice(0, 30)
         : [],
-      instructions: (dish.instructions ?? []).slice(0, 20),
+      instructions: (recipe.instructions ?? []).slice(0, 20),
     },
     this_meal: { date: meal.eaten_on, cook_note: meal.notes || null },
     servings: (servings ?? []).map((s: any) => ({
@@ -177,7 +177,7 @@ Deno.serve(async (req) => {
     })),
   });
 
-  const model = await getFeatureModel(db, "recipe-tweaks");
+  const model = await getFeatureModel(db, "recipe-tweaks", "text");
   const logger = GenerationLogger.fromEnv();
   await logger.start({ type: "recipe_tweaks", entityId: mealId, targetId: partyId, model, prompt: userMessage });
 

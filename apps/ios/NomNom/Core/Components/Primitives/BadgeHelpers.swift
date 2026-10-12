@@ -33,8 +33,8 @@ extension Badge {
         Badge("Pro", icon: "sparkles", variant: .pro)
     }
 
-    /// The one-line dish summary ("Quick win", "Crowd pleaser", …).
-    static func dishSummary(_ summary: DishSummary, size: BadgeSize = .md) -> Badge {
+    /// The one-line recipe summary ("Quick win", "Crowd pleaser", …).
+    static func recipeSummary(_ summary: RecipeSummary, size: BadgeSize = .md) -> Badge {
         let variant: DSVariant
         switch summary.role {
         case .primary: variant = .primary

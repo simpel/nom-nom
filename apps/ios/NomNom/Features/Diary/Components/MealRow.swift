@@ -11,7 +11,7 @@ enum MealRowMeta {
     case date
 }
 
-/// One meal in a list: a ListRow with the meal's PhotoCard thumbnail, the dish name,
+/// One meal in a list: a ListRow with the meal's PhotoCard thumbnail, the recipe name,
 /// a meta line and its score. Place it in a `Card(layout: .list)`.
 ///
 /// With `.ratingProgress` the trailing slot is the meal's ScoreValue, or, while nobody
@@ -59,7 +59,7 @@ struct MealRow: View {
             return partyNames
         case .parties:
             if isMinimal { return partyNames }
-            let effort = (meal.effort ?? store.dish(meal.dishID)?.effort)?.label
+            let effort = (meal.effort ?? store.recipe(meal.recipeID)?.effort)?.label
             return [partyNames, ratingSummaryText, effort]
                 .compactMap { $0 }
                 .filter { !$0.isEmpty }
@@ -91,7 +91,7 @@ struct MealRow: View {
         // ListRow has one meta line (README: title + meta), so the cook's notes are
         // left to the meal screen.
         ListRow(
-            store.dishName(forMeal: meal),
+            store.recipeName(forMeal: meal),
             meta: meta,
             metaAccent: waitingOn,
             leading: .photo(.meal(meal)),

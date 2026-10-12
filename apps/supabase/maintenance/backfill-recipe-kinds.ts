@@ -1,5 +1,5 @@
-// Maintenance script to backfill dish_kind_id for all dishes missing a taxonomy term.
-// Reads from public.dishes, asks AI for the culinary format, and resolves via resolveTaxonomyTerm.
+// Maintenance script to backfill recipe_kind_id for all recipes missing a taxonomy term.
+// Reads from public.recipes, asks AI for the culinary format, and resolves via resolveTaxonomyTerm.
 
 import { createClient } from "jsr:@supabase/supabase-js@2";
 import { resolveTaxonomyTerm } from "../functions/_shared/taxonomy-resolver.ts";
@@ -18,31 +18,31 @@ if (!serviceRoleKey) {
 const client = createClient(supabaseUrl, serviceRoleKey);
 
 const SYSTEM_PROMPT = `Classify this recipe's culinary format/kind (e.g. 'stew', 'casserole', 'soup', 'bbq', 'pasta', 'pizza', 'curry', 'salad', 'roast', 'stir-fry', 'sandwich', 'pie', 'tacos', 'risotto', etc. Do NOT restrict yourself to these examples).
-Return a single JSON object: { "dish_kind": "..." }`;
+Return a single JSON object: { "recipe_kind": "..." }`;
 
 async function backfill() {
-  console.log("Fetching dishes without dish_kind_id...");
-  const { data: dishes, error } = await client
-    .from("dishes")
+  console.log("Fetching recipes without recipe_kind_id...");
+  const { data: recipes, error } = await client
+    .from("recipes")
     .select("id, name, cuisine, ingredients")
-    .is("dish_kind_id", null);
+    .is("recipe_kind_id", null);
 
   if (error) {
-    console.error("Error fetching dishes:", error);
+    console.error("Error fetching recipes:", error);
     return;
   }
 
-  console.log(`Found ${dishes.length} dishes to classify.`);
+  console.log(`Found ${recipes.length} recipes to classify.`);
 
-  for (const dish of dishes) {
-    const rawIngs = (dish.ingredients || [])
+  for (const recipe of recipes) {
+    const rawIngs = (recipe.ingredients || [])
       .map((i: { ingredient?: string }) => i.ingredient)
       .filter(Boolean)
       .slice(0, 8)
       .join(", ");
 
-    const userMessage = `Recipe Name: ${dish.name}
-Cuisine: ${dish.cuisine || "Unknown"}
+    const userMessage = `Recipe Name: ${recipe.name}
+Cuisine: ${recipe.cuisine || "Unknown"}
 Sample Ingredients: ${rawIngs}`;
 
     try {
@@ -66,7 +66,7 @@ Sample Ingredients: ${rawIngs}`;
         if (res.ok) {
           const json = await res.json();
           const parsed = JSON.parse(json.choices?.[0]?.message?.content || "{}");
-          proposedKind = parsed.dish_kind || "";
+          proposedKind = parsed.recipe_kind || "";
         }
       }
 
@@ -76,7 +76,7 @@ Sample Ingredients: ${rawIngs}`;
 
       const resolved = await resolveTaxonomyTerm({
         client,
-        dimension: "dish_kind",
+        dimension: "recipe_kind",
         proposedTerm: proposedKind,
         apiKey,
         gatewayBaseUrl,
@@ -84,13 +84,13 @@ Sample Ingredients: ${rawIngs}`;
 
       if (resolved) {
         await client
-          .from("dishes")
-          .update({ dish_kind_id: resolved.id })
-          .eq("id", dish.id);
-        console.log(`✓ '${dish.name}' -> ${resolved.name} (${resolved.slug})`);
+          .from("recipes")
+          .update({ recipe_kind_id: resolved.id })
+          .eq("id", recipe.id);
+        console.log(`✓ '${recipe.name}' -> ${resolved.name} (${resolved.slug})`);
       }
     } catch (e) {
-      console.error(`Failed to process '${dish.name}':`, e);
+      console.error(`Failed to process '${recipe.name}':`, e);
     }
   }
 

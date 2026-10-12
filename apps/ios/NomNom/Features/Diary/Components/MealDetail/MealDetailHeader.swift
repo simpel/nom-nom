@@ -2,7 +2,7 @@ import SwiftUI
 
 /// Meal Detail's ScreenHeader, centred on the meal's first photo as its Avatar (the
 /// cuisine photo when it has none): the party as the eyebrow (none for a meal of your
-/// own), the dish as the title, the date, "Rate this meal" (or "Change your rating",
+/// own), the recipe as the title, the date, "Rate this meal" (or "Change your rating",
 /// soft, once you have rated) and "View recipe" (`secondary soft`) when there is one.
 struct MealDetailHeader: View {
     let meal: Meal
@@ -16,7 +16,7 @@ struct MealDetailHeader: View {
 
     var body: some View {
         ScreenHeader(
-            store.dishName(forMeal: meal),
+            store.recipeName(forMeal: meal),
             eyebrow: party,
             date: meal.eatenOn,
             avatar: avatar,
@@ -29,7 +29,7 @@ struct MealDetailHeader: View {
 
     private var avatar: Avatar {
         Avatar(
-            name: store.dishName(forMeal: meal),
+            name: store.recipeName(forMeal: meal),
             photoPath: meal.photoPath,
             bucket: SupabaseConfig.photoBucket,
             assetName: Cuisine.assetImageName(for: store.recipe(meal.recipeID)?.cuisine),

@@ -31,13 +31,13 @@ enum SuggestionMode: String, CaseIterable, Identifiable {
     var explanation: String {
         switch self {
         case .balanced:
-            return "Food they liked that we haven't had for a while, with a nudge towards dishes we've only tried once or twice."
+            return "Food they liked that we haven't had for a while, with a nudge towards recipes we've only tried once or twice."
         case .crowdPleasers:
             return "Safe bets. Ranked almost purely on how much the kids liked it, and hard on anything somebody disliked."
         case .longTime:
-            return "Rotation first. Dishes we're overdue for, even if they're only moderately popular."
+            return "Rotation first. Recipes we're overdue for, even if they're only moderately popular."
         case .adventurous:
-            return "Leans on the dishes we know least about, so the ratings get more reliable over time."
+            return "Leans on the recipes we know least about, so the ratings get more reliable over time."
         }
     }
 
@@ -64,15 +64,15 @@ enum SuggestionMode: String, CaseIterable, Identifiable {
 
 struct SuggestionFilters: Equatable {
     var mode: SuggestionMode = .balanced
-    /// Only keep dishes these people are known to like. Keyed by `RaterRef` rather
+    /// Only keep recipes these people are known to like. Keyed by `RaterRef` rather
     /// than an eater id, so "must be liked by" can name a household member or an
     /// account holder — both leave verdicts now.
     var requiredRaters: Set<RaterRef> = []
     /// Hide anything cooked more recently than this many days ago.
     var minDaysSinceServed: Int = 0
-    /// Drop dishes where somebody's recent verdict was a flat no.
+    /// Drop recipes where somebody's recent verdict was a flat no.
     var hideDisliked: Bool = true
-    /// Keep dishes that exist but have no verdicts yet.
+    /// Keep recipes that exist but have no verdicts yet.
     var includeUntried: Bool = true
     var searchText: String = ""
 

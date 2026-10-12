@@ -37,16 +37,18 @@ what happens afterwards.
 
 ## Meal
 
-One occasion of eating a dish, logged by one user on one date. A meal is **served
+One occasion of eating a [recipe](#recipe), logged by one user on one date. A meal is **served
 to** any number of parties, including none. Serving a meal to a party is what makes
 it visible to that party's members — there is no separate per-meal invitation.
 
 A meal served to no party is private to the user who logged it.
 
-## Dish
+## Recipe
 
-The canonical name of something cooked. A dish belongs to the user who created it —
-it is a personal catalogue, not a party's. The same dish is served to any party.
+Something cookable, with a canonical name. A recipe belongs to the user who created
+it — it is a personal catalogue, not a party's. The same recipe is served to any
+party. A recipe is what you cook; a [meal](#meal) is each time you eat it. There is
+no third concept: "dish" is not a term in Nom Nom.
 
 ## Rating
 
@@ -58,7 +60,7 @@ carries no party.
 Which ratings you can *see*, and which the ranking counts, is decided by party
 membership rather than by the rating itself: a rating counts for a party when its
 rater is a member of that party and the meal was served to that party. Two parties
-therefore reach different verdicts on the same dish through different membership,
+therefore reach different verdicts on the same recipe through different membership,
 not through duplicate rows. See [ADR 0001](docs/adr/0001-one-rating-per-user-per-meal.md).
 
 Leaving a rating blank means "didn't catch it". It is ignored by the ranking, never

@@ -54,7 +54,7 @@ extension FoodStore {
             do {
                 print("[HEALTH_DEBUG] Persisting health score to database for owned recipe \(recipe.id)...")
                 let updated: Recipe = try await supabase
-                    .from("dishes")
+                    .from("recipes")
                     .update(RecipeHealthPatch(
                         health_score: result.score,
                         health_verdict: result.verdict,

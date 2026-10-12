@@ -1,33 +1,33 @@
 import Foundation
 
-/// How often and how recently a dish has been cooked. Passed in rather than read
-/// off the model, because a `Dish` row knows nothing about its meals — the join
+/// How often and how recently a recipe has been cooked. Passed in rather than read
+/// off the model, because a `Recipe` row knows nothing about its meals — the join
 /// lives in the store.
-struct DishHistory {
+struct RecipeHistory {
     var timesServed: Int
     var lastServed: Date?
 
-    static let none = DishHistory(timesServed: 0, lastServed: nil)
+    static let none = RecipeHistory(timesServed: 0, lastServed: nil)
 }
 
-/// Everything that keeps dish names from drifting apart.
+/// Everything that keeps recipe names from drifting apart.
 ///
 /// Find-or-create moved to `FoodStore`, since it is now a write that
 /// has to go through Postgres and lean on `unique (owner_id, normalized_name)` to
 /// settle a race. What's left here is pure matching, with no I/O in it.
-enum DishRepository {
+enum RecipeRepository {
 
     // MARK: - Autofill
 
     struct NameSuggestion: Identifiable, Hashable {
-        let dishID: UUID
+        let recipeID: UUID
         let name: String
         let timesServed: Int
         let lastServed: Date?
         /// Higher is a better match.
         let rank: Double
 
-        var id: UUID { dishID }
+        var id: UUID { recipeID }
     }
 
     /// Ranked autofill candidates for what the user has typed so far.
@@ -39,14 +39,14 @@ enum DishRepository {
     ///   4. the query is a near-typo of the name
     /// Ties are broken by how often we've cooked it and how recently.
     static func suggestions(for query: String,
-                            in dishes: [Dish],
-                            history: [UUID: DishHistory],
+                            in recipes: [Recipe],
+                            history: [UUID: RecipeHistory],
                             favoriteIDs: Set<UUID> = [],
                             limit: Int = 6) -> [NameSuggestion] {
         let q = query.normalizedForMatching
         guard !q.isEmpty else {
-            // Nothing typed yet: offer favourites first, then dishes we cook the most, most recent first.
-            return dishes
+            // Nothing typed yet: offer favourites first, then recipes we cook the most, most recent first.
+            return recipes
                 .sorted { lhs, rhs in
                     let lFav = favoriteIDs.contains(lhs.id)
                     let rFav = favoriteIDs.contains(rhs.id)
@@ -60,19 +60,19 @@ enum DishRepository {
         }
 
         var scored: [NameSuggestion] = []
-        for dish in dishes {
-            let name = dish.normalizedName
+        for recipe in recipes {
+            let name = recipe.normalizedName
             var base: Double
 
-            let normalizedCuisine = dish.cuisine?.normalizedForMatching ?? ""
-            let matchesIngredient = dish.ingredients.contains { $0.ingredient.normalizedForMatching.contains(q) } ||
-                                    dish.canonicalIngredients.contains { $0.normalizedForMatching.contains(q) }
+            let normalizedCuisine = recipe.cuisine?.normalizedForMatching ?? ""
+            let matchesIngredient = recipe.ingredients.contains { $0.ingredient.normalizedForMatching.contains(q) } ||
+                                    recipe.canonicalIngredients.contains { $0.normalizedForMatching.contains(q) }
 
             if name == q {
                 base = 100
             } else if name.hasPrefix(q) {
                 base = 80
-            } else if dish.normalizedName.matchTokens.contains(where: { $0.hasPrefix(q) }) {
+            } else if recipe.normalizedName.matchTokens.contains(where: { $0.hasPrefix(q) }) {
                 base = 60
             } else if !normalizedCuisine.isEmpty && (normalizedCuisine == q || normalizedCuisine.hasPrefix(q)) {
                 base = 55
@@ -88,7 +88,7 @@ enum DishRepository {
                 continue
             }
 
-            let entry = history[dish.id] ?? .none
+            let entry = history[recipe.id] ?? .none
 
             // Prefer names that aren't much longer than what was typed, so "pasta"
             // ranks "Pasta" above "Pasta bolognese with extra cheese".
@@ -101,10 +101,10 @@ enum DishRepository {
                 return max(0, 6 - days / 30)
             }()
 
-            let isFavorite = favoriteIDs.contains(dish.id)
+            let isFavorite = favoriteIDs.contains(recipe.id)
             let favoriteBonus = isFavorite ? 50.0 : 0.0
 
-            scored.append(suggestion(for: dish,
+            scored.append(suggestion(for: recipe,
                                      history: entry,
                                      rank: base - lengthPenalty + familiarity + recency + favoriteBonus))
         }
@@ -112,9 +112,9 @@ enum DishRepository {
         return scored.sorted { $0.rank > $1.rank }.prefix(limit).map { $0 }
     }
 
-    private static func suggestion(for dish: Dish, history: DishHistory, rank: Double) -> NameSuggestion {
-        NameSuggestion(dishID: dish.id,
-                       name: dish.name,
+    private static func suggestion(for recipe: Recipe, history: RecipeHistory, rank: Double) -> NameSuggestion {
+        NameSuggestion(recipeID: recipe.id,
+                       name: recipe.name,
                        timesServed: history.timesServed,
                        lastServed: history.lastServed,
                        rank: rank)
@@ -122,19 +122,19 @@ enum DishRepository {
 
     // MARK: - Lookup
 
-    static func exactMatch(for name: String, in dishes: [Dish]) -> Dish? {
+    static func exactMatch(for name: String, in recipes: [Recipe]) -> Recipe? {
         let key = name.normalizedForMatching
         guard !key.isEmpty else { return nil }
-        return dishes.first { $0.normalizedName == key }
+        return recipes.first { $0.normalizedName == key }
     }
 
-    /// A dish whose name is one or two typos away from what was typed. Drives the
+    /// A recipe whose name is one or two typos away from what was typed. Drives the
     /// "did you mean …?" banner in the editor.
-    static func nearMatch(for name: String, in dishes: [Dish]) -> Dish? {
+    static func nearMatch(for name: String, in recipes: [Recipe]) -> Recipe? {
         let key = name.normalizedForMatching
         guard key.count >= 5 else { return nil }
-        guard exactMatch(for: name, in: dishes) == nil else { return nil }
-        return dishes
+        guard exactMatch(for: name, in: recipes) == nil else { return nil }
+        return recipes
             .filter { Fuzzy.isProbableTypo($0.normalizedName, key) }
             .max { Fuzzy.similarity($0.normalizedName, key) < Fuzzy.similarity($1.normalizedName, key) }
     }

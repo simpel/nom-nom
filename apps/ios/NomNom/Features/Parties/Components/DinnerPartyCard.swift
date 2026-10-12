@@ -13,7 +13,7 @@ struct DinnerPartyCard: View {
 
     /// Newest first (PartyCard README: a Timeline `mini`).
     private var recentMeals: [PartyCardMeal] {
-        meals.sorted { $0.eatenOn > $1.eatenOn }.prefix(8).map { PartyCardMeal(id: $0.id, source: .meal($0), title: store.dishName(forMeal: $0), date: $0.eatenOn) }
+        meals.sorted { $0.eatenOn > $1.eatenOn }.prefix(8).map { PartyCardMeal(id: $0.id, source: .meal($0), title: store.recipeName(forMeal: $0), date: $0.eatenOn) }
     }
 
     @State private var showingCreateMeal = false

@@ -4,7 +4,7 @@
 -- nobody has looked at is not something to automate.
 
 with keep(name) as (
-    values ('profiles'), ('dishes'), ('meals'), ('eaters'),
+    values ('profiles'), ('recipes'), ('meals'), ('eaters'),
            ('meal_invites'), ('meal_ratings'), ('notifications'), ('device_tokens')
 )
 select format('drop table if exists public.%I cascade;', t.table_name) as statement,

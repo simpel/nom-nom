@@ -27,7 +27,7 @@ struct RaterScoreSheet: View {
                     ProCard(
                         "Why \(isViewer ? "you" : name) scored it this way",
                         sub: target.provenance,
-                        teaser: "See what in \(isViewer ? "your" : target.possessive) history explains this score: dish kinds, ingredients, cuisines and who cooked."
+                        teaser: "See what in \(isViewer ? "your" : target.possessive) history explains this score: recipe kinds, ingredients, cuisines and who cooked."
                     ) {
                         ReasonList(reasons: target.reasons())
                     }

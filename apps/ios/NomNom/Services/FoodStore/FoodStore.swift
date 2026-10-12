@@ -9,11 +9,7 @@ final class FoodStore {
 
     let userID: UUID
 
-    var dishes: [Recipe] = []
-    var recipes: [Recipe] {
-        get { dishes }
-        set { dishes = newValue }
-    }
+    var recipes: [Recipe] = []
     var meals: [Meal] = []
     var eaters: [Eater] = []
     var ratings: [MealRating] = []
@@ -28,6 +24,8 @@ final class FoodStore {
     
     /// Recipes currently having AI photos generated in the background.
     var generatingPhotoRecipeIDs: Set<UUID> = []
+    /// Meals currently having AI photos generated in the background.
+    var generatingPhotoMealIDs: Set<UUID> = []
 
     // Dinner Parties
     var parties: [Party] = []
@@ -62,15 +60,14 @@ final class FoodStore {
     var errorMessage: String?
 
     // Lookups
-    var mealsByDish: [UUID: [Meal]] = [:]
+    var mealsByRecipe: [UUID: [Meal]] = [:]
     var ratingsByMeal: [UUID: [MealRating]] = [:]
     var invitesByMeal: [UUID: [MealInvite]] = [:]
     var mealPartiesByMeal: [UUID: [MealParty]] = [:]
     var mealPartiesByParty: [UUID: [MealParty]] = [:]
     var partyMembersByParty: [UUID: [PartyMember]] = [:]
     var partyFollowersByParty: [UUID: [PartyFollower]] = [:]
-    var dishByID: [UUID: Recipe] = [:]
-    var recipeByID: [UUID: Recipe] { dishByID }
+    var recipeByID: [UUID: Recipe] = [:]
     var eaterByID: [UUID: Eater] = [:]
     var mealByID: [UUID: Meal] = [:]
     var partyByID: [UUID: Party] = [:]
@@ -84,8 +81,7 @@ final class FoodStore {
 
     // MARK: - Slices the views want
 
-    var myDishes: [Recipe] { dishes.filter { $0.ownerID == userID && !$0.isDeleted } }
-    var myRecipes: [Recipe] { myDishes }
+    var myRecipes: [Recipe] { recipes.filter { $0.ownerID == userID && !$0.isDeleted } }
 
     func isFavorite(recipeID: UUID) -> Bool {
         favoriteRecipeIDs.contains(recipeID)
@@ -209,24 +205,19 @@ final class FoodStore {
         return (own + invited).sorted { ($0.eatenOn, $0.createdAt) > ($1.eatenOn, $1.createdAt) }
     }
 
-    func dish(_ id: UUID) -> Recipe? { dishByID[id] }
-    func recipe(_ id: UUID) -> Recipe? { dishByID[id] }
+    func recipe(_ id: UUID) -> Recipe? { recipeByID[id] }
     func eater(_ id: UUID) -> Eater? { eaterByID[id] }
     func meal(_ id: UUID) -> Meal? { mealByID[id] }
     func party(_ id: UUID) -> Party? { partyByID[id] }
 
     /// The meal's own name when it has one, else its recipe's.
-    func dishName(forMeal meal: Meal) -> String {
-        if let title = meal.title?.nilIfBlank { return title }
-        return dishByID[meal.dishID]?.name ?? "Untitled"
-    }
-
     func recipeName(forMeal meal: Meal) -> String {
-        dishByID[meal.recipeID]?.name ?? "Untitled"
+        if let title = meal.title?.nilIfBlank { return title }
+        return recipeByID[meal.recipeID]?.name ?? "Untitled"
     }
 
-    func servings(of dishID: UUID) -> [Meal] {
-        mealsByDish[dishID] ?? []
+    func servings(of recipeID: UUID) -> [Meal] {
+        mealsByRecipe[recipeID] ?? []
     }
 
     func ratings(forMeal mealID: UUID) -> [MealRating] {
@@ -262,8 +253,8 @@ final class FoodStore {
         return scores.reduce(0, +) / Double(scores.count)
     }
 
-    func dishKind(for recipe: Recipe) -> TaxonomyTermRecord? {
-        recipe.dishKindID.flatMap { taxonomyTerms[$0] }
+    func recipeKind(for recipe: Recipe) -> TaxonomyTermRecord? {
+        recipe.recipeKindID.flatMap { taxonomyTerms[$0] }
     }
 
     func cookingMethod(for recipe: Recipe) -> TaxonomyTermRecord? {
@@ -314,19 +305,19 @@ final class FoodStore {
         verdictDetails(forMeal: mealID).map { (name: $0.name, reaction: $0.reaction) }
     }
 
-    var dishHistory: [UUID: DishHistory] {
-        var history: [UUID: DishHistory] = [:]
-        for dish in myDishes {
-            let servings = mealsByDish[dish.id] ?? []
-            history[dish.id] = DishHistory(timesServed: servings.count,
+    var recipeHistory: [UUID: RecipeHistory] {
+        var history: [UUID: RecipeHistory] = [:]
+        for recipe in myRecipes {
+            let servings = mealsByRecipe[recipe.id] ?? []
+            history[recipe.id] = RecipeHistory(timesServed: servings.count,
                                           lastServed: servings.map(\.eatenOn).max())
         }
         return history
     }
 
     var suggestionInputs: SuggestionEngine.Inputs {
-        SuggestionEngine.Inputs(dishes: myDishes,
-                                mealsByDish: mealsByDish,
+        SuggestionEngine.Inputs(recipes: myRecipes,
+                                mealsByRecipe: mealsByRecipe,
                                 ratingsByMeal: ratingsByMeal,
                                 roster: raterRoster)
     }
@@ -372,16 +363,12 @@ final class FoodStore {
     // MARK: - Local patching
 
     func upsertLocal(recipe: Recipe) {
-        if let index = dishes.firstIndex(where: { $0.id == recipe.id }) {
-            dishes[index] = recipe
+        if let index = recipes.firstIndex(where: { $0.id == recipe.id }) {
+            recipes[index] = recipe
         } else {
-            dishes.append(recipe)
+            recipes.append(recipe)
         }
-        dishByID[recipe.id] = recipe
-    }
-
-    func upsertLocal(dish: Recipe) {
-        upsertLocal(recipe: dish)
+        recipeByID[recipe.id] = recipe
     }
 
     func upsertLocal(meal: Meal) {

@@ -1,7 +1,7 @@
 import Foundation
 import Parsing
 
-/// Parses and normalizes text into matching tokens for search and dish queries.
+/// Parses and normalizes text into matching tokens for search and recipe queries.
 enum SearchTokenParser {
     private static let tokenParser = Parse(input: Substring.self) {
         Whitespace(.horizontal)

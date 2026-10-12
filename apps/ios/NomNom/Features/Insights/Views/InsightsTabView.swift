@@ -1,7 +1,7 @@
 import SwiftUI
 
 enum InsightsRoute: Hashable {
-    case dish(UUID)
+    case recipe(UUID)
 }
 
 struct InsightsTabView: View {
@@ -43,8 +43,8 @@ struct InsightsTabView: View {
             }
             .navigationDestination(for: InsightsRoute.self) { route in
                 switch route {
-                case .dish(let dishID):
-                    RecipeDetailView(dishID: dishID)
+                case .recipe(let recipeID):
+                    RecipeDetailView(recipeID: recipeID)
                 }
             }
             .refreshable {

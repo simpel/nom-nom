@@ -205,8 +205,8 @@ export default function UserDetailClient({ user }: { user: any }) {
               <div className="space-y-2">
                 {(insight.recommendations || []).map((rec: any, i: number) => (
                   <div key={i} className="border rounded-md p-3">
-                    {rec.dish_id ? (
-                      <Link href={`/admin/recipes/${rec.dish_id}`} className="font-medium text-blue-600 hover:underline">
+                    {rec.recipe_id ? (
+                      <Link href={`/admin/recipes/${rec.recipe_id}`} className="font-medium text-blue-600 hover:underline">
                         {rec.title}
                       </Link>
                     ) : (

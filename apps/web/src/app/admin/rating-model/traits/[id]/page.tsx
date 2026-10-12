@@ -48,10 +48,10 @@ export default async function TraitPage({ params }: { params: Promise<{ id: stri
             <p className="text-sm text-gray-500">
               {id === ANY_TRAIT.id
                 ? 'Not stored on terms: every meal offers these tags.'
-                : 'Not stored on terms: every meal whose dish kind and cooking method do not carry raw.'}
+                : 'Not stored on terms: every meal whose recipe kind and cooking method do not carry raw.'}
             </p>
           ) : carriers.length === 0 ? (
-            <p className="text-sm text-gray-500">No dish kind or cooking method carries this trait yet.</p>
+            <p className="text-sm text-gray-500">No recipe kind or cooking method carries this trait yet.</p>
           ) : (
             <div className="flex flex-wrap gap-2">
               {carriers.map(t => <Chip key={t.id} href={modelHref.term(t.id)}>{t.name}</Chip>)}

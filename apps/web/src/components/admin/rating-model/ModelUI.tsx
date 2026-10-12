@@ -8,7 +8,7 @@ export const modelHref = {
   trait: (id: string) => `/admin/rating-model/traits/${id}`,
   term: (id: string) => `/admin/rating-model/terms/${id}`,
   tag: (id: string) => `/admin/rating-model/tags/${id}`,
-  dish: (id: string) => `/admin/recipes/${id}`,
+  recipe: (id: string) => `/admin/recipes/${id}`,
 }
 
 export async function requireAdmin() {

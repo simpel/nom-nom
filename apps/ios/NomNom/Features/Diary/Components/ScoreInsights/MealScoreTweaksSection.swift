@@ -84,8 +84,8 @@ struct MealScoreTweaksSection: View {
     private func save(_ tweaks: RecipeTweaks, party: Party) async {
         guard !isSaving else { return }
         isSaving = true
-        await store.loadPartyRecipeNotes(dishID: meal.dishID)
-        saved = await store.appendTips(tweaks, toDish: meal.dishID, party: party.id)
+        await store.loadPartyRecipeNotes(recipeID: meal.recipeID)
+        saved = await store.appendTips(tweaks, toRecipe: meal.recipeID, party: party.id)
         isSaving = false
     }
 }

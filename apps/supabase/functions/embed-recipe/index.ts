@@ -1,11 +1,11 @@
 import { GenerationLogger } from "../_shared/generation-logger.ts";
 
-interface DishRow {
+interface RecipeRow {
   id: string;
   name: string;
   cuisine: string | null;
   cuisine_id: string | null;
-  dish_kind_id: string | null;
+  recipe_kind_id: string | null;
   cooking_method_id: string | null;
   ingredients: any | null;
   instructions: string[] | null;
@@ -14,8 +14,8 @@ interface DishRow {
 interface WebhookPayload {
   type: "INSERT" | "UPDATE";
   table: string;
-  record: DishRow;
-  old_record: DishRow | null;
+  record: RecipeRow;
+  old_record: RecipeRow | null;
 }
 
 Deno.serve(async (req) => {
@@ -30,18 +30,18 @@ Deno.serve(async (req) => {
 
   try {
     const payload: WebhookPayload = await req.json();
-    const dish = payload.record;
+    const recipe = payload.record;
 
     // Check if we actually need to update the embedding
     if (payload.type === "UPDATE" && payload.old_record) {
       if (
-        dish.name === payload.old_record.name &&
-        dish.cuisine === payload.old_record.cuisine &&
-        dish.cuisine_id === payload.old_record.cuisine_id &&
-        dish.dish_kind_id === payload.old_record.dish_kind_id &&
-        dish.cooking_method_id === payload.old_record.cooking_method_id &&
-        JSON.stringify(dish.ingredients) === JSON.stringify(payload.old_record.ingredients) &&
-        JSON.stringify(dish.instructions) === JSON.stringify(payload.old_record.instructions)
+        recipe.name === payload.old_record.name &&
+        recipe.cuisine === payload.old_record.cuisine &&
+        recipe.cuisine_id === payload.old_record.cuisine_id &&
+        recipe.recipe_kind_id === payload.old_record.recipe_kind_id &&
+        recipe.cooking_method_id === payload.old_record.cooking_method_id &&
+        JSON.stringify(recipe.ingredients) === JSON.stringify(payload.old_record.ingredients) &&
+        JSON.stringify(recipe.instructions) === JSON.stringify(payload.old_record.instructions)
       ) {
         return new Response(JSON.stringify({ skipped: "no-change" }), {
           headers: { "Content-Type": "application/json" },
@@ -63,11 +63,11 @@ Deno.serve(async (req) => {
     logger = GenerationLogger.fromEnv();
 
     // Format a rich string for embedding
-    let inputStr = `${dish.name}`;
-    if (dish.cuisine) inputStr += `\nCuisine: ${dish.cuisine}`;
+    let inputStr = `${recipe.name}`;
+    if (recipe.cuisine) inputStr += `\nCuisine: ${recipe.cuisine}`;
 
-    if (logger.client && (dish.dish_kind_id || dish.cooking_method_id)) {
-      const ids = [dish.dish_kind_id, dish.cooking_method_id].filter(Boolean) as string[];
+    if (logger.client && (recipe.recipe_kind_id || recipe.cooking_method_id)) {
+      const ids = [recipe.recipe_kind_id, recipe.cooking_method_id].filter(Boolean) as string[];
       if (ids.length > 0) {
         const { data: terms } = await logger.client
           .from("taxonomy_terms")
@@ -75,7 +75,7 @@ Deno.serve(async (req) => {
           .in("id", ids);
         if (terms) {
           for (const t of terms) {
-            if (t.dimension === "dish_kind") inputStr += `\nDish Kind: ${t.name}`;
+            if (t.dimension === "recipe_kind") inputStr += `\nRecipe Kind: ${t.name}`;
             if (t.dimension === "cooking_method") inputStr += `\nCooking Method: ${t.name}`;
           }
         }
@@ -83,19 +83,19 @@ Deno.serve(async (req) => {
     }
     
     // Ingredients is usually jsonb
-    if (dish.ingredients && Array.isArray(dish.ingredients)) {
-      const ingList = dish.ingredients.map((i: any) => i.ingredient).filter(Boolean);
+    if (recipe.ingredients && Array.isArray(recipe.ingredients)) {
+      const ingList = recipe.ingredients.map((i: any) => i.ingredient).filter(Boolean);
       if (ingList.length > 0) inputStr += `\nIngredients: ${ingList.join(", ")}`;
     }
     
-    if (dish.instructions && dish.instructions.length > 0) {
-      inputStr += `\nInstructions: ${dish.instructions.join(" ")}`;
+    if (recipe.instructions && recipe.instructions.length > 0) {
+      inputStr += `\nInstructions: ${recipe.instructions.join(" ")}`;
     }
 
     const embedModel = "text-embedding-3-small";
     await logger.start({
-      type: "dish_embed",
-      entityId: dish.id,
+      type: "recipe_embed",
+      entityId: recipe.id,
       prompt: inputStr,
       model: embedModel,
     });
@@ -114,7 +114,7 @@ Deno.serve(async (req) => {
 
     if (!aiResponse.ok) {
       const errText = await aiResponse.text();
-      console.error(`AI API Error for dish ${dish.id}:`, errText);
+      console.error(`AI API Error for recipe ${recipe.id}:`, errText);
       await logger.failure(`AI Gateway error (${aiResponse.status}): ${errText}`);
       return new Response(JSON.stringify({ error: errText }), { status: 502 });
     }
@@ -124,12 +124,12 @@ Deno.serve(async (req) => {
 
     if (embedding && logger.client) {
       const { error: updateErr } = await logger.client
-        .from("dishes")
+        .from("recipes")
         .update({ embedding })
-        .eq("id", dish.id);
+        .eq("id", recipe.id);
 
       if (updateErr) {
-        console.error(`Failed to persist embedding for dish ${dish.id}:`, updateErr);
+        console.error(`Failed to persist embedding for recipe ${recipe.id}:`, updateErr);
         await logger.failure(`Failed to persist embedding: ${updateErr.message}`);
         return new Response(JSON.stringify({ error: updateErr.message }), { status: 500 });
       }
@@ -137,7 +137,7 @@ Deno.serve(async (req) => {
 
     await logger.success(`embedding[${Array.isArray(embedding) ? embedding.length : 0}]`);
 
-    return new Response(JSON.stringify({ success: true, dish_id: dish.id }), {
+    return new Response(JSON.stringify({ success: true, recipe_id: recipe.id }), {
       headers: { "Content-Type": "application/json" },
     });
   } catch (err: any) {

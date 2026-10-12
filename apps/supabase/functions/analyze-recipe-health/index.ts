@@ -45,8 +45,8 @@ interface HealthAnalysisResult {
   health_rationale: string;
   health_breakdown: HealthBreakdown;
   canonical_ingredients: string[];
-  dish_kind?: string;
-  dish_kind_id?: string;
+  recipe_kind?: string;
+  recipe_kind_id?: string;
   cooking_method?: string;
   cooking_method_id?: string;
   cuisine?: string;
@@ -80,12 +80,12 @@ Score Scale (1 to 100):
    oil" becomes "olive oil"; "grated parmesan" becomes "parmesan"). Skip ubiquitous seasonings
    that don't distinguish one recipe's flavor from another (salt, pepper, water, cooking oil in
    general). Aim for the ingredients most likely to actually drive whether someone likes or
-   dislikes the dish: proteins, distinctive vegetables/produce, dairy, and strong flavor
+   dislikes the recipe: proteins, distinctive vegetables/produce, dairy, and strong flavor
    drivers (garlic, chili, specific herbs/spices). One category per distinct ingredient — do
    not list the same category twice.
 
-4. Culinary Dish Kind:
-   Freely determine the culinary kind/format of this dish (e.g. 'stew', 'casserole', 'soup', 'bbq', 'pasta', 'pizza', 'curry', 'salad', 'roast', 'stir-fry', 'sandwich', 'pie', 'tacos', 'risotto', etc. Do NOT restrict yourself to these examples). Propose the most authentic culinary descriptor in English.
+4. Culinary Recipe Kind:
+   Freely determine the culinary kind/format of this recipe (e.g. 'stew', 'casserole', 'soup', 'bbq', 'pasta', 'pizza', 'curry', 'salad', 'roast', 'stir-fry', 'sandwich', 'pie', 'tacos', 'risotto', etc. Do NOT restrict yourself to these examples). Propose the most authentic culinary descriptor in English.
 
 5. Primary Cooking Method:
    Identify the primary cooking method (e.g. 'baking', 'grilling', 'slow_cooking', 'roasting', 'steaming', 'frying', 'sauteing', 'simmering', 'raw_cured', 'smoking'). If none clearly dominates, set to null.
@@ -110,7 +110,7 @@ Return a single JSON object matching this schema:
     }
   },
   "canonical_ingredients": ["string (lowercase, singular core ingredient category)", "..."],
-  "dish_kind": "string or null (culinary format/kind of the dish)",
+  "recipe_kind": "string or null (culinary format/kind of the recipe)",
   "cooking_method": "string or null (primary cooking method)",
   "cuisine": "string or null (wide umbrella culinary tradition)"
 }
@@ -167,7 +167,7 @@ Deno.serve(async (req) => {
 
   const logger = GenerationLogger.fromEnv();
   const admin = logger.client;
-  const model = await getFeatureModel(admin, "analyze-recipe-health");
+  const model = await getFeatureModel(admin, "analyze-recipe-health", "text");
   const gatewayBaseUrl =
     Deno.env.get("AI_GATEWAY_BASE_URL") || "https://ai-gateway.vercel.sh/v1";
 
@@ -286,7 +286,7 @@ Cooking Instructions:
         })
       }),
       canonical_ingredients: z.array(z.string()).default([]),
-      dish_kind: z.string().nullable().optional(),
+      recipe_kind: z.string().nullable().optional(),
       cooking_method: z.string().nullable().optional(),
       cuisine: z.string().nullable().optional(),
     });
@@ -301,27 +301,27 @@ Cooking Instructions:
     }
 
     // Resolve taxonomy terms if present
-    let dishKindId: string | null = null;
+    let recipeKindId: string | null = null;
     let cookingMethodId: string | null = null;
     let cuisineId: string | null = null;
 
     if (admin) {
-      if (parsed.dish_kind) {
+      if (parsed.recipe_kind) {
         try {
           const resolved = await resolveTaxonomyTerm({
             client: admin,
-            dimension: "dish_kind",
-            proposedTerm: parsed.dish_kind,
+            dimension: "recipe_kind",
+            proposedTerm: parsed.recipe_kind,
             apiKey,
             gatewayBaseUrl,
           });
           if (resolved) {
-            dishKindId = resolved.id;
-            parsed.dish_kind_id = resolved.id;
-            parsed.dish_kind = resolved.name;
+            recipeKindId = resolved.id;
+            parsed.recipe_kind_id = resolved.id;
+            parsed.recipe_kind = resolved.name;
           }
         } catch (taxErr) {
-          console.warn("Failed to resolve dish_kind taxonomy term:", taxErr);
+          console.warn("Failed to resolve recipe_kind taxonomy term:", taxErr);
         }
       }
 
@@ -364,7 +364,7 @@ Cooking Instructions:
       }
     }
 
-    // Persist directly to Postgres dishes table if recipe_id is provided
+    // Persist directly to Postgres recipes table if recipe_id is provided
     if (admin && payload.recipe_id) {
       try {
         const updatePayload: Record<string, unknown> = {
@@ -374,8 +374,8 @@ Cooking Instructions:
           health_breakdown: parsed.health_breakdown,
           canonical_ingredients: parsed.canonical_ingredients,
         };
-        if (dishKindId) {
-          updatePayload.dish_kind_id = dishKindId;
+        if (recipeKindId) {
+          updatePayload.recipe_kind_id = recipeKindId;
         }
         if (cookingMethodId) {
           updatePayload.cooking_method_id = cookingMethodId;
@@ -386,14 +386,14 @@ Cooking Instructions:
         }
 
         const { error: updateErr } = await admin
-          .from("dishes")
+          .from("recipes")
           .update(updatePayload)
           .eq("id", payload.recipe_id);
 
         if (updateErr) {
-          console.error("Failed to persist health score and taxonomy to dishes table in Edge Function:", updateErr);
+          console.error("Failed to persist health score and taxonomy to recipes table in Edge Function:", updateErr);
         } else {
-          console.log(`Successfully persisted health score and taxonomy to dish ${payload.recipe_id}`);
+          console.log(`Successfully persisted health score and taxonomy to recipe ${payload.recipe_id}`);
         }
       } catch (dbErr) {
         console.error("Database error in analyze-recipe-health Edge Function:", dbErr);

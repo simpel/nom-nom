@@ -6,9 +6,10 @@ export type GenerationType =
   | "party_insight"
   | "member_match"
   | "recipe_health"
-  | "dish_photo"
+  | "recipe_photo"
+  | "meal_photo"
   | "recipe_parse"
-  | "dish_embed"
+  | "recipe_embed"
   | "ingredient_canonicalize"
   | "recipe_steps"
   | "party_recommendation"
@@ -30,7 +31,7 @@ const NIL_UUID = "00000000-0000-0000-0000-000000000000";
  *
  * Usage:
  *   const logger = GenerationLogger.fromEnv();
- *   await logger.start({ type: "dish_embed", entityId: dish.id, prompt, model });
+ *   await logger.start({ type: "recipe_embed", entityId: recipe.id, prompt, model });
  *   try {
  *     ... do the work ...
  *     await logger.success(responseSummary);

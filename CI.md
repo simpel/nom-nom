@@ -47,10 +47,12 @@ Backend changes are handled in two places:
    - Executes `python3 supabase/tests/rls_test.py` to test Row Level Security policies and triggers.
    - Uses only the local stack, so it needs no secrets.
 
-2. **Production deployment** — the **Supabase GitHub integration** (Dashboard → Project Settings → Integrations → GitHub), *not* a workflow in this repo:
-   - On push/merge to `main`, Supabase itself applies new migrations and deploys the Edge Functions declared in `supabase/config.toml`.
-   - No `SUPABASE_*` GitHub secret is involved — deployment auth lives in the dashboard integration.
-   - One-time setup that the integration does **not** manage, and that stays manual: the Vault rows (`project_url`, `webhook_secret`) and the `APNS_*` function secrets. See [`docs/SETUP_APPLE_KEYS.md`](docs/SETUP_APPLE_KEYS.md).
+2. **`supabase-deploy.yml` (Production deployment)** — a GitHub Actions workflow:
+   - Triggers on push to `main` (the merged release PR) when `apps/supabase/migrations/**`, `apps/supabase/functions/**` or `apps/supabase/config.toml` changed; run it on demand with `workflow_dispatch`.
+   - Runs `supabase db push` first, then deploys **every** Edge Function with `supabase functions deploy --use-api` (bundled by Supabase, no Docker). All of them, because most import `functions/_shared/`. `verify_jwt` per function comes from `config.toml`. No `--prune`: removing a deployed function stays manual.
+   - Needs repo secrets `SUPABASE_ACCESS_TOKEN`, `SUPABASE_DB_PASSWORD` and `SUPABASE_PROJECT_ID`.
+   - Turn off "Deploy to production" in the Supabase GitHub integration (Dashboard → Project Settings → Integrations → GitHub) so two deployers never race.
+   - One-time setup that stays manual: the Vault rows (`project_url`, `webhook_secret`) and the function secrets (`VERCEL_AI_GATEWAY`, `WEBHOOK_SECRET`, `APNS_*`). See [`docs/SETUP_APPLE_KEYS.md`](docs/SETUP_APPLE_KEYS.md).
    - Enable "Require status checks to pass before merging" for the Supabase check so a broken migration can't land on `main`.
 
 > [!IMPORTANT]

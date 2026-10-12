@@ -17,7 +17,7 @@ import '@xyflow/react/dist/style.css'
 // A read-only relation graph laid out in columns, left to right. Every node links to
 // its detail page; the focus node is the page you are on.
 
-export type GraphKind = 'term' | 'trait' | 'tag' | 'verdict' | 'dish'
+export type GraphKind = 'term' | 'trait' | 'tag' | 'verdict' | 'recipe'
 
 export type GraphNode = {
   id: string
@@ -44,7 +44,7 @@ const KIND_STYLES: Record<GraphKind, string> = {
   trait: 'bg-indigo-50 border-indigo-300',
   tag: 'bg-white border-gray-300',
   verdict: 'bg-gray-100 border-gray-300',
-  dish: 'bg-white border-dashed border-gray-300',
+  recipe: 'bg-white border-dashed border-gray-300',
 }
 
 function RelationNode({ data }: NodeProps<Node<RelationNodeData>>) {

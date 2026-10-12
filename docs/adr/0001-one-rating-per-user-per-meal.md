@@ -17,9 +17,9 @@ party.
 
 ## Consequences
 
-- Two parties reach different conclusions about the same dish through **different
+- Two parties reach different conclusions about the same recipe through **different
   membership**, not through duplicate rows. The ranking already supports this: it
-  derives a score per person per dish, so scoping is a filter on which people count.
+  derives a score per person per recipe, so scoping is a filter on which people count.
 - Rating visibility cannot be a column comparison. It is a join across
   `party_members` and `meal_parties`, which is why RLS needs a `SECURITY DEFINER`
   helper rather than an inline predicate.

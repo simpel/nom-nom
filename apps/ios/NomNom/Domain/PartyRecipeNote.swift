@@ -6,14 +6,14 @@ import Foundation
 struct PartyRecipeNote: Identifiable, Hashable, Decodable {
     let id: UUID
     var partyID: UUID
-    var dishID: UUID
+    var recipeID: UUID
     var body: String
     var updatedAt: Date
 
     enum CodingKeys: String, CodingKey {
         case id, body
         case partyID = "party_id"
-        case dishID = "dish_id"
+        case recipeID = "recipe_id"
         case updatedAt = "updated_at"
     }
 
@@ -21,15 +21,15 @@ struct PartyRecipeNote: Identifiable, Hashable, Decodable {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         id = try container.decode(UUID.self, forKey: .id)
         partyID = try container.decode(UUID.self, forKey: .partyID)
-        dishID = try container.decode(UUID.self, forKey: .dishID)
+        recipeID = try container.decode(UUID.self, forKey: .recipeID)
         body = try container.decodeIfPresent(String.self, forKey: .body) ?? ""
         updatedAt = try container.decodeTimestamp(.updatedAt)
     }
 
-    init(id: UUID = UUID(), partyID: UUID, dishID: UUID, body: String, updatedAt: Date = .now) {
+    init(id: UUID = UUID(), partyID: UUID, recipeID: UUID, body: String, updatedAt: Date = .now) {
         self.id = id
         self.partyID = partyID
-        self.dishID = dishID
+        self.recipeID = recipeID
         self.body = body
         self.updatedAt = updatedAt
     }

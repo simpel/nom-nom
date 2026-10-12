@@ -81,7 +81,7 @@ extension FoodStore {
 
     private static func title(for kind: RaterTagAffinity.Kind, isNegative: Bool) -> String {
         switch kind {
-        case .dishKind(let name), .cookingMethod(let name), .ingredient(let name):
+        case .recipeKind(let name), .cookingMethod(let name), .ingredient(let name):
             return name.prefix(1).uppercased() + name.dropFirst()
         case .cuisine(let name):
             return name.capitalized
@@ -95,12 +95,12 @@ extension FoodStore {
         let direction = delta < 0 ? "lower" : "higher"
         let rate = names == ["You"] || names.count > 1 ? "rate" : "rates"
         switch kind {
-        case .dishKind(let name):
+        case .recipeKind(let name):
             return "\(who) \(rate) \(name.lowercased()) \(direction)"
         case .cookingMethod(let name):
-            return "\(who) \(rate) \(name.lowercased()) dishes \(direction)"
+            return "\(who) \(rate) \(name.lowercased()) recipes \(direction)"
         case .ingredient(let name):
-            return "\(who) \(rate) dishes with \(name.lowercased()) \(direction)"
+            return "\(who) \(rate) recipes with \(name.lowercased()) \(direction)"
         case .cuisine(let name):
             return "\(who) \(rate) \(name.capitalized) food \(direction)"
         case .baseline:

@@ -89,16 +89,16 @@ extension FoodStore {
 
         categories[index] = updated
 
-        // Update any dishes that were using the old category name or slug
+        // Update any recipes that were using the old category name or slug
         if slugChanged {
             struct RecipeCuisinePatch: Encodable {
                 let cuisine: String?
             }
-            for dish in dishes where dish.ownerID == userID && (dish.cuisine?.lowercased() == oldCategory.slug.lowercased() || dish.cuisine == oldCategory.name) {
+            for recipe in recipes where recipe.ownerID == userID && (recipe.cuisine?.lowercased() == oldCategory.slug.lowercased() || recipe.cuisine == oldCategory.name) {
                 if let updatedRecipe: Recipe = try? await supabase
-                    .from("dishes")
+                    .from("recipes")
                     .update(RecipeCuisinePatch(cuisine: trimmed))
-                    .eq("id", value: dish.id.uuidString)
+                    .eq("id", value: recipe.id.uuidString)
                     .select()
                     .single()
                     .execute()

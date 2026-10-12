@@ -84,35 +84,35 @@ extension FoodStore {
         averageScore(forMeal: mealID).map(Reaction.init(score:))
     }
 
-    /// Average rotation goal for a meal, falling back to dish average if not explicitly set.
+    /// Average rotation goal for a meal, falling back to recipe average if not explicitly set.
     func averageRotation(forMeal mealID: UUID) -> RotationGoal? {
         if let meal = meal(mealID), let repeatDesire = meal.repeatDesire {
             return repeatDesire
         }
         guard let meal = meal(mealID) else { return nil }
-        return averageRotation(forDish: meal.dishID)
+        return averageRotation(forRecipe: meal.recipeID)
     }
 
-    /// Average rotation goal across all historical servings of a dish.
-    func averageRotation(forDish dishID: UUID) -> RotationGoal? {
-        let goals = servings(of: dishID).compactMap(\.repeatDesire)
+    /// Average rotation goal across all historical servings of a recipe.
+    func averageRotation(forRecipe recipeID: UUID) -> RotationGoal? {
+        let goals = servings(of: recipeID).compactMap(\.repeatDesire)
         guard !goals.isEmpty else { return nil }
         let avg = Double(goals.map(\.rawValue).reduce(0, +)) / Double(goals.count)
         let rounded = Int(avg.rounded())
         return RotationGoal(rawValue: min(2, max(0, rounded)))
     }
 
-    /// Average score across all historical servings of a dish (0.0 to 1.0).
-    func averageScore(forDish dishID: UUID) -> Double? {
-        let dishMeals = servings(of: dishID)
-        let scores = dishMeals.compactMap { averageScore(forMeal: $0.id) }
+    /// Average score across all historical servings of a recipe (0.0 to 1.0).
+    func averageScore(forRecipe recipeID: UUID) -> Double? {
+        let recipeMeals = servings(of: recipeID)
+        let scores = recipeMeals.compactMap { averageScore(forMeal: $0.id) }
         guard !scores.isEmpty else { return nil }
         return scores.reduce(0, +) / Double(scores.count)
     }
 
-    /// Average taste reaction across all historical servings of a dish.
-    func averageReaction(forDish dishID: UUID) -> Reaction? {
-        averageScore(forDish: dishID).map(Reaction.init(score:))
+    /// Average taste reaction across all historical servings of a recipe.
+    func averageReaction(forRecipe recipeID: UUID) -> Reaction? {
+        averageScore(forRecipe: recipeID).map(Reaction.init(score:))
     }
 
     /// Saves the chef's review and adjustments: actual cooking time/duration and chef cooking notes.
@@ -138,20 +138,20 @@ extension FoodStore {
                 .value
             upsertLocal(meal: updatedMeal)
 
-            // Sync effort to dish if the dish doesn't have one and user is the cook
-            if let effort, let dish = dish(currentMeal.dishID), dish.effort == nil, currentMeal.createdBy == userID {
-                struct DishEffortPatch: Encodable {
+            // Sync effort to recipe if the recipe doesn't have one and user is the cook
+            if let effort, let recipe = recipe(currentMeal.recipeID), recipe.effort == nil, currentMeal.createdBy == userID {
+                struct RecipeEffortPatch: Encodable {
                     let effort: Int?
                 }
-                let updatedDish: Dish = try await supabase
-                    .from("dishes")
-                    .update(DishEffortPatch(effort: effort.rawValue))
-                    .eq("id", value: dish.id.uuidString)
+                let updatedRecipe: Recipe = try await supabase
+                    .from("recipes")
+                    .update(RecipeEffortPatch(effort: effort.rawValue))
+                    .eq("id", value: recipe.id.uuidString)
                     .select()
                     .single()
                     .execute()
                     .value
-                upsertLocal(dish: updatedDish)
+                upsertLocal(recipe: updatedRecipe)
             }
 
             reindex()

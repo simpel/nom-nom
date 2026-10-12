@@ -1,4 +1,4 @@
-// Rating traits for a new dish kind or cooking method. Traits decide which "what stood
+// Rating traits for a new recipe kind or cooking method. Traits decide which "what stood
 // out" tags a meal offers (see rating_tags in 20261004140000_rating_traits_and_score.sql),
 // so a term the resolver creates must get them too. The model picks from the fixed list;
 // if it can't, the nearest existing term of the same dimension lends its traits.
@@ -10,9 +10,9 @@ export const RATING_TRAITS = ["crust", "saucy", "raw", "meat_fish", "starch", "s
 export type RatingTrait = typeof RATING_TRAITS[number];
 
 /** Dimensions that carry traits. Cuisine does not. */
-export const TRAIT_DIMENSIONS = new Set(["dish_kind", "cooking_method"]);
+export const TRAIT_DIMENSIONS = new Set(["recipe_kind", "cooking_method"]);
 
-const SYSTEM_PROMPT = `You classify a dish kind or a cooking method for a dinner-rating app.
+const SYSTEM_PROMPT = `You classify a recipe kind or a cooking method for a dinner-rating app.
 Pick every trait that usually applies, from this list only:
 - crust: has a crust, crisp coating or crisp edges (pizza, pie, fried, baked, roasted, grilled)
 - saucy: built around a sauce, broth or liquid (stew, soup, curry, risotto)
@@ -41,7 +41,7 @@ export async function suggestRatingTraits({
 
   if (apiKey) {
     try {
-      const model = await getFeatureModel(client, "taxonomy-traits");
+      const model = await getFeatureModel(client, "taxonomy-traits", "text");
       const res = await fetch(`${gatewayBaseUrl}/chat/completions`, {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${apiKey}` },
@@ -49,7 +49,7 @@ export async function suggestRatingTraits({
           model,
           messages: [
             { role: "system", content: SYSTEM_PROMPT },
-            { role: "user", content: `${dimension === "dish_kind" ? "Dish kind" : "Cooking method"}: ${name}` },
+            { role: "user", content: `${dimension === "recipe_kind" ? "Recipe kind" : "Cooking method"}: ${name}` },
           ],
           response_format: { type: "json_object" },
           temperature: 0,

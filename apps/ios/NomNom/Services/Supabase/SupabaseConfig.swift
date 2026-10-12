@@ -32,7 +32,7 @@ enum SupabaseConfig {
     /// who may see the object, so the layout is load-bearing.
     static let photoBucket = "meal-photos"
 
-    /// Private bucket holding recipe photos, keyed `<dish_id>/<uuid>.jpg`.
+    /// Private bucket holding recipe photos, keyed `<recipe_id>/<uuid>.jpg`.
     static let recipeBucket = "recipe-photos"
 
     /// Private bucket holding dinner party avatar photos, keyed `<party_id>/avatar.jpg`.

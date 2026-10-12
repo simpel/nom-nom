@@ -1,42 +1,42 @@
 import SwiftUI
 import PhotosUI
 
-/// Add or edit one meal: multiple photos, title (with existing dish matching), date, dinner party serving, notes.
+/// Add or edit one meal: multiple photos, title (with existing recipe matching), date, dinner party serving, notes.
 struct MealEditorView: View {
     var mealID: UUID?
     var initialDate: Date?
-    var prefilledDishID: UUID?
+    var prefilledRecipeID: UUID?
     var prefilledPartyID: UUID?
 
     @Environment(FoodStore.self) private var store
 
     /// The one meal draft, shared by both steps. Step 1 holds the recipe (name, linked
-    /// dish, recipe draft), date and notes; the Details step binds to the same draft.
+    /// recipe, recipe draft), date and notes; the Details step binds to the same draft.
     @State private var session: FormSession<FoodStore.MealDraft>
-    @State private var loadedRecipeDishID: UUID?
+    @State private var loadedRecipeID: UUID?
 
-    @State private var showDishPickerSheet = false
+    @State private var showRecipePickerSheet = false
     @State private var showRecipeEditorSheet = false
     @State private var showCreateRecipeSheet = false
     @State private var navigateToDetailsStep = false
 
-    init(mealID: UUID? = nil, initialDate: Date? = nil, prefilledDishID: UUID? = nil, prefilledPartyID: UUID? = nil) {
+    init(mealID: UUID? = nil, initialDate: Date? = nil, prefilledRecipeID: UUID? = nil, prefilledPartyID: UUID? = nil) {
         self.mealID = mealID
         self.initialDate = initialDate
-        self.prefilledDishID = prefilledDishID
+        self.prefilledRecipeID = prefilledRecipeID
         self.prefilledPartyID = prefilledPartyID
-        let draft = FoodStore.MealDraft(mealID: mealID, dishName: "", eatenOn: .now, notes: "", recipe: FoodStore.RecipeDraft())
+        let draft = FoodStore.MealDraft(mealID: mealID, recipeName: "", eatenOn: .now, notes: "", recipe: FoodStore.RecipeDraft())
         self._session = State(initialValue: FormSession(draft, kind: mealID == nil ? .create : .edit, isLoaded: false))
     }
 
     private var meal: Meal? { mealID.flatMap { store.meal($0) } }
     private var isEditing: Bool { mealID != nil }
 
-    private var existingMatchedDish: Dish? {
-        if let linkedDishID = session.form.linkedDishID, let dish = store.dish(linkedDishID) { return dish }
-        let normalized = session.form.dishName.trimmedName.normalizedForMatching
+    private var existingMatchedRecipe: Recipe? {
+        if let linkedRecipeID = session.form.linkedRecipeID, let recipe = store.recipe(linkedRecipeID) { return recipe }
+        let normalized = session.form.recipeName.trimmedName.normalizedForMatching
         guard !normalized.isEmpty else { return nil }
-        return store.myDishes.first { $0.normalizedName == normalized }
+        return store.myRecipes.first { $0.normalizedName == normalized }
     }
 
     private var recipeDraft: Binding<FoodStore.RecipeDraft> {
@@ -48,13 +48,13 @@ struct MealEditorView: View {
             ScrollView {
                 VStack(spacing: 0) {
                     MealEditorRecipeSection(
-                        title: $session.form.dishName,
-                        existingMatchedRecipe: existingMatchedDish,
-                        isExistingRecipe: existingMatchedDish != nil,
-                        onPickRecipe: { showDishPickerSheet = true },
+                        title: $session.form.recipeName,
+                        existingMatchedRecipe: existingMatchedRecipe,
+                        isExistingRecipe: existingMatchedRecipe != nil,
+                        onPickRecipe: { showRecipePickerSheet = true },
                         onCreateRecipe: { showCreateRecipeSheet = true },
                         onEditRecipe: { showRecipeEditorSheet = true },
-                        onRemoveRecipe: removeSelectedDish
+                        onRemoveRecipe: removeSelectedRecipe
                     )
 
                     MealEditorDetailsSection(date: $session.form.eatenOn, notes: $session.form.notes)
@@ -71,68 +71,68 @@ struct MealEditorView: View {
                     .stepCommitToolbar(session, save: save)
             }
             .sheet(isPresented: $showRecipeEditorSheet) {
-                DishRecipeEditSheet(dishName: $session.form.dishName, recipeDraft: recipeDraft)
+                MealRecipeEditSheet(recipeName: $session.form.recipeName, recipeDraft: recipeDraft)
             }
             .sheet(isPresented: $showCreateRecipeSheet) {
-                CreateRecipeSheet(initialName: session.form.dishName.trimmedName) { recipe in
+                CreateRecipeSheet(initialName: session.form.recipeName.trimmedName) { recipe in
                     select(recipe)
                 }
             }
-            .sheet(isPresented: $showDishPickerSheet) {
+            .sheet(isPresented: $showRecipePickerSheet) {
                 RecipePickerSheet(
                     onSelectExistingRecipe: select,
                     onSelectNewRecipe: { name in
-                        removeSelectedDish()
-                        session.form.dishName = name
+                        removeSelectedRecipe()
+                        session.form.recipeName = name
                     }
                 )
             }
             .onAppear(perform: load)
-            .onChange(of: session.form.linkedDishID) { _, _ in syncMatchedDishRecipe() }
-            .onChange(of: session.form.dishName) { _, _ in syncMatchedDishRecipe() }
+            .onChange(of: session.form.linkedRecipeID) { _, _ in syncMatchedRecipe() }
+            .onChange(of: session.form.recipeName) { _, _ in syncMatchedRecipe() }
         }
         .editorSheet(session, errorTitle: "Couldn\u{2019}t save meal")
     }
 
-    private func select(_ dish: Dish) {
-        session.form.dishName = dish.name
-        session.form.linkedDishID = dish.id
-        loadRecipe(from: dish, into: &session.form)
+    private func select(_ recipe: Recipe) {
+        session.form.recipeName = recipe.name
+        session.form.linkedRecipeID = recipe.id
+        loadRecipe(from: recipe, into: &session.form)
     }
 
-    private func removeSelectedDish() {
-        session.form.dishName = ""
-        session.form.linkedDishID = nil
+    private func removeSelectedRecipe() {
+        session.form.recipeName = ""
+        session.form.linkedRecipeID = nil
         session.form.recipe = FoodStore.RecipeDraft()
-        loadedRecipeDishID = nil
+        loadedRecipeID = nil
     }
 
-    /// Saves the meal, linking it to the matching dish when none was picked.
+    /// Saves the meal, linking it to the matching recipe when none was picked.
     private func save(_ form: FoodStore.MealDraft) async throws {
         var draft = form
-        draft.dishName = form.dishName.trimmedName
-        draft.linkedDishID = form.linkedDishID ?? existingMatchedDish?.id
+        draft.recipeName = form.recipeName.trimmedName
+        draft.linkedRecipeID = form.linkedRecipeID ?? existingMatchedRecipe?.id
         let saved = await store.save(draft)
         try store.throwIfFailed(saved)
     }
 
-    private func syncMatchedDishRecipe() {
-        guard let dish = existingMatchedDish, dish.id != loadedRecipeDishID else { return }
-        loadRecipe(from: dish, into: &session.form)
+    private func syncMatchedRecipe() {
+        guard let recipe = existingMatchedRecipe, recipe.id != loadedRecipeID else { return }
+        loadRecipe(from: recipe, into: &session.form)
     }
 
-    private func loadRecipe(from dish: Dish, into draft: inout FoodStore.MealDraft) {
-        loadedRecipeDishID = dish.id
+    private func loadRecipe(from recipe: Recipe, into draft: inout FoodStore.MealDraft) {
+        loadedRecipeID = recipe.id
         draft.recipe = FoodStore.RecipeDraft(
-            ingredients: dish.ingredients,
-            instructions: dish.instructions,
-            existingPhotoPaths: dish.recipePhotoPaths,
+            ingredients: recipe.ingredients,
+            instructions: recipe.instructions,
+            existingPhotoPaths: recipe.recipePhotoPaths,
             addedPhotoData: [],
             removedPhotoPaths: [],
-            effort: dish.effort
+            effort: recipe.effort
         )
-        if draft.effort == nil, let dishEffort = dish.effort {
-            draft.effort = dishEffort
+        if draft.effort == nil, let recipeEffort = recipe.effort {
+            draft.effort = recipeEffort
         }
     }
 
@@ -143,19 +143,19 @@ struct MealEditorView: View {
 
         guard let meal else {
             if let initialDate { draft.eatenOn = initialDate }
-            if let prefilledDishID, let dish = store.dish(prefilledDishID) {
-                draft.dishName = dish.name
-                draft.linkedDishID = dish.id
-                loadRecipe(from: dish, into: &draft)
+            if let prefilledRecipeID, let recipe = store.recipe(prefilledRecipeID) {
+                draft.recipeName = recipe.name
+                draft.linkedRecipeID = recipe.id
+                loadRecipe(from: recipe, into: &draft)
             }
             draft.servedParties = prefilledPartyID.map { [$0] } ?? store.myParties.first.map { [$0.id] } ?? []
             session.load(draft)
             return
         }
 
-        let dish = store.dish(meal.dishID)
-        draft.dishName = dish?.name ?? ""
-        draft.linkedDishID = dish?.id
+        let recipe = store.recipe(meal.recipeID)
+        draft.recipeName = recipe?.name ?? ""
+        draft.linkedRecipeID = recipe?.id
         draft.eatenOn = meal.eatenOn
         draft.notes = meal.notes
         draft.mealTitle = meal.title ?? ""
@@ -163,7 +163,7 @@ struct MealEditorView: View {
         draft.repeatDesire = meal.repeatDesire
         draft.photos = FoodStore.PhotosDraft(existingPaths: meal.photoPaths)
         draft.servedParties = Set(store.parties(forMeal: meal.id).map(\.id))
-        if let dish { loadRecipe(from: dish, into: &draft) }
+        if let recipe { loadRecipe(from: recipe, into: &draft) }
         session.load(draft)
     }
 }

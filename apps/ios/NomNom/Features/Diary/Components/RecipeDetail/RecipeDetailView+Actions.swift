@@ -67,7 +67,7 @@ extension RecipeDetailView {
             defer { isLoadingRemote = false }
             do {
                 let fetched: Recipe = try await supabase
-                    .from("dishes")
+                    .from("recipes")
                     .select()
                     .eq("id", value: recipeID.uuidString)
                     .single()

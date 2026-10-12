@@ -1,5 +1,6 @@
 import { createClient as createSupabaseClient } from '@supabase/supabase-js';
 import { z } from 'zod';
+import { getFeatureModel } from '@/utils/ai-config';
 
 const InsightSchema = z.object({
     summary_sentence: z.string(),
@@ -7,7 +8,7 @@ const InsightSchema = z.object({
         title: z.string(),
         description: z.string(),
         cuisine: z.string().nullable().optional(),
-        dish_id: z.string().uuid().nullable().optional()
+        recipe_id: z.string().uuid().nullable().optional()
     })),
     top_ingredients: z.array(z.string()).optional().default([]),
     ways_of_cooking: z.array(z.string()).optional().default([]),
@@ -38,7 +39,7 @@ Wrap positive things (foods, cuisines, or flavors they enjoy) in **double asteri
 Wrap negative things (foods, cuisines, or flavors they dislike or avoid) in ~~double tildes~~ (e.g. ~~seafood~~, ~~mushrooms~~).
 Output MUST match this JSON schema exactly:
 {
-  "summary_sentence": "A VERY CONCISE, one-sentence summary of the party's tastes (MAX 25 WORDS). Format like: '[Party Name] enjoys [flavor] dishes with a preference for [cuisine].'",
+  "summary_sentence": "A VERY CONCISE, one-sentence summary of the party's tastes (MAX 25 WORDS). Format like: '[Party Name] enjoys [flavor] recipes with a preference for [cuisine].'",
   "recommendations": [
     {
       "title": "Recipe Name",
@@ -57,7 +58,7 @@ Output MUST match this JSON schema exactly:
     {
       "member_id": "member_id",
       "member_name": "Member Name",
-      "explanation": "1 concise sentence explaining how this member's taste aligns with or deviates from the food served to the party (e.g. 'Anna loves pasta nights but consistently rates the party's heavier BBQ and spicy dishes lower than the group.')"
+      "explanation": "1 concise sentence explaining how this member's taste aligns with or deviates from the food served to the party (e.g. 'Anna loves pasta nights but consistently rates the party's heavier BBQ and spicy recipes lower than the group.')"
     }
   ]
 }`;
@@ -69,7 +70,12 @@ export async function generatePartyInsightsForParty(
     const adminSupabase = getAdminSupabase();
     const aiGatewayUrl = process.env.AI_GATEWAY_BASE_URL || 'https://ai-gateway.vercel.sh/v1';
     const apiKey = process.env.VERCEL_AI_GATEWAY || process.env.VERCEL_AI_GATEWAY_KEY;
-    const model = process.env.AI_GATEWAY_MODEL || 'google/gemini-2.5-flash';
+    let model: string;
+    try {
+        model = await getFeatureModel(adminSupabase, 'party-insights');
+    } catch (err) {
+        return { success: false, error: (err as Error).message };
+    }
 
     if (!apiKey) {
         return { success: false, error: 'Missing VERCEL_AI_GATEWAY credentials' };
@@ -104,7 +110,7 @@ export async function generatePartyInsightsForParty(
             meals (
                 eaten_on,
                 notes,
-                dishes (
+                recipes (
                     name,
                     cuisine,
                     ingredients
@@ -139,7 +145,7 @@ export async function generatePartyInsightsForParty(
     const recentMeals = mealData.map((row: any) => {
         const m = row.meals;
         if (!m) return null;
-        const dish = m.dishes;
+        const recipe = m.recipes;
         const ratings = m.meal_ratings || [];
 
         let totalScore = 0;
@@ -159,10 +165,10 @@ export async function generatePartyInsightsForParty(
         const avgScore = count > 0 ? parseFloat((totalScore / count).toFixed(2)) : null;
 
         return {
-            name: dish?.name,
-            cuisine: dish?.cuisine,
+            name: recipe?.name,
+            cuisine: recipe?.cuisine,
             avg_score: avgScore,
-            ingredients: Array.isArray(dish?.ingredients) ? dish.ingredients.map((i: any) => i.ingredient || i) : [],
+            ingredients: Array.isArray(recipe?.ingredients) ? recipe.ingredients.map((i: any) => i.ingredient || i) : [],
             member_ratings: memberRatings
         };
     }).filter(m => m != null && m.name != null);
@@ -253,7 +259,7 @@ export async function generatePartyInsightsForParty(
         const parsed = JSON.parse(content);
         const validated = InsightSchema.parse(parsed);
 
-        // Vector search to link recommendations to existing dishes
+        // Vector search to link recommendations to existing recipes
         for (const rec of validated.recommendations) {
             try {
                 const input = `${rec.title} - ${rec.cuisine || ''} - ${rec.description || ''}`;
@@ -273,13 +279,13 @@ export async function generatePartyInsightsForParty(
                     const recCompletion = await recAiResponse.json();
                     const queryEmbedding = recCompletion.data?.[0]?.embedding;
                     if (queryEmbedding) {
-                        const { data: matchedDishes, error: matchError } = await adminSupabase.rpc('match_dishes', {
+                        const { data: matchedRecipes, error: matchError } = await adminSupabase.rpc('match_recipes', {
                             query_embedding: queryEmbedding,
                             match_threshold: 0.2,
                             match_count: 1
                         });
-                        if (!matchError && matchedDishes && matchedDishes.length > 0) {
-                            rec.dish_id = matchedDishes[0].id;
+                        if (!matchError && matchedRecipes && matchedRecipes.length > 0) {
+                            rec.recipe_id = matchedRecipes[0].id;
                         }
                     }
                 }

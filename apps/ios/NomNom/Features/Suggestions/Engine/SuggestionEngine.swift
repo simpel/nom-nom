@@ -7,7 +7,7 @@ import Foundation
 struct EaterVerdict: Identifiable, Hashable {
     let ref: RaterRef
     let name: String
-    /// Recency-weighted 0...1, `nil` when this person never rated the dish.
+    /// Recency-weighted 0...1, `nil` when this person never rated the recipe.
     let score: Double?
     let sampleCount: Int
 
@@ -19,7 +19,7 @@ struct EaterVerdict: Identifiable, Hashable {
 }
 
 struct Suggestion: Identifiable {
-    let dish: Dish
+    let recipe: Recipe
     let score: Double
     let likeScore: Double?
     let confidence: Double
@@ -30,13 +30,13 @@ struct Suggestion: Identifiable {
     let typicalGapDays: Double?
     let verdicts: [EaterVerdict]
     let reasons: [String]
-    /// Most recent photo of this dish, for the row thumbnail. A storage path now,
+    /// Most recent photo of this recipe, for the row thumbnail. A storage path now,
     /// not bytes — the row loads it through `PhotoCache`.
     let photoPath: String?
 
-    var id: UUID { dish.id }
+    var id: UUID { recipe.id }
 
-    var name: String { dish.name }
+    var name: String { recipe.name }
 }
 
 // MARK: - Engine
@@ -50,8 +50,8 @@ struct SuggestionEngine {
     var ranker = Ranker()
 
     struct Inputs {
-        var dishes: [Dish]
-        var mealsByDish: [UUID: [Meal]]
+        var recipes: [Recipe]
+        var mealsByRecipe: [UUID: [Meal]]
         var ratingsByMeal: [UUID: [MealRating]]
         /// Everyone whose opinion the UI shows a column for.
         var roster: [(ref: RaterRef, name: String)]
@@ -63,15 +63,15 @@ struct SuggestionEngine {
 
         var results: [Suggestion] = []
 
-        for dish in inputs.dishes {
-            let servings = inputs.mealsByDish[dish.id] ?? []
-            let record = Self.record(for: dish, servings: servings, ratingsByMeal: inputs.ratingsByMeal)
+        for recipe in inputs.recipes {
+            let servings = inputs.mealsByRecipe[recipe.id] ?? []
+            let record = Self.record(for: recipe, servings: servings, ratingsByMeal: inputs.ratingsByMeal)
             let metrics = ranker.metrics(for: record)
 
             // --- filters ---
             if !query.isEmpty,
-               !dish.normalizedName.contains(query),
-               !dish.normalizedName.matchTokens.contains(where: { $0.hasPrefix(query) }) {
+               !recipe.normalizedName.contains(query),
+               !recipe.normalizedName.matchTokens.contains(where: { $0.hasPrefix(query) }) {
                 continue
             }
             if metrics.likeScore == nil, !filters.includeUntried { continue }
@@ -99,7 +99,7 @@ struct SuggestionEngine {
                 .first { $0.photoPath != nil }?
                 .photoPath
 
-            results.append(Suggestion(dish: dish,
+            results.append(Suggestion(recipe: recipe,
                                       score: ranker.score(metrics, weights: weights),
                                       likeScore: metrics.likeScore,
                                       confidence: metrics.confidence,
@@ -123,10 +123,10 @@ struct SuggestionEngine {
 
     // MARK: Rows → value bridge
 
-    static func record(for dish: Dish,
+    static func record(for recipe: Recipe,
                        servings: [Meal],
-                       ratingsByMeal: [UUID: [MealRating]]) -> DishRecord<UUID, RaterRef> {
-        DishRecord(id: dish.id,
+                       ratingsByMeal: [UUID: [MealRating]]) -> RecipeRecord<UUID, RaterRef> {
+        RecipeRecord(id: recipe.id,
                    servings: servings.map { meal in
                        ServingRecord(date: meal.eatenOn,
                                      reactions: (ratingsByMeal[meal.id] ?? []).map {
@@ -139,7 +139,7 @@ struct SuggestionEngine {
 
     /// Short chips explaining why something is near the top. Without them the
     /// ranking is a black box and you stop trusting it.
-    static func reasons(metrics: DishMetrics<RaterRef>,
+    static func reasons(metrics: RecipeMetrics<RaterRef>,
                         verdicts: [EaterVerdict],
                         now: Date) -> [String] {
         var reasons: [String] = []

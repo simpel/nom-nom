@@ -2,7 +2,7 @@ import Foundation
 
 // MARK: - Tuning
 
-/// Weights that turn dish history into a ranking. Each preset is a different
+/// Weights that turn recipe history into a ranking. Each preset is a different
 /// opinion about what "a good suggestion" means.
 struct SuggestionWeights: Hashable {
     var like: Double
@@ -33,22 +33,22 @@ struct ServingRecord<EaterID: Hashable> {
     }
 }
 
-struct DishRecord<DishID: Hashable, EaterID: Hashable> {
-    let id: DishID
+struct RecipeRecord<RecipeID: Hashable, EaterID: Hashable> {
+    let id: RecipeID
     /// Any order; the ranker sorts.
     let servings: [ServingRecord<EaterID>]
 }
 
 // MARK: - Output
 
-struct DishMetrics<EaterID: Hashable> {
+struct RecipeMetrics<EaterID: Hashable> {
     /// Recency-weighted mean verdict, 0...1. `nil` when nobody ever rated it.
     var likeScore: Double?
     /// 0...1 — how much evidence is behind `likeScore`.
     var confidence: Double
-    /// 0...1 — how overdue the dish is, relative to its own usual rhythm.
+    /// 0...1 — how overdue the recipe is, relative to its own usual rhythm.
     var readiness: Double
-    /// 0...1 — bigger for dishes we know less about.
+    /// 0...1 — bigger for recipes we know less about.
     var exploration: Double
     /// 0...1 — share of servings that landed on today's weekday.
     var weekdayAffinity: Double
@@ -63,7 +63,7 @@ struct DishMetrics<EaterID: Hashable> {
     /// 0 when nobody minds it, 1 when somebody's recent verdict was a flat no.
     ///
     /// Falls back to the overall score when verdicts were logged without naming an
-    /// eater, so a dish nobody liked still gets penalised.
+    /// eater, so a recipe nobody liked still gets penalised.
     var dislikeSeverity: Double {
         guard let worst = perEater.values.map(\.score).min() ?? likeScore else { return 0 }
         return min(1, max(0, (0.5 - worst) * 2))
@@ -75,18 +75,18 @@ struct DishMetrics<EaterID: Hashable> {
 struct Ranker {
     /// How fast an old verdict stops counting. Kids change their minds, so ~6 months.
     var reactionHalfLifeDays: Double = 180
-    /// Rotation period assumed for a dish we've only cooked once.
+    /// Rotation period assumed for a recipe we've only cooked once.
     var defaultGapDays: Double = 14
     /// Verdict weight at which we call `likeScore` trustworthy.
     var confidenceSaturation: Double = 6
-    /// Readiness given to a dish we've never cooked. Deliberately below 1: with no
+    /// Readiness given to a recipe we've never cooked. Deliberately below 1: with no
     /// rotation history it isn't "overdue", it's just available. Novelty is the
     /// exploration term's job, and letting both max out double-counts it.
     var neverServedReadiness: Double = 0.7
     var now: Date = .now
     var calendar: Calendar = .current
 
-    func metrics<D: Hashable, E: Hashable>(for record: DishRecord<D, E>) -> DishMetrics<E> {
+    func metrics<D: Hashable, E: Hashable>(for record: RecipeRecord<D, E>) -> RecipeMetrics<E> {
         let servings = record.servings.sorted { $0.date < $1.date }
         let lastServed = servings.last?.date
         let daysSince = lastServed.map { max(0, Int((now.timeIntervalSince($0) / 86_400).rounded(.down))) }
@@ -124,8 +124,8 @@ struct Ranker {
             max(1, later.date.timeIntervalSince(earlier.date) / 86_400)
         }
         let typicalGap: Double? = gaps.isEmpty ? nil : gaps.reduce(0, +) / Double(gaps.count)
-        // A dish we normally eat weekly feels overdue much sooner than one we eat
-        // twice a year, so the time constant follows the dish's own rhythm.
+        // A recipe we normally eat weekly feels overdue much sooner than one we eat
+        // twice a year, so the time constant follows the recipe's own rhythm.
         let tau = min(max(typicalGap ?? defaultGapDays, 4), 60)
         let readiness: Double = {
             guard let daysSince else { return neverServedReadiness }
@@ -140,7 +140,7 @@ struct Ranker {
         let weekdayHits = servings.filter { calendar.component(.weekday, from: $0.date) == todayWeekday }.count
         let weekdayAffinity = servings.isEmpty ? 0 : Double(weekdayHits) / Double(servings.count)
 
-        return DishMetrics(likeScore: likeScore,
+        return RecipeMetrics(likeScore: likeScore,
                            confidence: confidence,
                            readiness: readiness,
                            exploration: exploration,
@@ -154,8 +154,8 @@ struct Ranker {
     }
 
     /// Combines the metrics into the number the list is sorted by.
-    func score<E: Hashable>(_ metrics: DishMetrics<E>, weights: SuggestionWeights) -> Double {
-        // An unrated dish gets a neutral 0.5 rather than a 0, so it isn't punished
+    func score<E: Hashable>(_ metrics: RecipeMetrics<E>, weights: SuggestionWeights) -> Double {
+        // An unrated recipe gets a neutral 0.5 rather than a 0, so it isn't punished
         // for being unknown; the exploration term is what actually promotes it.
         let effectiveLike = metrics.likeScore ?? 0.5
         return weights.like * effectiveLike

@@ -1,37 +1,39 @@
 import { SupabaseClient } from "jsr:@supabase/supabase-js@2";
 
+/** The kind of model a feature calls; each kind has its own default at /admin/ai-config. */
+export type ModelKind = "text" | "image";
+
 /**
- * Fetches the configured AI model for a given feature from the ai_feature_configs table.
- * Falls back to the defaultModel (or AI_GATEWAY_MODEL env var) if not configured or if DB fails.
+ * The model for `featureId`, set at /admin/ai-config (public.ai_feature_configs).
+ *
+ * A feature row with a model wins; a feature row without one (or no row) uses the
+ * `default-<kind>` row. There is no model in code: if neither is set, this throws so the
+ * misconfiguration shows up in the logs instead of silently calling some other model.
+ * Every feature id here must also be listed in apps/web/src/app/admin/ai-config/features.ts.
  */
 export async function getFeatureModel(
   client: SupabaseClient | null,
   featureId: string,
-  defaultModel: string = "google/gemini-2.5-flash"
+  kind: ModelKind,
 ): Promise<string> {
-  const envDefault = Deno.env.get("AI_GATEWAY_MODEL") || defaultModel;
-
   if (!client) {
-    return envDefault;
+    throw new Error(`Cannot read the AI model for ${featureId}: no Supabase service client`);
   }
 
-  try {
-    const { data, error } = await client
-      .from("ai_feature_configs")
-      .select("model_name")
-      .eq("feature_id", featureId)
-      .single();
+  const defaultId = `default-${kind}`;
+  const { data, error } = await client
+    .from("ai_feature_configs")
+    .select("feature_id, model_name")
+    .in("feature_id", [featureId, defaultId]);
 
-    if (error || !data?.model_name) {
-      if (error && error.code !== 'PGRST116') { // Ignore "no rows returned" error
-        console.error(`Error fetching AI config for ${featureId}:`, error);
-      }
-      return envDefault;
-    }
-
-    return data.model_name;
-  } catch (err) {
-    console.error(`Exception fetching AI config for ${featureId}:`, err);
-    return envDefault;
+  if (error) {
+    throw new Error(`Cannot read the AI model for ${featureId}: ${error.message}`);
   }
+
+  const model = (id: string) => data?.find((row) => row.feature_id === id)?.model_name;
+  const resolved = model(featureId) || model(defaultId);
+  if (!resolved) {
+    throw new Error(`No AI model set for ${featureId} and no ${kind} default; set one at /admin/ai-config`);
+  }
+  return resolved;
 }
