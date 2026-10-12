@@ -27,7 +27,9 @@ final class AuthController {
 
     private(set) var phase: Phase = .loading
     private(set) var step: Step = .email
-    private(set) var isWorking = false
+    /// True while a sign-in, sign-out or deletion is in flight. Set by the extensions
+    /// in `AuthController+SignIn.swift` and `AuthController+Account.swift`.
+    var isWorking = false
     var errorMessage: String?
 
     private var listener: Task<Void, Never>?
@@ -50,6 +52,23 @@ final class AuthController {
 
     static var preview: AuthController {
         AuthController(phase: .signedIn(userID: UUID(uuidString: "00000000-0000-0000-0000-000000000001")!))
+    }
+
+    /// Moves to the signed-in phase, back on the address step for the next sign-out.
+    func completeSignIn(userID: UUID) {
+        phase = .signedIn(userID: userID)
+        step = .email
+    }
+
+    /// Drops to the signed-out phase on the address step.
+    func completeSignOut() {
+        phase = .signedOut
+        step = .email
+    }
+
+    /// Shows the code field once a code is on its way to `email`.
+    func awaitCode(sentTo email: String) {
+        step = .code(sentTo: email)
     }
 
     // MARK: - Lifecycle
@@ -100,168 +119,15 @@ final class AuthController {
         }
     }
 
-    // MARK: - Sign in with Apple
-
-    func signInWithApple(idToken: String, nonce: String, fullName: PersonNameComponents?) async {
-        guard !isWorking else { return }
-        isWorking = true
-        errorMessage = nil
-        defer { isWorking = false }
-
-        do {
-            let session = try await supabase.auth.signInWithIdToken(
-                credentials: .init(
-                    provider: .apple,
-                    idToken: idToken,
-                    nonce: nonce
-                )
-            )
-
-            // fullName is provided only on the first sign-in (account creation),
-            // so we update profile metadata when present.
-            if let fullName {
-                let formatted = PersonNameComponentsFormatter.localizedString(from: fullName, style: .default).trimmingCharacters(in: .whitespacesAndNewlines)
-                if !formatted.isEmpty {
-                    _ = try? await supabase.auth.update(
-                        user: UserAttributes(data: ["full_name": .string(formatted)])
-                    )
-                }
-            }
-
-            self.phase = .signedIn(userID: session.user.id)
-            self.step = .email
-        } catch {
-            #if DEBUG
-            print("Sign in with Apple error: \(error)")
-            #endif
-            errorMessage = Self.describe(error)
-        }
-    }
-
-    // MARK: - Signing in
-
-    func sendCode(to rawEmail: String) async {
-        let email = rawEmail.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
-        guard email.contains("@"), !email.hasPrefix("@"), !email.hasSuffix("@") else {
-            errorMessage = "That doesn't look like an email address."
-            return
-        }
-
-        isWorking = true
-        errorMessage = nil
-        defer { isWorking = false }
-
-        // The reviewer test account uses a static code and does not dispatch email.
-        if ReviewerAccount.isReviewerEmail(email) {
-            step = .code(sentTo: email)
-            return
-        }
-
-        do {
-            // shouldCreateUser: signing in and signing up are the same gesture here
-            // — there is no separate registration step, and the trigger on
-            // auth.users creates the profile and claims any waiting invites.
-            try await supabase.auth.signInWithOTP(email: email, shouldCreateUser: true)
-            step = .code(sentTo: email)
-        } catch {
-            errorMessage = Self.describe(error)
-        }
-    }
-
-    func verify(code rawCode: String) async {
-        guard !isWorking else { return }
-        guard case .code(let email) = step else { return }
-        let code = rawCode.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard code.count >= 6 else {
-            errorMessage = "The code is six digits."
-            return
-        }
-
-        isWorking = true
-        errorMessage = nil
-        defer { isWorking = false }
-
-        do {
-            if ReviewerAccount.isReviewerEmail(email) {
-                guard ReviewerAccount.isReviewerCode(code) else {
-                    errorMessage = "That code didn't work. Please check and try again."
-                    return
-                }
-                let session = try await supabase.auth.signIn(email: email, password: ReviewerAccount.password)
-                self.phase = .signedIn(userID: session.user.id)
-                self.step = .email
-                return
-            }
-
-            // `.email` covers both halves of the flow. GoTrue mails a signup
-            // confirmation to an address it has never seen and a magic link to one
-            // it has, and verifying with the generic email type accepts either —
-            // so the client doesn't have to know whether this is a new account.
-            let authResponse = try await supabase.auth.verifyOTP(email: email, token: code, type: .email)
-            self.phase = .signedIn(userID: authResponse.user.id)
-            self.step = .email
-        } catch {
-            #if DEBUG
-            print("Auth verification error: \(error)")
-            #endif
-            errorMessage = Self.describe(error)
-        }
+    /// Stops mirroring the session. The listener otherwise lives as long as the controller.
+    func stop() {
+        listener?.cancel()
+        listener = nil
     }
 
     /// Back to the address field, e.g. after a typo in the email.
     func startOver() {
         step = .email
         errorMessage = nil
-    }
-
-    func signOut() async {
-        isWorking = true
-        defer { isWorking = false }
-        do {
-            try await supabase.auth.signOut()
-        } catch {
-            // A failed sign-out is usually the network, and leaving the user
-            // apparently signed in with no way back is worse than dropping the
-            // local session and letting the next launch sort it out.
-            phase = .signedOut
-            step = .email
-        }
-    }
-
-    /// Deletes this account and everything in it, permanently.
-    ///
-    /// Required by App Store Review Guideline 5.1.1(v) — an app that creates
-    /// accounts has to let a person delete one without leaving it.
-    ///
-    /// The work happens in the `delete-account` Edge Function, because removing an
-    /// auth user needs the service role key and that must never ship inside an
-    /// app. Note that this call carries no argument: the function reads the
-    /// account to delete out of the caller's own token, so there is nothing here
-    /// to name and therefore nothing to get wrong.
-    ///
-    /// Returns whether it worked, so the view can stay put and show the error
-    /// rather than dismissing as though something had happened.
-    @discardableResult
-    func deleteAccount() async -> Bool {
-        isWorking = true
-        errorMessage = nil
-        defer { isWorking = false }
-
-        do {
-            try await supabase.functions.invoke("delete-account")
-        } catch {
-            errorMessage = Self.describeDeletion(error)
-            return false
-        }
-
-        // The account is gone, so the stored session is now a token for a user
-        // that no longer exists. `.local` because the default `.global` asks the
-        // server to revoke every session for this account, which is a request
-        // made *as* the deleted user and fails — leaving a signed-in-looking app
-        // whose every request 401s. Dropping the session locally is the whole job.
-        try? await supabase.auth.signOut(scope: .local)
-        phase = .signedOut
-        step = .email
-        return true
     }
 }

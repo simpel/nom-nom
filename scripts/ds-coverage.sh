@@ -7,7 +7,8 @@
 #    - it starts with `// DS-GAP` or its type name appears in Core/Design/DS-GAPS.md.
 #    Foundations/ (axes, previews, camera plumbing) and *Gallery.swift previews are exempt.
 # 2. Features/*/Components (warnings): a SwiftUI view that calls no design-system component
-#    and is not named in DS-GAPS.md is probably hand-rolled.
+#    and is not named in DS-GAPS.md is probably hand-rolled. A view that only dispatches to
+#    other feature views that do compose the DS says so with a `// ds-coverage: delegates` line.
 #
 # Usage: scripts/ds-coverage.sh
 # Exit status: 0 when Core/Components is fully mapped, 1 otherwise. Warnings never fail.
@@ -25,7 +26,7 @@ COMPONENTS=()
 while IFS= read -r d; do COMPONENTS+=("$(basename "$d")"); done < <(find "$DS_DIR" -mindepth 1 -maxdepth 1 -type d | sort)
 
 # The Swift calls that count as "composes the design system" in a feature view.
-DS_CALLS="AppButton|AppButtonLabel|Card|SectionCard|DSSection|ListRow|EmptyState|Badge|Avatar|Bar|ScoreValue|SectionHeader|AppToggle|Input|TextArea|ScreenHeader|Facts|ScoreCard|PhotoCard|PhotoStrip|PhotoStripEditor|RatingList|Timeline|RecipeCard|RecipeLinkCard|RecipeShelf|PartyCard|SegmentedBar|ValueStepper|LabeledPhotoCard|TasteScoreSelector|SheetBody|SheetCard|SheetHero|SwipeableListCard|TrendChart|MediaViewerSheet|NameFieldsCard|PartyFormFields|VisibilityToggleCard|AccountActionsSection|ChoiceTile|TagToggle|ProCard|ProGate|ProMark|Skeleton|SkeletonBone|ScreenSkeleton"
+DS_CALLS="AppButton|AppButtonLabel|Card|SectionCard|DSSection|ListRow|EmptyState|Badge|Avatar|Bar|ScoreValue|SectionHeader|AppToggle|Input|TextArea|ScreenHeader|Facts|ScoreCard|PhotoCard|PhotoStrip|PhotoStripEditor|RatingList|Timeline|RecipeCard|RecipeLinkCard|RecipeShelf|PartyCard|SegmentedBar|ValueStepper|LabeledPhotoCard|TasteScoreSelector|SheetBody|SheetCard|SheetHero|SwipeableListCard|TrendChart|MediaViewerSheet|NameFieldsCard|PartyFormFields|VisibilityToggleCard|AccountActionsSection|ChoiceTile|TagToggle|ProCard|ProGate|ProMark|Skeleton|SkeletonBone|ScreenSkeleton|ProScoreCard|ProLinkCard|PageMenu|PersonHeaderRow|NoteField|DismissibleNotice"
 
 in_gaps() { grep -qw "$1" "$GAPS"; }
 
@@ -57,6 +58,7 @@ while IFS= read -r -d '' f; do
   name="$(basename "$f" .swift)"; name="${name%%+*}"
   grep -qE ':[[:space:]]*View[[:space:]]*\{|some View' "$f" || continue
   grep -qE "\\b($DS_CALLS)[[:space:]]*[({]" "$f" && continue
+  grep -q '// ds-coverage: delegates' "$f" && continue
   in_gaps "$name" && continue
   echo "  WARN  $rel"
   warnings=$((warnings + 1))

@@ -165,6 +165,9 @@ struct RecipeScannerSheet: View {
         analysisTask = Task {
             do {
                 let result = try await store.parseRecipeFromPhotos(stagedPhotos)
+                // Cancelling can't stop a request already in flight; a scan the person
+                // discarded must not hand its result to the caller or dismiss again.
+                guard !Task.isCancelled else { return }
                 isAnalyzing = false
                 UINotificationFeedbackGenerator().notificationOccurred(.success)
                 onParsed?(result, stagedPhotos)

@@ -107,6 +107,10 @@ struct PersonDetailView: View {
                     meals: meals,
                     raterRef: raterRef
                 )
+
+                if isCurrentUser {
+                    AccountActionsSection()
+                }
             }
             .padding(.horizontal, DS.Spacing.gutter)
             .padding(.top, DS.Spacing.s5)
@@ -119,11 +123,7 @@ struct PersonDetailView: View {
         .screenTitle("", displayMode: .inline)
         .modifier(SheetToolbarConditional(isSheet: isSheet))
         .sheet(isPresented: $showingEditProfile) {
-            NavigationStack {
-                SettingsView(showsProfileLink: false)
-                    .sheetCloseToolbar()
-            }
-            .dsSheet()
+            ProfileSheetView()
         }
         .alert("Couldn't Save Photo", isPresented: Binding(
             get: { photoError != nil },
