@@ -144,9 +144,7 @@ enum GuestNoteSynthesizer {
         if weeks <= 4 { return "a few weeks ago" }
         if weeks <= 8 { return "last month" }
         if weeks <= 52 {
-            let fmt = DateFormatter()
-            fmt.dateFormat = "MMMM"
-            return "in \(fmt.string(from: date))"
+            return "in \(date.formatted(.dateTime.month(.wide)))"
         }
         return "last year"
     }
