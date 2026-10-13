@@ -1,0 +1,417 @@
+/* ==========================================================================
+   Landing page sections. Values come from the Nom Nom design system
+   (design-system/README.md) through the --lp-* tokens in site.css.
+   ========================================================================== */
+
+/* Tokens, header and buttons live in site.css (loaded by the root layout). */
+.lp {
+  --sh-bg: var(--lp-bg);
+  background: var(--lp-bg);
+  color: var(--lp-text);
+  flex: 1;
+}
+
+.lp-page {
+  width: 100%;
+  max-width: 64rem;
+  margin: 0 auto;
+  padding: 5rem 1rem 4rem; /* top clears the fixed logo */
+  display: flex;
+  flex-direction: column;
+  gap: 4.5rem;
+}
+
+.lp-main {
+  display: flex;
+  flex-direction: column;
+  gap: 4.5rem;
+}
+
+/* --- Type ---------------------------------------------------------------- */
+.lp-display {
+  margin: 0;
+  font-family: var(--lp-serif-display);
+  font-weight: 400;
+  font-size: 2.25rem;
+  line-height: 1.25;
+  letter-spacing: -0.025em;
+}
+.lp-heading {
+  margin: 0;
+  font-family: var(--lp-serif-display);
+  font-weight: 400;
+  font-size: 2.25rem;
+  line-height: 1.25;
+  letter-spacing: -0.025em;
+}
+.lp-card-title {
+  margin: 0;
+  font-family: var(--lp-serif);
+  font-weight: 400;
+  font-size: 1.5rem;
+  line-height: 1.375;
+}
+.lp-lead {
+  margin: 0;
+  max-width: 36rem;
+  font-size: 1.125rem;
+  line-height: 1.5;
+  color: var(--lp-text-2);
+}
+.lp-label,
+.lp-eyebrow {
+  font-size: 0.75rem;
+  line-height: 1.5;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--lp-text-3);
+}
+
+@media (min-width: 768px) {
+  .lp-display {
+    font-size: 3rem;
+    line-height: 1;
+  }
+}
+
+/* --- Hero ---------------------------------------------------------------- */
+.lp-hero {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 3rem;
+}
+/* Phones: the photos lead, above the title. Tablet and up: copy left, photos right. */
+.lp-hero {
+  flex-direction: column-reverse;
+  align-items: stretch;
+}
+@media (min-width: 768px) {
+  .lp-hero {
+    flex-direction: row;
+    flex-wrap: nowrap;
+    align-items: center;
+  }
+  .lp-hero .lp-pile {
+    flex: 0 0 21.5rem;
+  }
+  .lp-hero .lp-hero-copy {
+    flex: 1 1 0;
+  }
+}
+.lp-hero-copy {
+  flex: none;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1.5rem;
+}
+.lp-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+/* --- Photo pile ---------------------------------------------------------- */
+.lp-pile {
+  --w: 9rem;
+  flex: none;
+  width: 100%;
+  position: relative;
+  min-width: 0;
+  max-width: calc(var(--w) * 2.667);
+  height: calc(var(--w) * 2.1);
+  margin: 0 auto;
+}
+.lp-pile-card {
+  position: absolute;
+  /* Every card starts squared up in the middle of the pile; PhotoPile sets
+     --x/--y/--r once mounted and the card eases to them. */
+  left: calc(50% - var(--w) / 2);
+  top: calc(50% - var(--w) * 2 / 3);
+  margin: 0;
+  width: var(--w);
+  aspect-ratio: 3 / 4;
+  border-radius: 1rem;
+  overflow: hidden;
+  background: var(--lp-sunken);
+  box-shadow:
+    0 10px 15px -3px rgb(0 0 0 / 0.12),
+    0 4px 6px -4px rgb(0 0 0 / 0.1);
+}
+.lp-pile[data-settled] .lp-pile-card {
+  translate: calc(var(--w) * var(--x)) calc(var(--w) * var(--y));
+  rotate: var(--r);
+}
+@media (prefers-reduced-motion: no-preference) {
+  .lp-pile-card {
+    transition:
+      translate 900ms cubic-bezier(0.22, 1, 0.36, 1) 120ms,
+      rotate 900ms cubic-bezier(0.22, 1, 0.36, 1) 120ms;
+  }
+}
+/* Later cards sit on top (DOM order); only the top four show their verdict. */
+.lp-pile-card:nth-last-child(n + 5) .lp-badge {
+  display: none;
+}
+.lp-pile-photo {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+/* Each card sits over the one on its left, so its verdict goes bottom-left,
+   where nothing covers it. */
+.lp-pile-card .lp-badge {
+  position: absolute;
+  left: 0.5rem;
+  bottom: 0.5rem;
+}
+
+@media (max-width: 440px) {
+  .lp-pile {
+    --w: 7.25rem;
+  }
+}
+
+/* --- Badges (verdict) ---------------------------------------------------- */
+.lp-badge {
+  display: inline-flex;
+  align-items: center;
+  height: 1.5rem;
+  padding: 0 0.625rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1.5;
+  background: var(--lp-panel);
+}
+.lp-badge[data-verdict] {
+  background: color-mix(in srgb, var(--badge-fill) 15%, var(--lp-panel));
+  color: var(--badge-text);
+}
+[data-verdict="meh"] {
+  --badge-fill: var(--lp-meh);
+  --badge-text: var(--lp-meh-text);
+}
+[data-verdict="good"] {
+  --badge-fill: var(--lp-good);
+  --badge-text: var(--lp-good-text);
+}
+[data-verdict="great"] {
+  --badge-fill: var(--lp-great);
+  --badge-text: var(--lp-great-text);
+}
+[data-verdict="amazing"] {
+  --badge-fill: var(--lp-amazing);
+  --badge-text: var(--lp-amazing-text);
+}
+
+/* --- Cards and stats ----------------------------------------------------- */
+.lp-card {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 1.25rem;
+  border-radius: 1.5rem;
+  background: var(--lp-panel);
+}
+.lp-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(13.75rem, 1fr));
+  gap: 1rem;
+}
+.lp-stat {
+  gap: 0.5rem;
+}
+.lp-stat-value {
+  font-family: var(--lp-serif-display);
+  font-size: 1.875rem;
+  line-height: 1.25;
+  color: var(--lp-primary-text);
+  font-variant-numeric: tabular-nums;
+}
+
+/* --- Sections ------------------------------------------------------------ */
+.lp-section {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1.5rem;
+}
+.lp-compare,
+.lp-steps {
+  width: 100%;
+  display: grid;
+  gap: 1rem;
+  align-items: stretch;
+}
+.lp-compare {
+  grid-template-columns: repeat(auto-fit, minmax(20rem, 1fr));
+}
+.lp-steps {
+  grid-template-columns: repeat(auto-fit, minmax(16.25rem, 1fr));
+}
+
+.lp-features {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+.lp-features li {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+}
+.lp-features strong {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  font-size: 1rem;
+  font-weight: 600;
+  line-height: 1.5;
+}
+.lp-leaf {
+  flex: none;
+}
+.lp-features span {
+  font-size: 0.875rem;
+  line-height: 1.5;
+  color: var(--lp-text-2);
+}
+
+.lp-card[data-tone="pro"] {
+  background: var(--lp-pro-soft);
+  box-shadow:
+    0 10px 15px -3px rgb(0 0 0 / 0.1),
+    0 4px 6px -4px rgb(0 0 0 / 0.1);
+}
+.lp-pro-mark {
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--lp-pro-text);
+}
+.lp-pro-note {
+  margin: auto 0 0;
+  font-size: 0.875rem;
+  color: var(--lp-pro-text);
+  font-weight: 600;
+}
+
+/* Title, preview and text share rows across the three cards, so a title that
+   wraps to two lines never pushes one preview out of line. */
+.lp-steps .lp-card {
+  display: grid;
+  grid-row: span 3;
+  grid-template-rows: subgrid;
+  gap: 1rem;
+}
+
+/* --- How it works previews ----------------------------------------------- */
+.lp-preview {
+  min-height: 11rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+.lp-step-text {
+  margin: 0;
+  color: var(--lp-text-2);
+  line-height: 1.5;
+}
+.lp-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  padding: 0.5rem 1rem;
+  border-radius: 0.75rem;
+  background: var(--lp-sunken);
+}
+.lp-field-label {
+  font-size: 0.75rem;
+  color: var(--lp-text-3);
+}
+.lp-field-value {
+  font-size: 1rem;
+}
+.lp-mini {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 1rem;
+  border-radius: 1.5rem;
+  background: var(--lp-sunken);
+}
+.lp-mini-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+.lp-mini-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+.lp-mini-score strong {
+  font-family: var(--lp-serif-display);
+  font-weight: 400;
+  font-size: 1.875rem;
+  color: var(--lp-primary-text);
+  font-variant-numeric: tabular-nums;
+}
+.lp-avatars {
+  display: flex;
+  gap: 0.25rem;
+}
+.lp-avatar {
+  display: grid;
+  place-items: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 9999px;
+  background: var(--lp-panel);
+  color: var(--lp-primary-text);
+  font-family: var(--lp-serif);
+  font-size: 0.75rem;
+}
+.lp-bar {
+  display: flex;
+  height: 0.75rem;
+  border-radius: 9999px;
+  overflow: hidden;
+  gap: 2px;
+  background: var(--lp-track);
+}
+.lp-bar > span[data-verdict] {
+  background: var(--badge-fill);
+  min-width: 0;
+}
+.lp-bar-thin {
+  height: 0.5rem;
+  display: block;
+}
+.lp-bar-thin > span {
+  display: block;
+  height: 100%;
+  border-radius: 9999px;
+  background: var(--lp-primary);
+}
+.lp-caption {
+  font-size: 0.75rem;
+  color: var(--lp-text-3);
+}
+
+@media (forced-colors: active) {
+  .lp-card,
+  .lp-mini,
+  .lp-field {
+    border: 1px solid CanvasText;
+  }
+}

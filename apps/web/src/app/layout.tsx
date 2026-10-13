@@ -1,8 +1,25 @@
 import type { Metadata, Viewport } from 'next';
-import { Inter, Newsreader, Geist, Instrument_Serif, Montserrat } from 'next/font/google';
+import { Inter, Geist, Instrument_Serif, Montserrat } from 'next/font/google';
+import localFont from 'next/font/local';
 import './globals.css';
+import './site.css';
 import { cn } from "@/lib/utils";
 import { Toaster } from 'sonner';
+
+// The exact Newsreader cuts the iOS app bundles (apps/ios/NomNom/Core/Fonts):
+// the 16pt text cut for serif-xs/sm, the 72pt display cut for serif-md and up.
+const newsreaderText = localFont({
+  src: [
+    { path: './fonts/Newsreader-Regular.ttf', weight: '400', style: 'normal' },
+    { path: './fonts/Newsreader-Italic.ttf', weight: '400', style: 'italic' },
+  ],
+  variable: '--font-newsreader',
+});
+const newsreaderDisplay = localFont({
+  src: './fonts/Newsreader-DisplayRegular.ttf',
+  weight: '400',
+  variable: '--font-newsreader-display',
+});
 
 const montserratHeading = Montserrat({subsets:['latin'],variable:'--font-heading'});
 
@@ -55,7 +72,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className={cn( geist.variable, "font-serif", instrumentSerif.variable, montserratHeading.variable)}>
+    <html lang="en" className={cn( geist.variable, "font-serif", instrumentSerif.variable, montserratHeading.variable, newsreaderText.variable, newsreaderDisplay.variable)}>
       <body>
         <a href="#main-content" className="skip-link">
           Skip to main content

@@ -1,4 +1,5 @@
 import { Metadata } from "next";
+import { SiteHeader } from "@/components/SiteHeader";
 
 type SearchParams = { [key: string]: string | string[] | undefined };
 
@@ -47,6 +48,8 @@ export default async function InvitePage({
   const { heading, body } = copyFor(await searchParams);
 
   return (
+    <>
+    <SiteHeader />
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', fontFamily: 'system-ui, sans-serif', padding: '20px' }}>
       <img src="/icon.png" alt="Nom Nom Logo" style={{ width: '120px', height: '120px', borderRadius: '24px', marginBottom: '24px' }} />
       <h1 style={{ fontSize: '28px', marginBottom: '12px', textAlign: 'center' }}>{heading}</h1>
@@ -61,5 +64,6 @@ export default async function InvitePage({
         Download Nom Nom
       </a>
     </div>
+    </>
   );
 }
