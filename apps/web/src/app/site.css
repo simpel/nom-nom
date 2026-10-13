@@ -1,0 +1,157 @@
+/* ==========================================================================
+   Shared site chrome: design tokens, the fixed header, the download button.
+   Values come from the Nom Nom design system (design-system/README.md):
+   Stone/Pine roles, reaction ramp, Pro violet. Named --lp-* so they never
+   collide with the shadcn tokens (--primary, --card, ...) used elsewhere.
+   ========================================================================== */
+
+:root {
+  --lp-bg: var(--stone-100);
+  --lp-panel: var(--stone-0);
+  --lp-sunken: var(--stone-200);
+  --lp-line: var(--stone-200);
+  --lp-track: var(--stone-200);
+  --lp-text: #16181a;
+  --lp-text-2: #3a3f45;
+  --lp-text-3: #5b6168;
+  --lp-primary: var(--pine-600);
+  --lp-on-primary: #ffffff;
+  --lp-primary-text: var(--pine-600);
+  --lp-pro-soft: #f4f0f9;
+  --lp-pro-text: #7242c2;
+  --lp-meh: #d3a032;
+  --lp-meh-text: #774d00;
+  --lp-good: #7ba853;
+  --lp-good-text: #3c6211;
+  --lp-great: #2e985e;
+  --lp-great-text: #006836;
+  --lp-amazing: #247f63;
+  --lp-amazing-text: #00684c;
+  /* tokens.json: serif = Newsreader (16pt cut), serif-display = Newsreader 72pt cut. */
+  --lp-serif: var(--font-newsreader), Georgia, serif;
+  --lp-serif-display: var(--font-newsreader-display), var(--font-newsreader), Georgia, serif;
+  /* The ground the header's blur fades into: each page sets its own. */
+  --sh-bg: var(--color-bg);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --lp-bg: var(--stone-1000);
+    --lp-panel: var(--stone-900);
+    --lp-sunken: var(--stone-800);
+    --lp-line: var(--stone-800);
+    --lp-track: var(--stone-800);
+    --lp-text: var(--stone-100);
+    --lp-text-2: var(--stone-300);
+    --lp-text-3: var(--stone-400);
+    --lp-primary: var(--pine-400);
+    --lp-on-primary: var(--pine-900);
+    --lp-primary-text: var(--pine-300);
+    --lp-pro-soft: #1a1130;
+    --lp-pro-text: #b398ea;
+    --lp-meh: #e4b65c;
+    --lp-meh-text: #e4b65c;
+    --lp-good: #a0ca7f;
+    --lp-good-text: #a0ca7f;
+    --lp-great: #71c791;
+    --lp-great-text: #71c791;
+    --lp-amazing: #62bc9c;
+    --lp-amazing-text: #62bc9c;
+  }
+}
+
+/* --- Header ---------------------------------------------------------------
+   Fixed. Behind the logo and button sits a gradient backdrop blur: strongest
+   at the top edge, fading to nothing below, so content slides under it
+   without a visible bar. */
+.lp-nav {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  pointer-events: none;
+}
+.lp-nav::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 -1.5rem 0;
+  background: linear-gradient(
+    to bottom,
+    color-mix(in srgb, var(--sh-bg) 80%, transparent),
+    transparent
+  );
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+  -webkit-mask-image: linear-gradient(to bottom, #000 45%, transparent);
+  mask-image: linear-gradient(to bottom, #000 45%, transparent);
+}
+.lp-nav-inner {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  max-width: 64rem;
+  margin: 0 auto;
+  padding: 1rem 1rem 0.75rem;
+}
+.lp-nav a { pointer-events: auto; }
+
+/* On the start page the button folds down from above the top edge. */
+.lp-nav-action {
+  pointer-events: auto;
+  transition: transform 250ms ease-out;
+}
+.lp-nav[data-variant='home'] .lp-nav-action { transform: translateY(-200%); }
+.lp-nav[data-variant='home'] .lp-nav-action[data-visible='true'] { transform: translateY(0); }
+.lp-nav-action .lp-button {
+  box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+}
+@media (prefers-reduced-motion: reduce) {
+  .lp-nav-action { transition: none; }
+}
+/* On a phone the header button just says "Download". */
+@media (max-width: 640px) {
+  .lp-nav-action .lp-button-extra { display: none; }
+}
+/* Other pages keep the button; make room for it next to the logo. */
+@media (max-width: 480px) {
+  .lp-nav[data-variant='page'] .lp-brand-name { display: none; }
+}
+
+.lp-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+  color: var(--lp-text);
+  text-decoration: none;
+}
+.lp-brand-icon { border-radius: 0.5rem; display: block; }
+.lp-brand-name {
+  font-family: var(--lp-serif);
+  font-size: 1.25rem;
+  line-height: 1.375;
+}
+
+/* --- Buttons ------------------------------------------------------------- */
+.lp-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-height: 2.75rem;
+  padding: 0 1.25rem;
+  border-radius: 9999px;
+  background: var(--lp-primary);
+  color: var(--lp-on-primary);
+  font-size: 1rem;
+  font-weight: 600;
+  line-height: 1.5;
+  text-decoration: none;
+  transition: opacity 120ms ease-out;
+}
+.lp-button[data-size='sm'] { font-size: 0.875rem; padding: 0 1rem; }
+.lp-button[data-size='lg'] { min-height: 3rem; font-size: 1.125rem; padding: 0 1.5rem; }
+.lp-button[data-variant='ghost'] { background: transparent; color: var(--lp-primary-text); }
+.lp-button:active { opacity: 0.7; }

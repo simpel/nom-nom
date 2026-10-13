@@ -1,34 +1,31 @@
-import Image from 'next/image';
-import Link from 'next/link';
+import { Footer } from '@/components/Footer';
+import { SiteHeader } from '@/components/SiteHeader';
+import { Hero } from '@/components/landing/Hero';
+import { HowItWorks } from '@/components/landing/HowItWorks';
+import { ProCompare } from '@/components/landing/ProCompare';
+import { StatsSection } from '@/components/landing/StatsSection';
+import { getLandingStats } from '@/lib/landing-stats';
+import { getLatestMealPhotos } from '@/lib/landing-photos';
+import './landing.css';
 
-export default function HomePage() {
+// Stats are counts only; refresh them hourly instead of on every request.
+export const revalidate = 3600;
+
+export default async function HomePage() {
+  const [stats, cards] = await Promise.all([getLandingStats(), getLatestMealPhotos()]);
+
   return (
-    <div className="minimal-screen">
-      <main className="minimal-main">
-        <div className="minimal-brand">
-          <Image
-            src="/icon.png"
-            alt="Nom Nom"
-            width={96}
-            height={96}
-            className="minimal-logo"
-            priority
-          />
-          <h1 className="minimal-title">Nom Nom</h1>
-        </div>
-      </main>
-
-      <footer className="minimal-footer">
-        <Link href="/support" className="minimal-footer-link">
-          Support
-        </Link>
-        <span aria-hidden="true" className="minimal-footer-sep">
-          &middot;
-        </span>
-        <Link href="/privacy" className="minimal-footer-link">
-          Privacy Policy
-        </Link>
-      </footer>
+    <div className="lp">
+      <SiteHeader variant="home" />
+      <div className="lp-page">
+        <main id="main-content" className="lp-main">
+          <Hero cards={cards} />
+          {stats && <StatsSection stats={stats} />}
+          <ProCompare />
+          <HowItWorks />
+        </main>
+      </div>
+      <Footer />
     </div>
   );
 }
