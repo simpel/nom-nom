@@ -43,26 +43,17 @@ jobs:
         with:
           version: latest
 
+      # Runners have no IPv6, so `db push` falls back to the IPv4 pooler that `link` saves in
+      # .temp/pooler-url. `link` swallows a failure to fetch it (a token without Project
+      # Settings read access does), hence --debug: the pooler error shows up in this log.
       - name: Link production project
-        run: cd apps/supabase && supabase link --project-ref "$SUPABASE_PROJECT_ID"
-
-      # GitHub runners have no IPv6, and the direct db.<ref>.supabase.co host is IPv6-only.
-      # `supabase link` records the IPv4 session pooler in .temp/pooler-url; push through it.
-      - name: Resolve IPv4 pooler URL
-        run: |
-          cd apps/supabase
-          pooler="$(cat supabase/.temp/pooler-url 2>/dev/null || cat .temp/pooler-url)"
-          encoded="$(python3 -c 'import os,urllib.parse as u; print(u.quote(os.environ["SUPABASE_DB_PASSWORD"], safe=""))')"
-          echo "::add-mask::$encoded"
-          url="$(echo "$pooler" | sed -E "s#^(postgres(ql)?://[^:@/]+)@#\\1:${encoded}@#")"
-          echo "::add-mask::$url"
-          echo "SUPABASE_DB_URL=$url" >> "$GITHUB_ENV"
+        run: cd apps/supabase && supabase link --project-ref "$SUPABASE_PROJECT_ID" --debug
 
       - name: Show pending migrations
-        run: cd apps/supabase && supabase db push --dry-run --db-url "$SUPABASE_DB_URL"
+        run: cd apps/supabase && supabase db push --dry-run
 
       - name: Push migrations
-        run: cd apps/supabase && supabase db push --db-url "$SUPABASE_DB_URL"
+        run: cd apps/supabase && supabase db push
 
       # All functions, not only changed ones: _shared/ is imported by most of them, so a
       # change there needs every function redeployed. `--use-api` bundles on Supabase's
