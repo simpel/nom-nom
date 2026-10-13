@@ -22,18 +22,22 @@ function shuffle<T>(items: T[]): T[] {
   return items;
 }
 
+// Landings come in left/right mirrored pairs (an odd card out lands on the
+// centre line), so the spread is always balanced around the middle of the pile.
 function scatter(count: number): Landing[] {
-  const turn = Math.random() * Math.PI * 2;
-  const slice = (Math.PI * 2) / count;
-  const angles = shuffle(Array.from({ length: count }, (_, i) => turn + i * slice + jitter(slice * 0.4)));
-  return angles.map((angle) => {
+  const pairs = Math.floor(count / 2);
+  const slice = Math.PI / Math.max(pairs, 1);
+  const lands: Landing[] = [];
+  for (let i = 0; i < pairs; i++) {
+    const angle = -Math.PI / 2 + slice * (i + 0.5) + jitter(slice * 0.3);
     const distance = 0.45 + Math.random() * 0.55;
-    return {
-      x: Math.cos(angle) * distance * REACH_X,
-      y: Math.sin(angle) * distance * REACH_Y,
-      r: jitter(12),
-    };
-  });
+    const x = Math.cos(angle) * distance * REACH_X;
+    const y = Math.sin(angle) * distance * REACH_Y;
+    const r = 4 + Math.random() * 8;
+    lands.push({ x, y, r }, { x: -x, y, r: -r });
+  }
+  if (count % 2) lands.push({ x: 0, y: (Math.random() < 0.5 ? -1 : 1) * 0.3 * REACH_Y, r: jitter(6) });
+  return shuffle(lands);
 }
 
 /**
