@@ -801,7 +801,7 @@
 
 /* --- Privacy Policy Document Page --- */
 .policy-page {
-  padding-top: var(--space-xl);
+  padding-top: calc(var(--space-xl) + 4rem); /* clears the fixed site header */
   padding-bottom: var(--space-section);
 }
 
@@ -821,11 +821,13 @@
   margin-bottom: var(--space-xs);
 }
 
+/* serif-lg: Newsreader Display, regular, tight tracking (design system). */
 .policy-title {
-  font-family: var(--font-serif-stack);
+  font-family: var(--lp-serif-display);
   font-size: 2.25rem;
-  font-weight: 500;
-  line-height: 1.2;
+  font-weight: 400;
+  letter-spacing: -0.025em;
+  line-height: 1.25;
   color: var(--color-text-primary);
   margin-bottom: var(--space-xs);
 }
@@ -843,19 +845,21 @@
   margin-bottom: var(--space-xl);
 }
 
+/* serif-sm: Newsreader text cut, regular. */
 .policy-section h2 {
-  font-family: var(--font-serif-stack);
-  font-size: 1.45rem;
-  font-weight: 500;
+  font-family: var(--lp-serif);
+  font-size: 1.5rem;
+  font-weight: 400;
+  line-height: 1.375;
   color: var(--color-text-primary);
   margin-bottom: var(--space-sm);
   padding-top: var(--space-xs);
 }
 
 .policy-section h3 {
-  font-family: var(--font-serif-stack);
+  font-family: var(--lp-serif);
   font-size: 1.05rem;
-  font-weight: 500;
+  font-weight: 400;
   color: var(--color-text-primary);
   margin-top: var(--space-lg);
   margin-bottom: var(--space-xs);
