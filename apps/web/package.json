@@ -14,7 +14,7 @@
     "@hookform/resolvers": "^5.9.1",
     "@number-flow/react": "^0.6.2",
     "@supabase/ssr": "^0.12.7",
-    "@supabase/supabase-js": "^2.45.0",
+    "@supabase/supabase-js": "^2.117.3",
     "@xyflow/react": "^12.12.0",
     "class-variance-authority": "^0.7.1",
     "cn": "^0.3.0",
