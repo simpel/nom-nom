@@ -771,6 +771,23 @@ export interface IngredientListProps extends BaseProps { items: CheckRowProps[];
 export interface SelectRowProps extends BaseProps { title: string; meta?: string; value?: string; options: (string | { value: string; label: string })[]; placeholder?: string; onChange?: (value: string) => void; }
 export interface BrandMarkProps extends BaseProps { src: string; alt?: string; size?: 'xl' | 'lg'; }
 export interface SwipeRowProps extends BaseProps { actions: { label: string; variant?: Variant; onClick?: () => void }[]; revealed?: boolean; defaultRevealed?: boolean; onRevealedChange?: (open: boolean) => void; children?: unknown; }
+/** Drag to reorder any set, either axis. No wrapper: each child becomes a `.nn-reorder__item`, a direct child of the consumer's Card list or strip.
+ *  Long press on touch, drag with a pointer, Alt + arrows on the keyboard. Sets with the same `group` take each other's items. */
+export interface ReorderProps extends BaseProps {
+  /** The children's ids, in the same order. */
+  items: (string | number)[];
+  /** 'vertical' (a list: Move up / down) or 'horizontal' (a strip: Move left / right). @default 'vertical' */
+  axis?: 'vertical' | 'horizontal';
+  /** Sets that share a group take each other's items. */
+  group?: string;
+  /** Put `moved` where `target` is. Called live as the held item passes over others. */
+  onMove: (moved: string | number, target: string | number) => void;
+  /** Extra class on every item wrapper (a strip's tile spacing). */
+  itemClassName?: string;
+  children?: unknown;
+}
+/** A drop target with no item of its own: a set's footer or empty state. */
+export interface ReorderTargetProps extends BaseProps { group?: string; onEnter: (moved: string | number) => void; children?: unknown; }
 export interface EditorialTextProps extends BaseProps { parts: (string | { text: string; tone: 'positive' | 'negative' })[]; }
 export interface ScannerOverlayProps extends BaseProps { title?: string; message?: string; onCancel?: () => void; style?: Record<string, string | number>; }
 export interface UnitToggleProps extends BaseProps { imperial?: boolean; defaultImperial?: boolean; onChange?: (imperial: boolean) => void; title?: string; meta?: string; }
@@ -814,4 +831,14 @@ export interface DismissibleNoticeProps extends BaseProps {
   onDismiss?: () => void;
   /** @default 'Dismiss' */
   dismissLabel?: string;
+}
+
+/** Two or more Pro scores together, viewer without Pro: one pro-soft card, one ProMark, one readout row per score, one sentence on what Pro opens, one Unlock with Pro. */
+export interface ProScoreGroupProps extends BaseProps {
+  scores: { title: string; score: number | null; verdict?: string }[];
+  /** One sentence naming every score Pro opens ("Pro opens the health score breakdown and The Friday Feast Club's insights."). */
+  teaser?: string;
+  onUnlock?: () => void;
+  /** @default 'Unlock with Pro' */
+  unlockLabel?: string;
 }

@@ -129,10 +129,10 @@
     "Photography"
   ],
   "lastChange": {
-    "at": "2026-10-16T16:00:00Z",
+    "at": "2026-10-16T17:45:00Z",
     "by": "Joel Sandén",
-    "note": "One list, never split by state (root, ListRow, RatingList); DismissibleNotice; Add photo sheet, generating tile and pending AI tile (PhotoStrip); Avatar loading.",
-    "via": "Claude (Claude Code)"
+    "via": "Claude (Claude Code)",
+    "note": "Reorder: drag to reorder any set in either direction (list rows, strip tiles), between sets in one group; Reorder + ReorderTarget, grip icon (Reorder README, root README)."
   },
   "layout": "files",
   "libraries": [

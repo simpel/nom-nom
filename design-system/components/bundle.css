@@ -572,6 +572,11 @@
 .nn-pro-card .nn-shelf { margin-inline: calc(-1 * var(--spacing-5)); }
 .nn-pro-card .nn-shelf__track { padding-inline: var(--spacing-5); scroll-padding-left: var(--spacing-5); }
 .nn-pro-card .nn-shelf .nn-section-header { padding-inline: var(--spacing-5); }
+.nn-pro-group__rows { display: flex; flex-direction: column; }
+.nn-pro-group__row { display: flex; flex-direction: column; gap: var(--spacing-1); padding-block: var(--spacing-3); }
+.nn-pro-group__row + .nn-pro-group__row { border-top: var(--border-hairline) solid var(--line); }
+.nn-pro-group__row:first-child { padding-top: 0; }
+.nn-pro-group__row:last-child { padding-bottom: 0; }
 .nn-pro-view { --bg: var(--pro-soft); --sheet: var(--pro-soft); background: var(--pro-soft); color: var(--text-primary); }
 .nn-pro-view .nn-sheet { background: var(--pro-soft); }
 .nn-pro-gate { display: grid; }
@@ -593,6 +598,7 @@
 .nn-i-ellipsis{--nn-i:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22%3E%3Ccircle fill=%22black%22 cx=%225%22 cy=%2212%22 r=%222%22/%3E%3Ccircle fill=%22black%22 cx=%2212%22 cy=%2212%22 r=%222%22/%3E%3Ccircle fill=%22black%22 cx=%2219%22 cy=%2212%22 r=%222%22/%3E%3C/svg%3E")}
 .nn-i-list{--nn-i:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22%3E%3Ccircle fill=%22black%22 cx=%225%22 cy=%227%22 r=%221.6%22/%3E%3Ccircle fill=%22black%22 cx=%225%22 cy=%2212%22 r=%221.6%22/%3E%3Ccircle fill=%22black%22 cx=%225%22 cy=%2217%22 r=%221.6%22/%3E%3Cpath stroke=%22black%22 stroke-width=%222%22 stroke-linecap=%22round%22 fill=%22none%22 d=%22M10 7h10M10 12h10M10 17h10%22/%3E%3C/svg%3E")}
 .nn-i-chevron-up-down{--nn-i:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22%3E%3Cpath stroke=%22black%22 stroke-width=%222%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22 fill=%22none%22 d=%22M7 9l5-5 5 5M7 15l5 5 5-5%22/%3E%3C/svg%3E")}
+.nn-i-grip{--nn-i:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22%3E%3Cpath stroke=%22black%22 stroke-width=%222%22 stroke-linecap=%22round%22 fill=%22none%22 d=%22M4 7h16M4 12h16M4 17h16%22/%3E%3C/svg%3E")}
 .nn-i-filter{--nn-i:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22%3E%3Cpath stroke=%22black%22 stroke-width=%222%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22 fill=%22none%22 d=%22M3 5h18l-7 8.5V20l-4-2v-4.5z%22/%3E%3C/svg%3E")}
 .nn-i-filter-fill{--nn-i:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22%3E%3Cpath fill=%22black%22 stroke=%22black%22 stroke-width=%222%22 stroke-linejoin=%22round%22 d=%22M3 5h18l-7 8.5V20l-4-2v-4.5z%22/%3E%3C/svg%3E")}
 
@@ -806,6 +812,13 @@ button.nn-person-row:active { opacity: var(--opacity-70); }
 .nn-swipe__front { position: relative; background: var(--panel); transition: transform var(--duration-layout) var(--ease-standard); }
 .nn-swipe[data-open] .nn-swipe__front { transform: translateX(calc(-1 * var(--nn-reveal))); }
 
+/* ---------- Reorder: drag to reorder any set, either axis. No wrapper of its own: the
+   items stay direct children of the consumer's Card list or strip, so its hairlines and gaps hold. */
+.nn-reorder__item { transition: opacity var(--duration-layout) var(--ease-standard); }
+.nn-reorder__item[data-dragging] { opacity: var(--opacity-disabled); }
+.nn-reorder__item:focus-visible { outline: var(--border-thick) solid var(--focus-ring); outline-offset: calc(-1 * var(--spacing-0\.5)); border-radius: var(--radius-xl); }
+.nn-reorder__item .nn-i-grip { cursor: grab; }
+
 /* ---------- EditorialText */
 .nn-editorial__pos { color: var(--primary-text); }
 .nn-editorial__neg { color: var(--warning-text); }
@@ -827,4 +840,5 @@ button.nn-person-row:active { opacity: var(--opacity-70); }
 @media (prefers-reduced-motion: reduce) {
   .nn-code__input:focus ~ .nn-code__cell[data-active]::after { animation: none; }
   .nn-swipe__front { transition: none; }
+  .nn-reorder__item { transition: none; }
 }
