@@ -1,8 +1,9 @@
 import SwiftUI
 
-/// Meal Detail's "Who rated" ("Nom Nom iOS" canvas): "3 of 5" in `primary-text`, a Card of everyone who has rated (the viewer last), then
-/// "Not yet" over a Card of everyone who hasn't. Every row opens a rater sheet; the
-/// viewer's own unrated row opens the rating sheet.
+/// Meal Detail's "Who rated": "3 of 5" in `primary-text`, then one Card of everyone who
+/// can rate, alphabetical. State never splits the list (DS README, "One list, never split
+/// by state"): rated rows show a score, unrated rows carry the Ask / Remind / Rate button.
+/// Every row opens a rater sheet; the viewer's own unrated row opens the rating sheet.
 struct MealDetailRatingsSection: View {
     let meal: Meal
     let onRate: (() -> Void)?
@@ -11,28 +12,15 @@ struct MealDetailRatingsSection: View {
     @State private var target: MealRaterTarget?
 
     var body: some View {
-        let raters = store.raters(forMeal: meal)
-        let rated = raters.filter { $0.rating != nil && !$0.isViewer } + raters.filter { $0.rating != nil && $0.isViewer }
-        let pending = raters.filter { $0.rating == nil }
+        let raters = store.raters(forMeal: meal).sorted {
+            displayName($0).localizedCaseInsensitiveCompare(displayName($1)) == .orderedAscending
+        }
+        let ratedCount = raters.filter { $0.rating != nil }.count
 
-        DSSection("Who rated", trailing: "\(rated.count) of \(raters.count)", trailingTone: .primary) {
-            VStack(alignment: .leading, spacing: DS.Spacing.s3) {
-                if !rated.isEmpty {
-                    Card(layout: .list) {
-                        ForEach(rated) { rater in
-                            MealRaterRow(meal: meal, rater: rater) { open(rater) }
-                        }
-                    }
-                }
-                if !pending.isEmpty {
-                    SectionHeader(title: "Not yet")
-                        .padding(.horizontal, DS.Spacing.sectionInset)
-                        .padding(.top, DS.Spacing.s2)
-                    Card(layout: .list) {
-                        ForEach(pending) { rater in
-                            MealRaterRow(meal: meal, rater: rater) { open(rater) }
-                        }
-                    }
+        DSSection("Who rated", trailing: "\(ratedCount) of \(raters.count)", trailingTone: .primary) {
+            Card(layout: .list) {
+                ForEach(raters) { rater in
+                    MealRaterRow(meal: meal, rater: rater) { open(rater) }
                 }
             }
         }
@@ -43,6 +31,11 @@ struct MealDetailRatingsSection: View {
                 RaterPendingSheet(meal: meal, rater: target.ref)
             }
         }
+    }
+
+    /// The name the row shows (the viewer too, marked by a "You" Badge), so the list reads alphabetically as drawn.
+    private func displayName(_ rater: FoodStore.MealRater) -> String {
+        store.firstName(for: rater.ref)
     }
 
     private func open(_ rater: FoodStore.MealRater) {

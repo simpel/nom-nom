@@ -1,8 +1,9 @@
 import SwiftUI
 
 /// Modal sheet displaying the in-app activity notifications inbox: a ScreenHeader, then
-/// "Unread" and "Read" DSSections over `Card(layout: .list)`s of NotificationRows, or a
-/// screen EmptyState when there is nothing.
+/// one "Notifications" DSSection over a `Card(layout: .list)` of NotificationRows (unread
+/// rows carry the unread dot; state never splits the list), or a screen EmptyState when
+/// there is nothing.
 struct InboxSheetView: View {
     @Environment(FoodStore.self) private var store
 
@@ -30,19 +31,14 @@ struct InboxSheetView: View {
                     )
                 } else {
                     ScreenHeader("Inbox", summary: headerSubtitle)
-                    if !unreadNotifications.isEmpty {
-                        // The count stays: it is what the person acts on. "Mark all read" is
-                        // this section's one verb, so it left the toolbar.
-                        notificationSection(
-                            "Unread",
-                            trailing: "\(unreadNotifications.count)",
-                            action: SectionAction("Mark all read", perform: markAllRead),
-                            items: unreadNotifications
-                        )
-                    }
-                    if !readNotifications.isEmpty {
-                        notificationSection("Read", trailing: nil, items: readNotifications)
-                    }
+                    // One list; "Mark all read" is the section's one verb.
+                    notificationSection(
+                        "Notifications",
+                        trailing: store.unreadCount > 0 ? "\(store.unreadCount) unread" : nil,
+                        action: store.unreadCount > 0
+                            ? SectionAction("Mark all read", perform: markAllRead) : nil,
+                        items: store.notifications
+                    )
                 }
             }
             .screenTitle("", displayMode: .inline)
@@ -63,14 +59,6 @@ struct InboxSheetView: View {
     }
 
     // MARK: - Subviews
-
-    private var unreadNotifications: [AppNotification] {
-        store.notifications.filter(\.isUnread)
-    }
-
-    private var readNotifications: [AppNotification] {
-        store.notifications.filter { !$0.isUnread }
-    }
 
     private var headerSubtitle: String {
         let unread = store.unreadCount
