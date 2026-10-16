@@ -2,8 +2,8 @@ import SwiftUI
 
 /// One member of a dinner party ("Nom Nom iOS" canvas, MemberSheet), as a BottomSheet:
 /// the PersonHeaderRow ("Member since Mar 2026 · 18 meals rated here"), two compact
-/// ScoreCards (their average here, their taste match), a ProCard "Cooking for Anna"
-/// with the AI tip and recipes they will love, then their highest and lowest here.
+/// ScoreCards (their average here, and with Pro their taste match), a ProCard "Cooking for
+/// Anna" with the AI tip and recipes they will love, then with Pro their highest and lowest here.
 struct PartyMemberInsightSheet: View {
     let memberRef: RaterRef
     let partyID: UUID
@@ -58,12 +58,15 @@ struct PartyMemberInsightSheet: View {
 
                 PartyMemberCookingForSection(memberRef: memberRef, name: name, partyID: partyID)
 
-                PartyMemberPartyRatingsSection(
-                    memberRef: memberRef,
-                    memberName: name,
-                    highest: history.highest,
-                    lowest: history.lowest
-                )
+                // Their highest and lowest meals are derived from their history, so Pro only.
+                if entitlements.hasProAccess {
+                    PartyMemberPartyRatingsSection(
+                        memberRef: memberRef,
+                        memberName: name,
+                        highest: history.highest,
+                        lowest: history.lowest
+                    )
+                }
             }
             .screenTitle(name, displayMode: .inline)
             .sheetCloseToolbar()
