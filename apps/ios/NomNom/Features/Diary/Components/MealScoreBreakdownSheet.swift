@@ -1,9 +1,9 @@
 import SwiftUI
 
 /// How the table scored a meal, as a DS BottomSheet ("Nom Nom iOS" score canvas, board 1):
-/// SheetHero (the average and what changed since last time), the Pro "Why it landed at"
-/// card, and each rater's score. The distribution and the recipe's history live in the Pro
-/// breakdown (`MealScoreInsightsSheet`).
+/// SheetHero (the average and who rated it), the Pro "Why it landed at" card (which carries
+/// the change since last time), and each rater's score. The distribution and the recipe's
+/// history live in the Pro breakdown (`MealScoreInsightsSheet`).
 struct MealScoreBreakdownSheet: View {
     let meal: Meal
 
@@ -54,14 +54,6 @@ struct MealScoreBreakdownSheet: View {
         let party = store.partyDisplayName(forMeal: meal)
         let group = party == "You" ? "you" : party
         let count = ratings.count == 1 ? "1 rating" : "\(ratings.count) ratings"
-        guard let change = store.scoreChange(forMeal: meal) else {
-            return ("\(count) from \(group) on \(meal.eatenOn.formatted(date: .abbreviated, time: .omitted)).", nil)
-        }
-        if change.delta == 0 {
-            return ("Level with the last time \(group) had it, across \(count).", nil)
-        }
-        let points = abs(change.delta) == 1 ? "1 point" : "\(abs(change.delta)) points"
-        let emphasis = "\(points) \(change.delta > 0 ? "up" : "down")"
-        return ("\(emphasis) on the last time \(group) had it, across \(count).", emphasis)
+        return ("\(count) from \(group) on \(meal.eatenOn.formatted(date: .abbreviated, time: .omitted)).", nil)
     }
 }
