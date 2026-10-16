@@ -8,10 +8,10 @@
 // - No `--ar` / `--no` flags or negative-prompt lists: Muse has no such parameters. The few
 //   exclusions that matter (Muse likes to scatter props and garnish) are one closing sentence.
 //
-// Three subjects share one SETTING (same oak table, same light); the camera differs:
-// - recipe:   the plate alone, shot from directly overhead, the cleanest shot of the food.
-// - meal:     the same plate as eaten at home, seen from a seated diner's eye view: cutlery, a napkin and a drink, casually placed.
-// - category: a spread of the category's signature dishes, shot from directly overhead.
+// Three subjects share one SETTING (same oak table, same overhead camera, same light):
+// - recipe:   the plate alone, the cleanest shot of the food.
+// - meal:     the same plate as eaten at home: cutlery, a napkin and a drink, casually placed.
+// - category: a spread of the category's signature dishes.
 
 const PLATE =
   "round stoneware coupe plate with a shallow well and a low rim, in a matte off-white glaze with fine brown speckles";
@@ -19,21 +19,12 @@ const PLATE =
 const SURFACE =
   "one seamless slab of pale, lightly oiled European white oak with fine grain running left to right";
 
-const OVERHEAD_CAMERA = [
+/** Table, camera and light that every photo shares, so recipes, meals and categories read as one set. */
+const SETTING_BASE = [
   `Everything sits on ${SURFACE}, and the oak fills the whole frame.`,
   "Shot from directly overhead with the camera pointing straight down, so plates and glasses read as full circles.",
-];
-
-/** A diner's view: seated at the table, looking down at the plate in front of them. */
-const SEATED_CAMERA = [
-  `Everything sits on ${SURFACE}, which runs away from the camera and fills the frame behind the plate.`,
-  "Shot from a seated diner's eye view: the camera is about 40 cm above the table, tilted down about 45 degrees at the plate, as if the person eating were looking at their own meal. The plate is the nearest and largest object, the table recedes behind it, and the far edge of the table is out of frame.",
-  "Shallow depth of field keeps the front of the food sharp and lets the table behind it fall softly out of focus.",
-];
-
-/** Light that every photo shares, so recipes, meals and categories read as one set. */
-const LIGHT = [
   "Soft, diffused daylight comes from the upper left and casts gentle, open shadows toward the lower right; a soft ray of warm sunshine may fall across the wood, always with soft, blurred edges, never hard or harsh; exposure is bright and even, with neutral-warm colour.",
+  "Sharp focus across all the food.",
 ];
 
 /** Recipe and category photos are styled like editorial food photography. */
@@ -41,8 +32,7 @@ const SETTING = [...SETTING_BASE, "Photoreal editorial food photography, natural
 
 /** Meal photos look like a home meal: tidy but not styled by a professional. */
 const MEAL_SETTING = [
-  ...SEATED_CAMERA,
-  ...LIGHT,
+  ...SETTING_BASE,
   "Photoreal, natural photograph of an everyday home meal, natural colour, not styled by a professional.",
 ].join(" ");
 
@@ -64,10 +54,10 @@ export function recipePhotoPrompt(dish: string, elements: string, garnish: strin
 export function mealPhotoPrompt(dish: string, elements: string, garnish: string, beverage: string): string {
   return [
     `A square photograph of a meal at the table in a dinner diary app: one serving of ${dish}: ${elements}, finished with ${garnish}, laid for one person and ready to eat.`,
-    `The food is served on exactly one ${PLATE}, about 28 cm across, just left of centre in the lower half of the frame. It is home-served: a generous, slightly uneven portion with soft, natural edges, not arranged with tweezers or neatly wiped, and with no more than a light sprinkle of garnish.`,
+    `The food is served on exactly one ${PLATE}, about 28 cm across, just left of centre. It is home-served: a generous, slightly uneven portion with soft, natural edges, not arranged with tweezers or neatly wiped, and with no more than a light sprinkle of garnish.`,
     "To the right of the plate lie a fork and a knife, set down casually and not perfectly parallel, on a natural linen napkin in an oatmeal tone that is folded roughly with a soft crease or two.",
-    `Behind the plate, towards the right, stands ${beverage}.`,
-    "The plate, napkin and drink together fill about four fifths of the frame width, with bare wood showing around them.",
+    `At the upper right of the plate stands ${beverage}.`,
+    "The plate, napkin and drink together span about four fifths of the frame, with bare wood showing around them.",
     MEAL_SETTING,
     "The table looks lived-in but tidy: a faint sauce smear on the plate rim is fine, but no spills, crumbs, mess, other dishes, loose ingredients or text. Only these four things are on the table: the plate, the cutlery, the napkin and the drink.",
   ].join("\n\n");
