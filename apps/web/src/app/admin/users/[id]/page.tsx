@@ -1,6 +1,5 @@
-import { createClient } from '@/utils/supabase/server'
+import { requireAdmin } from '@/utils/supabase/admin-auth'
 import { createClient as createSupabaseClient } from '@supabase/supabase-js'
-import { redirect } from 'next/navigation'
 import UserDetailClient from './UserDetailClient'
 
 const DAY_MS = 1000 * 60 * 60 * 24
@@ -11,12 +10,7 @@ function ratingScore(score: number | string | null | undefined) {
 }
 
 export default async function UserDetailPage({ params }: { params: Promise<{ id: string }> }) {
-  const supabase = await createClient()
-
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) {
-    redirect('/admin/login')
-  }
+  await requireAdmin()
 
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
   const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!

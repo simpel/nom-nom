@@ -1,15 +1,9 @@
-import { createClient } from '@/utils/supabase/server'
+import { requireAdmin } from '@/utils/supabase/admin-auth'
 import { createClient as createSupabaseClient } from '@supabase/supabase-js'
-import { redirect } from 'next/navigation'
 import PartyDetailClient from './PartyDetailClient'
 
 export default async function PartyDetailPage({ params }: { params: Promise<{ id: string }> }) {
-  const supabase = await createClient()
-
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) {
-    redirect('/admin/login')
-  }
+  await requireAdmin()
 
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
   const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!

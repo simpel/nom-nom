@@ -1,4 +1,5 @@
 import { createClient } from '@/utils/supabase/server'
+import { requireAdmin } from '@/utils/supabase/admin-auth'
 import AiConfigForm from './AiConfigForm'
 
 export const dynamic = 'force-dynamic'
@@ -28,6 +29,7 @@ async function getAvailableModels() {
 }
 
 export default async function AiConfigPage() {
+  await requireAdmin()
   const supabase = await createClient()
 
   // 1. Fetch current configs from Postgres

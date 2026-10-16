@@ -1,5 +1,5 @@
+import { adminGuard } from '@/utils/supabase/admin-auth';
 import { NextResponse } from 'next/server';
-import { createClient } from '@/utils/supabase/server';
 import { createClient as createSupabaseClient } from '@supabase/supabase-js';
 import { z } from 'zod';
 import { getFeatureModel } from '@/utils/ai-config';
@@ -29,12 +29,8 @@ Output MUST match this JSON schema exactly:
 }`;
 
 export async function POST(request: Request) {
-    const supabaseServer = await createClient();
-    const { data: { user } } = await supabaseServer.auth.getUser();
-
-    if (!user) {
-        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    const denied = await adminGuard();
+    if (denied) return denied;
 
     const { profile_id } = await request.json();
 

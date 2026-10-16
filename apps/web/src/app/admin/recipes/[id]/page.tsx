@@ -1,18 +1,12 @@
+import { requireAdmin } from '@/utils/supabase/admin-auth'
 import { createClient as createSupabaseClient } from '@supabase/supabase-js'
-import { createClient } from '@/utils/supabase/server'
-import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import GenerationLogsClient from '@/components/admin/GenerationLogsClient'
 import GenerateHealthScoreButton from '@/components/admin/GenerateHealthScoreButton'
 import { flattenIngredients, type IngredientGroup } from '@/lib/ingredients'
 
 export default async function RecipeDetailPage({ params }: { params: Promise<{ id: string }> }) {
-  const supabase = await createClient()
-
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) {
-    redirect('/admin/login')
-  }
+  await requireAdmin()
 
   const { id } = await params;
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!

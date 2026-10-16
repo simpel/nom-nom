@@ -1,16 +1,9 @@
-import { createClient } from '@/utils/supabase/server'
+import { requireAdmin } from '@/utils/supabase/admin-auth'
 import { createClient as createSupabaseClient } from '@supabase/supabase-js'
-import { redirect } from 'next/navigation'
 import AdminDashboardClient from './AdminDashboardClient'
 
 export default async function AdminPage() {
-  const supabase = await createClient()
-
-  const { data: { user } } = await supabase.auth.getUser()
-
-  if (!user) {
-    redirect('/admin/login')
-  }
+  await requireAdmin()
 
   // Use Service Role to bypass RLS for admin dashboard
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!

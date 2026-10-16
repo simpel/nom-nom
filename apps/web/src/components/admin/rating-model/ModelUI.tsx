@@ -1,6 +1,5 @@
 import Link from 'next/link'
-import { redirect } from 'next/navigation'
-import { createClient } from '@/utils/supabase/server'
+import { requireAdmin } from '@/utils/supabase/admin-auth'
 import { verdictLabel, type RatingTag } from '@/utils/rating-model'
 
 export const modelHref = {
@@ -11,11 +10,7 @@ export const modelHref = {
   recipe: (id: string) => `/admin/recipes/${id}`,
 }
 
-export async function requireAdmin() {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) redirect('/admin/login')
-}
+export { requireAdmin }
 
 export function ModelPage({
   eyebrow,

@@ -1,16 +1,12 @@
+import { adminGuard } from '@/utils/supabase/admin-auth';
 import { NextResponse } from 'next/server';
-import { createClient } from '@/utils/supabase/server';
 import { generatePartyInsightsForParty, processStalePartyInsights } from '@/utils/party-insights';
 
 export const maxDuration = 60; // 1 minute max duration
 
 export async function POST(request: Request) {
-    const supabaseServer = await createClient();
-    const { data: { user } } = await supabaseServer.auth.getUser();
-
-    if (!user) {
-        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    const denied = await adminGuard();
+    if (denied) return denied;
 
     const { party_id, all, force } = await request.json();
 
