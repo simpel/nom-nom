@@ -70,6 +70,7 @@ The rule when the spec disagrees with itself: the component README wins over old
 - **Category cover crop.** LabeledPhotoCard `lg landscape` is 4:3, but "Imagery" says only 1:1 and 4:5 crops are safe. Confirm.
 - **"Current row" state.** The recipe leaderboard can no longer mark the recipe it was opened from.
 - **Field success state.** EmailInviteCard's "Invitation sent" sits in the hint slot with no colour.
+- **One list, never split by state (new rule, 16 Oct 2026).** Product call: a list of one kind of thing is one Card `list` under one header, ordered by a stable key; state lives on the row (score, button, unread dot, meta), never in separate sections. The RatingList README says "the viewer's row is last" and draws only people who rated; the DS should add the rule to the root README, name the viewer's row as ordinary (alphabetical), and show unrated people in the same list. Meal Detail's Who rated and the Inbox are on the rule already.
 - **ListRow meta.** There is one meta line and one ink, so meal notes, notification dates and the "Invitation resent" feedback lose their emphasis. The canvas tones "Waiting on 2" `warning-text` after the party name, so ListRow takes a `metaAccent` run (`ListRowMetaAccent`, default `warning-text`) joined with " · ".
 - **Value step.** The README gives no type step for a ListRow `value` or a SegmentedBar inline figure. Both are `sans-sm` tabular.
 - **Onboarding progress.** The Bar has no width in the navigation bar; it takes `spacing-20`.
