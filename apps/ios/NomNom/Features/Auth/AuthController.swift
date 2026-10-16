@@ -31,6 +31,8 @@ final class AuthController {
     /// in `AuthController+SignIn.swift` and `AuthController+Account.swift`.
     var isWorking = false
     var errorMessage: String?
+    /// A non-error line for the sign-in screen, e.g. confirming the account was deleted.
+    var noticeMessage: String?
 
     private var listener: Task<Void, Never>?
 
