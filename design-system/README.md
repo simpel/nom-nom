@@ -241,12 +241,12 @@ The app is the source of truth, and these patterns were drawn there first. Each 
 
 The items the app had listed as undefined are now defined here: the unit system (UnitToggle, `convertAmount`), the form blocks, the code field, the paywall package card, numbered steps and the checkable ingredient list, the brand mark, the select row, the top-bar unread mark and active state (BarButton), swipe rows, editorial text and the scanner overlay. The app has adopted them and retired its interim components and its gap list.
 
-Added later (Oct 2026): **DismissibleNotice** (an inline, closable message in the `warning` role); the **Add photo sheet**, the generating tile and the pending AI tile (PhotoStrip); **Avatar** loading; the **one list, never split by state** rule (root README, ListRow, RatingList, whose Who rated is now one alphabetical list with the viewer marked by a "You" Badge).
+Added later (Oct 2026): **DismissibleNotice** (an inline, closable message in the `warning` role); the **Add photo sheet**, the generating tile and the pending AI tile (PhotoStrip); **Avatar** loading; the **one list, never split by state** rule (root README, ListRow, RatingList, whose Who rated is now one alphabetical list with the viewer marked by a "You" Badge). **Reorder**: drag to reorder any set in either direction (list rows, strip tiles), moving between sets in one group (a recipe's ingredient groups); a long press starts it, so scroll and swipe are untouched.
 
 ### Still open
 
 - A taste control compact enough for a list row (TactileTasteSelector has no caller; the design is to use ChoiceTile `square: false` in a row).
-- Drag-to-reorder in PhotoStrip edit mode: reorder stays on the context menu and accessibility actions.
+- PhotoStrip edit mode adopting Reorder (`horizontal`): it still reorders through the context menu and accessibility actions only.
 - Dynamic Type for Avatar initials at accessibility sizes.
 - Semibold serif: only Newsreader Regular is bundled, so `weight: semibold` has no effect on serif steps.
 - The iOS app's own spacing (`DS.Spacing`) and radii (`AppRadius`) are replaced by the Tailwind steps above; the web's shadcn defaults (`--background`, `--primary`, `--chart-1…5`, `--sidebar-*`, `oklch` greys) are left out; the web's own Stone/Pine layer overrides them.

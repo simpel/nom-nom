@@ -1,4 +1,4 @@
-/* @ds-bundle: {"format":4,"namespace":"NomNom","components":[{"name":"Text"},{"name":"Card"},{"name":"AppButton"},{"name":"Badge"},{"name":"Input"},{"name":"TextArea"},{"name":"TasteScoreSelector"},{"name":"SectionHeader"},{"name":"Section"},{"name":"SectionCard"},{"name":"Avatar"},{"name":"ScoreValue"},{"name":"Bar"},{"name":"PhotoCard"},{"name":"RecipeCard"},{"name":"PhotoStrip"},{"name":"RecipeLinkCard"},{"name":"ScoreCard"},{"name":"RatingList"},{"name":"Timeline"},{"name":"BottomSheet"},{"name":"ListRow"},{"name":"Toggle"},{"name":"EmptyState"},{"name":"Skeleton"},{"name":"SegmentedBar"},{"name":"ValueStepper"},{"name":"ScreenHeader"},{"name":"Facts"},{"name":"LabeledPhotoCard"},{"name":"RecipeShelf"},{"name":"PartyCard"},{"name":"ProMark"},{"name":"ProCard"},{"name":"ProView"},{"name":"ProGate"},{"name":"ProLinkCard"},{"name":"CollectionSection"},{"name":"AddRow"},{"name":"BarButton"},{"name":"BarAction"},{"name":"TagToggle"},{"name":"ChoiceTile"},{"name":"NoteField"},{"name":"NoteEditor"},{"name":"PersonHeaderRow"},{"name":"PageMenu"},{"name":"TrendChart"},{"name":"MediaViewer"},{"name":"FieldGroup"},{"name":"ToggleCard"},{"name":"AccountActions"},{"name":"CodeField"},{"name":"PackageCard"},{"name":"StepList"},{"name":"CheckRow"},{"name":"IngredientList"},{"name":"SelectRow"},{"name":"BrandMark"},{"name":"SwipeRow"},{"name":"EditorialText"},{"name":"ScannerOverlay"},{"name":"UnitToggle"},{"name":"DismissibleNotice"}]} */
+/* @ds-bundle: {"format":4,"namespace":"NomNom","components":[{"name":"Text"},{"name":"Card"},{"name":"AppButton"},{"name":"Badge"},{"name":"Input"},{"name":"TextArea"},{"name":"TasteScoreSelector"},{"name":"SectionHeader"},{"name":"Section"},{"name":"SectionCard"},{"name":"Avatar"},{"name":"ScoreValue"},{"name":"Bar"},{"name":"PhotoCard"},{"name":"RecipeCard"},{"name":"PhotoStrip"},{"name":"RecipeLinkCard"},{"name":"ScoreCard"},{"name":"RatingList"},{"name":"Timeline"},{"name":"BottomSheet"},{"name":"ListRow"},{"name":"Toggle"},{"name":"EmptyState"},{"name":"Skeleton"},{"name":"SegmentedBar"},{"name":"ValueStepper"},{"name":"ScreenHeader"},{"name":"Facts"},{"name":"LabeledPhotoCard"},{"name":"RecipeShelf"},{"name":"PartyCard"},{"name":"ProMark"},{"name":"ProCard"},{"name":"ProView"},{"name":"ProGate"},{"name":"ProLinkCard"},{"name":"ProScoreGroup"},{"name":"CollectionSection"},{"name":"AddRow"},{"name":"BarButton"},{"name":"BarAction"},{"name":"TagToggle"},{"name":"ChoiceTile"},{"name":"NoteField"},{"name":"NoteEditor"},{"name":"PersonHeaderRow"},{"name":"PageMenu"},{"name":"TrendChart"},{"name":"MediaViewer"},{"name":"FieldGroup"},{"name":"ToggleCard"},{"name":"AccountActions"},{"name":"CodeField"},{"name":"PackageCard"},{"name":"StepList"},{"name":"CheckRow"},{"name":"IngredientList"},{"name":"SelectRow"},{"name":"BrandMark"},{"name":"SwipeRow"},{"name":"EditorialText"},{"name":"ScannerOverlay"},{"name":"UnitToggle"},{"name":"DismissibleNotice"},{"name":"Reorder"},{"name":"ReorderTarget"}]} */
 (function () {
   'use strict';
   var React = window.React;
@@ -929,6 +929,20 @@
         h(AppButton, { variant: 'pro', size: 'lg', icon: 'sparkles', fullWidth: true, onClick: p.onUnlock }, p.unlockLabel || 'Unlock with Pro'))
         : h('div', { className: 'nn-pro-card__body' }, p.children));
   }
+  /** Two or more Pro scores side by side, viewer without Pro: ONE card, one ProMark, a readout row per score, one sentence naming everything Pro opens, one Unlock with Pro. */
+  function ProScoreGroup(props) {
+    var p = props;
+    var scores = p.scores || [];
+    return h('section', { className: cx('nn-pro-card', 'nn-pro-group', p.className), 'aria-label': p['aria-label'] || 'Pro scores' },
+      h(ProMark, null),
+      h('div', { className: 'nn-pro-group__rows' }, scores.map(function (s, i) {
+        return h('div', { key: i, className: 'nn-pro-group__row' },
+          h(Text, { as: 'h3', textStyle: 'sans-xs', tone: 'secondary' }, s.title),
+          h(ScoreValue, { score: s.score, verdict: s.verdict, size: 'md', ink: 'pro' }));
+      })),
+      p.teaser ? h(Text, { as: 'p', tone: 'secondary' }, p.teaser) : null,
+      h(AppButton, { variant: 'pro', size: 'lg', icon: 'sparkles', fullWidth: true, onClick: p.onUnlock }, p.unlockLabel || 'Unlock with Pro'));
+  }
   /** A whole Pro-only view (a screen or sheet). Sets the pro-soft ground; cards on it stay panel. Put ProMark above the title. */
   function ProView(props) {
     var p = props;
@@ -1246,6 +1260,70 @@
   }
   function spacingPx(n) { return n; }
 
+  // ---------- Reorder: drag to reorder any set (list rows, strip tiles), either axis
+  /** No wrapper of its own: each child becomes a draggable `.nn-reorder__item`, a direct child of the consumer's
+   *  Card list or strip, so its hairlines and gaps hold. Sets with the same `group` take each other's items.
+   *  onMove(moved, target) puts `moved` where `target` is; the set moves live as the item passes over others. */
+  var reorderDrag = { id: null, group: null };
+  var reorderListeners = [];
+  function reorderSet(id, group) {
+    reorderDrag.id = id; reorderDrag.group = group;
+    reorderListeners.forEach(function (f) { f(); });
+  }
+  if (typeof document !== 'undefined') {
+    // The held item may have moved to another set (and remounted) by the time the drag ends.
+    document.addEventListener('dragend', function () { if (reorderDrag.id !== null) reorderSet(null, null); }, true);
+    document.addEventListener('drop', function () { if (reorderDrag.id !== null) reorderSet(null, null); }, true);
+  }
+  function useReorderDrag() {
+    var tick = useState(0);
+    React.useEffect(function () {
+      function f() { tick[1](function (n) { return n + 1; }); }
+      reorderListeners.push(f);
+      return function () { reorderListeners = reorderListeners.filter(function (x) { return x !== f; }); };
+    }, []);
+  }
+  function reorderAccepts(e, group) {
+    if (reorderDrag.id === null || reorderDrag.group !== group) return false;
+    e.preventDefault();
+    return true;
+  }
+  function Reorder(props) {
+    var p = props;
+    useReorderDrag();
+    var ids = p.items || [];
+    var horizontal = p.axis === 'horizontal';
+    function move(moved, target) { if (moved !== target && p.onMove) p.onMove(moved, target); }
+    return h(React.Fragment, null, React.Children.toArray(p.children).map(function (child, i) {
+      var id = ids[i];
+      return h('div', {
+        key: id, className: cx('nn-reorder__item', p.itemClassName), tabIndex: 0, draggable: true,
+        'data-axis': horizontal ? 'horizontal' : 'vertical',
+        'data-dragging': reorderDrag.id === id ? '' : undefined,
+        'aria-roledescription': 'reorderable',
+        'aria-keyshortcuts': horizontal ? 'Alt+ArrowLeft Alt+ArrowRight' : 'Alt+ArrowUp Alt+ArrowDown',
+        onDragStart: function (e) { e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('text/plain', String(id)); reorderSet(id, p.group); },
+        onDragOver: function (e) { reorderAccepts(e, p.group); },
+        onDragEnter: function (e) { if (reorderAccepts(e, p.group)) move(reorderDrag.id, id); },
+        onDrop: function (e) { e.preventDefault(); },
+        onKeyDown: function (e) {
+          if (!e.altKey) return;
+          var back = horizontal ? 'ArrowLeft' : 'ArrowUp', fwd = horizontal ? 'ArrowRight' : 'ArrowDown';
+          if (e.key === back && i > 0) { e.preventDefault(); move(id, ids[i - 1]); }
+          if (e.key === fwd && i < ids.length - 1) { e.preventDefault(); move(id, ids[i + 1]); }
+        }
+      }, child);
+    }));
+  }
+  /** A drop target with no item of its own: a set's footer or empty state. onEnter(moved) runs as an item of the same group comes over it. */
+  function ReorderTarget(props) {
+    var p = props;
+    return h('div', { className: cx('nn-reorder-target', p.className),
+      onDragOver: function (e) { reorderAccepts(e, p.group); },
+      onDragEnter: function (e) { if (reorderAccepts(e, p.group) && p.onEnter) p.onEnter(reorderDrag.id); },
+      onDrop: function (e) { e.preventDefault(); } }, p.children);
+  }
+
   // ---------- EditorialText: positive and negative fragments inside a sentence
   /** parts: ['plain text', { text, tone: 'positive' | 'negative' }]. positive = primary-text, negative = warning-text, serif-xs. Colour is never the only signal: pair with the words. */
   function EditorialText(props) {
@@ -1326,7 +1404,7 @@
     DismissibleNotice: DismissibleNotice, CollectionSection: CollectionSection, AddRow: AddRow, BarButton: BarButton, BarAction: BarAction, TagToggle: TagToggle, ChoiceTile: ChoiceTile, NoteField: NoteField, NoteEditor: NoteEditor,
     PersonHeaderRow: PersonHeaderRow, ProLinkCard: ProLinkCard, PageMenu: PageMenu, TrendChart: TrendChart, MediaViewer: MediaViewer,
     FieldGroup: FieldGroup, ToggleCard: ToggleCard, AccountActions: AccountActions, CodeField: CodeField, PackageCard: PackageCard,
-    StepList: StepList, CheckRow: CheckRow, IngredientList: IngredientList, SelectRow: SelectRow, BrandMark: BrandMark, SwipeRow: SwipeRow,
+    StepList: StepList, CheckRow: CheckRow, IngredientList: IngredientList, SelectRow: SelectRow, BrandMark: BrandMark, SwipeRow: SwipeRow, Reorder: Reorder, ReorderTarget: ReorderTarget,
     EditorialText: EditorialText, ScannerOverlay: ScannerOverlay, UnitToggle: UnitToggle, convertAmount: convertAmount,
     Text: Text, Card: Card, AppButton: AppButton, Badge: Badge, Input: Input, TextArea: TextArea,
     TasteScoreSelector: TasteScoreSelector,
@@ -1337,7 +1415,7 @@
     LabeledPhotoCard: LabeledPhotoCard, RecipeShelf: RecipeShelf, PartyCard: PartyCard,
     SegmentedBar: SegmentedBar, ValueStepper: ValueStepper, ScreenHeader: ScreenHeader, Facts: Facts,
     // parts and helpers
-    ProMark: ProMark, ProCard: ProCard, ProView: ProView, ProGate: ProGate,
+    ProMark: ProMark, ProCard: ProCard, ProScoreGroup: ProScoreGroup, ProView: ProView, ProGate: ProGate,
     Icon: Icon, SheetCard: SheetCard, Reason: Reason,
     REACTIONS: REACTIONS, reactionForScore: reactionForScore, verdictForScore: verdictForScore
   };
