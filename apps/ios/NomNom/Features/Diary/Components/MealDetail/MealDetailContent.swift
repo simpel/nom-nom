@@ -60,6 +60,8 @@ struct MealDetailContent: View {
                 PhotoStrip(
                     photos: photos,
                     onAddPhoto: actions.onAddPhoto,
+                    addOffersAI: true,
+                    isGenerating: store.generatingPhotoMealIDs.contains(meal.id),
                     onSelect: { index in
                         if hasPhotos { actions.onSelectPhoto(index) }
                     }
