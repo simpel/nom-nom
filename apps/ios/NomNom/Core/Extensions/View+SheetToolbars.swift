@@ -11,7 +11,7 @@ extension View {
     /// DS grabber (`spacing-10` × `spacing-1.5`, `radius-sm`, `grabber`, `spacing-2`
     /// from the top) in place of the system drag indicator. Apply to the sheet's root
     /// view; lay its content out with `SheetBody`. The scrim is the system dimming
-    /// (DS-GAPS.md). Pass `selection` to drive the detent (a sheet sized to its content).
+    ///. Pass `selection` to drive the detent (a sheet sized to its content).
     func dsSheet(
         detents: Set<PresentationDetent> = [.large],
         selection: Binding<PresentationDetent>? = nil,
@@ -63,7 +63,7 @@ extension View {
 
     /// A pushed middle step of a multi-step sheet (it keeps the navigation back
     /// button): a trailing text action ("Next"), disabled until `canProceed`.
-    /// DS-GAP: the multi-step toolbar convention is pending (DS-GAPS.md).
+    /// BottomSheet README, "Sheet types and how they dismiss".
     func stepNextToolbar(
         title: String = "Next",
         canProceed: Bool = true,

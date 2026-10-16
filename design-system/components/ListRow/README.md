@@ -55,6 +55,8 @@ Press, hover and the focus ring move to `.nn-row__main` in a split row, so only 
 - `inactive` dims what describes the row, never what acts: someone invited and not yet joined sits at the end of the member list with a dimmed lead and a live "Remind". There is no separate "Invited" section inside a member list.
 - Meta is one clipped line unless the sentence is the content (`metaLines: null`). `metaAccent` carries one emphasised run at the end of the meta; it is the only way to colour part of a meta line.
 - The title is sans. A person at the top of a sheet is a bare row, not a ListRow in a Card: Avatar `lg`, a `serif-sm` name (`serif-md` on the member sheet), a `sans-sm` `text-tertiary` meta line and a `primary-text` chevron at `spacing-14` minimum height (the app's PersonHeaderRow).
+- **A list is never split by state.** One kind of thing is one Card `list` under one header, in a stable order (people alphabetical, events newest first). State shows on the row: a score, a Badge, a button, the `unread` dot, the meta line, `inactive`. Never "Rated / Not yet", "Unread / Read" or "Joined / Pending" cards.
+- The viewer's own row shows their real name and a small `secondary` `sm` Badge "You" in the title, never the word "You" as the name.
 - A suggested party is a Subject row whose meta ends with the reason it was suggested, and a Follow button in `trailing`.
 - A row does not repeat what its section header already says: an invite row under an "Invited" header needs no Pending badge, and a row in a "Favourites" list needs no heart.
 - `value` and `trailing` are alternatives: a number goes in `value` (tabular), a control goes in `trailing`.

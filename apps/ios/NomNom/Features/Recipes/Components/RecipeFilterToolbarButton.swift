@@ -1,3 +1,4 @@
+// ds-coverage: platform
 import SwiftUI
 
 /// The toolbar control that opens `RecipeFilterSheet` (search tab, category drill-down).

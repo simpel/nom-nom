@@ -1,7 +1,7 @@
 // GENERATED — do not edit.
 // Source: design-system/tokens.json (tokens version 1, "Nom Nom")
 //   source: https://claude.ai/artifact/4jeEJ91V5eRxpDn8NtqNgK
-//   version: 1792161590-8c98
+//   version: 1792163468-3cdb
 //   downloaded: 2026-10-16
 // Tokens: 184 (blur 2, border-width 2, color 80, container 3, dash 1, font-weight 2, leading 5, motion 8, opacity 16, radius 8, shadow 7, spacing 25, text 10, tracking 2, type 13)
 // Dynamic Type mapping: design-system/README.md, "Dynamic Type".

@@ -23,7 +23,7 @@ struct PhotoStrip: View {
     var onAddPhoto: (() -> Void)?
     /// The add tile's "AI" Badge, where the Add photo sheet offers AI.
     var addOffersAI: Bool
-    /// A photo is being made: a loading tile leads the strip (DS-GAPS.md, "PhotoStrip generating tile").
+    /// A photo is being made: a loading tile leads the strip.
     var isGenerating: Bool
     var onSelect: (Int) -> Void
 

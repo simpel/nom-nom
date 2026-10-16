@@ -362,7 +362,15 @@ export interface RatingListProps extends BaseProps {
   /** Right-hand figure in the header. Defaults to "{rated} of {total}" when `total` is given. */
   trailing?: unknown;
   /** score null = not rated yet; vsUsual: signed change, 0 = as usual, 'new' = first rating. */
-  raters?: { name: string; role?: string; score?: number | null; vsUsual?: number | 'new' }[];
+  raters?: {
+    name: string; role?: string; score?: number | null; vsUsual?: number | 'new';
+    /** The viewer's own row: a small "You" Badge after their real name (never the word "You" as the name). */
+    you?: boolean;
+    /** Unrated rows only: the meta line ("Not asked yet", "Asked 2 days ago"). */
+    meta?: string;
+    /** Unrated rows only: the one soft button on the row (Ask, Remind, Rate). */
+    action?: { label: string; onClick?: () => void; variant?: 'primary' | 'secondary'; disabled?: boolean };
+  }[];
   /** The general shape. Takes precedence over `raters`. */
   rows?: RatingListRow[];
   rated?: number;
@@ -797,3 +805,13 @@ export interface CollectionSectionProps extends BaseProps {
   children?: unknown;
 }
 export interface AddRowProps extends BaseProps { label: string; onClick?: () => void; }
+
+/** An inline message the person can close, in the warning role: `warning-soft` ground, `warning-text` copy,
+ *  an icon-only `secondary ghost` Dismiss on the trailing edge. */
+export interface DismissibleNoticeProps extends BaseProps {
+  children?: unknown;
+  /** Controlled: you hide it. Omit and it hides itself. */
+  onDismiss?: () => void;
+  /** @default 'Dismiss' */
+  dismissLabel?: string;
+}

@@ -1,3 +1,4 @@
+// ds-coverage: delegates
 import SwiftUI
 
 /// Rating a meal, for yourself only: one question per screen (taste, what stood out,

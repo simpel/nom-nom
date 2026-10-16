@@ -19,6 +19,7 @@ A grid tile for a recipe: one fixed square photo with the verdict word as a badg
 
 | prop | type | note |
 | --- | --- | --- |
+| `alt` | `string` | Alt text for the photo. Leave unset only when the title beside it names the dish. |
 | `title` * | `string` |  |
 | `photo` | `string` |  |
 | `category` | `string` | Eyebrow, e.g. 'Italian'. @default 'Recipe' |

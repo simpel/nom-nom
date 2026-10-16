@@ -17,7 +17,7 @@ extension View {
 
     /// Every top-bar control (close, back, Next, checkmark, "…", filter): a `text-primary`
     /// glyph on the system's white glass circle, never the app's `primary` tint
-    /// (DS-GAPS.md, "Top-bar controls").
+    ///.
     func barItemStyle() -> some View {
         tint(DS.Color.textPrimary)
     }

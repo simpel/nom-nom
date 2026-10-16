@@ -46,13 +46,13 @@ struct ListRow: View {
     var action: (() -> Void)?
     private var customTitle: AnyView?
     /// Dims the lead, title and meta at `opacity-50`; the trailing control stays live
-    /// (an invited member who hasn't joined). DS-GAPS.md A, "ListRow inactive".
+    /// (an invited member who hasn't joined). ListRow README, `inactive`.
     private var isInactive = false
-    /// Meta line limit; 1 unless `.metaLines(_:)` lifts it. DS-GAPS.md A, "ListRow meta lines".
+    /// Meta line limit; 1 unless `.metaLines(_:)` lifts it. ListRow README, `metaLines`.
     private var metaLineLimit: Int? = 1
-    /// Title line limit; 1 unless `.titleLines(_:)` lifts it. DS-GAPS.md A, "ListRow title and value".
+    /// Title line limit; 1 unless `.titleLines(_:)` lifts it. ListRow README, `titleLines`.
     private var titleLineLimit: Int? = 1
-    /// The value in semibold (an ingredient's amount). DS-GAPS.md A, "ListRow title and value".
+    /// The value in semibold (an ingredient's amount). ListRow README, `valueSemibold`.
     private var isValueSemibold = false
 
     init(

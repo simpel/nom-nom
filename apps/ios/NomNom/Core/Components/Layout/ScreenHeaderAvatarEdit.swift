@@ -1,4 +1,3 @@
-// DS-GAP: pending design system — see Core/Design/DS-GAPS.md
 import SwiftUI
 
 /// ScreenHeader's avatar edit mode: the `xl` avatar becomes one 80pt button with a camera

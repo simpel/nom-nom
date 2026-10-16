@@ -21,7 +21,7 @@ A screen section: a SectionHeader (uppercase title, optional trailing count) abo
 | --- | --- | --- |
 | `title` | `string` |  |
 | `trailing` | `string` |  |
-| `trailingVariant` | `'secondary' \| 'primary'` |  |
+| `trailingTone` | `'tertiary' \| 'accent'` |  |
 | `uppercase` | `boolean` |  |
 | `icon` | `IconName` |  |
 | `children` | `unknown` |  |

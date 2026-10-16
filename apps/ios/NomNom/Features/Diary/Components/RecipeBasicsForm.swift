@@ -1,4 +1,3 @@
-// DS-GAP: pending design system — see Core/Design/DS-GAPS.md
 import SwiftUI
 
 /// Step 1 of the recipe create and edit sheets: cover photos, the recipe name

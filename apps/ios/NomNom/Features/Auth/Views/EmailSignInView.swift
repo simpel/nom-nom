@@ -86,7 +86,7 @@ struct EmailSignInView: View {
             Text("We sent a code to **\(address)**")
                 .textStyle(.sansMd, tone: .secondary, align: .center)
 
-            OTPCodeField(
+            CodeField(
                 code: $code,
                 isError: auth.errorMessage != nil,
                 onComplete: { completeCode in

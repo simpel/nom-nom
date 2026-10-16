@@ -17,7 +17,7 @@ struct RatingListRow: Identifiable {
 ///
 /// - **Who rated** (`entries:`): "5 of 6" as the header's `primary` trailing figure,
 ///   a Bar `xs` of rated / total, then one RatingRow per person (their change vs
-///   their usual and ScoreValue `xs`). The viewer's row is last.
+///   their usual and ScoreValue `xs`). Alphabetical, the viewer included (marked "You").
 /// - **Any other distribution** (`rows:meter:`): your meter above the card, your rows
 ///   inside it (SegmentedBar's legend).
 ///
@@ -57,7 +57,7 @@ extension RatingList where Meter == RatingListMeter {
     init(entries: [RatingListEntry], title: String = "Who rated", total: Int? = nil) {
         let rated = entries.filter { $0.score != nil }.count
         let total = max(total ?? entries.count, rated)
-        self.shape = .raters(entries.filter { !$0.isViewer } + entries.filter(\.isViewer))
+        self.shape = .raters(Self.alphabetical(entries))
         self.title = title
         self.trailing = "\(rated) of \(total)"
         self.meter = RatingListMeter(rated: rated, total: total)
@@ -65,10 +65,16 @@ extension RatingList where Meter == RatingListMeter {
 }
 
 extension RatingList {
+    /// One list, never split by state: everyone alphabetical by the name shown, the viewer
+    /// like anyone else (README: "The viewer is a person, not the word You").
+    static func alphabetical(_ entries: [RatingListEntry]) -> [RatingListEntry] {
+        entries.sorted { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
+    }
+
     /// People with your own header figure and meter (index.d.ts: `trailing` and `bar`
     /// replace the "{rated} of {total}" defaults), e.g. a party average above the members.
     init(entries: [RatingListEntry], title: String, trailing: String? = nil, @ViewBuilder meter: () -> Meter) {
-        self.shape = .raters(entries.filter { !$0.isViewer } + entries.filter(\.isViewer))
+        self.shape = .raters(Self.alphabetical(entries))
         self.title = title
         self.trailing = trailing
         self.meter = meter()

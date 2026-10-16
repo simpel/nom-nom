@@ -129,9 +129,9 @@
     "Photography"
   ],
   "lastChange": {
-    "at": "2026-10-16T13:00:00Z",
+    "at": "2026-10-16T16:00:00Z",
     "by": "Joel Sandén",
-    "note": "CollectionSection: the section-action rule as one component (header verb, empty state, cannot-add); soft capsule header action; AddRow.",
+    "note": "One list, never split by state (root, ListRow, RatingList); DismissibleNotice; Add photo sheet, generating tile and pending AI tile (PhotoStrip); Avatar loading.",
     "via": "Claude (Claude Code)"
   },
   "layout": "files",

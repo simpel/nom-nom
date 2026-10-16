@@ -22,7 +22,7 @@ struct RatingListEntry: Identifiable {
     var delta: Int?
     /// Their first rating: a `secondary` "New" Badge instead of a delta.
     var isNew: Bool = false
-    /// The viewer's own row ("You"); sorted last by RatingList.
+    /// The viewer's own row: their real name with a small "You" Badge; sorted like everyone else.
     var isViewer: Bool = false
     /// Shown instead of the score (unrated rows: Rate / Ask / Asked).
     var action: RatingListAction?
@@ -31,18 +31,16 @@ struct RatingListEntry: Identifiable {
 }
 
 /// A RatingList row: a ListRow (RatingList README: "Rows are ListRows"). Title: name
-/// `sans-md` + role `sans-sm` `text-tertiary`. Trailing: the change vs their usual
+/// `sans-md` (the viewer adds a "You" Badge `sm`) + role `sans-sm` `text-tertiary`. Trailing: the change vs their usual
 /// (delta Badge `sm`, a `secondary` "New" Badge, or "As usual" / "Not rated yet" in
 /// `text-tertiary`) and ScoreValue `xs` right-aligned in `spacing-9`. No avatar, no chevron.
 struct RatingRow: View {
     let entry: RatingListEntry
 
-    private var name: String { entry.isViewer ? "You" : entry.name }
-
     var body: some View {
         // README: "the note and the score share its `trailing` slot".
         ListRow(
-            accessibilityTitle: name,
+            accessibilityTitle: entry.isViewer ? "\(entry.name), you" : entry.name,
             trailing: .view {
                 HStack(spacing: DS.Spacing.s2) {
                     change
@@ -53,7 +51,10 @@ struct RatingRow: View {
             action: entry.onTap
         ) {
             HStack(alignment: .firstTextBaseline, spacing: DS.Spacing.s1_5) {
-                Text(name).textStyle(.sansMd)
+                Text(entry.name).textStyle(.sansMd)
+                if entry.isViewer {
+                    Badge("You", variant: .secondary, size: .sm)
+                }
                 if let role = entry.role {
                     Text(role).textStyle(.sansSm, tone: .tertiary)
                 }

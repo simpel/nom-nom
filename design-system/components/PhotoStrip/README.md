@@ -21,6 +21,12 @@ Where photos are being added to something (the meal and recipe editors), the str
 - Add: "Camera" is an AppButton, "Library" a photo picker with an AppButton label. Tapping a tile opens the media viewer (BottomSheet, Media viewer).
 - Reorder through each tile's context menu and accessibility actions (Make cover, Move left, Move right), never drag, which would fight the horizontal scroll.
 
+## Adding a photo
+- Where a photo can be made as well as taken (a recipe's cover), the add tile's sub-line starts with a `pro soft sm` "AI" Badge with a sparkles glyph, and the tile opens the **Add photo sheet** instead of going straight to the camera.
+- **Add photo sheet** (BottomSheet, picker type: fitted to its content, "Add photo" inline title, close on the leading side, a choice dismisses it): first "Generate with AI" as a ProLinkCard (title, and "A photo plated from the name and ingredients"; free viewers who tap it reach the paywall), then a Card `list` of "Take photo" (only with a camera) and "Choose from library". Without AI the sheet is the Card list alone, or the tile skips the sheet and opens the camera and library directly.
+- **A photo being made** is a tile in the strip: a PhotoCard `lg`-sized `sunken` tile with the Skeleton sweep, leading the strip until the photo lands there. It carries no caption.
+- **In the editors**, choosing AI shows a pending tile in the strip until the recipe is saved: PhotoCard `sm`-sized, `pro-soft`, a sparkles glyph in `pro-text`, "AI photo when you save" (`sans-sm` semibold) over "Tap to undo" (`sans-sm` `text-secondary`). Tapping it takes the AI photo back out.
+
 ## Use
 `NomNom.PhotoStrip` — props are `PhotoStripProps` in `components/index.d.ts`. The track is `.nn-scroller`, the system's one horizontal scroll area: snap-to-tile, contained overscroll, and a thin `line-control` bar that fades in on hover or focus and is absent on touch, where the platform draws its own. Never hide the scrollbar outright — on a pointer device it is the only sign there is more to the right.
 
