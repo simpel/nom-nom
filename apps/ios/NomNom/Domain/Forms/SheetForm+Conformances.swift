@@ -16,3 +16,6 @@ extension RecipeFilterCriteria: SheetForm {}
 extension RecipeIngredient: SheetForm {
     var isValid: Bool { !trimmedIngredient.isEmpty }
 }
+
+/// A group's name is optional, so any value can be saved.
+extension IngredientGroup: SheetForm {}

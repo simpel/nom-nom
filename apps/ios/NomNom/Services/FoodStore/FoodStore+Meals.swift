@@ -180,7 +180,7 @@ extension FoodStore {
     struct RecipeDraft: Equatable {
         static let maxCount: Int = 5
 
-        var ingredients: [RecipeIngredient] = []
+        var ingredientGroups: [IngredientGroup] = []
         var instructions: [String] = []
         var existingPhotoPaths: [String] = []
         var addedPhotoData: [Data] = []
@@ -219,7 +219,7 @@ extension FoodStore {
 
         var hasContent: Bool {
             if effort != nil || cuisine != nil || serves != nil || !isPublic || recipeKindID != nil || cookingMethodID != nil { return true }
-            let hasIngredients = ingredients.contains { !$0.isEmpty }
+            let hasIngredients = ingredientGroups.allIngredients.contains { !$0.isEmpty }
             let hasInstructions = instructions.contains { !$0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
             return hasIngredients || hasInstructions || totalPhotosCount > 0
         }

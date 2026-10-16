@@ -91,12 +91,12 @@ extension FoodStore {
             id: recipe1ID,
             ownerID: previewUserID,
             name: "Birria Tacos",
-            ingredients: [
+            ingredientGroups: [IngredientGroup(ingredients: [
                 RecipeIngredient(quantity: "1", measurement: "kg", ingredient: "beef chuck"),
                 RecipeIngredient(quantity: "4", measurement: "", ingredient: "guajillo chilies"),
                 RecipeIngredient(quantity: "12", measurement: "", ingredient: "corn tortillas"),
                 RecipeIngredient(quantity: "200", measurement: "g", ingredient: "Oaxaca cheese")
-            ],
+            ])],
             instructions: [
                 "Slow cook beef with guajillo chilies, onions, garlic and spices for 3 hours.",
                 "Dip corn tortillas in consommé and fry on flat top.",
@@ -109,12 +109,12 @@ extension FoodStore {
             id: recipe2ID,
             ownerID: previewUserID,
             name: "Crispy Salmon Bowl",
-            ingredients: [
+            ingredientGroups: [IngredientGroup(ingredients: [
                 RecipeIngredient(quantity: "2", measurement: "", ingredient: "salmon fillets"),
                 RecipeIngredient(quantity: "200", measurement: "g", ingredient: "sushi rice"),
                 RecipeIngredient(quantity: "1", measurement: "", ingredient: "avocado"),
                 RecipeIngredient(quantity: "2", measurement: "tbsp", ingredient: "spicy mayo")
-            ],
+            ])],
             instructions: [
                 "Pan sear salmon fillets skin-side down for 4 mins.",
                 "Serve over warm sushi rice with edamame, avocado, cucumber, and spicy mayo."
@@ -126,11 +126,11 @@ extension FoodStore {
             id: recipe3ID,
             ownerID: previewUserID,
             name: "Cacio e Pepe",
-            ingredients: [
+            ingredientGroups: [IngredientGroup(ingredients: [
                 RecipeIngredient(quantity: "400", measurement: "g", ingredient: "spaghetti"),
                 RecipeIngredient(quantity: "100", measurement: "g", ingredient: "Pecorino Romano"),
                 RecipeIngredient(quantity: "1", measurement: "tbsp", ingredient: "black peppercorns")
-            ],
+            ])],
             instructions: [
                 "Toast freshly cracked black pepper in olive oil.",
                 "Emulsify pasta water with Pecorino Romano cheese until velvety smooth."

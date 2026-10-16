@@ -25,7 +25,7 @@ extension RecipeForm {
         name = recipe.name
         coverPhotos = FoodStore.PhotosDraft(existingPaths: recipe.photoPaths)
         self.recipe = FoodStore.RecipeDraft(
-            ingredients: recipe.ingredients,
+            ingredientGroups: recipe.ingredientGroups,
             instructions: recipe.instructions,
             existingPhotoPaths: recipe.recipePhotoPaths,
             addedPhotoData: [],

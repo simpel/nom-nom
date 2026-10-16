@@ -6,7 +6,7 @@ extension FoodStore {
     struct AnalyzeHealthPayload: Encodable {
         let recipe_id: String?
         let name: String
-        let ingredients: [RecipeIngredient]
+        let ingredient_groups: [IngredientGroup]
         let instructions: [String]
         let serves: Int?
         let cuisine: String?
@@ -23,7 +23,7 @@ extension FoodStore {
         let payload = AnalyzeHealthPayload(
             recipe_id: recipe.id.uuidString,
             name: recipe.name,
-            ingredients: recipe.ingredients,
+            ingredient_groups: recipe.ingredientGroups,
             instructions: recipe.instructions,
             serves: recipe.serves,
             cuisine: recipe.cuisine

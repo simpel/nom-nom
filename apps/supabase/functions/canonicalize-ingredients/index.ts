@@ -16,6 +16,7 @@ import { createClient } from "jsr:@supabase/supabase-js@2";
 import { GenerationLogger } from "../_shared/generation-logger.ts";
 import { resolveTaxonomyTerm } from "../_shared/taxonomy-resolver.ts";
 import { getFeatureModel } from "../_shared/ai-config.ts";
+import { flattenIngredients, type IngredientGroup } from "../_shared/ingredients.ts";
 
 const SYSTEM_PROMPT = `You are a multilingual culinary ingredient analyst.
 
@@ -42,7 +43,7 @@ Return ONLY valid JSON, no markdown fences or commentary.`;
 
 interface RecipeRow {
   id: string;
-  ingredients: { quantity?: string; measurement?: string; ingredient: string }[] | null;
+  ingredient_groups: IngredientGroup[] | null;
 }
 
 interface WebhookPayload {
@@ -77,7 +78,7 @@ Deno.serve(async (req) => {
   try {
     const payload: WebhookPayload = await req.json();
     const recipe = payload.record;
-    const rawIngredients = (recipe.ingredients || []).map((i) => i.ingredient).filter(Boolean);
+    const rawIngredients = flattenIngredients(recipe.ingredient_groups).map((i) => i.ingredient).filter(Boolean);
 
     if (rawIngredients.length === 0) {
       return new Response(JSON.stringify({ skipped: "no-ingredients" }), {

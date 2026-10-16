@@ -6,6 +6,7 @@
 import { createClient } from "jsr:@supabase/supabase-js@2";
 import { GenerationLogger } from "../_shared/generation-logger.ts";
 import { getFeatureModel } from "../_shared/ai-config.ts";
+import { flattenIngredients, ingredientLine } from "../_shared/ingredients.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -110,7 +111,7 @@ Deno.serve(async (req) => {
 
   const { data: meal, error: mealErr } = await db
     .from("meals")
-    .select("id, recipe_id, eaten_on, notes, recipes(name, cuisine, ingredients, instructions)")
+    .select("id, recipe_id, eaten_on, notes, recipes(name, cuisine, ingredient_groups, instructions)")
     .eq("id", mealId).maybeSingle();
   if (mealErr) return json({ error: mealErr.message }, 500);
   if (!meal) return json({ error: "Meal not found" }, 404);
@@ -158,9 +159,7 @@ Deno.serve(async (req) => {
     recipe: {
       name: recipe.name,
       cuisine: recipe.cuisine,
-      ingredients: Array.isArray(recipe.ingredients)
-        ? recipe.ingredients.map((i: any) => [i.quantity, i.measurement, i.ingredient].filter(Boolean).join(" ")).slice(0, 30)
-        : [],
+      ingredients: flattenIngredients(recipe.ingredient_groups).map(ingredientLine).slice(0, 30),
       instructions: (recipe.instructions ?? []).slice(0, 20),
     },
     this_meal: { date: meal.eaten_on, cook_note: meal.notes || null },

@@ -7,11 +7,12 @@ import { z } from "npm:zod";
 import { createClient } from "jsr:@supabase/supabase-js@2";
 import { GenerationLogger } from "../_shared/generation-logger.ts";
 import { getFeatureModel } from "../_shared/ai-config.ts";
+import { flattenIngredients, ingredientGroupsText, type IngredientGroup } from "../_shared/ingredients.ts";
 
 interface RecipeRow {
   id: string;
   name: string;
-  ingredients: { quantity?: string; measurement?: string; ingredient: string }[] | null;
+  ingredient_groups: IngredientGroup[] | null;
   instructions: string[] | null;
 }
 
@@ -26,7 +27,7 @@ const SYSTEM_PROMPT = `You prepare recipes for a step-by-step cook mode.
 
 For every numbered instruction step, return:
 - "minutes": the time the cook waits on in that step (roasting, simmering, resting, marinating, boiling pasta). An integer, or null when the step is hands-on with no wait. Use the time the step states; if it gives a range, use the upper bound; if it says "until golden" with no time, estimate a typical integer.
-- "ingredients": the indexes (0-based, from the numbered ingredient list) of the ingredients first added or used in that step. An ingredient may appear in more than one step only if it is split across them (e.g. oil used twice). Never invent indexes.
+- "ingredients": the indexes (0-based, the numbers in the ingredient list; group headings like "Sauce:" are not numbered) of the ingredients first added or used in that step. An ingredient may appear in more than one step only if it is split across them (e.g. oil used twice). Never invent indexes.
 
 Return exactly one entry per instruction step, in order, as:
 { "steps": [ { "minutes": 20, "ingredients": [0, 4] }, { "minutes": null, "ingredients": [] } ] }
@@ -52,7 +53,7 @@ Deno.serve(async (req) => {
         headers: { "Content-Type": "application/json" },
       });
     }
-    const ingredients = recipe.ingredients || [];
+    const ingredients = flattenIngredients(recipe.ingredient_groups);
 
     const apiKey =
       Deno.env.get("VERCEL_AI_GATEWAY") ||
@@ -82,12 +83,7 @@ Deno.serve(async (req) => {
     logger = GenerationLogger.fromEnv();
     const model = await getFeatureModel(admin, "analyze-recipe-steps", "text");
 
-    const ingredientList = ingredients
-      .map((ing, i) => {
-        const amount = [ing.quantity, ing.measurement].filter(Boolean).join(" ");
-        return `${i}. ${amount ? `${amount} ` : ""}${ing.ingredient}`;
-      })
-      .join("\n");
+    const ingredientList = ingredientGroupsText(recipe.ingredient_groups, true);
     const stepList = instructions.map((s, i) => `${i + 1}. ${s}`).join("\n");
     const userMessage = `Recipe: ${recipe.name}\n\nIngredients:\n${ingredientList || "(none listed)"}\n\nSteps:\n${stepList}`;
 

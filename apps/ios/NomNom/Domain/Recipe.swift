@@ -12,8 +12,11 @@ struct Recipe: Identifiable, Hashable, Decodable {
     var name: String
     /// Lowercased, diacritic-folded, whitespace-collapsed. Used for matching.
     var normalizedName: String
-    /// Structured ingredients list (each with quantity, measurement, and ingredient).
-    var ingredients: [RecipeIngredient]
+    /// The ingredients in their groups ("Sauce", "Salad"; one unnamed group when the
+    /// recipe has no sections).
+    var ingredientGroups: [IngredientGroup]
+    /// Every ingredient in order, across groups. Cook mode's step indexes point here.
+    var ingredients: [RecipeIngredient] { ingredientGroups.allIngredients }
     /// Step-by-step preparation instructions.
     var instructions: [String]
     /// Cook mode's per-step timers and ingredients, aligned with `instructions`.
@@ -70,7 +73,7 @@ struct Recipe: Identifiable, Hashable, Decodable {
         case ownerID = "owner_id"
         case name
         case normalizedName = "normalized_name"
-        case ingredients
+        case ingredientGroups = "ingredient_groups"
         case instructions
         case instructionDetails = "instruction_details"
         case photoPaths = "photo_paths"
@@ -97,7 +100,7 @@ struct Recipe: Identifiable, Hashable, Decodable {
         ownerID = try container.decodeIfPresent(UUID.self, forKey: .ownerID)
         name = try container.decode(String.self, forKey: .name)
         normalizedName = try container.decode(String.self, forKey: .normalizedName)
-        ingredients = try container.decodeIfPresent([RecipeIngredient].self, forKey: .ingredients) ?? []
+        ingredientGroups = try container.decodeIfPresent([IngredientGroup].self, forKey: .ingredientGroups) ?? []
         instructions = try container.decodeIfPresent([String].self, forKey: .instructions) ?? []
         instructionDetails = try? container.decodeIfPresent([RecipeStepDetail].self, forKey: .instructionDetails)
         photoPaths = try container.decodeIfPresent([String].self, forKey: .photoPaths) ?? []
@@ -127,7 +130,7 @@ struct Recipe: Identifiable, Hashable, Decodable {
         ownerID: UUID?,
         name: String,
         normalizedName: String? = nil,
-        ingredients: [RecipeIngredient] = [],
+        ingredientGroups: [IngredientGroup] = [],
         instructions: [String] = [],
         photoPaths: [String] = [],
         recipePhotoPaths: [String] = [],
@@ -150,7 +153,7 @@ struct Recipe: Identifiable, Hashable, Decodable {
         self.ownerID = ownerID
         self.name = name.trimmedName
         self.normalizedName = normalizedName ?? name.normalizedForMatching
-        self.ingredients = ingredients
+        self.ingredientGroups = ingredientGroups
         self.instructions = instructions
         self.photoPaths = photoPaths
         self.recipePhotoPaths = recipePhotoPaths

@@ -154,7 +154,7 @@ struct RecipeDetailView: View {
                     .id(Self.partyNoteAnchor)
 
                 if !recipe.ingredients.isEmpty {
-                    RecipeIngredientsCard(ingredients: recipe.ingredients, serves: recipe.serves)
+                    RecipeIngredientsCard(groups: recipe.ingredientGroups, serves: recipe.serves)
                 }
 
                 if !recipe.instructions.isEmpty {

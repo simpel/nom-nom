@@ -1,4 +1,5 @@
 import { GenerationLogger } from "../_shared/generation-logger.ts";
+import { flattenIngredients, type IngredientGroup } from "../_shared/ingredients.ts";
 
 interface RecipeRow {
   id: string;
@@ -7,7 +8,7 @@ interface RecipeRow {
   cuisine_id: string | null;
   recipe_kind_id: string | null;
   cooking_method_id: string | null;
-  ingredients: any | null;
+  ingredient_groups: IngredientGroup[] | null;
   instructions: string[] | null;
 }
 
@@ -40,7 +41,7 @@ Deno.serve(async (req) => {
         recipe.cuisine_id === payload.old_record.cuisine_id &&
         recipe.recipe_kind_id === payload.old_record.recipe_kind_id &&
         recipe.cooking_method_id === payload.old_record.cooking_method_id &&
-        JSON.stringify(recipe.ingredients) === JSON.stringify(payload.old_record.ingredients) &&
+        JSON.stringify(recipe.ingredient_groups) === JSON.stringify(payload.old_record.ingredient_groups) &&
         JSON.stringify(recipe.instructions) === JSON.stringify(payload.old_record.instructions)
       ) {
         return new Response(JSON.stringify({ skipped: "no-change" }), {
@@ -82,11 +83,8 @@ Deno.serve(async (req) => {
       }
     }
     
-    // Ingredients is usually jsonb
-    if (recipe.ingredients && Array.isArray(recipe.ingredients)) {
-      const ingList = recipe.ingredients.map((i: any) => i.ingredient).filter(Boolean);
-      if (ingList.length > 0) inputStr += `\nIngredients: ${ingList.join(", ")}`;
-    }
+    const ingList = flattenIngredients(recipe.ingredient_groups).map((i) => i.ingredient).filter(Boolean);
+    if (ingList.length > 0) inputStr += `\nIngredients: ${ingList.join(", ")}`;
     
     if (recipe.instructions && recipe.instructions.length > 0) {
       inputStr += `\nInstructions: ${recipe.instructions.join(" ")}`;
