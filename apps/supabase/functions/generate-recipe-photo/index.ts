@@ -6,6 +6,7 @@
 // Photos of meals are made by generate-meal-photo.
 // A text model first turns the input into a food description.
 
+import { createClient, type SupabaseClient } from "jsr:@supabase/supabase-js@2";
 import { GenerationLogger } from "../_shared/generation-logger.ts";
 import { getFeatureModel } from "../_shared/ai-config.ts";
 import { resolveCategoryBrief, resolveRecipeBrief, type RecipeBriefInput } from "../_shared/photos/briefs.ts";
@@ -16,10 +17,42 @@ import { attachRowPhoto, saveCategoryPhoto } from "../_shared/photos/storage.ts"
 interface RequestPayload extends RecipeBriefInput {
   mode?: "recipe" | "category";
   recipe_id?: string;
+  /** The recipe's first photo when the app asked; the photo is attached only if it is still first. */
+  expected_cover?: string | null;
   category?: string;
 }
 
 const NIL_UUID = "00000000-0000-0000-0000-000000000000";
+
+/** Null when the caller owns the recipe and has Pro; otherwise the response to send. */
+async function checkRecipeAccess(
+  req: Request,
+  admin: SupabaseClient | null,
+  recipeId: string | undefined,
+): Promise<Response | null> {
+  const url = Deno.env.get("SUPABASE_URL");
+  const anonKey = Deno.env.get("SUPABASE_ANON_KEY");
+  if (!admin || !url || !anonKey) return jsonResponse({ error: "Server is not configured" }, 500);
+  if (!recipeId) return jsonResponse({ error: "recipe_id is required" }, 400);
+
+  // Who is asking: resolved from the JWT, never from the body.
+  const userClient = createClient(url, anonKey, {
+    global: { headers: { Authorization: req.headers.get("Authorization") ?? "" } },
+  });
+  const { data: userData, error: userErr } = await userClient.auth.getUser();
+  if (userErr || !userData.user) return jsonResponse({ error: "Unauthorized" }, 401);
+  const userId = userData.user.id;
+
+  // Postgres returns uuids lower case; iOS sends them upper case.
+  const { data: recipe } = await admin
+    .from("recipes").select("owner_id").eq("id", recipeId.toLowerCase()).maybeSingle();
+  if (!recipe) return jsonResponse({ error: "Recipe not found" }, 404);
+  if (recipe.owner_id !== userId) return jsonResponse({ error: "Only the recipe's owner can add photos" }, 403);
+
+  const { data: pro } = await admin.rpc("has_pro", { p_user_id: userId });
+  if (pro !== true) return jsonResponse({ error: "Nom Nom Pro required" }, 402);
+  return null;
+}
 
 Deno.serve(async (req) => {
   const gateway = authenticate(req);
@@ -49,6 +82,13 @@ Deno.serve(async (req) => {
 
   const logger = GenerationLogger.fromEnv();
   const admin = logger.client;
+
+  // A person asking for a recipe photo (not the categories webhook) must own the
+  // recipe and have Nom Nom Pro.
+  if (!isCategoryMode && !req.headers.get("x-webhook-secret")) {
+    const denied = await checkRecipeAccess(req, admin, payload.recipe_id);
+    if (denied) return denied;
+  }
   const textModel = await getFeatureModel(admin, "recipe-photo-brief", "text");
   const imageModel = await getFeatureModel(admin, "generate-recipe-photo", "image");
 
@@ -78,7 +118,14 @@ Deno.serve(async (req) => {
       if (isCategoryMode) {
         storagePath = await saveCategoryPhoto(admin, categoryName, image.bytes, format);
       } else if (payload.recipe_id) {
-        storagePath = await attachRowPhoto(admin, { bucket: "recipe-photos", table: "recipes", id: payload.recipe_id }, image.bytes, format);
+        // A photo the person added while this ran wins over the generated one.
+        storagePath = await attachRowPhoto(
+          admin,
+          { bucket: "recipe-photos", table: "recipes", id: payload.recipe_id },
+          image.bytes,
+          format,
+          { expectedCover: payload.expected_cover },
+        );
       }
     } catch (storageErr) {
       console.error("Storage persistence error:", storageErr);

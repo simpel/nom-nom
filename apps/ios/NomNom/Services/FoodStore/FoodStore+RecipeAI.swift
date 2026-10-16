@@ -95,6 +95,9 @@ extension FoodStore {
 
     struct GenerateRecipeImagePayload: Encodable {
         let recipe_id: String?
+        /// The cover when this started ("" for none): the server attaches the photo only
+        /// while it is still the cover, so a photo the person adds meanwhile wins.
+        let expected_cover: String
         let name: String
         let cuisine: String?
         let ingredients: [RecipeIngredient]
@@ -128,6 +131,7 @@ extension FoodStore {
 
         let payload = GenerateRecipeImagePayload(
             recipe_id: recipe.id.uuidString,
+            expected_cover: (self.recipe(recipe.id) ?? recipe).photoPaths.first ?? "",
             name: recipe.name,
             cuisine: recipe.cuisine,
             ingredients: recipe.ingredients,
@@ -138,6 +142,9 @@ extension FoodStore {
             "generate-recipe-photo",
             options: FunctionInvokeOptions(body: payload)
         )
+
+        // A photo the person picked meanwhile cancelled this; it must not be covered.
+        try Task.checkCancellation()
 
         if let path = result.photoPath {
             if let b64 = result.imageBase64, let data = Data(base64Encoded: b64) {

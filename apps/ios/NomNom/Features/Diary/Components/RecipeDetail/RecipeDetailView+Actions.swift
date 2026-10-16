@@ -46,7 +46,7 @@ extension RecipeDetailView {
         }
     }
 
-    /// The page menu's recipe group: Generate photo, Edit and Delete for the owner.
+    /// The page menu's recipe group: Edit and Delete for the owner.
     @ViewBuilder
     var recipeMenu: some View {
         if let recipe, recipe.ownerID == store.userID {
@@ -82,10 +82,6 @@ extension RecipeDetailView {
             store.upsertLocal(recipe: fallbackRecipe)
         }
 
-        if let recipe, recipe.photoPaths.isEmpty, recipe.ownerID == store.userID, !store.generatingPhotoRecipeIDs.contains(recipe.id) {
-            generatePhoto(for: recipe)
-        }
-
         if entitlements.hasProAccess, let recipe, recipe.healthIndex == nil, !recipe.ingredients.isEmpty, !healthAnalysisFailed {
             isAnalyzingHealth = true
             do {
@@ -102,16 +98,6 @@ extension RecipeDetailView {
             if let data = await PhotoCache.shared.data(for: photoPath, bucket: SupabaseConfig.recipeBucket),
                let uiImage = UIImage(data: data) {
                 shareImage = Image(uiImage: uiImage)
-            }
-        }
-    }
-
-    func generatePhoto(for recipe: Recipe) {
-        Task {
-            do {
-                try await store.generateRecipeImage(for: recipe)
-            } catch {
-                FoodStore.log.error("Failed to generate recipe image: \(error.localizedDescription, privacy: .public)")
             }
         }
     }

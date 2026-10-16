@@ -26,8 +26,6 @@ struct SwipeActionRow<ID: Hashable, Content: View>: View {
     /// The revealed action is `spacing-20` wide; a drag past two widths fires it.
     private let buttonWidth = DS.Spacing.s20
     private var fullSwipeThreshold: CGFloat { buttonWidth * 2 }
-    /// Drag distance before the row starts to follow the finger (`spacing-4`).
-    private let dragThreshold = DS.Spacing.s4
     /// The snap: `duration-layout` (README "Motion and states": the layout duration).
     private var snap: Animation { .spring(duration: DS.Motion.durationLayout) }
 
@@ -116,73 +114,7 @@ struct SwipeActionRow<ID: Hashable, Content: View>: View {
                     }
                 }
                 .offset(x: offset)
-                // Simultaneous, not high-priority: a high-priority drag steals the touch
-                // from the ScrollView, so a vertical drag that starts on a row never scrolls.
-                .simultaneousGesture(
-                    DragGesture(minimumDistance: dragThreshold)
-                        .onChanged { value in
-                            if dragAxis == nil {
-                                let t = value.translation
-                                dragAxis = abs(t.width) > abs(t.height) ? .horizontal : .vertical
-                            }
-                            guard dragAxis == .horizontal else { return }
-
-                            if openRowID != id {
-                                openRowID = id
-                            }
-                            
-                            let canSwipeRight = onLeadingAction != nil
-                            let canSwipeLeft = onTrailingAction != nil
-                            
-                            var newOffset = value.translation.width
-                            if isSwipedLeading {
-                                newOffset += buttonWidth
-                            } else if isSwipedTrailing {
-                                newOffset -= buttonWidth
-                            }
-                            
-                            // Constrain to available actions
-                            if newOffset > 0 && !canSwipeRight {
-                                newOffset = 0
-                            } else if newOffset < 0 && !canSwipeLeft {
-                                newOffset = 0
-                            }
-                            
-                            offset = newOffset
-                        }
-                        .onEnded { _ in
-                            defer { dragAxis = nil }
-                            guard dragAxis == .horizontal else { return }
-                            withAnimation(snap) {
-                                if offset >= fullSwipeThreshold {
-                                    // Full leading swipe
-                                    closeAndTrigger(action: onLeadingAction)
-                                } else if offset <= -fullSwipeThreshold {
-                                    // Full trailing swipe
-                                    closeAndTrigger(action: onTrailingAction)
-                                } else if offset >= buttonWidth * 0.5 {
-                                    // Snap open leading
-                                    offset = buttonWidth
-                                    isSwipedLeading = true
-                                    isSwipedTrailing = false
-                                } else if offset <= -buttonWidth * 0.5 {
-                                    // Snap open trailing
-                                    offset = -buttonWidth
-                                    isSwipedTrailing = true
-                                    isSwipedLeading = false
-                                } else {
-                                    // Snap closed
-                                    offset = 0
-                                    isSwipedLeading = false
-                                    isSwipedTrailing = false
-                                    if openRowID == id {
-                                        openRowID = nil
-                                    }
-                                }
-                            }
-                        },
-                    including: hasActions ? .all : .subviews
-                )
+                .modifier(SwipeDragGesture(isEnabled: hasActions, onChanged: dragChanged, onEnded: dragEnded))
         }
         .onChange(of: openRowID) { _, newValue in
             if newValue != id && (isSwipedLeading || isSwipedTrailing || offset != 0) {
@@ -206,6 +138,63 @@ struct SwipeActionRow<ID: Hashable, Content: View>: View {
     private static func ink(on ground: Color?) -> Color {
         let roles: [DS.Role] = [.primary, .secondary, .destructive, .pro, .warning]
         return roles.first { $0.fill == ground }?.on ?? DS.Color.onDestructive
+    }
+
+    /// A drag moved by `translation`. With `axisKnown` (the iOS 18 pan, which only begins
+    /// sideways) the axis is horizontal; otherwise the first movement decides it, and a
+    /// vertical drag is left to the enclosing ScrollView.
+    private func dragChanged(_ translation: CGSize, axisKnown: Bool) {
+        if dragAxis == nil {
+            dragAxis = axisKnown || abs(translation.width) > abs(translation.height) ? .horizontal : .vertical
+        }
+        guard dragAxis == .horizontal else { return }
+
+        if openRowID != id {
+            openRowID = id
+        }
+
+        var newOffset = translation.width
+        if isSwipedLeading {
+            newOffset += buttonWidth
+        } else if isSwipedTrailing {
+            newOffset -= buttonWidth
+        }
+
+        // Constrain to available actions
+        if newOffset > 0 && onLeadingAction == nil {
+            newOffset = 0
+        } else if newOffset < 0 && onTrailingAction == nil {
+            newOffset = 0
+        }
+
+        offset = newOffset
+    }
+
+    private func dragEnded() {
+        defer { dragAxis = nil }
+        guard dragAxis == .horizontal else { return }
+        withAnimation(snap) {
+            if offset >= fullSwipeThreshold {
+                closeAndTrigger(action: onLeadingAction)
+            } else if offset <= -fullSwipeThreshold {
+                closeAndTrigger(action: onTrailingAction)
+            } else if offset >= buttonWidth * 0.5 {
+                offset = buttonWidth
+                isSwipedLeading = true
+                isSwipedTrailing = false
+            } else if offset <= -buttonWidth * 0.5 {
+                offset = -buttonWidth
+                isSwipedTrailing = true
+                isSwipedLeading = false
+            } else {
+                offset = 0
+                isSwipedLeading = false
+                isSwipedTrailing = false
+                if openRowID == id {
+                    openRowID = nil
+                }
+            }
+        }
     }
 
     private var hasActions: Bool { onLeadingAction != nil || onTrailingAction != nil }

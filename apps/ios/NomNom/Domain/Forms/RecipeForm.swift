@@ -7,6 +7,8 @@ struct RecipeForm: SheetForm {
     var name: String = ""
     var coverPhotos = FoodStore.PhotosDraft()
     var recipe = FoodStore.RecipeDraft()
+    /// Make an AI cover photo once saved (Pro; chosen in the Add photo sheet).
+    var generatesAIPhoto = false
 
     var isValid: Bool { !name.trimmedName.isEmpty }
 }

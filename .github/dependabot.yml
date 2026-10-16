@@ -1,11 +1,19 @@
 version: 2
 updates:
+  # Patch and minor bumps land as one grouped PR per ecosystem and auto-merge
+  # (.github/workflows/dependabot-auto-merge.yml). Majors stay separate PRs.
   - package-ecosystem: "npm"
     directory: "/"
     schedule:
       interval: "weekly"
+    groups:
+      npm-minor-patch:
+        update-types: ["minor", "patch"]
 
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
       interval: "weekly"
+    groups:
+      actions-minor-patch:
+        update-types: ["minor", "patch"]

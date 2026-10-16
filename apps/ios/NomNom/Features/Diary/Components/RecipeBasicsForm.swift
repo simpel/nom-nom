@@ -6,11 +6,12 @@ import SwiftUI
 struct RecipeBasicsForm: View {
     @Binding var name: String
     @Binding var coverPhotos: FoodStore.PhotosDraft
+    @Binding var generatesAIPhoto: Bool
     @Binding var effort: EffortLevel?
     @Binding var cuisine: String?
 
     var body: some View {
-        AssetPhotosPickerSection(draft: $coverPhotos, title: "Cover Photo")
+        AssetPhotosPickerSection(draft: $coverPhotos, title: "Cover Photo", generatesAIPhoto: $generatesAIPhoto)
 
         SectionCard("Recipe Name") {
             Input("Recipe name (e.g. Carbonara)", text: $name, appearance: .plain)
@@ -26,6 +27,7 @@ struct RecipeBasicsForm: View {
 private struct RecipeBasicsFormPreview: View {
     @State private var name = ""
     @State private var photos = FoodStore.PhotosDraft()
+    @State private var generatesAIPhoto = false
     @State private var effort: EffortLevel?
     @State private var cuisine: String? = "italian"
 
@@ -33,7 +35,8 @@ private struct RecipeBasicsFormPreview: View {
         NomNomPreview(inNavigationStack: false) { _ in
             ScrollView {
                 VStack(spacing: DS.Spacing.block) {
-                    RecipeBasicsForm(name: $name, coverPhotos: $photos, effort: $effort, cuisine: $cuisine)
+                    RecipeBasicsForm(name: $name, coverPhotos: $photos, generatesAIPhoto: $generatesAIPhoto,
+                                     effort: $effort, cuisine: $cuisine)
                 }
                 .padding(DS.Spacing.gutter)
             }
