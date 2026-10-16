@@ -1,0 +1,32 @@
+name: Dependabot auto-merge
+
+# Turns on auto-merge (squash) for Dependabot patch and minor bumps. GitHub merges
+# once the main ruleset's required checks pass. Major bumps stay open for a human.
+on:
+  pull_request:
+    branches:
+      - main
+
+permissions: {}
+
+jobs:
+  auto-merge:
+    name: Enable auto-merge
+    if: github.event.pull_request.user.login == 'dependabot[bot]'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - name: Read Dependabot metadata
+        id: meta
+        uses: dependabot/fetch-metadata@v3
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Enable auto-merge
+        if: steps.meta.outputs.update-type != 'version-update:semver-major'
+        env:
+          PR_URL: ${{ github.event.pull_request.html_url }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh pr merge --auto --squash "$PR_URL"
