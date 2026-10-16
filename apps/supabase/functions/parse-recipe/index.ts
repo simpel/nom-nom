@@ -98,7 +98,6 @@ const looseString = z.preprocess(
   z.string(),
 );
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function mergeRecipeFragments(items: any[]): Record<string, unknown> {
   const objs = items.filter((i) => i && typeof i === "object" && !Array.isArray(i));
   const merged: Record<string, unknown> = { ...(objs[0] ?? {}) };
