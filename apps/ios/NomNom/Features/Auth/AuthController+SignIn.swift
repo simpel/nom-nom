@@ -9,6 +9,7 @@ extension AuthController {
         guard !isWorking else { return }
         isWorking = true
         errorMessage = nil
+        noticeMessage = nil
         defer { isWorking = false }
 
         do {
@@ -51,6 +52,7 @@ extension AuthController {
 
         isWorking = true
         errorMessage = nil
+        noticeMessage = nil
         defer { isWorking = false }
 
         // The reviewer test account uses a static code and does not dispatch email.
@@ -81,6 +83,7 @@ extension AuthController {
 
         isWorking = true
         errorMessage = nil
+        noticeMessage = nil
         defer { isWorking = false }
 
         do {
