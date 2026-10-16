@@ -1,4 +1,4 @@
-/* @ds-bundle: {"format":4,"namespace":"NomNom","components":[{"name":"Text"},{"name":"Card"},{"name":"AppButton"},{"name":"Badge"},{"name":"Input"},{"name":"TextArea"},{"name":"TasteScoreSelector"},{"name":"SectionHeader"},{"name":"Section"},{"name":"SectionCard"},{"name":"Avatar"},{"name":"ScoreValue"},{"name":"Bar"},{"name":"PhotoCard"},{"name":"RecipeCard"},{"name":"PhotoStrip"},{"name":"RecipeLinkCard"},{"name":"ScoreCard"},{"name":"RatingList"},{"name":"Timeline"},{"name":"BottomSheet"},{"name":"ListRow"},{"name":"Toggle"},{"name":"EmptyState"},{"name":"Skeleton"},{"name":"SegmentedBar"},{"name":"ValueStepper"},{"name":"ScreenHeader"},{"name":"Facts"},{"name":"LabeledPhotoCard"},{"name":"RecipeShelf"},{"name":"PartyCard"},{"name":"ProMark"},{"name":"ProCard"},{"name":"ProView"},{"name":"ProGate"},{"name":"ProLinkCard"},{"name":"ProScoreGroup"},{"name":"CollectionSection"},{"name":"AddRow"},{"name":"BarButton"},{"name":"BarAction"},{"name":"TagToggle"},{"name":"ChoiceTile"},{"name":"NoteField"},{"name":"NoteEditor"},{"name":"PersonHeaderRow"},{"name":"PageMenu"},{"name":"TrendChart"},{"name":"MediaViewer"},{"name":"FieldGroup"},{"name":"ToggleCard"},{"name":"AccountActions"},{"name":"CodeField"},{"name":"PackageCard"},{"name":"StepList"},{"name":"CheckRow"},{"name":"IngredientList"},{"name":"SelectRow"},{"name":"BrandMark"},{"name":"SwipeRow"},{"name":"EditorialText"},{"name":"ScannerOverlay"},{"name":"UnitToggle"},{"name":"DismissibleNotice"},{"name":"Reorder"},{"name":"ReorderTarget"}]} */
+/* @ds-bundle: {"format":4,"namespace":"NomNom","components":[{"name":"Text"},{"name":"Card"},{"name":"AppButton"},{"name":"Badge"},{"name":"Input"},{"name":"TextArea"},{"name":"TasteScoreSelector"},{"name":"SectionHeader"},{"name":"Section"},{"name":"SectionCard"},{"name":"Avatar"},{"name":"ScoreValue"},{"name":"Bar"},{"name":"PhotoCard"},{"name":"RecipeCard"},{"name":"PhotoStrip"},{"name":"RecipeLinkCard"},{"name":"ScoreCard"},{"name":"RatingList"},{"name":"Timeline"},{"name":"BottomSheet"},{"name":"ListRow"},{"name":"Toggle"},{"name":"EmptyState"},{"name":"Skeleton"},{"name":"SegmentedBar"},{"name":"ValueStepper"},{"name":"ScreenHeader"},{"name":"Facts"},{"name":"LabeledPhotoCard"},{"name":"RecipeShelf"},{"name":"PartyCard"},{"name":"ProMark"},{"name":"ProCard"},{"name":"ProView"},{"name":"ProGate"},{"name":"ProLinkCard"},{"name":"CollectionSection"},{"name":"AddRow"},{"name":"BarButton"},{"name":"BarAction"},{"name":"TagToggle"},{"name":"ChoiceTile"},{"name":"NoteField"},{"name":"NoteEditor"},{"name":"PersonHeaderRow"},{"name":"PageMenu"},{"name":"TrendChart"},{"name":"MediaViewer"},{"name":"FieldGroup"},{"name":"ToggleCard"},{"name":"AccountActions"},{"name":"CodeField"},{"name":"PackageCard"},{"name":"StepList"},{"name":"CheckRow"},{"name":"IngredientList"},{"name":"SelectRow"},{"name":"BrandMark"},{"name":"SwipeRow"},{"name":"EditorialText"},{"name":"ScannerOverlay"},{"name":"UnitToggle"},{"name":"DismissibleNotice"},{"name":"Reorder"},{"name":"ReorderTarget"}]} */
 (function () {
   'use strict';
   var React = window.React;
@@ -929,20 +929,6 @@
         h(AppButton, { variant: 'pro', size: 'lg', icon: 'sparkles', fullWidth: true, onClick: p.onUnlock }, p.unlockLabel || 'Unlock with Pro'))
         : h('div', { className: 'nn-pro-card__body' }, p.children));
   }
-  /** Two or more Pro scores side by side, viewer without Pro: ONE card, one ProMark, a readout row per score, one sentence naming everything Pro opens, one Unlock with Pro. */
-  function ProScoreGroup(props) {
-    var p = props;
-    var scores = p.scores || [];
-    return h('section', { className: cx('nn-pro-card', 'nn-pro-group', p.className), 'aria-label': p['aria-label'] || 'Pro scores' },
-      h(ProMark, null),
-      h('div', { className: 'nn-pro-group__rows' }, scores.map(function (s, i) {
-        return h('div', { key: i, className: 'nn-pro-group__row' },
-          h(Text, { as: 'h3', textStyle: 'sans-xs', tone: 'secondary' }, s.title),
-          h(ScoreValue, { score: s.score, verdict: s.verdict, size: 'md', ink: 'pro' }));
-      })),
-      p.teaser ? h(Text, { as: 'p', tone: 'secondary' }, p.teaser) : null,
-      h(AppButton, { variant: 'pro', size: 'lg', icon: 'sparkles', fullWidth: true, onClick: p.onUnlock }, p.unlockLabel || 'Unlock with Pro'));
-  }
   /** A whole Pro-only view (a screen or sheet). Sets the pro-soft ground; cards on it stay panel. Put ProMark above the title. */
   function ProView(props) {
     var p = props;
@@ -1415,7 +1401,7 @@
     LabeledPhotoCard: LabeledPhotoCard, RecipeShelf: RecipeShelf, PartyCard: PartyCard,
     SegmentedBar: SegmentedBar, ValueStepper: ValueStepper, ScreenHeader: ScreenHeader, Facts: Facts,
     // parts and helpers
-    ProMark: ProMark, ProCard: ProCard, ProScoreGroup: ProScoreGroup, ProView: ProView, ProGate: ProGate,
+    ProMark: ProMark, ProCard: ProCard, ProView: ProView, ProGate: ProGate,
     Icon: Icon, SheetCard: SheetCard, Reason: Reason,
     REACTIONS: REACTIONS, reactionForScore: reactionForScore, verdictForScore: verdictForScore
   };

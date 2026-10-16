@@ -9,6 +9,10 @@ import SwiftUI
 /// at `spacing-28`, and "Unlock with Pro" (`pro solid lg`, full width, sparkles). Locked
 /// never means empty. The blurred copy is hidden from VoiceOver.
 ///
+/// A **pitch** has no content: `ProCard(title, teaser:)` locked shows the ProMark, the title, the
+/// teaser and "Unlock with Pro", with no blurred preview. Use one pitch in place of several
+/// locked Pro blocks side by side (Pro README, "Selling Pro instead of previewing it").
+///
 /// `teaser` is optional: a screen whose title already says what the block holds can
 /// leave it out.
 ///
@@ -26,6 +30,7 @@ struct ProCard<Content: View>: View {
     var mark: Bool
     var contentBleed: CGFloat
     var action: (() -> Void)?
+    private var hasPreview = true
     @ViewBuilder let content: () -> Content
 
     @Environment(EntitlementStore.self) private var entitlements
@@ -101,16 +106,26 @@ struct ProCard<Content: View>: View {
             if let teaser {
                 Text(teaser).textStyle(.sansMd, tone: .secondary)
             }
-            content()
-                .padding(.horizontal, -contentBleed)
-                .frame(maxHeight: DS.Spacing.s28, alignment: .top)
-                .clipped()
-                .blur(radius: DS.Blur.sm)
-                .allowsHitTesting(false)
-                .accessibilityHidden(true)
+            if hasPreview {
+                content()
+                    .padding(.horizontal, -contentBleed)
+                    .frame(maxHeight: DS.Spacing.s28, alignment: .top)
+                    .clipped()
+                    .blur(radius: DS.Blur.sm)
+                    .allowsHitTesting(false)
+                    .accessibilityHidden(true)
+            }
             AppButton("Unlock with Pro", icon: "sparkles", variant: .pro, size: .lg, fullWidth: true) {
                 showPaywall = true
             }
         }
+    }
+}
+
+extension ProCard where Content == EmptyView {
+    /// A Pro pitch: no content, so nothing to preview (see the type's doc).
+    init(_ title: String, teaser: String) {
+        self.init(title, teaser: teaser) { EmptyView() }
+        hasPreview = false
     }
 }

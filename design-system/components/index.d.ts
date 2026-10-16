@@ -833,12 +833,3 @@ export interface DismissibleNoticeProps extends BaseProps {
   dismissLabel?: string;
 }
 
-/** Two or more Pro scores together, viewer without Pro: one pro-soft card, one ProMark, one readout row per score, one sentence on what Pro opens, one Unlock with Pro. */
-export interface ProScoreGroupProps extends BaseProps {
-  scores: { title: string; score: number | null; verdict?: string }[];
-  /** One sentence naming every score Pro opens ("Pro opens the health score breakdown and The Friday Feast Club's insights."). */
-  teaser?: string;
-  onUnlock?: () => void;
-  /** @default 'Unlock with Pro' */
-  unlockLabel?: string;
-}

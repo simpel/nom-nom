@@ -572,11 +572,6 @@
 .nn-pro-card .nn-shelf { margin-inline: calc(-1 * var(--spacing-5)); }
 .nn-pro-card .nn-shelf__track { padding-inline: var(--spacing-5); scroll-padding-left: var(--spacing-5); }
 .nn-pro-card .nn-shelf .nn-section-header { padding-inline: var(--spacing-5); }
-.nn-pro-group__rows { display: flex; flex-direction: column; }
-.nn-pro-group__row { display: flex; flex-direction: column; gap: var(--spacing-1); padding-block: var(--spacing-3); }
-.nn-pro-group__row + .nn-pro-group__row { border-top: var(--border-hairline) solid var(--line); }
-.nn-pro-group__row:first-child { padding-top: 0; }
-.nn-pro-group__row:last-child { padding-bottom: 0; }
 .nn-pro-view { --bg: var(--pro-soft); --sheet: var(--pro-soft); background: var(--pro-soft); color: var(--text-primary); }
 .nn-pro-view .nn-sheet { background: var(--pro-soft); }
 .nn-pro-gate { display: grid; }
