@@ -9,6 +9,7 @@ struct RecipeDetailsStepView: View {
     var scanNotice: Binding<String?> = .constant(nil)
 
     @Environment(FoodStore.self) private var store
+    @Environment(EntitlementStore.self) private var entitlements
 
     var body: some View {
         ScrollView {
@@ -57,8 +58,8 @@ struct RecipeDetailsStepView: View {
         try await store.applyCoverPhotos(form.coverPhotos, to: recipe)
         try await store.applyRecipe(draft, to: recipe)
 
-        if recipeID == nil && form.coverPhotos.isEmpty {
-            Task { try? await store.generateRecipeImage(for: recipe) }
+        if form.generatesAIPhoto && entitlements.hasProAccess {
+            store.startRecipePhotoGeneration(for: store.recipe(recipe.id) ?? recipe)
         }
         onCreated?(recipe)
     }

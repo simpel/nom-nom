@@ -21,6 +21,10 @@ struct PhotoStrip: View {
     var emptyTitle: String
     var bleed: CGFloat
     var onAddPhoto: (() -> Void)?
+    /// The add tile's "AI" Badge, where the Add photo sheet offers AI.
+    var addOffersAI: Bool
+    /// A photo is being made: a loading tile leads the strip (DS-GAPS.md, "PhotoStrip generating tile").
+    var isGenerating: Bool
     var onSelect: (Int) -> Void
 
     init(
@@ -30,6 +34,8 @@ struct PhotoStrip: View {
         emptyTitle: String = "Add a photo",
         bleed: CGFloat = DS.Spacing.gutter,
         onAddPhoto: (() -> Void)? = nil,
+        addOffersAI: Bool = false,
+        isGenerating: Bool = false,
         onSelect: @escaping (Int) -> Void
     ) {
         self.photos = photos
@@ -38,11 +44,13 @@ struct PhotoStrip: View {
         self.emptyTitle = emptyTitle
         self.bleed = bleed
         self.onAddPhoto = onAddPhoto
+        self.addOffersAI = addOffersAI
+        self.isGenerating = isGenerating
         self.onSelect = onSelect
     }
 
     var body: some View {
-        if photos.isEmpty && onAddPhoto == nil {
+        if photos.isEmpty && onAddPhoto == nil && !isGenerating {
             PhotoCard(.none(), size: .lg, format: format)
         } else {
             strip
@@ -54,6 +62,17 @@ struct PhotoStrip: View {
         // Never hide the scrollbar outright" — so the system indicator stays on.
         ScrollView(.horizontal) {
             HStack(spacing: DS.Spacing.s2_5) {
+                if isGenerating {
+                    // PhotoCard's own loading state: the Skeleton ground and sweep.
+                    DS.Color.sunken.skeletonShimmer()
+                        .frame(
+                            width: format.width(longEdge: PhotoCardSize.lg.longEdge),
+                            height: format.height(longEdge: PhotoCardSize.lg.longEdge)
+                        )
+                        .clipShape(RoundedRectangle(cornerRadius: PhotoCardSize.lg.radius, style: .continuous))
+                        .accessibilityElement()
+                        .accessibilityLabel("Making a photo")
+                }
                 ForEach(photos.indices, id: \.self) { index in
                     Button { onSelect(index) } label: {
                         PhotoCard(
@@ -69,6 +88,7 @@ struct PhotoStrip: View {
                 if let onAddPhoto {
                     PhotoStripAddTile(
                         title: photos.isEmpty ? emptyTitle : "Add photo",
+                        offersAI: addOffersAI,
                         format: format,
                         action: onAddPhoto
                     )

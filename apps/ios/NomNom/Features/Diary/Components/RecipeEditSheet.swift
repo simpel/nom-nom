@@ -21,6 +21,7 @@ struct RecipeEditSheet: View {
                             RecipeBasicsForm(
                                 name: $session.form.name,
                                 coverPhotos: $session.form.coverPhotos,
+                                generatesAIPhoto: $session.form.generatesAIPhoto,
                                 effort: $session.form.recipe.effort,
                                 cuisine: $session.form.recipe.cuisine
                             )

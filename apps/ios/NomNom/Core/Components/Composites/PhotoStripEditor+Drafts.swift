@@ -10,11 +10,13 @@ private let photoDraftAnimation = DS.Motion.layout
 extension PhotoStripEditor {
     /// A meal, cover or avatar photo set (`PhotosDraft`): add, remove and reorder.
     /// `maxCount: 1` replaces the photo instead of adding (avatars, party covers),
-    /// and hides the "Cover" badge.
+    /// and hides the "Cover" badge. `generatesAIPhoto` offers "Generate with AI"; adding
+    /// a photo of your own takes the AI photo back out.
     init(
         draft: Binding<FoodStore.PhotosDraft>,
         bucket: String = SupabaseConfig.photoBucket,
         maxCount: Int = FoodStore.PhotosDraft.maxCount,
+        generatesAIPhoto: Binding<Bool>? = nil,
         onSelect: @escaping (Int) -> Void
     ) {
         let items = draft.wrappedValue.items.map { item -> PhotoStripEditorItem in
@@ -31,6 +33,7 @@ extension PhotoStripEditor {
             badge: maxCount > 1 ? .cover : .none,
             onAdd: { photos in
                 withAnimation(photoDraftAnimation) {
+                    generatesAIPhoto?.wrappedValue = false
                     if maxCount == 1, let first = photos.first {
                         draft.wrappedValue.items = [.added(id: UUID(), data: first)]
                     } else {
@@ -48,7 +51,11 @@ extension PhotoStripEditor {
                     draft.wrappedValue.move(from: IndexSet(integer: from), to: to > from ? to + 1 : to)
                 }
             } : nil,
-            onSelect: onSelect
+            onSelect: onSelect,
+            onGenerate: generatesAIPhoto.map { binding in
+                { withAnimation(photoDraftAnimation) { binding.wrappedValue = true } }
+            },
+            pendingAIPhoto: generatesAIPhoto
         )
     }
 

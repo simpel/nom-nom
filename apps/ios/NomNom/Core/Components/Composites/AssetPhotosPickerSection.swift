@@ -9,12 +9,14 @@ struct AssetPhotosPickerSection: View {
     var caption: String? = "Optional"
     var bucket: String = SupabaseConfig.photoBucket
     var maxCount: Int = FoodStore.PhotosDraft.maxCount
+    /// Offers "Generate with AI" (recipe covers): true while an AI photo will be made on save.
+    var generatesAIPhoto: Binding<Bool>?
 
     @State private var previewIndex: Int?
 
     var body: some View {
         DSSection(title, trailing: caption) {
-            PhotoStripEditor(draft: $draft, bucket: bucket, maxCount: maxCount) { index in
+            PhotoStripEditor(draft: $draft, bucket: bucket, maxCount: maxCount, generatesAIPhoto: generatesAIPhoto) { index in
                 previewIndex = index
             }
         }

@@ -37,6 +37,9 @@ struct Avatar: View {
     var assetName: String?
     var size: AvatarSize
     var decorative: Bool
+    /// The photo is still being made (an AI cover): the Skeleton bone and sweep stand in,
+    /// as PhotoCard does it, so the fallback doesn't flash first (DS-GAPS.md, "Avatar loading").
+    var isLoading = false
 
     @State private var imageData: Data?
 
@@ -83,6 +86,13 @@ struct Avatar: View {
                   assetName: category.assetImageName, size: size, decorative: decorative)
     }
 
+    /// This avatar while its photo is still being made.
+    func loading(_ isLoading: Bool = true) -> Avatar {
+        var copy = self
+        copy.isLoading = isLoading
+        return copy
+    }
+
     /// Empty when there is no name yet (onboarding before the name is typed): a bare circle.
     private var initials: String {
         if let text, !text.isEmpty { return String(text.prefix(2)) }
@@ -100,6 +110,8 @@ struct Avatar: View {
                 Image(uiImage: image)
                     .resizable()
                     .scaledToFill()
+            } else if isLoading {
+                DS.Color.sunken.skeletonShimmer()
             } else if let assetName {
                 Image(assetName)
                     .resizable()
@@ -122,6 +134,7 @@ struct Avatar: View {
         .dsHairline(radius: DS.Radius.full)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(name)
+        .accessibilityValue(isLoading ? "Photo loading" : "")
         .accessibilityAddTraits(.isImage)
         .accessibilityHidden(decorative)
         .task(id: photoPath) { await loadPhoto() }
@@ -153,6 +166,7 @@ private struct AvatarGallery: View {
                 ForEach(AvatarSize.allCases, id: \.self) { Avatar(name: "Anna", size: $0) }
             }
             Avatar(name: "Taco Night", text: "TN", bucket: SupabaseConfig.partyBucket, size: .lg)
+            Avatar(name: "Carbonara", size: .xl).loading()
         }
         .padding(DS.Spacing.s4)
         .background(DS.Color.bg)

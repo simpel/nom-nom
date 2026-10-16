@@ -5,8 +5,11 @@ import SwiftUI
 /// 2px dashed `line-control` border at `radius-3xl`, a camera glyph in `primary-text`,
 /// the title `sans-sm` semibold over "Camera or library" `sans-sm` tertiary. The whole
 /// tile is the button. With no photos it is the only tile, labelled `emptyTitle`.
+/// Where the Add photo sheet also offers AI, a `pro soft sm` "AI" Badge leads the
+/// sub-line (DS-GAPS.md, "Add photo sheet").
 struct PhotoStripAddTile: View {
     var title: String = "Add photo"
+    var offersAI = false
     var format: PhotoCardFormat = .portrait
     let action: () -> Void
 
@@ -22,7 +25,12 @@ struct PhotoStripAddTile: View {
                     .accessibilityHidden(true)
                 VStack(spacing: 0) {
                     Text(title).textStyle(.sansSm, weight: .semibold, align: .center)
-                    Text("Camera or library").textStyle(.sansSm, tone: .tertiary, align: .center)
+                    HStack(spacing: DS.Spacing.s1_5) {
+                        if offersAI {
+                            Badge("AI", icon: "sparkles", variant: .pro, size: .sm)
+                        }
+                        Text("Camera or library").textStyle(.sansSm, tone: .tertiary, align: .center)
+                    }
                 }
             }
             .padding(DS.Spacing.s4)
@@ -42,7 +50,7 @@ struct PhotoStripAddTile: View {
         .buttonStyle(AppPressableButtonStyle())
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(title)
-        .accessibilityHint("Camera or library")
+        .accessibilityHint(offersAI ? "Generate with AI, camera or library" : "Camera or library")
         .accessibilityAddTraits(.isButton)
     }
 }
