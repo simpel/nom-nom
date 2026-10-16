@@ -7,7 +7,7 @@
 import { GenerationLogger } from "../_shared/generation-logger.ts";
 import { getFeatureModel } from "../_shared/ai-config.ts";
 import { resolveRecipeBrief, type RecipeBriefInput } from "../_shared/photos/briefs.ts";
-import { authenticate, generateImage, jsonResponse } from "../_shared/photos/pipeline.ts";
+import { authenticate, authorizeUserPhoto, generateImage, isWebhookCall, jsonResponse } from "../_shared/photos/pipeline.ts";
 import { detectImageFormat, mealPhotoPrompt } from "../_shared/photos/prompts.ts";
 import { attachRowPhoto } from "../_shared/photos/storage.ts";
 
@@ -33,6 +33,14 @@ Deno.serve(async (req) => {
 
   const logger = GenerationLogger.fromEnv();
   const admin = logger.client;
+
+  // Only the person who logged the meal, with Nom Nom Pro (or a trusted webhook call).
+  if (!isWebhookCall(req)) {
+    const denied = await authorizeUserPhoto(req, admin, {
+      table: "meals", ownerColumn: "created_by", id: payload.meal_id,
+    });
+    if (denied) return denied;
+  }
   const textModel = await getFeatureModel(admin, "recipe-photo-brief", "text");
   const imageModel = await getFeatureModel(admin, "generate-meal-photo", "image");
 

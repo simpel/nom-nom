@@ -6,7 +6,7 @@ extension FoodStore {
         let meal_id: String
         let name: String
         let cuisine: String?
-        let ingredients: [RecipeIngredient]
+        let ingredient_groups: [IngredientGroup]
         let instructions: [String]
     }
 
@@ -23,7 +23,7 @@ extension FoodStore {
             meal_id: meal.id.uuidString,
             name: meal.title ?? recipe.name,
             cuisine: recipe.cuisine,
-            ingredients: recipe.ingredients,
+            ingredient_groups: recipe.ingredientGroups,
             instructions: recipe.instructions
         )
 

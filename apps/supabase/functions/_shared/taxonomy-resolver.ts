@@ -34,7 +34,7 @@ function toSlug(text: string): string {
 }
 
 function toHumanReadableName(text: string): string {
-  const words = text.trim().replace(/[_\-]+/g, " ").split(/\s+/);
+  const words = text.trim().replace(/[_-]+/g, " ").split(/\s+/);
   return words
     .filter(Boolean)
     .map((w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())

@@ -5,7 +5,7 @@ import SwiftUI
 /// `primary solid` or `primary soft` appearance, one request at a time, with a light haptic on change.
 ///
 /// PartyCard README names this slot "Ask to join"; the app follows public parties
-/// instead of requesting to join them (see DS-GAPS.md).
+/// instead of requesting to join them.
 struct PartyFollowButton: View {
     let party: Party
 

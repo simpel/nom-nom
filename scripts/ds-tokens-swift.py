@@ -36,6 +36,7 @@ PT_PER_REM = 16.0
 KNOWN_FAMILIES = {
     "version", "name", "meta", "color", "type", "spacing", "radius", "shadow", "opacity",
     "container", "text", "font-weight", "tracking", "leading", "border-width", "motion",
+    "blur", "dash",
 }
 
 # iOS text styles accepted from the README's Dynamic Type table.
@@ -96,6 +97,10 @@ def swift_name(family, name):
     if family == "border-width":
         return camel(strip_prefix(name, "border-").split("-"))
     if family == "motion":
+        return camel(name.split("-"))
+    if family == "blur":
+        return size_word(strip_prefix(name, "blur-"))
+    if family == "dash":
         return camel(name.split("-"))
     if family == "type":
         return camel(name.split("-"))
@@ -318,6 +323,8 @@ SCALAR_FAMILIES = [
     ("tracking", "Tracking", "CGFloat", "em", "em — multiply by the font size for points"),
     ("leading", "Leading", "CGFloat", "num", "line height as a multiple of the font size"),
     ("border-width", "BorderWidth", "CGFloat", "pt", "points"),
+    ("blur", "Blur", "CGFloat", "pt", "points"),
+    ("dash", "Dash", "CGFloat", "pt", "points (one length for a dash and its gap)"),
 ]
 
 

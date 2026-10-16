@@ -47,7 +47,7 @@ struct ScreenHeader: View {
     var avatarEdit: ScreenHeaderAvatarEdit?
     var role: ScreenHeaderRole
     /// Centres a `standard` header (an empty-state style prompt in a sheet). An avatar or a
-    /// `tabRoot` / `moment` role already centres it. DS-GAPS.md, "ScreenHeader `centered`".
+    /// `tabRoot` / `moment` role already centres it. ScreenHeader README, `centered`.
     var centered: Bool
     var actions: [ScreenHeaderAction]
 

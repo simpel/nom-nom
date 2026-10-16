@@ -5,6 +5,7 @@ import { z } from "npm:zod";
 import { GenerationLogger } from "../_shared/generation-logger.ts";
 import { resolveTaxonomyTerm } from "../_shared/taxonomy-resolver.ts";
 import { getFeatureModel } from "../_shared/ai-config.ts";
+import { flattenIngredients, ingredientGroupsText, type IngredientGroup } from "../_shared/ingredients.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -12,16 +13,10 @@ const corsHeaders = {
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
-interface IngredientInput {
-  quantity?: string;
-  measurement?: string;
-  ingredient: string;
-}
-
 interface RequestPayload {
   recipe_id?: string;
   name: string;
-  ingredients: IngredientInput[];
+  ingredient_groups: IngredientGroup[];
   instructions: string[];
 }
 
@@ -155,7 +150,7 @@ Deno.serve(async (req) => {
     });
   }
 
-  if (!payload.name || !payload.ingredients || payload.ingredients.length === 0) {
+  if (!payload.name || flattenIngredients(payload.ingredient_groups).length === 0) {
     return new Response(
       JSON.stringify({ error: "Recipe name and ingredients are required" }),
       {
@@ -171,19 +166,14 @@ Deno.serve(async (req) => {
   const gatewayBaseUrl =
     Deno.env.get("AI_GATEWAY_BASE_URL") || "https://ai-gateway.vercel.sh/v1";
 
-  const ingredientsList = payload.ingredients
-    .map((ing) => {
-      const amt = [ing.quantity, ing.measurement].filter(Boolean).join(" ");
-      return amt ? `${amt} ${ing.ingredient}` : ing.ingredient;
-    })
-    .join("\n- ");
+  const ingredientsList = ingredientGroupsText(payload.ingredient_groups);
 
   const instructionsList = (payload.instructions || []).join("\n1. ");
 
   const userMessage = `Recipe Name: ${payload.name}
 
 Ingredients:
-- ${ingredientsList}
+${ingredientsList}
 
 Cooking Instructions:
 1. ${instructionsList || "No specific instructions provided."}`;

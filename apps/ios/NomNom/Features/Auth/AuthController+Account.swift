@@ -49,6 +49,7 @@ extension AuthController {
         // whose every request 401s. Dropping the session locally is the whole job.
         try? await supabase.auth.signOut(scope: .local)
         completeSignOut()
+        noticeMessage = "Your account was deleted."
         return true
     }
 }

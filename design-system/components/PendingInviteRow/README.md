@@ -1,6 +1,6 @@
 **Removed.** An invite row is ListRow's Invite shape — see ListRow.
 
-`NomNom.PendingInviteRow` no longer exists. The replacement:
+`NomNom.PendingInviteRow` no longer exists. The replacement is ListRow's "Invited, not joined" shape: `inactive`, one "Remind" button, Revoke in the row's context menu. The example below is the older Resend / Revoke pair and is superseded.
 
 ```js
 h(N.Section, { title: 'Invited' },

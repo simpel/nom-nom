@@ -30,7 +30,7 @@ struct MinimalRecipeGrid: View {
     var body: some View {
         Group {
             if let title {
-                DSSection(title, trailing: "\(recipes.count)") { grid }
+                DSSection(title) { grid }
             } else {
                 grid
             }

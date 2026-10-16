@@ -21,6 +21,10 @@ struct DSSection<Content: View>: View {
     /// Header-to-content gap; `spacing-2` (`.nn-section__head`) unless a block sets
     /// its own (SegmentedBar: bundle.css `.nn-segbar-section { gap: spacing-3 }`).
     var spacing: CGFloat
+    /// The one verb the section offers on its header's right (`SectionAction`). Pass it
+    /// only when the viewer can act, and not while the section is empty (`CollectionSection`
+    /// hands it to the EmptyState).
+    var action: SectionAction?
     @ViewBuilder var content: Content
 
     init(
@@ -30,6 +34,7 @@ struct DSSection<Content: View>: View {
         systemImage: String? = nil,
         uppercase: Bool = true,
         spacing: CGFloat = DS.Spacing.s2,
+        action: SectionAction? = nil,
         @ViewBuilder content: () -> Content
     ) {
         self.title = title
@@ -38,6 +43,7 @@ struct DSSection<Content: View>: View {
         self.systemImage = systemImage
         self.uppercase = uppercase
         self.spacing = spacing
+        self.action = action
         self.content = content()
     }
 
@@ -49,9 +55,12 @@ struct DSSection<Content: View>: View {
                 trailing: trailing,
                 trailingTone: trailingTone,
                 systemImage: systemImage,
-                uppercase: uppercase
+                uppercase: uppercase,
+                action: action
             )
-            .padding(.horizontal, DS.Spacing.sectionInset)
+            // With an action the button's right edge sits on the card's right edge.
+            .padding(.leading, DS.Spacing.sectionInset)
+            .padding(.trailing, action == nil ? DS.Spacing.sectionInset : 0)
             // `.nn-section` is a column with no gap of its own.
             VStack(alignment: .leading, spacing: 0) { content }
         }

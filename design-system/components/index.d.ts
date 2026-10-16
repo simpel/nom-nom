@@ -362,7 +362,15 @@ export interface RatingListProps extends BaseProps {
   /** Right-hand figure in the header. Defaults to "{rated} of {total}" when `total` is given. */
   trailing?: unknown;
   /** score null = not rated yet; vsUsual: signed change, 0 = as usual, 'new' = first rating. */
-  raters?: { name: string; role?: string; score?: number | null; vsUsual?: number | 'new' }[];
+  raters?: {
+    name: string; role?: string; score?: number | null; vsUsual?: number | 'new';
+    /** The viewer's own row: a small "You" Badge after their real name (never the word "You" as the name). */
+    you?: boolean;
+    /** Unrated rows only: the meta line ("Not asked yet", "Asked 2 days ago"). */
+    meta?: string;
+    /** Unrated rows only: the one soft button on the row (Ask, Remind, Rate). */
+    action?: { label: string; onClick?: () => void; variant?: 'primary' | 'secondary'; disabled?: boolean };
+  }[];
   /** The general shape. Takes precedence over `raters`. */
   rows?: RatingListRow[];
   rated?: number;
@@ -655,4 +663,182 @@ export interface ProGateProps extends BaseProps {
   /** @default 'Not now' */
   dismissLabel?: string;
   children?: unknown;
+}
+
+// ---------------------------------------------------------------------------------------------
+// Adopted from the app (Oct 2026). Interfaces below that repeat a name above merge with it.
+// ---------------------------------------------------------------------------------------------
+
+export interface ListRowProps {
+  /** Dims the lead, title and meta to opacity-50; a trailing control stays live. An invited member who has not joined: one "Remind" button, Revoke in a context menu. */
+  inactive?: boolean;
+  /** 1 clips (default); null lets the title wrap (an ingredient name). */
+  titleLines?: number | null;
+  /** 1 clips (default); null lets the meta wrap (a full-sentence reason). */
+  metaLines?: number | null;
+  /** One emphasised run at the end of the meta, in warning-text, joined with " · " ("Waiting on 2"). */
+  metaAccent?: string;
+  /** The value in semibold (an ingredient amount). */
+  valueSemibold?: boolean;
+}
+export interface ScoreCardProps {
+  /** One chart-series block per rater, each their share of the score: [{ value, label }]. Named for VoiceOver only. */
+  barSegments?: { value: number; label?: string }[];
+  /** 'pro' = a Pro score (ProCard's ground, ProMark, a pro numeral and Bar). With `locked`: score only, no Bar, one Unlock button. */
+  variant?: 'primary' | 'pro';
+  locked?: boolean;
+  onUnlock?: () => void;
+  /** Unrated: pass `unratedText` ("0 of 4 have rated") and/or `onRemind` to draw "No score yet", not pressable. */
+  unratedText?: string;
+  onRemind?: () => void;
+}
+export interface ScoreValueProps {
+  /** accent (default, primary-text) · reaction (a sheet hero: the score's own reaction-*-text) · pro (a Pro score). */
+  ink?: 'accent' | 'reaction' | 'pro';
+}
+export interface AvatarProps {
+  /** xl only. Makes the whole avatar a button with a camera badge on its top-right. */
+  onEdit?: () => void;
+  editLabel?: string;
+}
+export interface ScreenHeaderProps {
+  /** Centres a standard header that opens a sheet as a prompt. An avatar always centres. */
+  centered?: boolean;
+  /** Makes the avatar editable: pass the handler, or { onEdit }. */
+  avatarEdit?: (() => void) | { onEdit: () => void };
+}
+export interface Fact { onSelect?: () => void; }
+export interface SkeletonProps {
+  /** 'screen': header bones over a card and a list, for a screen opened by id. */
+  layout?: 'list' | 'card' | 'text' | 'row' | 'screen';
+}
+export interface ProCardProps {
+  /** Unlocked: the whole card is one button with a pro-text chevron. Locked: ignored. */
+  action?: () => void;
+}
+export interface PartyCardProps { followLabel?: string; }
+export interface PhotoStripProps {
+  /** Edit mode: PhotoCard sm tiles with Remove, a Cover (or Page N) badge, Camera and Library. */
+  editing?: boolean;
+  pages?: boolean;
+  onRemove?: (index: number) => void;
+  onPickLibrary?: () => void;
+  title?: string;
+}
+export interface BottomSheetProps {
+  /** read (close only) · commit (close + checkmark) · next (close + "Next") · picker · media (dark chrome). Default: commit when onConfirm, else read. */
+  kind?: 'read' | 'commit' | 'next' | 'picker' | 'media';
+  onConfirm?: () => void;
+  confirmLabel?: string;
+  canConfirm?: boolean;
+  /** Changed: close and Escape ask "Discard changes?" first. */
+  dirty?: boolean;
+  /** Saving: the checkmark is a spinner and nothing dismisses. */
+  saving?: boolean;
+  /** A pushed step: shows Back in place of Close. */
+  back?: () => void;
+  /** A custom trailing control. */
+  action?: unknown;
+  /** The hero's ink: 'reaction' (default), 'accent' or 'pro'. */
+  heroInk?: 'reaction' | 'accent' | 'pro';
+}
+
+/** A platform top-bar control: a glass circle with a text-primary glyph. `active` swaps to `<icon>-fill` (a filter that is on). */
+export interface BarButtonProps extends BaseProps { icon: IconName; label: string; onClick?: () => void; active?: boolean; activeIcon?: IconName; unread?: boolean; disabled?: boolean; }
+/** A text action in a bar: sans-sm semibold primary-text. */
+export interface BarActionProps extends BaseProps { label: string; onClick?: () => void; disabled?: boolean; loading?: boolean; }
+/** A selectable pill for multi-select tags. */
+export interface TagToggleProps extends BaseProps { label: string; selected?: boolean; onClick?: () => void; disabled?: boolean; }
+/** One large choice in a single-choice grid. `reaction` tints a taste step. `square: false` keeps the height to its copy. */
+export interface ChoiceTileProps extends BaseProps { title: string; sub?: string; numeral?: boolean; selected?: boolean; reaction?: Reaction; square?: boolean; onClick?: () => void; }
+/** A form row for a multi-line note; opens a NoteEditor. */
+export interface NoteFieldProps extends BaseProps { value?: string; placeholder?: string; bulleted?: boolean; label?: string; onOpen?: () => void; }
+export interface NoteEditorProps extends BaseProps { title?: string; value?: string; placeholder?: string; bulleted?: boolean; onSave?: (value: string) => void; onClose?: () => void; onDelete?: () => void; style?: Record<string, string | number>; }
+export interface PersonHeaderRowProps extends BaseProps { name: string; photo?: string; meta?: string; large?: boolean; onClick?: () => void; }
+export interface ProLinkCardProps extends BaseProps { title: string; subtitle?: string; href?: string; onClick?: () => void; }
+export interface PageMenuItem { label: string; onClick?: () => void; checked?: boolean; destructive?: boolean; }
+export interface PageMenuProps extends BaseProps { groups: { label?: string; items: PageMenuItem[] }[]; unread?: boolean; open?: boolean; defaultOpen?: boolean; onOpenChange?: (open: boolean) => void; }
+export interface TrendChartProps extends BaseProps { total: number[]; members?: { name: string; values: number[] }[]; labels?: string[]; framed?: boolean; showsPoints?: boolean; 'aria-label'?: string; }
+export interface MediaViewerProps extends BaseProps { photos: ({ src: string; alt?: string } | string)[]; index?: number; onClose?: () => void; style?: Record<string, string | number>; }
+export interface FieldGroupProps extends BaseProps { title?: string; trailing?: string; hint?: string; fields: (InputProps & { label?: string })[]; }
+export interface ToggleCardProps extends BaseProps { heading?: string; title: string; meta?: string; footnote?: string; checked?: boolean; defaultChecked?: boolean; onChange?: (checked: boolean) => void; }
+export interface AccountActionsProps extends BaseProps { onSignOut?: () => void; onDelete?: () => void; }
+export interface CodeFieldProps extends BaseProps { length?: number; value?: string; defaultValue?: string; onChange?: (value: string) => void; label?: string; error?: boolean | string; }
+export interface PackageCardProps extends BaseProps { title: string; price: string; period?: string; note?: string; badge?: string; selected?: boolean; onSelect?: () => void; }
+export interface StepListProps extends BaseProps { steps: (string | { title?: string; text: string })[]; current?: number; }
+export interface CheckRowProps extends BaseProps { name: string; amount?: string; checked?: boolean; defaultChecked?: boolean; onChange?: (checked: boolean) => void; }
+export interface IngredientListProps extends BaseProps { items: CheckRowProps[]; }
+export interface SelectRowProps extends BaseProps { title: string; meta?: string; value?: string; options: (string | { value: string; label: string })[]; placeholder?: string; onChange?: (value: string) => void; }
+export interface BrandMarkProps extends BaseProps { src: string; alt?: string; size?: 'xl' | 'lg'; }
+export interface SwipeRowProps extends BaseProps { actions: { label: string; variant?: Variant; onClick?: () => void }[]; revealed?: boolean; defaultRevealed?: boolean; onRevealedChange?: (open: boolean) => void; children?: unknown; }
+/** Drag to reorder any set, either axis. No wrapper: each child becomes a `.nn-reorder__item`, a direct child of the consumer's Card list or strip.
+ *  Long press on touch, drag with a pointer, Alt + arrows on the keyboard. Sets with the same `group` take each other's items. */
+export interface ReorderProps extends BaseProps {
+  /** The children's ids, in the same order. */
+  items: (string | number)[];
+  /** 'vertical' (a list: Move up / down) or 'horizontal' (a strip: Move left / right). @default 'vertical' */
+  axis?: 'vertical' | 'horizontal';
+  /** Sets that share a group take each other's items. */
+  group?: string;
+  /** Put `moved` where `target` is. Called live as the held item passes over others. */
+  onMove: (moved: string | number, target: string | number) => void;
+  /** Extra class on every item wrapper (a strip's tile spacing). */
+  itemClassName?: string;
+  children?: unknown;
+}
+/** A drop target with no item of its own: a set's footer or empty state. */
+export interface ReorderTargetProps extends BaseProps { group?: string; onEnter: (moved: string | number) => void; children?: unknown; }
+export interface EditorialTextProps extends BaseProps { parts: (string | { text: string; tone: 'positive' | 'negative' })[]; }
+export interface ScannerOverlayProps extends BaseProps { title?: string; message?: string; onCancel?: () => void; style?: Record<string, string | number>; }
+export interface UnitToggleProps extends BaseProps { imperial?: boolean; defaultImperial?: boolean; onChange?: (imperial: boolean) => void; title?: string; meta?: string; }
+/** convertAmount('500', 'g', 'imperial') → { quantity: '1.1', unit: 'lb' }. tsp / tbsp, counts and unknown units are returned unchanged. */
+export declare function convertAmount(quantity: string | number, unit: string, to: 'metric' | 'imperial'): { quantity: string; unit: string };
+
+// The section action (Oct 2026): one verb on the right of a section header; the count follows the title.
+export interface SectionHeaderProps {
+  /** The figure after the title ("MEAL HISTORY 31"). */
+  count?: number | string;
+  /** The section's one verb: an AppButton primary ghost sm. Pass only when the viewer can act, and not when the section is empty (EmptyState carries it). */
+  action?: { label: string; onClick?: () => void; 'aria-label'?: string; disabled?: boolean };
+}
+export interface SectionProps {
+  count?: number | string;
+  action?: { label: string; onClick?: () => void; 'aria-label'?: string; disabled?: boolean };
+}
+
+/** A section of things the viewer may add to: the header carries one verb; when empty, the EmptyState carries it; cannot add → no button. */
+export interface CollectionSectionProps extends BaseProps {
+  title: string;
+  /** The figure after the title; 0 means empty. Default: the number of children. */
+  count?: number;
+  /** The header button, one or two words ("New party"). @default 'Add' */
+  verb?: string;
+  /** The long form for VoiceOver and the empty state's button ("Add a recipe"). */
+  addLabel?: string;
+  onAdd?: () => void;
+  /** false when this viewer cannot act (someone else's profile): no action is drawn. @default true */
+  canAdd?: boolean;
+  empty?: { title?: string; message?: string; icon?: IconName };
+  children?: unknown;
+}
+export interface AddRowProps extends BaseProps { label: string; onClick?: () => void; }
+
+/** An inline message the person can close, in the warning role: `warning-soft` ground, `warning-text` copy,
+ *  an icon-only `secondary ghost` Dismiss on the trailing edge. */
+export interface DismissibleNoticeProps extends BaseProps {
+  children?: unknown;
+  /** Controlled: you hide it. Omit and it hides itself. */
+  onDismiss?: () => void;
+  /** @default 'Dismiss' */
+  dismissLabel?: string;
+}
+
+/** Two or more Pro scores together, viewer without Pro: one pro-soft card, one ProMark, one readout row per score, one sentence on what Pro opens, one Unlock with Pro. */
+export interface ProScoreGroupProps extends BaseProps {
+  scores: { title: string; score: number | null; verdict?: string }[];
+  /** One sentence naming every score Pro opens ("Pro opens the health score breakdown and The Friday Feast Club's insights."). */
+  teaser?: string;
+  onUnlock?: () => void;
+  /** @default 'Unlock with Pro' */
+  unlockLabel?: string;
 }

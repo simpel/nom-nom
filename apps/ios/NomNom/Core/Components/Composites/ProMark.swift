@@ -20,8 +20,3 @@ struct ProMark: View {
     }
 }
 
-/// No blur token exists; Pro previews blur by `shadow-md`'s blur (6pt, the README's
-/// ProCard value; the ProGate's 8px has no token either). DS-GAPS.md, section C.
-enum ProBlur {
-    static var radius: CGFloat { DS.Shadow.md.token.light[0].blur }
-}

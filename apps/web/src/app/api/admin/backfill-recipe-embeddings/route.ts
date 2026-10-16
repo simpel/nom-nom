@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/utils/supabase/server';
 import { createClient as createSupabaseClient } from '@supabase/supabase-js';
+import { flattenIngredients } from '@/lib/ingredients';
 
 export const maxDuration = 300;
 
@@ -22,7 +23,7 @@ export async function POST(request: Request) {
     try {
         const { data: recipes, error } = await adminSupabase
             .from('recipes')
-            .select('id, name, cuisine, tags, ingredients, instructions')
+            .select('id, name, cuisine, tags, ingredient_groups, instructions')
             .is('embedding', null)
             .limit(100);
 
@@ -41,10 +42,8 @@ export async function POST(request: Request) {
             if (recipe.cuisine) inputStr += `\nCuisine: ${recipe.cuisine}`;
             if (recipe.tags && recipe.tags.length > 0) inputStr += `\nTags: ${recipe.tags.join(", ")}`;
             
-            if (recipe.ingredients && Array.isArray(recipe.ingredients)) {
-                const ingList = recipe.ingredients.map((i: any) => i.ingredient).filter(Boolean);
-                if (ingList.length > 0) inputStr += `\nIngredients: ${ingList.join(", ")}`;
-            }
+            const ingList = flattenIngredients(recipe.ingredient_groups).map((i) => i.ingredient).filter(Boolean);
+            if (ingList.length > 0) inputStr += `\nIngredients: ${ingList.join(", ")}`;
             
             if (recipe.instructions && recipe.instructions.length > 0) {
                 inputStr += `\nInstructions: ${recipe.instructions.join(" ")}`;

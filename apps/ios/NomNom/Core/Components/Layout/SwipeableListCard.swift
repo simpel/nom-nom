@@ -7,6 +7,8 @@ import SwiftUI
 struct SwipeableListCard<Data: RandomAccessCollection, Content: View>: View where Data.Element: Identifiable {
     var title: String? = nil
     var caption: String? = nil
+    /// The section's one verb, on the header's right (`SectionAction`); needs a `title`.
+    var action: SectionAction? = nil
     let data: Data
 
     // Action definitions (closures so each item can conditionally enable/disable actions)
@@ -25,7 +27,7 @@ struct SwipeableListCard<Data: RandomAccessCollection, Content: View>: View wher
     var body: some View {
         Group {
             if let title {
-                DSSection(title, trailing: caption) { list }
+                DSSection(title, trailing: caption, action: action) { list }
             } else {
                 list
             }

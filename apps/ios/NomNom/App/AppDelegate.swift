@@ -25,7 +25,7 @@ final class AppDelegate: NSObject, UIApplicationDelegate {
         // Fonts are registered through INFOPLIST_KEY_UIAppFonts.
         let appearance = UINavigationBarAppearance()
         appearance.configureWithDefaultBackground()
-        // The DS names no navigation-bar style (logged in DS-GAPS.md); these are the
+        // The DS names no navigation-bar style (BarButton README governs bar controls); these are the
         // closest documented steps. Inline title: `sans-lg` semibold — README
         // "Typography": "sans-lg … sheet and reason titles … (each sets semibold itself)".
         appearance.titleTextAttributes = [

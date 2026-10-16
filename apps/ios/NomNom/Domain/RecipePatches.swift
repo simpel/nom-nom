@@ -5,7 +5,7 @@ struct NewRecipe: Encodable {
     let owner_id: UUID?
     let name: String
     let normalized_name: String
-    let ingredients: [RecipeIngredient]
+    let ingredient_groups: [IngredientGroup]
     let instructions: [String]
     let photo_paths: [String]
     let recipe_photo_paths: [String]
@@ -25,7 +25,7 @@ struct NewRecipe: Encodable {
     init(
         ownerID: UUID?,
         name: String,
-        ingredients: [RecipeIngredient] = [],
+        ingredientGroups: [IngredientGroup] = [],
         instructions: [String] = [],
         photoPaths: [String] = [],
         recipePhotoPaths: [String] = [],
@@ -45,7 +45,7 @@ struct NewRecipe: Encodable {
         self.owner_id = ownerID
         self.name = name.trimmedName
         self.normalized_name = name.normalizedForMatching
-        self.ingredients = ingredients
+        self.ingredient_groups = ingredientGroups
         self.instructions = instructions
         self.photo_paths = photoPaths
         self.recipe_photo_paths = recipePhotoPaths
@@ -81,7 +81,7 @@ struct RecipePhotosPatch: Encodable {
 }
 
 struct RecipeContentPatch: Encodable {
-    let ingredients: [RecipeIngredient]
+    let ingredient_groups: [IngredientGroup]
     let instructions: [String]
     let recipe_photo_paths: [String]
     let effort: Int?
@@ -98,7 +98,7 @@ struct RecipeContentPatch: Encodable {
     let recipe_kind_id: UUID?
 
     init(
-        ingredients: [RecipeIngredient],
+        ingredientGroups: [IngredientGroup],
         instructions: [String],
         recipe_photo_paths: [String],
         effort: EffortLevel? = nil,
@@ -114,7 +114,7 @@ struct RecipeContentPatch: Encodable {
         healthBreakdown: HealthBreakdown? = nil,
         recipeKindID: UUID? = nil
     ) {
-        self.ingredients = ingredients
+        self.ingredient_groups = ingredientGroups
         self.instructions = instructions
         self.recipe_photo_paths = recipe_photo_paths
         self.effort = effort?.rawValue

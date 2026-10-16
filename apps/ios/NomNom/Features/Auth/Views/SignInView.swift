@@ -11,7 +11,7 @@ struct SignInView: View {
                 Spacer()
 
                 VStack(spacing: DS.Spacing.s5) {
-                    AppIconMark()
+                    BrandMark()
 
                     // The sign-in buttons stay at the bottom: Sign in with Apple is
                     // Apple's own control, not an AppButton the header could build.
@@ -25,6 +25,12 @@ struct SignInView: View {
                 Spacer()
 
                 VStack(spacing: DS.Spacing.s3) {
+                    if let notice = auth.noticeMessage {
+                        Text(notice)
+                            .textStyle(.sansSm, tone: .secondary, align: .center)
+                            .padding(.bottom, DS.Spacing.s1)
+                    }
+
                     if let message = auth.errorMessage {
                         Text(message)
                             .textStyle(.sansSm, tone: .secondary, align: .center)
@@ -43,6 +49,7 @@ struct SignInView: View {
                         fullWidth: true
                     ) {
                         auth.errorMessage = nil
+                        auth.noticeMessage = nil
                         navigateToEmailSignIn = true
                     }
                     .disabled(auth.isWorking)

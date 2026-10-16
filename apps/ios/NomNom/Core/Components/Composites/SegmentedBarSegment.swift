@@ -51,7 +51,7 @@ enum SegmentedBarFormat: Equatable {
 ///
 /// README: "`sm` (`spacing-1.5`) · `md` (`spacing-2.5`) · `lg` (`spacing-4`)". Bar
 /// README has five thicknesses and stops at `xl` 12 (`spacing-3`); SegmentedBar is
-/// built from Bar, so `lg` is Bar `xl` (see DS-GAPS.md).
+/// built from Bar, so `lg` is Bar `xl`.
 enum SegmentedBarSize: Equatable {
     case sm, md, lg
 

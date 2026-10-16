@@ -12,7 +12,7 @@ struct ParsedRecipeResult: Decodable {
     let recipeKind: String?
     let recipeKindID: UUID?
     let effort: Int?
-    let ingredients: [RecipeIngredient]
+    let ingredientGroups: [IngredientGroup]
     let instructions: [String]
     let healthScore: Int?
     let healthVerdict: String?
@@ -36,7 +36,7 @@ struct ParsedRecipeResult: Decodable {
         case recipeKind = "recipe_kind"
         case recipeKindID = "recipe_kind_id"
         case effort
-        case ingredients
+        case ingredientGroups = "ingredient_groups"
         case instructions
         case healthScore = "health_score"
         case healthVerdict = "health_verdict"
@@ -55,7 +55,7 @@ struct ParsedRecipeResult: Decodable {
         recipeKind = try container.decodeIfPresent(String.self, forKey: .recipeKind)
         recipeKindID = try container.decodeIfPresent(UUID.self, forKey: .recipeKindID)
         effort = try container.decodeIfPresent(Int.self, forKey: .effort)
-        ingredients = try container.decodeIfPresent([RecipeIngredient].self, forKey: .ingredients) ?? []
+        ingredientGroups = try container.decodeIfPresent([IngredientGroup].self, forKey: .ingredientGroups) ?? []
         instructions = try container.decodeIfPresent([String].self, forKey: .instructions) ?? []
         healthScore = try container.decodeIfPresent(Int.self, forKey: .healthScore)
         healthVerdict = try container.decodeIfPresent(String.self, forKey: .healthVerdict)
@@ -100,7 +100,7 @@ extension FoodStore {
         let expected_cover: String
         let name: String
         let cuisine: String?
-        let ingredients: [RecipeIngredient]
+        let ingredient_groups: [IngredientGroup]
         let instructions: [String]
     }
 
@@ -134,7 +134,7 @@ extension FoodStore {
             expected_cover: (self.recipe(recipe.id) ?? recipe).photoPaths.first ?? "",
             name: recipe.name,
             cuisine: recipe.cuisine,
-            ingredients: recipe.ingredients,
+            ingredient_groups: recipe.ingredientGroups,
             instructions: recipe.instructions
         )
 

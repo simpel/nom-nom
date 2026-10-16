@@ -1,24 +1,33 @@
 import SwiftUI
 
-/// The recipes a person created: a DSSection over ListRows (PhotoCard `xs` and the
-/// name) that open the recipe, or an EmptyState when there are none.
+/// The recipes a person created: ListRows (PhotoCard `xs` and the name) that open the
+/// recipe. On your own profile the section offers "Add recipe"; on someone else's it has
+/// no button.
 struct ProfileCreatedRecipesSection: View {
     let recipes: [Recipe]
+    /// `nil` on someone else's profile.
+    var onCreate: (() -> Void)?
 
     var body: some View {
-        DSSection("Created recipes", trailing: "\(recipes.count)") {
-            if recipes.isEmpty {
-                EmptyState("No recipes yet", message: "Recipes this person adds will show up here.")
-            } else {
-                Card(layout: .list) {
-                    ForEach(recipes) { recipe in
-                        NavigationLink {
-                            RecipeDetailView(recipe: recipe)
-                        } label: {
-                            ListRow(recipe.name, leading: .photo(.recipe(recipe)), chevron: true)
-                        }
-                        .buttonStyle(ListRowButtonStyle())
+        CollectionSection(
+            "Created recipes",
+            count: recipes.count,
+            verb: "Add recipe",
+            addLabel: "Add a recipe",
+            onAdd: onCreate,
+            emptyTitle: "No recipes yet",
+            emptyMessage: onCreate == nil
+                ? "Recipes this person adds will show up here."
+                : "Recipes you add will show up here."
+        ) {
+            Card(layout: .list) {
+                ForEach(recipes) { recipe in
+                    NavigationLink {
+                        RecipeDetailView(recipe: recipe)
+                    } label: {
+                        ListRow(recipe.name, leading: .photo(.recipe(recipe)), chevron: true)
                     }
+                    .buttonStyle(ListRowButtonStyle())
                 }
             }
         }
@@ -27,7 +36,7 @@ struct ProfileCreatedRecipesSection: View {
 
 #Preview {
     NomNomPreview { store in
-        ProfileCreatedRecipesSection(recipes: store.recipes)
+        ProfileCreatedRecipesSection(recipes: store.recipes, onCreate: {})
             .padding(DS.Spacing.gutter)
     }
 }

@@ -33,7 +33,7 @@ struct DinnerPartiesView: View {
                             action: EmptyStateAction("New party") { showingCreateSheet = true }
                         )
                     } else {
-                        DSSection("Your parties", trailing: "\(store.myParties.count)") {
+                        DSSection("Your parties") {
                             VStack(spacing: DS.Spacing.s4) {
                                 ForEach(store.myParties) { DinnerPartyCard(party: $0) }
                             }

@@ -124,7 +124,7 @@ struct MealEditorView: View {
     private func loadRecipe(from recipe: Recipe, into draft: inout FoodStore.MealDraft) {
         loadedRecipeID = recipe.id
         draft.recipe = FoodStore.RecipeDraft(
-            ingredients: recipe.ingredients,
+            ingredientGroups: recipe.ingredientGroups,
             instructions: recipe.instructions,
             existingPhotoPaths: recipe.recipePhotoPaths,
             addedPhotoData: [],

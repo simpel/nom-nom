@@ -80,7 +80,7 @@ extension FoodStore {
         let cuisineToSave = draft.cuisine ?? recipe.cuisine
         let servesToSave = draft.serves ?? recipe.serves
         let isPublicToSave = draft.isPublic
-        let cleanIngredients = draft.ingredients.filter { !$0.isEmpty }
+        let cleanGroups = draft.ingredientGroups.cleaned
         let cleanInstructions = draft.instructions
             .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
             .filter { !$0.isEmpty }
@@ -103,7 +103,8 @@ extension FoodStore {
             }
         }
 
-        let ingredientsChanged = recipe.ingredients != cleanIngredients || recipe.instructions != cleanInstructions
+        // Renaming or regrouping keeps the health score; changing what goes in resets it.
+        let ingredientsChanged = recipe.ingredients != cleanGroups.allIngredients || recipe.instructions != cleanInstructions
         let healthScoreToSave = ingredientsChanged ? nil : recipe.healthScore
         let healthVerdictToSave = ingredientsChanged ? nil : recipe.healthVerdict
         let healthRationaleToSave = ingredientsChanged ? nil : recipe.healthRationale
@@ -114,6 +115,7 @@ extension FoodStore {
         let recipeKindIDToSave = draft.recipeKindID ?? recipe.recipeKindID
 
         guard ingredientsChanged ||
+              recipe.ingredientGroups != cleanGroups ||
               recipe.recipePhotoPaths != newPaths ||
               recipe.effort != effortToSave ||
               recipe.cuisine != cuisineToSave ||
@@ -126,7 +128,7 @@ extension FoodStore {
         let updated: Recipe = try await supabase
             .from("recipes")
             .update(RecipeContentPatch(
-                ingredients: cleanIngredients,
+                ingredientGroups: cleanGroups,
                 instructions: cleanInstructions,
                 recipe_photo_paths: newPaths,
                 effort: effortToSave,
@@ -149,7 +151,7 @@ extension FoodStore {
         upsertLocal(recipe: updated)
         if ingredientsChanged {
             Self.log.info("Reset health score for recipe \(recipe.id, privacy: .public) due to modified ingredients or instructions.")
-            if !cleanIngredients.isEmpty {
+            if !cleanGroups.isEmpty {
                 Task { try? await analyzeHealth(for: updated) }
             }
         }

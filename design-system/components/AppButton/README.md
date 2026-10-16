@@ -27,7 +27,7 @@ Defined by the design system; maps onto `apps/ios/NomNom/Core/Components/AppButt
 
 That makes `xs` and `sm` labelled-button sizes. For an icon-only control there is now one size, so pass none.
 
-Each variant supplies four role tokens — `{role}`, `{role}-soft`, `{role}-text`, `on-{role}` — and the appearance paints with them: `solid` = `{role}` ground + `on-{role}`; `soft` = `{role}-soft` + `{role}-text`; `outline` = clear + `{role}-text` + 1.5px `{role}` border (`line-strong` for secondary); `ghost` = `{role}-text` only; `elevated` = `panel` + `shadow-xs` + `text-primary`.
+Each variant supplies four role tokens — `{role}`, `{role}-soft`, `{role}-text`, `on-{role}` — and the appearance paints with them: `solid` = `{role}` ground + `on-{role}`; `soft` = `{role}-soft` + `{role}-text`; `outline` = clear + `{role}-text` + `border-hairline` (1px) `line-control` (a role-coloured border has no token and `line-strong` fails 3:1); `ghost` = `{role}-text` only; `elevated` = `panel` + `shadow-xs` + `text-primary`.
 
 ## When to use
 - `primary solid` — the one main commitment on a screen ("Log a meal", "Email me a code", "Rate this meal"). One per view.
@@ -44,6 +44,10 @@ Each variant supplies four role tokens — `{role}`, `{role}-soft`, `{role}-text
 - Icons only where they remove ambiguity (camera, trash, plus, back, close, forward arrow). Never emoji.
 - **In a ScreenHeader:** `md`, label only (never an icon), hugging its label; one or two on one row, never full width, never wrapped.
 - Native alerts, confirmation dialogs, swipe actions, context menus and sheet toolbars use system buttons.
+- **Top-bar controls are not AppButtons.** Every control in a sheet or screen bar (close, back, Next, checkmark, heart, "…", filter, "Mark all read") is a system toolbar button on the platform's white glass circle with a `text-primary` glyph; never the `primary` tint. A bar's text action ("Mark all read") is `sans-sm` semibold `primary-text`. The `secondary soft iconOnly` close described elsewhere is the web rendition.
+- **Selected state, for a choice pill.** A multi-select tag ("What stood out?": Too salty, Tender) is an `sm` capsule: `panel` and `text-primary` at rest; `primary-soft` and `primary-text` semibold when on; press `opacity-70`; the selected trait on the control, not an appearance. Called TagToggle in the app; lay them out wrapping, `spacing-2` apart.
+- `variant="reaction"` is `soft` only; a `solid` reaction inks `reaction-text` on its fill and is not used.
+- Loading spinner: the platform's small progress indicator (`mini` on xs and sm, `small` on md and lg); the tap is dropped and the button keeps focus.
 - Contrast: `on-primary` on dark-theme `primary` is 2.98:1 and `on-destructive` on `destructive` ~3.5:1 — known misses kept from the source; `destructive-text` (outline/ghost/soft) passes.
 
 ## Migration from the Swift AppButton

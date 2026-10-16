@@ -18,7 +18,6 @@ struct InboxSheetView: View {
     }
 
     @State private var activeDestination: InboxSheetDestination?
-    @State private var isMarkingAllRead = false
 
     var body: some View {
         NavigationStack {
@@ -32,29 +31,18 @@ struct InboxSheetView: View {
                     )
                 } else {
                     ScreenHeader("Inbox", summary: headerSubtitle)
+                    // One list; "Mark all read" is the section's one verb.
                     notificationSection(
                         "Notifications",
                         trailing: store.unreadCount > 0 ? "\(store.unreadCount) unread" : nil,
+                        action: store.unreadCount > 0
+                            ? SectionAction("Mark all read", perform: markAllRead) : nil,
                         items: store.notifications
                     )
                 }
             }
             .screenTitle("", displayMode: .inline)
             .sheetCloseToolbar()
-            .toolbar {
-                if store.unreadCount > 0 {
-                    ToolbarItem(placement: .topBarTrailing) {
-                        Button(action: markAllRead) {
-                            if isMarkingAllRead {
-                                ProgressView().controlSize(.small)
-                            } else {
-                                Text("Mark all read").textStyle(.sansSm, weight: .semibold)
-                            }
-                        }
-                        .barItemStyle()
-                    }
-                }
-            }
             .refreshable {
                 await store.load()
             }
@@ -80,8 +68,13 @@ struct InboxSheetView: View {
         return "All caught up on dinner party invites and ratings."
     }
 
-    private func notificationSection(_ title: String, trailing: String?, items: [AppNotification]) -> some View {
-        DSSection(title, trailing: trailing, trailingTone: .primary) {
+    private func notificationSection(
+        _ title: String,
+        trailing: String?,
+        action: SectionAction? = nil,
+        items: [AppNotification]
+    ) -> some View {
+        DSSection(title, trailing: trailing, trailingTone: .primary, action: action) {
             Card(layout: .list) {
                 ForEach(items) { notification in
                     NotificationRow(
@@ -100,11 +93,7 @@ struct InboxSheetView: View {
     // MARK: - Actions
 
     private func markAllRead() {
-        isMarkingAllRead = true
-        Task {
-            await store.markAllRead()
-            isMarkingAllRead = false
-        }
+        Task { await store.markAllRead() }
     }
 
     private func toggleRead(_ notification: AppNotification) {

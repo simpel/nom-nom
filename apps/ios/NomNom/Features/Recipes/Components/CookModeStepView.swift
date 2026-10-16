@@ -2,7 +2,8 @@ import SwiftUI
 
 /// One cook-mode step ("Nom Nom iOS" canvas, CookMode): the step in `serif-md`, the
 /// "Start 20 min timer" button (secondary soft, clock) when the step waits on
-/// something, and "For this step" — the ingredients it uses as ListRows `sm`.
+/// something, and "For this step" — the ingredients it uses as ListRows `sm`, with the
+/// group as meta in a grouped recipe ("Sauce"), so two "salt" rows can be told apart.
 struct CookModeStepView: View {
     let recipe: Recipe
     @Environment(FoodStore.self) private var store
@@ -10,8 +11,13 @@ struct CookModeStepView: View {
     let detail: RecipeStepDetail?
     let timer: CookModeTimer
 
-    private var stepIngredients: [RecipeIngredient] {
-        (detail?.ingredients ?? []).compactMap { recipe.ingredients.indices.contains($0) ? recipe.ingredients[$0] : nil }
+    /// The step's ingredients and the name of the group each is in.
+    private var stepIngredients: [(item: RecipeIngredient, group: String?)] {
+        let grouped = !recipe.ingredientGroups.isUngrouped
+        let all = recipe.ingredientGroups.flatMap { group in
+            group.ingredients.map { (item: $0, group: grouped ? group.title : nil) }
+        }
+        return (detail?.ingredients ?? []).compactMap { all.indices.contains($0) ? all[$0] : nil }
     }
 
     var body: some View {
@@ -27,8 +33,9 @@ struct CookModeStepView: View {
             if !stepIngredients.isEmpty {
                 DSSection("For this step") {
                     Card(layout: .list) {
-                        ForEach(stepIngredients) { item in
-                            ListRow(item.trimmedIngredient, value: item.displayAmount(in: store.unitSystem), size: .sm)
+                        ForEach(stepIngredients.indices, id: \.self) { i in
+                            let (item, group) = stepIngredients[i]
+                            ListRow(item.trimmedIngredient, meta: group, value: item.displayAmount(in: store.unitSystem), size: .sm)
                                 .titleLines(nil)
                                 .valueSemibold()
                         }

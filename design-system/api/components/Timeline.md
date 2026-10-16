@@ -19,8 +19,9 @@ Every time this recipe was cooked, as a horizontal rail of dots over PhotoCards,
 
 | prop | type | note |
 | --- | --- | --- |
-| `title` | `string` | @default 'This recipe over time' |
-| `occasions` * | `{ date?: string; score: number; verdict?: string; photo?: string; current?: boolean; href?: string }[]` |  |
+| `size` | `'md' \| 'mini'` | 'md' (default): PhotoCard sm tiles with the verdict Badge under a "N times" header. 'mini': PhotoCard xs squares with the date only, no badge and no header u… |
+| `title` | `string` | @default 'This recipe over time' (md); none (mini) |
+| `occasions` * | `{ date?: string; score?: number; verdict?: string; photo?: string; alt?: string; current?: boolean; href?: …` | `score` drives the verdict Badge (md only; mini ignores it). |
 
 ## More
 

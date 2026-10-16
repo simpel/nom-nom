@@ -180,7 +180,7 @@ extension FoodStore {
     struct RecipeDraft: Equatable {
         static let maxCount: Int = 5
 
-        var ingredients: [RecipeIngredient] = []
+        var ingredientGroups: [IngredientGroup] = []
         var instructions: [String] = []
         var existingPhotoPaths: [String] = []
         var addedPhotoData: [Data] = []
@@ -219,7 +219,7 @@ extension FoodStore {
 
         var hasContent: Bool {
             if effort != nil || cuisine != nil || serves != nil || !isPublic || recipeKindID != nil || cookingMethodID != nil { return true }
-            let hasIngredients = ingredients.contains { !$0.isEmpty }
+            let hasIngredients = ingredientGroups.allIngredients.contains { !$0.isEmpty }
             let hasInstructions = instructions.contains { !$0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
             return hasIngredients || hasInstructions || totalPhotosCount > 0
         }
@@ -285,8 +285,8 @@ extension FoodStore {
             upsertLocal(meal: meal)
 
             try await applyPhotos(draft.photos, to: meal)
-            // A new meal logged without a photo gets an AI one (the plate laid for eating).
-            if draft.mealID == nil, self.meal(meal.id)?.photoPaths.isEmpty ?? meal.photoPaths.isEmpty {
+            // A new meal logged without a photo gets an AI one (the plate laid for eating), for Pro only.
+            if draft.mealID == nil, EntitlementStore.shared.hasProAccess, self.meal(meal.id)?.photoPaths.isEmpty ?? meal.photoPaths.isEmpty {
                 Task { try? await generateMealImage(for: meal, recipe: recipe) }
             }
             if let servedParties = draft.servedParties {

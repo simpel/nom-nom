@@ -17,7 +17,9 @@ Every slot is optional except `title`.
 | `summary` | Text `sans-md` `text-secondary`, capped at `container-sm` | One sentence in the household voice. |
 | `actions` | AppButton `md`, label only | At most two, at most one `solid`. See Actions below. |
 
-There is no `meta`, `facts`, `badges`, `align`, `size` or children slot, and the header never carries a photo. Facts about the subject are the Facts component, further down the screen. Counts and history (members, followers, last cooked) are not shown in the header.
+There is no `meta`, `facts`, `badges`, `align`, `size` or children slot, and the header never carries a photo (an avatar is not a photo strip: the meal screen passes the meal's first photo, or its cuisine photo, as the avatar).
+
+Two flags exist in the app. `centered` (default false) centres a `standard` header that opens a sheet as a prompt (the New meal sheet with no recipe yet: title, sentence, Pick / Create recipe); an avatar always centres, whatever it is. `avatarEdit` makes the `xl` avatar editable (see Avatar, Edit mode): onboarding's profile step, your own profile and the dinner party header for any member. Facts about the subject are the Facts component, further down the screen. Counts and history (members, followers, last cooked) are not shown in the header.
 
 ## Alignment
 
@@ -76,8 +78,9 @@ Second in the screen anatomy (root README, "Screen anatomy"): after the chrome (
 
 | screen | avatar | eyebrow | title | date | summary | actions |
 | --- | --- | --- | --- | --- | --- | --- |
-| Meals / Recipes / Parties (`tabRoot`, centred) | — | — | Meals at The Friday Feast Club · Recipes for The Friday Feast Club · Your dinner parties ("Your meals" / "Your recipes" with no party) | — | what the tab holds, one sentence | Log a meal / New recipe / New party |
-| Meal | — | THE FRIDAY FEAST CLUB | the dish | the meal's date | — | Rate this meal (`solid`); after rating "You rated 90" (`soft`) |
+| Meals / Parties (`tabRoot`, centred) | — | — | Meals at The Friday Feast Club · Your dinner parties ("Your meals" with no party) | — | what the tab holds, one sentence | Log a meal / New party |
+| Recipes (`tabRoot`, centred) | — | — | Recipes (the tab is where you find any recipe, so the party's name stays on its Pro shelf, "Picked for …") | — | one sentence about finding something to cook | none: "New recipe" is the first group of the page menu |
+| Meal | the meal's first photo (cuisine photo when none) | THE FRIDAY FEAST CLUB | the dish | the meal's date | — | Rate this meal (`solid`); after rating "Change your rating" (`soft`); "View recipe" (`secondary soft`) second when the meal has a recipe |
 | Recipe | — | AMERICAN | the dish | — | — | Start cooking (`solid`) · Use in a meal (`secondary soft`) |
 | Dinner party | the party | — | the party name | — | its about line | Add meal; others Follow / Following |
 | Person | the person | — | their name | — | — | Edit profile (`secondary soft`, own profile) |

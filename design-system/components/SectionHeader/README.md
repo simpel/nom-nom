@@ -36,11 +36,34 @@ Plus `title`, an optional `icon` before it, and `as` (the title element — `h2`
 | `secondary` | "INDIAN · by Anna", "INGREDIENTS · 6 items" |
 | `primary` | "WHO RATED · 5 of 6" |
 
+## The section action: `count` and `action`
+
+A section that the viewer can add to (or open) carries **one verb on the right of its header**; the count follows the title on the left. This is the one pattern for "Add a recipe", "New dinner party", "Log a meal" and "See all" on every section, so no screen invents its own.
+
+| prop | values |
+| --- | --- |
+| `count` | the figure after the title, `text-tertiary`, tabular. **Leave it out by default**: "MEAL HISTORY 31" adds nothing the list does not show. Use it only for a number the person acts on ("WAITING FOR YOUR RATING 3") |
+| `action` | `{ label, onClick, 'aria-label'? }`: an AppButton `primary soft sm`, one or two words in sentence case ("Add recipe", "New party", "Log meal", "See all"). `aria-label` names the noun for VoiceOver |
+
+| section state | where the verb lives |
+| --- | --- |
+| has items, viewer can act | the header `action` |
+| empty, viewer can act | the EmptyState's `action`, with the same verb; the header action is **not** drawn |
+| empty, viewer cannot act | the EmptyState with no action |
+| has items, viewer cannot act | no action; the header is the label and count only |
+
+- **One action per header, never an icon.** A section that offers both "See all" and "Add" keeps "Add"; "See all" moves to the foot of the list.
+- It is a real, visible 44pt capsule (`primary-soft` ground), not bare text: the header row grows to `spacing-11` to hold it, nothing overhangs, and its right edge lines up with the card's right edge. A ghost text button was tried and dropped: it read as a caption and its target was invisible.
+- A list card may also open with an AddRow (a plus and the verb, 56pt, full width) on screens whose whole job is adding, such as My recipes; the header action is still the rule everywhere else.
+- The verb names what the section holds in one word; the screen's own primary commitment ("Log a meal" in the ScreenHeader) stays there. A section action never duplicates a ScreenHeader action on the same screen.
+- Viewer permission decides it: pass `action` only when the person can act (their own profile, a party they belong to). Do not draw it disabled.
+- This relaxes "never a button" in the trailing slot below: `trailing` is still a figure; `action` is the slot for a verb.
+
 ## Rules
 - **One label per surface.** A card gets one, at the top. Two small uppercase labels in the same card compete and neither reads as the heading.
 - **At most one thing to the right of it.** The trailing slot takes a figure — a count, a byline, a score — not a second label and never a button. If a card needs a category, an author and a score, the category is the label and the rest belong with the content they describe, not crowded onto the label's line.
 - Uppercase for categories and section names; normal case for possessive or personal labels ("Joel's note"). Same size and colour either way.
-- The title is never truncated. It wraps to as many lines as it needs, and the trailing figure stays on one line, aligned to the title's first line (top), so a long title ("Every time the Friday Feast Club cooked this") reads in full beside "3 times".
+- The title truncates before the trailing figure does: the number is the part that must stay readable.
 - `variant: 'primary'` recolours the label only; it does not tint anything. Use it when the surface around it is already a `primary` card, and on one label there.
 - The component never paints a background. If a label needs a surface, the surface is a Card the consumer places — SectionCard exists for exactly that pairing.
 

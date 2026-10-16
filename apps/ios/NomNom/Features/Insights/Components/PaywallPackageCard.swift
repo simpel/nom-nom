@@ -2,7 +2,7 @@ import SwiftUI
 import RevenueCat
 
 /// One subscription option on the paywall. A "kept as-is" block awaiting a design
-/// (DS-GAPS.md "Paywall package cards"): a `panel` card at `radius-2xl`, the best-value
+///: a `panel` card at `radius-2xl`, the best-value
 /// plan tinted `pro` at `opacity-10` with a `pro` "Best value" Badge on its top edge,
 /// a `border-hairline` ring at rest and `border-thick` when selected.
 struct PaywallPackageCard: View {

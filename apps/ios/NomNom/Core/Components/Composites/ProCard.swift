@@ -10,10 +10,10 @@ import SwiftUI
 /// never means empty. The blurred copy is hidden from VoiceOver.
 ///
 /// `teaser` is optional: a screen whose title already says what the block holds can
-/// leave it out (DS-GAPS B, "ProCard without a teaser").
+/// leave it out.
 ///
 /// `action` (unlocked only) makes the whole card pressable, ProLinkCard style: a `pro-text`
-/// chevron on the title row and `opacity-70` on press (DS-GAPS B, "Pressable ProCard").
+/// chevron on the title row and `opacity-70` on press.
 /// Locked, the card ignores it and "Unlock with Pro" stays the one button.
 ///
 /// `mark: false` drops the ProMark; use it inside a ProView, which is already marked.
@@ -105,7 +105,7 @@ struct ProCard<Content: View>: View {
                 .padding(.horizontal, -contentBleed)
                 .frame(maxHeight: DS.Spacing.s28, alignment: .top)
                 .clipped()
-                .blur(radius: ProBlur.radius)
+                .blur(radius: DS.Blur.sm)
                 .allowsHitTesting(false)
                 .accessibilityHidden(true)
             AppButton("Unlock with Pro", icon: "sparkles", variant: .pro, size: .lg, fullWidth: true) {
