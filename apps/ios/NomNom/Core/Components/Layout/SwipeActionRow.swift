@@ -79,11 +79,13 @@ struct SwipeActionRow<ID: Hashable, Content: View>: View {
                         }
                     }
                     .frame(width: -offset, height: geo.size.height)
-                    .offset(x: geo.size.width + offset)
                     .clipped()
                     .onTapGesture {
                         closeAndTrigger(action: onTrailingAction)
                     }
+                    // Pin to the trailing edge by layout, not `.offset`: `.clipped()`
+                    // clips to the layout frame, so an offset strip was clipped away.
+                    .frame(width: geo.size.width, height: geo.size.height, alignment: .trailing)
                 }
             }
             .onTapGesture {
@@ -116,6 +118,8 @@ struct SwipeActionRow<ID: Hashable, Content: View>: View {
                 .offset(x: offset)
                 .modifier(SwipeDragGesture(isEnabled: hasActions, onChanged: dragChanged, onEnded: dragEnded))
         }
+        // The row slides over its action, never out past the card's edge.
+        .clipped()
         .onChange(of: openRowID) { _, newValue in
             if newValue != id && (isSwipedLeading || isSwipedTrailing || offset != 0) {
                 withAnimation(snap) {
