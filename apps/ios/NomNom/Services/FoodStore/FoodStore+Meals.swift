@@ -285,8 +285,8 @@ extension FoodStore {
             upsertLocal(meal: meal)
 
             try await applyPhotos(draft.photos, to: meal)
-            // A new meal logged without a photo gets an AI one (the plate laid for eating).
-            if draft.mealID == nil, self.meal(meal.id)?.photoPaths.isEmpty ?? meal.photoPaths.isEmpty {
+            // A new meal logged without a photo gets an AI one (the plate laid for eating), for Pro only.
+            if draft.mealID == nil, EntitlementStore.shared.hasProAccess, self.meal(meal.id)?.photoPaths.isEmpty ?? meal.photoPaths.isEmpty {
                 Task { try? await generateMealImage(for: meal, recipe: recipe) }
             }
             if let servedParties = draft.servedParties {
