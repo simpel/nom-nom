@@ -4,16 +4,34 @@ import { SupabaseClient } from "jsr:@supabase/supabase-js@2";
 
 type ImageFormat = { extension: string; contentType: string };
 
+/** The row's current photo_paths (empty when it has none or can't be read). */
+export async function rowPhotoPaths(
+  admin: SupabaseClient,
+  table: "recipes" | "meals",
+  id: string,
+): Promise<string[]> {
+  const { data: row } = await admin.from(table).select("photo_paths").eq("id", id).single();
+  return row?.photo_paths || [];
+}
+
 /**
  * A photo for one row that keeps a `photo_paths` array (recipes, meals): uploaded to
  * `<bucket>/<id>/<uuid>.<ext>` and put first in the row's photo_paths. Returns the path.
+ * With `expectedCover` (the first photo path when generation started; "" or null for none), a row
+ * whose cover changed meanwhile (the person added a photo while this was generated) is
+ * left alone and nothing is uploaded; returns null.
  */
 export async function attachRowPhoto(
   admin: SupabaseClient,
   target: { bucket: string; table: "recipes" | "meals"; id: string },
   bytes: Uint8Array,
   format: ImageFormat,
+  options: { expectedCover?: string | null } = {},
 ): Promise<string | null> {
+  if (options.expectedCover !== undefined) {
+    const current = (await rowPhotoPaths(admin, target.table, target.id))[0] ?? "";
+    if (current !== (options.expectedCover ?? "")) return null;
+  }
   const path = `${target.id.toLowerCase()}/${crypto.randomUUID().toLowerCase()}.${format.extension}`;
 
   const { error: uploadErr } = await admin.storage
@@ -24,8 +42,7 @@ export async function attachRowPhoto(
     return null;
   }
 
-  const { data: row } = await admin.from(target.table).select("photo_paths").eq("id", target.id).single();
-  const existing: string[] = row?.photo_paths || [];
+  const existing = await rowPhotoPaths(admin, target.table, target.id);
   const { error: dbErr } = await admin
     .from(target.table)
     .update({ photo_paths: [path, ...existing.filter((p) => p !== path)] })

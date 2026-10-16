@@ -24,6 +24,8 @@ final class FoodStore {
     
     /// Recipes currently having AI photos generated in the background.
     var generatingPhotoRecipeIDs: Set<UUID> = []
+    /// The running AI photo request per recipe, so a photo the person picks can stop it.
+    @ObservationIgnored var recipePhotoTasks: [UUID: Task<Void, Never>] = [:]
     /// Meals currently having AI photos generated in the background.
     var generatingPhotoMealIDs: Set<UUID> = []
 

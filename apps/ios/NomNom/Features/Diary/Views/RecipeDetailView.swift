@@ -3,7 +3,8 @@ import SwiftUI
 /// A recipe's detail screen ("Nom Nom iOS" canvas), top to bottom on `bg`: ScreenHeader
 /// (cuisine, name, "Start cooking" / "Use in a meal"), PhotoStrip, the Facts card, the party and health ScoreCards, ingredients with servings, steps,
 /// recipe pages and details. The toolbar has the favourite heart and the PageMenu,
-/// whose recipe group gives the owner Generate photo / Edit / Delete.
+/// whose recipe group gives the owner Edit / Delete. The owner's Add photo tile opens
+/// the Add photo sheet: Generate with AI (Pro), Take photo, Choose from library.
 struct RecipeDetailView: View {
     let recipeID: UUID
     var showCloseButton: Bool = false
@@ -17,6 +18,7 @@ struct RecipeDetailView: View {
     @State var fallbackRecipe: Recipe?
     @State var isLoadingRemote = false
     @State var showEditSheet = false
+    @State var showAddPhoto = false
     @State var showMealEditor = false
     @State var selectedPhotoIndex: Int?
     @State var confirmDeleteRecipe = false
@@ -125,8 +127,18 @@ struct RecipeDetailView: View {
 
                 PhotoStrip(
                     photos: allPhotos.map { .remote(path: $0, bucket: SupabaseConfig.recipeBucket, cuisine: recipe.cuisine) },
-                    onAddPhoto: isOwner ? { showEditSheet = true } : nil,
+                    onAddPhoto: isOwner ? { showAddPhoto = true } : nil,
+                    addOffersAI: true,
+                    isGenerating: store.generatingPhotoRecipeIDs.contains(recipe.id),
                     onSelect: { selectedPhotoIndex = $0 }
+                )
+                .addPhotoSheet(
+                    isPresented: $showAddPhoto,
+                    onGenerate: { store.startRecipePhotoGeneration(for: recipe) },
+                    onPick: { photos in
+                        guard let photo = photos.first else { return }
+                        Task { await store.setRecipeCover(photo, for: recipe) }
+                    }
                 )
 
                 RecipeDetailFacts(recipe: recipe)

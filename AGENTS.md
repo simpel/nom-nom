@@ -326,6 +326,7 @@ Only these specific system-level APIs are exempt from `AppButton`:
 ## 11. Branching & Releases
 
 - **Feature PRs target the newest `release/*` branch, never `main`.** Find it with `git branch -r --list 'origin/release/*' | sort -V | tail -n 1`. Superset workspaces start from the base picked at creation (`--base-branch` or the app's base picker; `main` or none means the newest `release/*`), and setup sets it as `gh pr create`'s default base (`.superset/setup.sh`). Otherwise branch from it and pass `--base release/<version>`.
+- **Check the release is still open before every PR.** The newest `release/*` may already be shipped: `gh pr list --state merged --base main --head release/<version>` must print nothing. If it lists a merged PR, that release is done; ask before creating the next `release/<x.y>` from `main`, then target that.
 - **Only release PRs (`release/*` → `main`) go into `main`.** The `Release gate` check fails anything else (Dependabot excepted).
 - **No direct pushes** to `main` or `release/*`; GitHub rulesets require a PR for both.
 - **CodeQL runs on the release PR into `main` and on pushes to `main` only**, not on feature PRs or release-branch pushes (that doubled every run). The Swift job takes about 30 min, so a release PR into `main` waits for it.
