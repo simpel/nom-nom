@@ -9,6 +9,7 @@ struct PartyMemberInsightSheet: View {
     let partyID: UUID
 
     @Environment(FoodStore.self) private var store
+    @Environment(EntitlementStore.self) private var entitlements
     @State private var showProfile = false
 
     init(memberRef: RaterRef, partyID: UUID) {
@@ -43,13 +44,16 @@ struct PartyMemberInsightSheet: View {
 
                 HStack(alignment: .top, spacing: DS.Spacing.s3) {
                     ScoreCard(score: average?.score, layout: .compact, title: "Average here")
-                    ScoreCard(
-                        score: tasteMatch.map { Double($0.matchScore) / 100 },
-                        verdict: tasteMatch.map { Self.matchVerdict($0.matchScore) },
-                        layout: .compact,
-                        title: "Taste match",
-                        delta: tasteMatch?.trendDelta
-                    )
+                    // Taste match is an insight, so it is Pro only.
+                    if entitlements.hasProAccess {
+                        ScoreCard(
+                            score: tasteMatch.map { Double($0.matchScore) / 100 },
+                            verdict: tasteMatch.map { Self.matchVerdict($0.matchScore) },
+                            layout: .compact,
+                            title: "Taste match",
+                            delta: tasteMatch?.trendDelta
+                        )
+                    }
                 }
 
                 PartyMemberCookingForSection(memberRef: memberRef, name: name, partyID: partyID)

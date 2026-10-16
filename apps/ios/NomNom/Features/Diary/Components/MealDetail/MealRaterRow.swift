@@ -14,6 +14,7 @@ struct MealRaterRow: View {
     let action: () -> Void
 
     @Environment(FoodStore.self) private var store
+    @Environment(EntitlementStore.self) private var entitlements
 
     private var name: String { rater.isViewer ? "You" : store.firstName(for: rater.ref) }
     private var score: Double? { rater.rating?.score }
@@ -23,7 +24,7 @@ struct MealRaterRow: View {
         if score != nil {
             if let createdBy = meal.createdBy, rater.ref == .account(createdBy) { return "Chef" }
             if rater.isViewer { return nil }
-            return isNew ? "First rating" : nil
+            return isNew && entitlements.hasProAccess ? "First rating" : nil
         }
         if rater.isViewer { return nil }
         guard let profile = rater.profile else { return nil }
@@ -81,7 +82,10 @@ struct MealRaterRow: View {
 
     @ViewBuilder
     private var change: some View {
-        if isNew {
+        // The change against their usual is an insight, so it is Pro only.
+        if !entitlements.hasProAccess {
+            EmptyView()
+        } else if isNew {
             Badge("New", variant: .secondary, size: .sm)
         } else if let delta = store.changeVsUsual(for: rater.ref, on: meal.id) {
             if delta == 0 {
