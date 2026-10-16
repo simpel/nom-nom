@@ -8,7 +8,7 @@ These instructions define how the Nom Nom codebase is structured and the rules t
 
 Nom Nom has its own design system. It is the spec for every pixel in the iOS app.
 
-- **Source of truth**: the artifact at https://claude.ai/artifact/4jeEJ91V5eRxpDn8NtqNgK, vendored read-only at `design-system/` (version in `design-system/VERSION`).
+- **Source of truth**: the artifact at https://claude.ai/artifact/4jeEJ91V5eRxpDn8NtqNgK, vendored at `design-system/` (version in `design-system/VERSION`). The design system is ours and meant to change: edit the **artifact**, then re-vendor. The vendored copy is a snapshot, so never hand-edit it (the next re-vendor would overwrite the edit and the repo would drift from the spec).
 - **What to read, in order**:
   1. `design-system/README.md`: voice, colour roles, scales, typography, imagery, composition rules.
   2. `design-system/components/<Name>/README.md` for every component you touch or compose. Read it before writing the Swift.
@@ -22,7 +22,7 @@ Before writing any view, card, row, sheet or control:
 
 1. **Find the DS component.** `ls design-system/components/`. If one fits, use its Swift counterpart with the axes its README defines. Do not add props, variants or sizes the README doesn't name.
 2. **Compose before inventing.** If no single component fits, build the view from DS components (Card + ListRow + Badge, …). A feature view built only from DS components and tokens needs no gap entry.
-3. **No equivalent? Flag it.** If the UI needs a pattern the DS does not define (a new visual shape, control, state or layout rule):
+3. **No equivalent? Add it to the design system.** The DS is editable: if the UI needs a pattern it does not define (a new visual shape, control, state or layout rule), update the artifact first (component README, `preview.html`, `components/bundle.js` + `bundle.css`, `components/index.d.ts`, following its `SKILL.md`; read the live files right before writing), re-vendor, bump `VERSION`, then build the Swift counterpart. Only when the artifact change cannot land in this PR, fall back to a flagged gap:
    - Shared across features → `Core/Components/Interim/<Name>.swift`, first line `// DS-GAP: pending design system — see Core/Design/DS-GAPS.md`. One feature → that feature's `Components/`.
    - Build it only from DS primitives and tokens.
    - Add it to `DS-GAPS.md` section A with what it covers and **what the DS needs to decide**.
@@ -50,7 +50,7 @@ This is a pnpm/Turborepo monorepo. Three apps under `apps/`, shared configs unde
 Every `NomNom/...` path elsewhere in this doc is shorthand for `apps/ios/NomNom/...`.
 
 ```
-design-system/          # Vendored snapshot of the design system artifact (see VERSION). Never hand-edit.
+design-system/          # Vendored snapshot of the design system artifact (see VERSION). Change the artifact, then re-vendor.
 │                         README.md (rules), tokens.json (every value), components/<Name>/README.md
 ├── components/         # One README per component + bundle.css / index.d.ts (reference implementation)
 scripts/
@@ -119,7 +119,7 @@ To keep the codebase maintainable and readable:
 
 5. **The design system is the only source of values**:
    - No font size, spacing, colour, radius, shadow, opacity, border width, duration or dimension is invented. Every value is a `DS.*` token or a `.textStyle(...)` step.
-   - Tokens are generated from `design-system/tokens.json` by `scripts/ds-tokens-swift.py` into `Core/Design/Generated/`. **Never hand-edit `Generated/`** or `design-system/`; `Core/Design/DS+*.swift` only alias generated values. See `Core/Design/README.md`.
+   - Tokens are generated from `design-system/tokens.json` by `scripts/ds-tokens-swift.py` into `Core/Design/Generated/`. **Never hand-edit `Generated/`** or the vendored `design-system/` snapshot (change the artifact); `Core/Design/DS+*.swift` only alias generated values. See `Core/Design/README.md`.
    - `scripts/ds-lint.sh` must be clean. A literal that has to stay ends in `// ds-lint:allow <reason>` quoting the README it came from.
    - Where the spec contradicts itself, the component README wins over older root-README prose; log every such call in `Core/Design/DS-GAPS.md`.
 
