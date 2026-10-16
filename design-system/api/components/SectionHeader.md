@@ -26,7 +26,7 @@ The one small label, wherever it sits — above a list or inside a card. It draw
 | `title` * | `string` |  |
 | `uppercase` | `boolean` | false sets the label as written, for a possessive or personal label ("Joel's note"). @default true |
 | `trailing` | `unknown` | One figure on the right — a count, a byline, a score. Never a second label, never a button. |
-| `trailingVariant` | `'secondary' \| 'primary'` | 'primary' makes the figure primary-text, for a live count. |
+| `trailingTone` | `'tertiary' \| 'accent'` | The figure's ink. 'accent' for a live count. @default 'tertiary' |
 | `icon` | `IconName` |  |
 | `variant` | `'primary'` | 'primary' — title primary-text semibold. Only inside a featured card, and only on one label there. |
 | `as` | `string` | The title element: 'h2' above content, 'span' inside a card or header. @default 'h2' |

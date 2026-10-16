@@ -44,7 +44,7 @@ export default async function UserDetailPage({ params }: { params: Promise<{ id:
 
   const { data: myRatings } = await adminSupabase
     .from('meal_ratings')
-    .select('meal_id, score, created_at, meals ( eaten_on, recipes ( name, cuisine, effort, ingredients, health_score ) )')
+    .select('meal_id, score, created_at, meals ( eaten_on, recipes ( name, cuisine, effort, health_score ) )')
     .eq('rater_id', id)
     .order('created_at', { ascending: false })
 

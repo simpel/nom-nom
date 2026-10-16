@@ -23,6 +23,7 @@ Nothing here yet. No artwork — the system defines none.
 
 | prop | type | note |
 | --- | --- | --- |
+| `titleAs` | `string` | The heading element for the title, so a nested block does not skip a level. @default 'h2' |
 | `layout` | `'screen' \| 'card' \| 'plain' \| 'row'` | screen = the whole view has nothing (serif-md, solid action) · card = a block on a screen that has other content · plain = inside a Card or sheet that alread… |
 | `title` * | `string` | The fact, in the household voice. 'row' shows only this. |
 | `message` | `string` | One sentence saying what to do. Not used by 'row'. |

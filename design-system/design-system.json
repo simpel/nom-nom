@@ -1,4 +1,5 @@
 {
+  "v": 3,
   "assetGroups": {
     "Logos": {
       "files": {
@@ -52,12 +53,6 @@
           "size": 772892,
           "type": "image/jpeg"
         },
-        "japanese.jpeg": {
-          "blob": "65054a7a0d367da2d194ebd357fd2ee5",
-          "name": "japanese.jpeg",
-          "size": 767854,
-          "type": "image/jpeg"
-        },
         "korean.jpeg": {
           "blob": "bfac2a7cfc7ded329808e40ca7961f4f",
           "name": "korean.jpeg",
@@ -109,7 +104,6 @@
         "greek.jpeg",
         "indian.jpeg",
         "italian.jpeg",
-        "japanese.jpeg",
         "korean.jpeg",
         "mediterranean.jpeg",
         "mexican.jpeg",
@@ -135,10 +129,10 @@
     "Photography"
   ],
   "lastChange": {
-    "at": "2026-10-04T21:20:00Z",
+    "at": "2026-10-16T17:45:00Z",
     "by": "Joel Sandén",
     "via": "Claude (Claude Code)",
-    "note": "ScreenHeader: role (standard · tabRoot · moment) replaces moment; tab roots are centred with a one-sentence summary and a contextual title that names the current party (\"Meals at The Friday Feast Club\")."
+    "note": "Reorder: drag to reorder any set in either direction (list rows, strip tiles), between sets in one group; Reorder + ReorderTarget, grip icon (Reorder README, root README)."
   },
   "layout": "files",
   "libraries": [
@@ -157,6 +151,5 @@
   ],
   "namespace": "NomNom",
   "sections": {},
-  "title": "Nom Nom",
-  "v": 3
+  "title": "Nom Nom"
 }

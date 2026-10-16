@@ -167,16 +167,33 @@
 .nn-badge[data-size="sm"] { height: var(--spacing-5); padding: 0 var(--spacing-2); }
 
 /* ---------- SectionHeader (also SectionCard's heading) */
-.nn-section-header { display: flex; align-items: first baseline; justify-content: space-between; gap: var(--spacing-2); min-width: 0; }
+.nn-section-header { display: flex; align-items: baseline; justify-content: space-between; gap: var(--spacing-2); min-width: 0; }
 /* The label reserves no space of its own. A Section places it with the inset and gap that a section needs. */
 .nn-section__head { padding: 0 var(--spacing-2); margin: 0 0 var(--spacing-2); }
 /* Type comes from Text (sans-xs, tertiary); this adds only the casing, the tracking and the layout. */
-.nn-section-header__title { margin: 0; display: inline-flex; align-items: first baseline; gap: var(--spacing-1\.5); min-width: 0;
-  white-space: normal; overflow-wrap: anywhere; letter-spacing: var(--tracking-widest); text-transform: uppercase; }
+.nn-section-header__title { margin: 0; display: inline-flex; align-items: center; gap: var(--spacing-1\.5); min-width: 0;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; letter-spacing: var(--tracking-widest); text-transform: uppercase; }
 .nn-section-header__title .nn-icon { flex: none; font-size: var(--text-sm); }
 .nn-section-header[data-case="normal"] .nn-section-header__title { letter-spacing: normal; text-transform: none; }
 .nn-section-header[data-variant="primary"] .nn-section-header__title { color: var(--primary-text); font-weight: var(--font-weight-semibold); }
 .nn-section-header__trailing { flex: none; }
+/* Lead = the title and its count. The count is a figure beside the label, not a second label. */
+.nn-section-header__lead { display: inline-flex; align-items: center; gap: var(--spacing-2); min-width: 0; }
+.nn-section-header__lead > .nn-text { line-height: var(--leading-none); }
+.nn-section-header__count { flex: none; }
+/* The section's one action: a soft sm AppButton on the right, a real bounded 44px target. The header row grows to hold it (no overhang),
+   and the button's right edge lines up with the card's right edge. */
+.nn-section-header[data-action] { align-items: center; min-height: var(--spacing-11); }
+.nn-section-header__action { flex: none; }
+.nn-section__head[data-action] { padding-right: 0; }
+
+/* AddRow: the first or last row of a list card, a full-width 56px add target. */
+.nn-add-row { display: flex; align-items: center; gap: var(--spacing-3); width: 100%; min-height: var(--spacing-14); padding: var(--spacing-3) 0; border: 0; background: none;
+  color: var(--primary-text); font: var(--font-weight-semibold) var(--text-base)/var(--leading-normal) var(--font-sans); text-align: left; cursor: pointer;
+  transition: opacity var(--duration-press) var(--ease-standard); }
+.nn-add-row:active { opacity: var(--opacity-70); }
+.nn-add-row:focus-visible { outline: var(--border-thick) solid var(--focus-ring); outline-offset: calc(-1 * var(--spacing-0\.5)); border-radius: var(--radius-xl); }
+.nn-add-row__glyph { display: grid; place-items: center; flex: none; width: var(--spacing-8); height: var(--spacing-8); border-radius: var(--radius-full); background: var(--primary-soft); font-size: var(--text-sm); }
 
 /* ---------- SectionCard: Section + Card (stacked) or Card with an inset label */
 .nn-section-card { --nn-gap: var(--spacing-1\.5); }
@@ -190,7 +207,7 @@
 .nn-field-block { display: flex; flex-direction: column; gap: var(--spacing-1\.5); width: 100%; }
 .nn-field { --nn-h: var(--spacing-11); --nn-px: var(--spacing-3\.5); display: flex; align-items: center; gap: var(--spacing-2);
   box-sizing: border-box; height: var(--nn-h); padding: 0 var(--nn-px); border-radius: var(--radius-xl); background: var(--sunken);
-  box-shadow: inset 0 0 0 var(--border-hairline) var(--line-control); transition: box-shadow var(--duration-state) var(--ease-standard); }
+  box-shadow: none; transition: box-shadow var(--duration-state) var(--ease-standard); }
 .nn-field[data-labeled] { --nn-h: var(--spacing-14); }
 .nn-field[data-appearance="plain"] { background: transparent; box-shadow: none; padding: 0; }
 .nn-field > .nn-icon { flex: none; font-size: var(--text-base); color: var(--text-secondary); transition: color var(--duration-state) var(--ease-standard); }
@@ -201,9 +218,8 @@
 .nn-field input::placeholder, .nn-field textarea::placeholder { color: var(--text-tertiary); opacity: 1; }
 .nn-field .nn-field__clear { margin-right: calc(-1 * var(--spacing-2)); color: var(--text-tertiary); }
 
-/* States, loudest last. Focus and error are 2px so they read at a glance; the ground shifts too. */
-.nn-field:hover:not(:has(:disabled)):not(:has(:read-only)):not([data-appearance="plain"]) { box-shadow: inset 0 0 0 var(--border-hairline) var(--text-tertiary); }
-.nn-field:focus-within:not([data-appearance="plain"]) { box-shadow: inset 0 0 0 var(--border-thick) var(--primary); }
+/* iOS: a field has no border at rest, on focus, read-only or disabled. Focus is the label in primary-text and the icon in primary;
+   only a soft field in error draws a border-thick destructive border. */
 .nn-field:focus-within > .nn-icon { color: var(--primary); }
 .nn-field:focus-within .nn-field__label { color: var(--primary-text); }
 .nn-field:has([aria-invalid="true"]):not([data-appearance="plain"]) { box-shadow: inset 0 0 0 var(--border-thick) var(--destructive-text); }
@@ -211,7 +227,6 @@
 /* Read-only keeps the ground but loses the border: no border, no affordance. */
 .nn-field:has(:read-only:not(:disabled)) { box-shadow: none; }
 .nn-field:has(:read-only:not(:disabled)) input, .nn-field:has(:read-only:not(:disabled)) textarea { color: var(--text-secondary); cursor: default; }
-.nn-field:has(:disabled) { box-shadow: inset 0 0 0 var(--border-hairline) var(--line); }
 .nn-field:has(:disabled) input, .nn-field:has(:disabled) textarea, .nn-field:has(:disabled) > .nn-icon, .nn-field:has(:disabled) .nn-field__label { color: var(--text-tertiary); }
 .nn-field:has(:disabled) * { cursor: not-allowed; }
 
@@ -567,3 +582,258 @@
 .nn-pro-gate__benefits li { display: flex; align-items: baseline; gap: var(--spacing-2\.5); }
 .nn-pro-gate__benefits .nn-icon { flex: none; color: var(--pro-text); transform: translateY(2px); }
 .nn-pro-gate__actions { display: flex; flex-direction: column; gap: var(--spacing-1); margin-top: var(--spacing-1); }
+
+/* =====================================================================
+   Adopted from the app (Oct 2026). Same rules as above: every value is a token.
+   New tokens carry a fallback in case tokens.css has not been regenerated yet:
+   --glass, --photo-scrim, --blur-sm, --blur-md, --dash.
+   ===================================================================== */
+
+/* ---------- Glyphs added for the bar, the menu, lists and pickers */
+.nn-i-ellipsis{--nn-i:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22%3E%3Ccircle fill=%22black%22 cx=%225%22 cy=%2212%22 r=%222%22/%3E%3Ccircle fill=%22black%22 cx=%2212%22 cy=%2212%22 r=%222%22/%3E%3Ccircle fill=%22black%22 cx=%2219%22 cy=%2212%22 r=%222%22/%3E%3C/svg%3E")}
+.nn-i-list{--nn-i:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22%3E%3Ccircle fill=%22black%22 cx=%225%22 cy=%227%22 r=%221.6%22/%3E%3Ccircle fill=%22black%22 cx=%225%22 cy=%2212%22 r=%221.6%22/%3E%3Ccircle fill=%22black%22 cx=%225%22 cy=%2217%22 r=%221.6%22/%3E%3Cpath stroke=%22black%22 stroke-width=%222%22 stroke-linecap=%22round%22 fill=%22none%22 d=%22M10 7h10M10 12h10M10 17h10%22/%3E%3C/svg%3E")}
+.nn-i-chevron-up-down{--nn-i:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22%3E%3Cpath stroke=%22black%22 stroke-width=%222%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22 fill=%22none%22 d=%22M7 9l5-5 5 5M7 15l5 5 5-5%22/%3E%3C/svg%3E")}
+.nn-i-grip{--nn-i:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22%3E%3Cpath stroke=%22black%22 stroke-width=%222%22 stroke-linecap=%22round%22 fill=%22none%22 d=%22M4 7h16M4 12h16M4 17h16%22/%3E%3C/svg%3E")}
+.nn-i-filter{--nn-i:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22%3E%3Cpath stroke=%22black%22 stroke-width=%222%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22 fill=%22none%22 d=%22M3 5h18l-7 8.5V20l-4-2v-4.5z%22/%3E%3C/svg%3E")}
+.nn-i-filter-fill{--nn-i:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22%3E%3Cpath fill=%22black%22 stroke=%22black%22 stroke-width=%222%22 stroke-linejoin=%22round%22 d=%22M3 5h18l-7 8.5V20l-4-2v-4.5z%22/%3E%3C/svg%3E")}
+
+/* ---------- Avatar: a hairline ring, and edit mode (xl) */
+.nn-avatar { box-shadow: inset 0 0 0 var(--border-hairline) color-mix(in srgb, var(--line) 30%, transparent); }
+.nn-avatar-edit { position: relative; display: inline-flex; padding: 0; border: 0; background: none; border-radius: var(--radius-full); cursor: pointer;
+  transition: opacity var(--duration-press) var(--ease-standard); }
+.nn-avatar-edit:active { opacity: var(--opacity-70); }
+.nn-avatar-edit:focus-visible { outline: var(--border-thick) solid var(--focus-ring); outline-offset: var(--spacing-0\.5); }
+/* The badge is visual only; the avatar is the 44pt+ target. Its centre sits on the circle's edge at 45 degrees. */
+.nn-avatar-edit__badge { position: absolute; top: calc(var(--spacing-20) * 0.1464 - var(--spacing-4)); right: calc(var(--spacing-20) * 0.1464 - var(--spacing-4));
+  display: grid; place-items: center; width: var(--spacing-8); height: var(--spacing-8); border-radius: var(--radius-full);
+  background: var(--panel); color: var(--text-primary); box-shadow: var(--shadow-md); font-size: var(--text-xs); font-weight: var(--font-weight-semibold); }
+
+/* ---------- ListRow: inactive, meta accent */
+.nn-row[data-inactive] .nn-row__lead, .nn-row[data-inactive] .nn-row__body { opacity: var(--opacity-50); }
+.nn-row__accent { color: var(--warning-text); }
+.nn-row__value[data-weight="semibold"] { font-weight: var(--font-weight-semibold); }
+
+/* ---------- Facts: a silent button */
+.nn-facts__select { display: block; padding: 0; margin: 0; border: 0; background: none; color: inherit; font: inherit; text-align: left; cursor: pointer; }
+.nn-facts__select:focus-visible { outline: var(--border-thick) solid var(--focus-ring); outline-offset: var(--spacing-0\.5); border-radius: var(--radius-sm); }
+
+/* ---------- Skeleton: a whole screen */
+.nn-skeleton-screen { display: flex; flex-direction: column; gap: var(--spacing-7); }
+.nn-skeleton-screen__head { display: flex; flex-direction: column; align-items: center; gap: var(--spacing-2); }
+.nn-skeleton[data-shape="screen-avatar"] { width: var(--spacing-20); height: var(--spacing-20); }
+.nn-skeleton[data-shape="screen-title"] { width: 55%; height: var(--spacing-8); }
+.nn-skeleton-screen__head .nn-skeleton[data-shape="meta"] { width: 30%; }
+
+/* ---------- ScoreCard: unrated, segments, Pro */
+.nn-score-card__unrated { display: flex; align-items: center; justify-content: space-between; gap: var(--spacing-3); }
+.nn-score-card__unrated-text { display: flex; flex-direction: column; gap: var(--spacing-0\.5); min-width: 0; }
+.nn-pro-card[data-score] { --nn-gap: var(--spacing-3); gap: var(--spacing-3); }
+.nn-score-card__pro-head { display: flex; align-items: center; justify-content: space-between; }
+.nn-pro-card[data-pressable] { position: relative; cursor: pointer; transition: opacity var(--duration-press) var(--ease-standard); }
+.nn-pro-card[data-pressable]:active { opacity: var(--opacity-70); }
+.nn-pro-card[data-pressable]:has(.nn-card__hit:focus-visible) { outline: var(--border-thick) solid var(--focus-ring); outline-offset: var(--spacing-0\.5); }
+.nn-pro-card__chevron { position: absolute; top: var(--spacing-5); right: var(--spacing-5); font-size: var(--text-base); color: var(--pro-text); }
+.nn-score-card__pro-head .nn-pro-card__chevron { position: static; }
+
+/* ---------- Pro: blur tokens, link card */
+.nn-pro-card__preview { filter: blur(var(--blur-sm, 6px)); }
+.nn-pro-gate__preview { filter: blur(var(--blur-md, 8px)); }
+.nn-pro-link { display: flex; align-items: center; gap: var(--spacing-3); width: 100%; padding: var(--spacing-5); border: 0; border-radius: var(--radius-3xl);
+  background: var(--pro-soft); box-shadow: var(--shadow-lg); color: var(--text-primary); font: inherit; text-align: left; text-decoration: none; cursor: pointer;
+  transition: opacity var(--duration-press) var(--ease-standard); }
+.nn-pro-link:active { opacity: var(--opacity-70); }
+.nn-pro-link:focus-visible { outline: var(--border-thick) solid var(--focus-ring); outline-offset: var(--spacing-0\.5); }
+.nn-pro-link__body { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: flex-start; gap: var(--spacing-1); }
+.nn-pro-link .nn-pro-card__chevron { position: static; }
+
+/* DismissibleNotice: a recoverable problem, in the warning role. */
+.nn-notice { display: flex; align-items: flex-start; gap: var(--spacing-2); padding: 0 var(--spacing-1) 0 var(--spacing-5); border-radius: var(--radius-3xl); background: var(--warning-soft); color: var(--warning-text); }
+.nn-notice__text { flex: 1; min-width: 0; padding: var(--spacing-3) 0; color: var(--warning-text); }
+.nn-notice .nn-button { color: var(--warning-text); }
+
+/* ---------- Bar: the platform's top-bar controls */
+.nn-bar-button { position: relative; display: inline-grid; place-items: center; flex: none; width: var(--spacing-11); height: var(--spacing-11); padding: 0; border: 0;
+  border-radius: var(--radius-full); background: var(--glass, color-mix(in srgb, var(--panel) 80%, transparent)); color: var(--text-primary); box-shadow: var(--shadow-xs);
+  font-size: var(--text-lg); cursor: pointer; transition: opacity var(--duration-press) var(--ease-standard); }
+.nn-bar-button:active { opacity: var(--opacity-70); }
+.nn-bar-button:disabled { opacity: var(--opacity-50); cursor: default; }
+.nn-bar-button:focus-visible, .nn-bar-action:focus-visible { outline: var(--border-thick) solid var(--focus-ring); outline-offset: var(--spacing-0\.5); }
+.nn-bar-button__dot { position: absolute; top: var(--spacing-1); right: var(--spacing-1); width: var(--spacing-2); height: var(--spacing-2); border-radius: var(--radius-full); background: var(--primary); }
+.nn-bar-action { min-height: var(--spacing-11); min-width: var(--spacing-11); padding: 0 var(--spacing-2); border: 0; background: none; color: var(--primary-text); cursor: pointer;
+  font: var(--font-weight-semibold) var(--text-sm)/var(--leading-none) var(--font-sans); }
+.nn-bar-action:disabled { opacity: var(--opacity-50); cursor: default; }
+.nn-bar-action:active { opacity: var(--opacity-70); }
+
+/* ---------- BottomSheet: bar, dark media chrome, discard prompt */
+.nn-sheet__bar { grid-template-columns: var(--spacing-11) 1fr var(--spacing-11); }
+.nn-sheet__bar-end { display: flex; justify-content: flex-end; }
+.nn-sheet { position: relative; }
+.nn-sheet-scrim[data-kind="media"] .nn-sheet { background: var(--stone-1000); color: var(--stone-0); }
+.nn-sheet-scrim[data-kind="media"] .nn-sheet__bar .nn-text { color: var(--stone-0); }
+.nn-sheet-scrim[data-kind="media"] .nn-sheet__bar { opacity: var(--opacity-90); }
+.nn-sheet__bar-end:has(.nn-viewer__pager) { grid-column: 3; }
+.nn-viewer__pager { display: inline-flex; gap: var(--spacing-1); }
+.nn-viewer__img { width: 100%; max-height: var(--spacing-72); object-fit: contain; border-radius: var(--radius-2xl); }
+.nn-sheet__discard { position: absolute; inset: 0; z-index: 2; display: flex; align-items: flex-end; justify-content: center; padding: var(--spacing-4); background: var(--scrim); border-radius: inherit; }
+.nn-sheet__discard-card { gap: var(--spacing-2); }
+.nn-sheet__discard-card > h3 { text-align: center; margin-bottom: var(--spacing-1); }
+
+/* ---------- TagToggle */
+.nn-tag { display: inline-flex; align-items: center; min-height: var(--spacing-11); padding: 0 var(--spacing-3); border: 0; border-radius: var(--radius-full);
+  background: var(--panel); color: var(--text-primary); cursor: pointer; font: var(--font-weight-normal) var(--text-sm)/var(--leading-none) var(--font-sans);
+  transition: opacity var(--duration-press) var(--ease-standard), background-color var(--duration-layout) var(--ease-standard); }
+.nn-tag[aria-pressed="true"] { background: var(--primary-soft); color: var(--primary-text); font-weight: var(--font-weight-semibold); }
+.nn-tag:active { opacity: var(--opacity-70); }
+.nn-tag:disabled { opacity: var(--opacity-50); cursor: default; }
+.nn-tag:focus-visible { outline: var(--border-thick) solid var(--focus-ring); outline-offset: var(--spacing-0\.5); }
+
+/* ---------- ChoiceTile */
+.nn-choice { --nn-tint: var(--primary); --nn-ink: var(--primary-text); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: var(--spacing-1);
+  box-sizing: border-box; width: 100%; aspect-ratio: 1; padding: var(--spacing-2); border: 0; border-radius: var(--radius-3xl); background: var(--panel); color: var(--text-primary);
+  text-align: center; cursor: pointer; transition: opacity var(--duration-press) var(--ease-standard), background-color var(--duration-layout) var(--ease-standard); }
+.nn-choice[data-square="false"] { aspect-ratio: auto; min-height: var(--spacing-14); border-radius: var(--radius-lg); }
+.nn-choice[data-reaction="inedible"] { --nn-tint: var(--reaction-inedible-fill); --nn-ink: var(--reaction-inedible-text); }
+.nn-choice[data-reaction="bad"] { --nn-tint: var(--reaction-bad-fill); --nn-ink: var(--reaction-bad-text); }
+.nn-choice[data-reaction="meh"] { --nn-tint: var(--reaction-meh-fill); --nn-ink: var(--reaction-meh-text); }
+.nn-choice[data-reaction="good"] { --nn-tint: var(--reaction-good-fill); --nn-ink: var(--reaction-good-text); }
+.nn-choice[data-reaction="great"] { --nn-tint: var(--reaction-great-fill); --nn-ink: var(--reaction-great-text); }
+.nn-choice[data-reaction="amazing"] { --nn-tint: var(--reaction-amazing-fill); --nn-ink: var(--reaction-amazing-text); }
+.nn-choice[aria-pressed="true"] { background: color-mix(in srgb, var(--nn-tint) 20%, var(--panel)); }
+.nn-choice[aria-pressed="true"] .nn-text { color: var(--nn-ink); }
+.nn-choice:active { opacity: var(--opacity-70); }
+.nn-choice:focus-visible { outline: var(--border-thick) solid var(--focus-ring); outline-offset: var(--spacing-0\.5); }
+
+/* ---------- NoteField / NoteEditor */
+.nn-note { display: block; width: 100%; min-height: var(--spacing-14); padding: var(--spacing-3) 0; border: 0; background: none; color: inherit; font: inherit; text-align: left; cursor: pointer;
+  transition: opacity var(--duration-press) var(--ease-standard); }
+.nn-note:active { opacity: var(--opacity-70); }
+.nn-note:focus-visible { outline: var(--border-thick) solid var(--focus-ring); outline-offset: calc(-1 * var(--spacing-0\.5)); border-radius: var(--radius-xl); }
+.nn-note-editor__card { min-height: var(--spacing-48); }
+.nn-format-bar { display: flex; align-items: center; gap: var(--spacing-2); padding: var(--spacing-1) var(--spacing-2); border-radius: var(--radius-full); background: var(--panel); box-shadow: var(--shadow-xs); }
+.nn-format-bar > .nn-button:last-child { margin-right: auto; }
+
+/* ---------- PersonHeaderRow */
+.nn-person-row { display: flex; align-items: center; gap: var(--spacing-3); width: 100%; min-height: var(--spacing-14); padding: 0; border: 0; background: none; color: inherit; font: inherit; text-align: left; }
+button.nn-person-row { cursor: pointer; transition: opacity var(--duration-press) var(--ease-standard); }
+button.nn-person-row:active { opacity: var(--opacity-70); }
+.nn-person-row__body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: var(--spacing-0\.5); }
+.nn-person-row__chevron { color: var(--primary-text); font-size: var(--text-base); }
+
+/* ---------- PageMenu */
+.nn-page-menu { position: relative; display: inline-block; }
+.nn-page-menu__panel { position: absolute; top: calc(100% + var(--spacing-2)); right: 0; z-index: 3; width: var(--spacing-72); max-width: 80vw; padding: var(--spacing-2) var(--spacing-4);
+  border-radius: var(--radius-2xl); background: var(--panel); box-shadow: var(--shadow-lg); }
+.nn-page-menu__group { display: flex; flex-direction: column; padding: var(--spacing-1) 0; }
+.nn-page-menu__group + .nn-page-menu__group { border-top: var(--border-hairline) solid var(--line); }
+.nn-page-menu__group > .nn-section-header { padding: var(--spacing-2) 0 var(--spacing-1); }
+.nn-page-menu__item { display: flex; align-items: center; justify-content: space-between; gap: var(--spacing-3); min-height: var(--spacing-11); padding: 0; border: 0; background: none; color: var(--text-primary); font: inherit; text-align: left; cursor: pointer; }
+.nn-page-menu__item[data-destructive] .nn-text { color: var(--destructive-text); }
+.nn-page-menu__item:active { opacity: var(--opacity-70); }
+.nn-page-menu__item:focus-visible { outline: var(--border-thick) solid var(--focus-ring); outline-offset: calc(-1 * var(--spacing-0\.5)); border-radius: var(--radius-xl); }
+.nn-page-menu__item .nn-icon { color: var(--primary-text); }
+
+/* ---------- TrendChart */
+.nn-trend { position: relative; touch-action: pan-y; }
+.nn-trend[data-framed="false"] { margin: 0 calc(-1 * var(--spacing-4)); }
+.nn-trend__svg { display: block; width: 100%; height: auto; }
+.nn-trend__grid { stroke: var(--line); stroke-width: var(--border-hairline); }
+.nn-trend__total { fill: none; stroke: var(--primary); stroke-width: var(--border-thick); stroke-linecap: round; stroke-linejoin: round; }
+.nn-trend__member { fill: none; stroke-width: var(--border-hairline); stroke-dasharray: var(--dash, 4px) var(--dash, 4px); stroke-linecap: round; stroke-linejoin: round; }
+.nn-trend__area { fill: color-mix(in srgb, var(--primary) 10%, transparent); stroke: none; }
+.nn-trend__dot { r: var(--spacing-1); fill: var(--primary); }
+.nn-trend__cursor { stroke: var(--line-control); stroke-width: var(--border-hairline); }
+.nn-trend__tip { position: absolute; top: 0; transform: translateX(-50%); width: auto; min-width: var(--spacing-24); gap: var(--spacing-0\.5); box-shadow: var(--shadow-lg); pointer-events: none; }
+
+/* ---------- Form blocks */
+.nn-field-group__row { padding: var(--spacing-1) 0; }
+.nn-field-group__hint { margin: var(--spacing-2) var(--spacing-2) 0; }
+
+/* ---------- CodeField */
+.nn-code { display: flex; flex-direction: column; gap: var(--spacing-1\.5); }
+.nn-code__cells { position: relative; display: flex; gap: var(--spacing-2); }
+.nn-code__input { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; border: 0; padding: 0; cursor: text; }
+.nn-code__cell { flex: 1; display: grid; place-items: center; min-width: 0; height: var(--spacing-14); border-radius: var(--radius-xl); background: var(--sunken); position: relative; }
+.nn-code__input:focus ~ .nn-code__cell[data-active]::after { content: ""; position: absolute; top: var(--spacing-3); bottom: var(--spacing-3); width: var(--border-thick); background: var(--primary);
+  animation: nn-caret var(--duration-layout) var(--ease-standard) infinite alternate; }
+@keyframes nn-caret { from { opacity: var(--opacity-100); } to { opacity: var(--opacity-0); } }
+.nn-code[data-error] .nn-code__cell { box-shadow: inset 0 0 0 var(--border-thick) var(--destructive); }
+.nn-code[data-error] > .nn-text { color: var(--destructive-text); }
+
+/* ---------- PackageCard */
+.nn-package { display: flex; align-items: center; gap: var(--spacing-3); width: 100%; min-height: var(--spacing-14); padding: var(--spacing-4); border: 0; border-radius: var(--radius-3xl);
+  background: var(--panel); color: var(--text-primary); font: inherit; text-align: left; cursor: pointer;
+  transition: opacity var(--duration-press) var(--ease-standard), background-color var(--duration-layout) var(--ease-standard); }
+.nn-package[aria-checked="true"] { background: var(--pro-soft); }
+.nn-package:active { opacity: var(--opacity-70); }
+.nn-package:focus-visible { outline: var(--border-thick) solid var(--focus-ring); outline-offset: var(--spacing-0\.5); }
+.nn-package__body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: var(--spacing-0\.5); }
+.nn-package__price { display: flex; flex-direction: column; align-items: flex-end; }
+.nn-package__check { display: grid; place-items: center; flex: none; width: var(--spacing-6); height: var(--spacing-6); border-radius: var(--radius-full); box-shadow: inset 0 0 0 var(--border-thick) var(--line-control); font-size: var(--text-xs); }
+.nn-package[aria-checked="true"] .nn-package__check { background: var(--pro); color: var(--on-pro); box-shadow: none; }
+
+/* ---------- StepList: numbered steps on a rail */
+.nn-steps { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+.nn-steps__item { position: relative; display: flex; gap: var(--spacing-3); padding-bottom: var(--spacing-5); }
+.nn-steps__item:last-child { padding-bottom: 0; }
+.nn-steps__item:not(:last-child)::before { content: ""; position: absolute; left: calc(var(--spacing-8) / 2 - var(--spacing-0\.5)); top: var(--spacing-8); bottom: 0; width: var(--spacing-0\.5); background: var(--line-strong); }
+.nn-steps__disc { display: grid; place-items: center; flex: none; width: var(--spacing-8); height: var(--spacing-8); border-radius: var(--radius-full); background: var(--primary-soft); }
+.nn-steps__item[aria-current="step"] .nn-steps__disc { background: var(--primary); }
+.nn-steps__item[aria-current="step"] .nn-steps__disc .nn-text { color: var(--on-primary) !important; }
+.nn-steps__body { display: flex; flex-direction: column; gap: var(--spacing-1); padding-top: var(--spacing-1); min-width: 0; }
+
+/* ---------- CheckRow / IngredientList */
+.nn-check-row { display: flex; align-items: center; gap: var(--spacing-3); width: 100%; min-height: var(--spacing-14); padding: var(--spacing-3) 0; border: 0; background: none; color: inherit; font: inherit; text-align: left; cursor: pointer; }
+.nn-check-row__name { flex: 1; min-width: 0; }
+.nn-check-row__box { display: grid; place-items: center; flex: none; width: var(--spacing-6); height: var(--spacing-6); border-radius: var(--radius-full); box-shadow: inset 0 0 0 var(--border-thick) var(--line-control); font-size: var(--text-xs); transition: background-color var(--duration-state) var(--ease-standard); }
+.nn-check-row[aria-checked="true"] .nn-check-row__box { background: var(--primary); color: var(--on-primary); box-shadow: none; }
+.nn-check-row[aria-checked="true"] .nn-check-row__name { color: var(--text-tertiary); text-decoration: line-through; }
+.nn-check-row:active { opacity: var(--opacity-70); }
+.nn-check-row:focus-visible { outline: var(--border-thick) solid var(--focus-ring); outline-offset: calc(-1 * var(--spacing-0\.5)); border-radius: var(--radius-xl); }
+
+/* ---------- SelectRow */
+.nn-select-row { position: relative; }
+.nn-select-row__native { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; }
+.nn-select-row:has(.nn-select-row__native:focus-visible) { outline: var(--border-thick) solid var(--focus-ring); outline-offset: calc(-1 * var(--spacing-0\.5)); border-radius: var(--radius-xl); }
+
+/* ---------- BrandMark */
+.nn-brand-mark { display: inline-block; width: var(--spacing-20); height: var(--spacing-20); flex: none; border-radius: var(--radius-2xl); overflow: hidden; box-shadow: inset 0 0 0 var(--border-hairline) var(--line); }
+.nn-brand-mark[data-size="lg"] { width: var(--spacing-28); height: var(--spacing-28); }
+.nn-brand-mark img { display: block; width: 100%; height: 100%; object-fit: cover; }
+
+/* ---------- SwipeRow */
+.nn-swipe { --nn-reveal: var(--spacing-24); position: relative; overflow: hidden; touch-action: pan-y; }
+.nn-swipe__actions { position: absolute; inset: 0 0 0 auto; display: flex; align-items: stretch; width: var(--nn-reveal); }
+.nn-swipe__actions > .nn-button { flex: 1; height: auto; border-radius: 0; }
+.nn-swipe__front { position: relative; background: var(--panel); transition: transform var(--duration-layout) var(--ease-standard); }
+.nn-swipe[data-open] .nn-swipe__front { transform: translateX(calc(-1 * var(--nn-reveal))); }
+
+/* ---------- Reorder: drag to reorder any set, either axis. No wrapper of its own: the
+   items stay direct children of the consumer's Card list or strip, so its hairlines and gaps hold. */
+.nn-reorder__item { transition: opacity var(--duration-layout) var(--ease-standard); }
+.nn-reorder__item[data-dragging] { opacity: var(--opacity-disabled); }
+.nn-reorder__item:focus-visible { outline: var(--border-thick) solid var(--focus-ring); outline-offset: calc(-1 * var(--spacing-0\.5)); border-radius: var(--radius-xl); }
+.nn-reorder__item .nn-i-grip { cursor: grab; }
+
+/* ---------- EditorialText */
+.nn-editorial__pos { color: var(--primary-text); }
+.nn-editorial__neg { color: var(--warning-text); }
+
+/* ---------- ScannerOverlay */
+.nn-scanner { display: grid; place-items: center; padding: var(--spacing-4); background: var(--scrim); }
+.nn-scanner__card { max-width: var(--spacing-72); gap: var(--spacing-2); box-shadow: var(--shadow-lg); text-align: center; }
+
+/* ---------- PhotoStrip edit mode */
+.nn-photo-strip-editor__track { display: flex; gap: var(--spacing-2\.5); padding: 0 var(--spacing-2) var(--spacing-2); margin-right: calc(-1 * var(--spacing-4)); }
+.nn-photo-strip-editor__tile { position: relative; flex: none; }
+.nn-photo-strip-editor__badge { position: absolute; left: var(--spacing-2); bottom: var(--spacing-2); }
+.nn-photo-strip-editor__remove { position: absolute; top: var(--spacing-1); right: var(--spacing-1); }
+.nn-photo-strip-editor__actions { display: flex; gap: var(--spacing-2); padding: 0 var(--spacing-2); }
+
+/* ---------- Photo scrim token (Imagery: stone-1000 at 72%, clear at 32%) */
+.nn-labeled-photo__scrim { background: linear-gradient(to top, var(--photo-scrim, color-mix(in srgb, var(--stone-1000) 72%, transparent)) 0%, transparent 68%); }
+
+@media (prefers-reduced-motion: reduce) {
+  .nn-code__input:focus ~ .nn-code__cell[data-active]::after { animation: none; }
+  .nn-swipe__front { transition: none; }
+  .nn-reorder__item { transition: none; }
+}

@@ -3,7 +3,7 @@ import SwiftUI
 /// Someone invited to a party who hasn't joined yet, as it sits at the end of every
 /// member list: ListRow `inactive` (Avatar `sm`, their name or address and "Invited
 /// {when}" at `opacity-50`) with one live "Remind" AppButton `sm` that resends the
-/// invite. Revoke is in the row's context menu. DS-GAPS.md A, "ListRow inactive".
+/// invite. Revoke is in the row's context menu. ListRow README, `inactive`.
 ///
 /// Remind shows a spinner while it sends, then "Reminder sent" or the store's error in
 /// the meta line.

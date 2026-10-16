@@ -107,9 +107,17 @@ struct MealDetailView: View {
         .navigationDestination(item: $pushedMealID) { id in
             MealDetailView(mealID: id)
         }
-        .avatarPhotoPicker(isPresented: $showingPhotoPicker) { data in
-            if let meal { addPhotoData(data, to: meal, prepend: false) }
-        }
+        .addPhotoSheet(
+            isPresented: $showingPhotoPicker,
+            onGenerate: {
+                guard let meal, let recipe = store.recipe(meal.recipeID) else { return }
+                Task { try? await store.generateMealImage(for: meal, recipe: recipe) }
+            },
+            onPick: { photos in
+                guard let meal, let data = photos.first else { return }
+                addPhotoData(data, to: meal, prepend: false)
+            }
+        )
     }
 
     /// A small inset under the navigation bar.

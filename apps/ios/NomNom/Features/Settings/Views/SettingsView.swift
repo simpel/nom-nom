@@ -3,6 +3,7 @@ import SwiftUI
 /// App settings: notifications and debug tools. Account actions live on the profile.
 struct SettingsView: View {
     @Environment(FoodStore.self) private var store
+    @Environment(EntitlementStore.self) private var entitlements
 
     @State private var isSeeding = false
 
@@ -25,6 +26,15 @@ struct SettingsView: View {
     #if DEBUG
     private var sampleDataSection: some View {
         SectionCard("Debug tools") {
+            ListRow(
+                "Nom Nom Pro",
+                meta: "Debug builds only — overrides the real subscription on this device.",
+                trailing: .toggle(Binding(
+                    get: { entitlements.isPro },
+                    set: { entitlements.debugProOverride = $0 }
+                ))
+            )
+
             AppButton(
                 "Fill with sample history",
                 variant: .secondary,

@@ -1,7 +1,7 @@
 import SwiftUI
 
 /// The member sheet's Pro block, "Cooking for Anna": the AI tip for their next dinner
-/// (EditorialTextView) and a RecipeShelf of recipes they will love, bleeding to the
+/// (EditorialText) and a RecipeShelf of recipes they will love, bleeding to the
 /// card's edges.
 struct PartyMemberCookingForSection: View {
     let memberRef: RaterRef
@@ -22,7 +22,7 @@ struct PartyMemberCookingForSection: View {
             ) {
                 VStack(alignment: .leading, spacing: DS.Spacing.s4) {
                     if !tip.isEmpty {
-                        EditorialTextView(segments: tip)
+                        EditorialText(segments: tip)
                             .padding(.horizontal, DS.Spacing.s5)
                     }
                     RecipeShelf("Recipes \(name) will love", recipes: recipes, bleed: DS.Spacing.s5) {

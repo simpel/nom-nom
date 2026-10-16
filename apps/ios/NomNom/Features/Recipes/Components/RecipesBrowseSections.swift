@@ -14,14 +14,12 @@ struct RecipesBrowseSections: View {
 
             RecipeShelf(
                 "My favourites",
-                trailing: count(store.favoriteRecipes),
                 recipes: store.favoriteRecipes.sorted { $0.createdAt > $1.createdAt }
             ) { RecipeDetailView(recipe: $0) }
 
             RecipeShelfWithSeeAll(
                 title: "My recipes",
-                recipes: Array(store.myRecipes.sorted { $0.createdAt > $1.createdAt }.prefix(10)),
-                total: store.myRecipes.count
+                recipes: Array(store.myRecipes.sorted { $0.createdAt > $1.createdAt }.prefix(10))
             ) { MyRecipesView() }
 
             RecipeShelf("Popular recipes", recipes: Array(store.popularRecipes.prefix(10))) {
@@ -31,9 +29,5 @@ struct RecipesBrowseSections: View {
             RecipeCategoryGridSection()
         }
         .padding(.horizontal, DS.Spacing.gutter)
-    }
-
-    private func count(_ recipes: [Recipe]) -> String? {
-        recipes.isEmpty ? nil : "\(recipes.count)"
     }
 }

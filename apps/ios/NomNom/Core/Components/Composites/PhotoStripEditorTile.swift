@@ -1,4 +1,3 @@
-// DS-GAP: pending design system — see Core/Design/DS-GAPS.md
 import SwiftUI
 
 /// One tile of a PhotoStripEditor: a PhotoCard `sm` portrait (tap to view), an elevated

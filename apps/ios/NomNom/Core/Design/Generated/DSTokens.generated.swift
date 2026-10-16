@@ -1,9 +1,9 @@
 // GENERATED — do not edit.
 // Source: design-system/tokens.json (tokens version 1, "Nom Nom")
 //   source: https://claude.ai/artifact/4jeEJ91V5eRxpDn8NtqNgK
-//   version: 1791206212-d0ff
-//   downloaded: 2026-10-05
-// Tokens: 179 (border-width 2, color 78, container 3, font-weight 2, leading 5, motion 8, opacity 16, radius 8, shadow 7, spacing 25, text 10, tracking 2, type 13)
+//   version: 1792166687-4fd3
+//   downloaded: 2026-10-16
+// Tokens: 184 (blur 2, border-width 2, color 80, container 3, dash 1, font-weight 2, leading 5, motion 8, opacity 16, radius 8, shadow 7, spacing 25, text 10, tracking 2, type 13)
 // Dynamic Type mapping: design-system/README.md, "Dynamic Type".
 // Regenerate: python3 scripts/ds-tokens-swift.py
 // swiftlint:disable all
@@ -32,7 +32,7 @@ enum DSTokens {
         let dark: [ShadowLayer]
     }
 
-    /// `color` — 78 tokens. Themes: light, dark. `{alias}` values are resolved per
+    /// `color` — 80 tokens. Themes: light, dark. `{alias}` values are resolved per
     /// theme; a token without a dark value uses its light value in dark.
     enum Color {
         /// Screen ground behind every list and scroll view. Cards sit on it with no border and no shadow — the white-on-grey step is the separation.
@@ -269,6 +269,12 @@ enum DSTokens {
         /// Pine ramp (hue 193°, chroma ≤ 0.086 — 128° from the oak table in the photos). Ramp step behind `accent*` roles; DividedScoreCard uses pine-600 / pine-400 directly.
         /// tokens.json: light `#002a29` · dark `#002a29`
         static let pine900 = SwiftUI.Color(light: "#002a29")
+        /// The platform's top-bar glass: the circle behind a bar control (BarButton). Glyph in text-primary (reads at 4.5:1+ on it in both themes).
+        /// tokens.json: light `rgba(255, 255, 255, 0.8)` · dark `rgba(41, 37, 36, 0.8)`
+        static let glass = SwiftUI.Color(light: SwiftUI.Color(.sRGB, red: 1, green: 1, blue: 1, opacity: 0.8), dark: SwiftUI.Color(.sRGB, red: 0.1607843137254902, green: 0.1450980392156863, blue: 0.1411764705882353, opacity: 0.8))
+        /// The bottom scrim under text on a photo (LabeledPhotoCard, a titled photo): stone-1000 at 72%, fading to clear at 32% from the top. White text on it is 5.8:1 over the plate.
+        /// tokens.json: light `rgba(6, 8, 12, 0.72)` · dark `rgba(6, 8, 12, 0.72)`
+        static let photoScrim = SwiftUI.Color(.sRGB, red: 0.023529411764705882, green: 0.03137254901960784, blue: 0.047058823529411764, opacity: 0.72)
     }
 
     /// `spacing` — 25 tokens, in points (rem × 16).
@@ -524,6 +530,25 @@ enum DSTokens {
         /// A state worth noticing: focus ring, error border, selected ring.
         /// tokens.json: `border-thick` = `2px`
         static let thick: CGFloat = 2
+    }
+
+    /// `blur` — 2 tokens, in points.
+    /// Blur radii for content that is locked, never for decoration.
+    enum Blur {
+        /// A locked ProCard's blurred preview (matches shadow-md's blur radius).
+        /// tokens.json: `blur-sm` = `6px`
+        static let sm: CGFloat = 6
+        /// A ProGate's blurred view behind its panel.
+        /// tokens.json: `blur-md` = `8px`
+        static let md: CGFloat = 8
+    }
+
+    /// `dash` — 1 tokens, in points (one length for a dash and its gap).
+    /// One dash length for every dashed stroke, on and off.
+    enum Dash {
+        /// The dashed Add photo tile and a chart's member lines: 4px on, 4px off (spacing-1).
+        /// tokens.json: `dash` = `4px`
+        static let dash: CGFloat = 4
     }
 
     /// `shadow` — 7 tokens, parsed from CSS box-shadow lists into layers.

@@ -3,7 +3,7 @@ import SwiftUI
 /// The BottomSheet hero: ScoreValue `lg` over a Bar `md` (the same pair
 /// as ScoreCard, `s3` apart) and a `sans-md` `text-secondary` lead whose key
 /// figure is set semibold in `primary-text`. Numeral and bar take the score's
-/// reaction step (`-text` ink, `-fill` bar): DS-GAPS B, "SheetHero reaction ink".
+/// reaction step (`-text` ink, `-fill` bar)(BottomSheet README, "Hero ink").
 ///
 /// ```swift
 /// SheetHero(score: 1, lead: "16 above Joel\u{2019}s usual of 84", emphasis: "16 above")

@@ -1,4 +1,3 @@
-// DS-GAP: pending design system — see Core/Design/DS-GAPS.md
 import SwiftUI
 
 // PhotoStripEditor bound to the app's photo draft models.

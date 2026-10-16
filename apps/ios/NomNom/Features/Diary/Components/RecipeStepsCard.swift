@@ -14,7 +14,7 @@ struct RecipeStepsCard: View {
 
     var body: some View {
         if !validSteps.isEmpty {
-            SectionCard("Steps", trailing: "\(validSteps.count)") {
+            SectionCard("Steps") {
                 VStack(spacing: 0) {
                     ForEach(Array(validSteps.enumerated()), id: \.offset) { index, step in
                         stepRow(step: step, index: index)

@@ -5,6 +5,7 @@
 import { createClient } from "jsr:@supabase/supabase-js@2";
 import { GenerationLogger } from "../_shared/generation-logger.ts";
 import { getFeatureModel } from "../_shared/ai-config.ts";
+import { flattenIngredients } from "../_shared/ingredients.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -159,7 +160,7 @@ Deno.serve(async (req) => {
       recipe_id: c.id,
       name: c.name,
       cuisine: c.cuisine,
-      ingredients: Array.isArray(c.ingredients) ? c.ingredients.map((i: any) => i.ingredient).filter(Boolean).slice(0, 12) : [],
+      ingredients: flattenIngredients(c.ingredient_groups).map((i) => i.ingredient).filter(Boolean).slice(0, 12),
       effort: c.effort,
       health_score: c.health_score,
     })),

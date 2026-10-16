@@ -17,11 +17,18 @@ Identical to Input — rest 1px `line`, hover 1px `line-control`, focus 2px `pri
 - Label `sans-xs` `text-secondary` above the text, as on Input.
 - Focus and error: 1.5px `primary` / `destructive` at `opacity-80`. Disabled: `opacity-50`, `text-tertiary`, not editable.
 
-## In a form: the note row
+On iOS the field is borderless like Input (see Input, "One style"): over the limit only the border (when `soft`) and the counter change, the hint does not turn `destructive-text`. A TextArea is no longer used inline in a form; it lives inside the note editor.
+
+## In a form: the note row (NoteField)
 A form never shows a TextArea inline. A multi-line note (meal notes, rating notes, a party's About, a recipe step) is a **note row** that opens a full-height editor sheet holding a `plain` TextArea, the way Apple Maps edits "Add a Note".
 - **Filled:** the note is set as the cook's note, `serif-xs` italic in `text-primary`. This is the same style as SectionCard's `quote`, so a note looks the same while you write it and after you've saved it.
 - **Empty:** the placeholder is `sans-md` in `text-tertiary`.
 - At most 3 lines, `spacing-14` minimum height, no ground, no border, **no chevron**: the italic note is the affordance. It sits in its host SectionCard the way a ListRow does.
+
+### The note editor sheet
+Tapping the row opens a large-detent sheet: an inline navigation title (no ScreenHeader), close on the left (discards) and a checkmark on the right (commits), one `panel` Card filling the sheet with a `plain` TextArea focused on open, and, when there was text, a full-width `destructive soft lg` "Delete note" that confirms with a native alert.
+- **Bulleted notes** (a party's recipe notes) open on a bullet and show every bullet unclamped and upright. In every note editor lists are plain text ("• " lines): Return continues the list, Return on an empty bullet ends it.
+- **Format bar.** While the keyboard is up a full-width `panel` capsule with `shadow-xs` docks above it, holding icon-only `secondary ghost` AppButtons: a `destructive ghost` trash on the left (only when a saved note exists, replacing "Delete note" until the keyboard goes down) and `list.bullet`, which bullets or unbullets every line.
 
 ## Use
 `NomNom.TextArea` — props are `TextAreaProps` in `components/index.d.ts`. Markup: `label.nn-field.nn-textarea` (+ Input's modifiers) > `textarea` (or `.nn-field__stack` > `__label` + `textarea`).

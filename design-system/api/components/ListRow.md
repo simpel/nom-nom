@@ -27,10 +27,10 @@ The one row. Leading slot · title + meta · value · trailing slot · chevron. 
 | `title` * | `unknown` | A string is set for you (semibold when the row is pressable or unread). |
 | `meta` | `unknown` | The second line: a string becomes sans-sm / secondary. |
 | `value` | `unknown` | Right-aligned value of a key–value row (tabular). Mutually exclusive with `trailing` in practice. |
-| `trailing` | `unknown` | Badge, ScoreValue 'xs', AppButton 'sm', Toggle. |
+| `trailing` | `unknown` | Badge, ScoreValue 'xs', AppButton 'sm', Toggle. Giving this to a pressable row splits the row: the title region becomes the button or link and the trailing s… |
 | `chevron` | `boolean` | @default true when pressable |
 | `unread` | `boolean` | Unread notification: a primary dot in the gutter and a semibold title. |
-| `tone` | `'destructive'` | 'destructive' for Leave, Delete account and the like. |
+| `variant` | `'destructive'` | 'destructive' for Leave, Delete account and the like. |
 | `size` | `'sm' \| 'md'` | @default 'md' (spacing-14 minimum) |
 | `onClick` | `() => void` |  |
 | `href` | `string` |  |

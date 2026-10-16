@@ -1,6 +1,7 @@
 import { createClient as createSupabaseClient } from '@supabase/supabase-js';
 import { z } from 'zod';
 import { getFeatureModel } from '@/utils/ai-config';
+import { flattenIngredients } from '@/lib/ingredients';
 
 const InsightSchema = z.object({
     summary_sentence: z.string(),
@@ -113,7 +114,7 @@ export async function generatePartyInsightsForParty(
                 recipes (
                     name,
                     cuisine,
-                    ingredients
+                    ingredient_groups
                 ),
                 meal_ratings (
                     rater_id,
@@ -168,7 +169,7 @@ export async function generatePartyInsightsForParty(
             name: recipe?.name,
             cuisine: recipe?.cuisine,
             avg_score: avgScore,
-            ingredients: Array.isArray(recipe?.ingredients) ? recipe.ingredients.map((i: any) => i.ingredient || i) : [],
+            ingredients: flattenIngredients(recipe?.ingredient_groups).map((i) => i.ingredient),
             member_ratings: memberRatings
         };
     }).filter(m => m != null && m.name != null);

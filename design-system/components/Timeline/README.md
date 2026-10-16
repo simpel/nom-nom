@@ -10,7 +10,7 @@ New from the Meal Detail Redesign canvas (not yet in the SwiftUI code); tiles ar
 ## Rules
 - The track is `.nn-scroller`: it scrolls, snapping to each occasion. It used to be `overflow: hidden`, which clipped everything past the fourth item with no way to reach it.
 - Heading: SectionHeader with "N times".
-- Rail: 2px `line-strong`; dots `spacing-5` with a 4px `bg` ring; current `primary`, past `primary-muted`.
+- Rail: 2px `line-strong`, centred on the dots (iOS; the web draws it one point low); dots `spacing-5` with a 4px `bg` ring; current `primary`, past `primary-muted`.
 - Tiles: PhotoCard `sm` (`spacing-36` × `spacing-48`) with the verdict Badge bottom-right; the current meal is `selected` (2px `primary` ring). No photo: the no-photo tile, badge kept.
 - Under each tile: the date `sans-sm` (current reads "This meal", semibold). No score numeral: the verdict badge carries the result; `score` drives the badge and its tooltip.
 - Past items link to that meal. The rail bleeds off the right edge.

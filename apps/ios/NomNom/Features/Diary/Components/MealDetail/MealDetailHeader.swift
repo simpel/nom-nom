@@ -48,7 +48,7 @@ struct MealDetailHeader: View {
     }
 
     /// The score is already in the ScoreCard below, so the action names the task, not
-    /// a number (DS-GAPS.md B, "Meal header action once rated").
+    /// a number.
     private var action: ScreenHeaderAction? {
         guard let onRate else { return nil }
         if store.myRating(forMeal: meal.id) != nil {

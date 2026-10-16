@@ -40,7 +40,7 @@ struct HouseholdMembersSection: View {
         }
 
         if !partyMembers.isEmpty || !pendingInvites.isEmpty {
-            DSSection("Members", trailing: "\(partyMembers.count)") {
+            DSSection("Members") {
                 Card(layout: .list) {
                     ForEach(partyMembers) { member in
                         NavigationLink {
@@ -61,7 +61,7 @@ struct HouseholdMembersSection: View {
         }
 
         if !store.myEaters.isEmpty {
-            DSSection("Profiles without an account", trailing: "\(store.myEaters.count)") {
+            DSSection("Profiles without an account") {
                 Card(layout: .list) {
                     ForEach(store.myEaters) { eater in
                         EaterRow(eater: eater)

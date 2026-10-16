@@ -2,7 +2,7 @@ import SwiftUI
 
 /// How a text field (Input, TextArea) is painted. There is one style, `soft`.
 /// No field draws a border at rest: like iOS, a standalone field is a borderless fill
-/// and a field inside a card is a plain row (DS-GAPS B: field borders).
+/// and a field inside a card is a plain row.
 enum InputAppearance: Equatable {
     /// `sunken` ground (the `tertiarySystemFill` role), no border. Standalone fields.
     case soft
@@ -54,7 +54,7 @@ enum InputMetrics {
     }
 
     /// Border colour and width, or nil for none. Only a `soft` field in error draws one:
-    /// iOS fields have no border at rest and no focus ring (DS-GAPS B: field borders).
+    /// iOS fields have no border at rest and no focus ring.
     static func border(_ appearance: InputAppearance, state: InputState) -> (color: Color, width: CGFloat)? {
         guard appearance != .plain, state == .error else { return nil }
         return (DS.Color.destructive, DS.BorderWidth.thick)

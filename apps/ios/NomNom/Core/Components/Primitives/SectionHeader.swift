@@ -23,10 +23,13 @@ enum SectionHeaderVariant: Equatable {
 /// Above content use `DSSection` (which supplies the `spacing-2` inset and gap); inside
 /// a card use `SectionCard` or the card's own padding.
 ///
-/// Axes: case (`uppercase`), trailing (`trailing` + `trailingTone`) and emphasis
-/// (`variant`). The trailing slot takes a figure — a count, a byline, a score — never a
-/// second label or a button. The title is never truncated: it wraps to as many lines as
-/// it needs and the figure stays aligned to its first line.
+/// Axes: case (`uppercase`), trailing (`trailing` + `trailingTone`), emphasis
+/// (`variant`) and the section action (`action`). The trailing slot takes a figure — a
+/// byline, a score, a count the person acts on ("Waiting for your rating 3"), never a
+/// plain list length — and never a button. The one verb a section offers is `action`: a
+/// soft `sm` AppButton on the right ("New party", "Log meal", "See all"), drawn only when
+/// the viewer can act. The title is never truncated: it wraps to as many lines as it
+/// needs and the figure stays aligned to its first line.
 struct SectionHeader: View {
     let title: String
     var trailing: String?
@@ -34,6 +37,7 @@ struct SectionHeader: View {
     var systemImage: String?
     var uppercase: Bool
     var variant: SectionHeaderVariant?
+    var action: SectionAction?
 
     init(
         title: String,
@@ -41,7 +45,8 @@ struct SectionHeader: View {
         trailingTone: SectionHeaderTrailingTone = .secondary,
         systemImage: String? = nil,
         uppercase: Bool = true,
-        variant: SectionHeaderVariant? = nil
+        variant: SectionHeaderVariant? = nil,
+        action: SectionAction? = nil
     ) {
         self.title = title
         self.trailing = trailing
@@ -49,6 +54,7 @@ struct SectionHeader: View {
         self.systemImage = systemImage
         self.uppercase = uppercase
         self.variant = variant
+        self.action = action
     }
 
     private var trailingColor: Color {
@@ -56,8 +62,23 @@ struct SectionHeader: View {
     }
 
     var body: some View {
+        // The action is a real 44pt button, so the row centres on it; without one the
+        // figure stays on the title's first line.
+        HStack(alignment: action == nil ? .firstTextBaseline : .center, spacing: DS.Spacing.s2) {
+            label
+            if let action {
+                SectionActionView(action: action)
+            }
+        }
+        // bundle.css `.nn-section-header[data-action] { min-height: spacing-11 }`.
+        .frame(minHeight: action == nil ? nil : DS.Spacing.s11)
+    }
+
+    /// The title, its optional icon and the figure: one VoiceOver element, so the button
+    /// beside it stays its own.
+    private var label: some View {
         // The title wraps onto as many lines as it needs; the figure stays on the first.
-        HStack(alignment: .firstTextBaseline, spacing: DS.Spacing.s2) {
+        HStack(alignment: action == nil ? .firstTextBaseline : .center, spacing: DS.Spacing.s2) {
             HStack(alignment: .firstTextBaseline, spacing: DS.Spacing.s1_5) {
                 if let systemImage {
                     // bundle.css: the title's icon is `text-sm`.
@@ -78,7 +99,7 @@ struct SectionHeader: View {
 
             if let trailing {
                 // The README does not name the figure's step; it shares the label's
-                // `sans-xs` line (DS-GAPS.md).
+                // `sans-xs` line.
                 Text(trailing)
                     .textStyle(.sansXs, tone: nil, numeric: true, lines: 1)
                     .foregroundStyle(trailingColor)
@@ -97,6 +118,7 @@ private struct SectionHeaderGallery: View {
             SectionHeader(title: "Italian")
             SectionHeader(title: "Joel\u{2019}s note", uppercase: false)
             SectionHeader(title: "Household score", systemImage: "person.2", variant: .primary)
+            SectionHeader(title: "Meal history", action: SectionAction("Log meal", accessibilityLabel: "Log a meal") {})
         }
         .padding(DS.Spacing.gutter)
         .background(DS.Color.bg)

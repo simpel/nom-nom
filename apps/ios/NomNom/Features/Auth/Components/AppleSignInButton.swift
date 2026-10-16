@@ -1,3 +1,4 @@
+// ds-coverage: platform
 import AuthenticationServices
 import CryptoKit
 import SwiftUI

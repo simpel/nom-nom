@@ -8,10 +8,13 @@ struct MealMemberScoreRow: View {
     let affinities: [RaterTagAffinity]
     var onTapExplain: (() -> Void)?
 
+    @Environment(EntitlementStore.self) private var entitlements
+
     private var canExplain: Bool { !affinities.isEmpty && onTapExplain != nil }
 
     private var insight: String? {
-        guard let top = affinities.first else { return nil }
+        // A taste insight, so it is Pro only; free members get the score and the sheet's unlock card.
+        guard entitlements.hasProAccess, let top = affinities.first else { return nil }
         let more = affinities.count > 1 ? " \u{00B7} \(affinities.count - 1) more" : ""
         return top.shortSummary + more
     }

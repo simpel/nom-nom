@@ -24,7 +24,7 @@ struct ProfileInsightsSection: View {
         if isOwnProfile, tasteProfile != nil || healthInsights != nil {
             ProCard(
                 "Insights",
-                teaser: "See this taste profile, the health trend and the flavours behind it."
+                teaser: "See your taste profile, the health trend and the flavours behind it."
             ) {
                 VStack(alignment: .leading, spacing: DS.Spacing.block) {
                     if let tasteProfile {

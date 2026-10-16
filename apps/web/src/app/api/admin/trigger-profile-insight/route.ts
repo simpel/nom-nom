@@ -3,6 +3,7 @@ import { createClient } from '@/utils/supabase/server';
 import { createClient as createSupabaseClient } from '@supabase/supabase-js';
 import { z } from 'zod';
 import { getFeatureModel } from '@/utils/ai-config';
+import { flattenIngredients } from '@/lib/ingredients';
 
 export const maxDuration = 60; // 1 minute max duration
 
@@ -73,7 +74,7 @@ export async function POST(request: Request) {
             .from('meals')
             .select(`
                 eaten_on,
-                recipes ( name, cuisine, tags, ingredients )
+                recipes ( name, cuisine, tags, ingredient_groups )
             `)
             .eq('created_by', profile_id)
             .order('eaten_on', { ascending: false })
@@ -83,7 +84,7 @@ export async function POST(request: Request) {
             .from('meal_ratings')
             .select(`
                 score,
-                meals ( eaten_on, recipes ( name, cuisine, tags, ingredients ) )
+                meals ( eaten_on, recipes ( name, cuisine, tags, ingredient_groups ) )
             `)
             .eq('rater_id', profile_id)
             .order('created_at', { ascending: false })
@@ -94,14 +95,14 @@ export async function POST(request: Request) {
                 name: row.recipes?.name,
                 cuisine: row.recipes?.cuisine,
                 tags: row.recipes?.tags,
-                ingredients: row.recipes?.ingredients?.map((i: any) => i.ingredient),
+                ingredients: flattenIngredients(row.recipes?.ingredient_groups).map((i) => i.ingredient),
                 user_score: null as number | null
             })),
             ...(ratedMeals || []).map((row: any) => ({
                 name: row.meals?.recipes?.name,
                 cuisine: row.meals?.recipes?.cuisine,
                 tags: row.meals?.recipes?.tags,
-                ingredients: row.meals?.recipes?.ingredients?.map((i: any) => i.ingredient),
+                ingredients: flattenIngredients(row.meals?.recipes?.ingredient_groups).map((i) => i.ingredient),
                 user_score: row.score == null ? null : Number(row.score)
             }))
         ].filter(m => m.name != null);

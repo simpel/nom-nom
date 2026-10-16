@@ -44,7 +44,7 @@ struct ProGate<Content: View>: View {
             content()
         } else {
             content()
-                .blur(radius: ProBlur.radius)
+                .blur(radius: DS.Blur.md)
                 .opacity(DS.Opacity.o60)
                 .allowsHitTesting(false)
                 .accessibilityHidden(true)

@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/utils/supabase/server';
 import { createClient as createSupabaseClient } from '@supabase/supabase-js';
+import { flattenIngredients } from '@/lib/ingredients';
 
 export const maxDuration = 300;
 
@@ -25,7 +26,7 @@ export async function POST(request: Request) {
     try {
         let query = adminSupabase
             .from('recipes')
-            .select('id, name, ingredients, instructions');
+            .select('id, name, ingredient_groups, instructions');
 
         if (recipeId) {
             query = query.eq('id', recipeId);
@@ -58,7 +59,7 @@ export async function POST(request: Request) {
         let lastError: string | null = null;
 
         for (const recipe of recipes) {
-            if (!recipe.ingredients || !Array.isArray(recipe.ingredients) || recipe.ingredients.length === 0) {
+            if (flattenIngredients(recipe.ingredient_groups).length === 0) {
                 failed++;
                 lastError = `${recipe.name}: no ingredients to analyze`;
                 continue;
@@ -68,7 +69,7 @@ export async function POST(request: Request) {
                 body: {
                     recipe_id: recipe.id,
                     name: recipe.name,
-                    ingredients: recipe.ingredients,
+                    ingredient_groups: recipe.ingredient_groups,
                     instructions: recipe.instructions || [],
                 },
             });

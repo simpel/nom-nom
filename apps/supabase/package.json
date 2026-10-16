@@ -10,7 +10,10 @@
   "devDependencies": {
     "@food/eslint-config": "workspace:*",
     "@food/typescript-config": "workspace:*",
-    "eslint": "^8.57.0",
-    "typescript": "^7.0.2"
+    "@eslint/js": "^9.39.5",
+    "eslint": "^9.39.5",
+    "eslint-config-prettier": "^10.1.8",
+    "typescript": "^7.0.2",
+    "typescript-eslint": "^8.71.2"
   }
 }

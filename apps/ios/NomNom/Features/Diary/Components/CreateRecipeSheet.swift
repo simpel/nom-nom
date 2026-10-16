@@ -85,7 +85,7 @@ struct CreateRecipeSheet: View {
         if let serves = result.serves {
             session.form.recipe.serves = serves
         }
-        session.form.recipe.ingredients = result.ingredients
+        session.form.recipe.ingredientGroups = result.ingredientGroups
         session.form.recipe.instructions = result.instructions
 
         // Attach scanned photos to drafts

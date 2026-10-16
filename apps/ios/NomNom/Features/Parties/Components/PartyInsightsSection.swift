@@ -46,7 +46,7 @@ struct PartyInsightsSection: View {
     var body: some View {
         VStack(alignment: .leading, spacing: DS.Spacing.block) {
             if hasLoadedInsights {
-                EditorialTextView(insightSummary: insights?.summarySentence)
+                EditorialText(insightSummary: insights?.summarySentence)
             } else {
                 Skeleton(layout: .text, lines: 3, label: "Loading the party summary")
             }

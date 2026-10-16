@@ -19,6 +19,7 @@ A circle that shows a photo, or text when there is none — initials from name i
 
 | prop | type | note |
 | --- | --- | --- |
+| `decorative` | `boolean` | The name is visible beside the avatar: hide it from assistive tech so it is not read twice. |
 | `name` * | `string` | Accessible name; first + last word give the initials. |
 | `photo` | `string` |  |
 | `size` | `'xs' \| 'sm' \| 'md' \| 'lg' \| 'xl'` | 24 / 32 / 40 / 56 / 80 (spacing-6 / 8 / 10 / 14 / 20). @default 'md' |

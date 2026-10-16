@@ -37,10 +37,7 @@ struct RecipeLeaderboardSheet: View {
     // MARK: - Subviews
 
     private var rankedList: some View {
-        DSSection(
-            "Ranked recipes",
-            trailing: "\(rankedRecipes.count) \(rankedRecipes.count == 1 ? "recipe" : "recipes")"
-        ) {
+        DSSection("Ranked recipes") {
             Card(layout: .list) {
                 ForEach(Array(rankedRecipes.enumerated()), id: \.element.recipe.id) { index, item in
                     NavigationLink(value: item.recipe) {

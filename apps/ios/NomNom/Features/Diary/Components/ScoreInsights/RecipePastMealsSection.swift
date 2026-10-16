@@ -19,7 +19,7 @@ struct RecipePastMealsSection: View {
             }
         } else {
             let servings = ([meal] + history).sorted { $0.eatenOn > $1.eatenOn }
-            DSSection("Past meals with this recipe", trailing: "\(servings.count) meals") {
+            DSSection("Past meals with this recipe") {
                 VStack(spacing: DS.Spacing.s3) {
                     TrendChart(total: points(servings), totalName: "Score", showsPoints: true)
                     Card(layout: .list) {

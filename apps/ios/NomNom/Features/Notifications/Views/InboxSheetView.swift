@@ -1,8 +1,9 @@
 import SwiftUI
 
 /// Modal sheet displaying the in-app activity notifications inbox: a ScreenHeader, then
-/// "Unread" and "Read" DSSections over `Card(layout: .list)`s of NotificationRows, or a
-/// screen EmptyState when there is nothing.
+/// one "Notifications" DSSection over a `Card(layout: .list)` of NotificationRows (unread
+/// rows carry the unread dot; state never splits the list), or a screen EmptyState when
+/// there is nothing.
 struct InboxSheetView: View {
     @Environment(FoodStore.self) private var store
 
@@ -17,7 +18,6 @@ struct InboxSheetView: View {
     }
 
     @State private var activeDestination: InboxSheetDestination?
-    @State private var isMarkingAllRead = false
 
     var body: some View {
         NavigationStack {
@@ -31,30 +31,18 @@ struct InboxSheetView: View {
                     )
                 } else {
                     ScreenHeader("Inbox", summary: headerSubtitle)
-                    if !unreadNotifications.isEmpty {
-                        notificationSection("Unread", trailing: "\(unreadNotifications.count)", items: unreadNotifications)
-                    }
-                    if !readNotifications.isEmpty {
-                        notificationSection("Read", trailing: nil, items: readNotifications)
-                    }
+                    // One list; "Mark all read" is the section's one verb.
+                    notificationSection(
+                        "Notifications",
+                        trailing: store.unreadCount > 0 ? "\(store.unreadCount) unread" : nil,
+                        action: store.unreadCount > 0
+                            ? SectionAction("Mark all read", perform: markAllRead) : nil,
+                        items: store.notifications
+                    )
                 }
             }
             .screenTitle("", displayMode: .inline)
             .sheetCloseToolbar()
-            .toolbar {
-                if store.unreadCount > 0 {
-                    ToolbarItem(placement: .topBarTrailing) {
-                        Button(action: markAllRead) {
-                            if isMarkingAllRead {
-                                ProgressView().controlSize(.small)
-                            } else {
-                                Text("Mark all read").textStyle(.sansSm, weight: .semibold)
-                            }
-                        }
-                        .barItemStyle()
-                    }
-                }
-            }
             .refreshable {
                 await store.load()
             }
@@ -72,14 +60,6 @@ struct InboxSheetView: View {
 
     // MARK: - Subviews
 
-    private var unreadNotifications: [AppNotification] {
-        store.notifications.filter(\.isUnread)
-    }
-
-    private var readNotifications: [AppNotification] {
-        store.notifications.filter { !$0.isUnread }
-    }
-
     private var headerSubtitle: String {
         let unread = store.unreadCount
         if unread > 0 {
@@ -88,8 +68,13 @@ struct InboxSheetView: View {
         return "All caught up on dinner party invites and ratings."
     }
 
-    private func notificationSection(_ title: String, trailing: String?, items: [AppNotification]) -> some View {
-        DSSection(title, trailing: trailing, trailingTone: .primary) {
+    private func notificationSection(
+        _ title: String,
+        trailing: String?,
+        action: SectionAction? = nil,
+        items: [AppNotification]
+    ) -> some View {
+        DSSection(title, trailing: trailing, trailingTone: .primary, action: action) {
             Card(layout: .list) {
                 ForEach(items) { notification in
                     NotificationRow(
@@ -108,11 +93,7 @@ struct InboxSheetView: View {
     // MARK: - Actions
 
     private func markAllRead() {
-        isMarkingAllRead = true
-        Task {
-            await store.markAllRead()
-            isMarkingAllRead = false
-        }
+        Task { await store.markAllRead() }
     }
 
     private func toggleRead(_ notification: AppNotification) {
