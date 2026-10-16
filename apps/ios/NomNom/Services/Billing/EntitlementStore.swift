@@ -12,8 +12,35 @@ import RevenueCat
 final class EntitlementStore: NSObject, PurchasesDelegate {
     static let shared = EntitlementStore()
 
-    private(set) var isPro: Bool = false
+    /// What RevenueCat says; `isPro` is this, unless a debug build overrides it.
+    private(set) var isEntitled: Bool = false
     private(set) var customerInfo: CustomerInfo?
+
+    var isPro: Bool {
+        #if DEBUG
+        return debugProOverride ?? isEntitled
+        #else
+        return isEntitled
+        #endif
+    }
+
+    #if DEBUG
+    private static let debugProKey = "debug.proOverride"
+
+    /// Debug builds only: forces Pro on (`true`) or off (`false`); `nil` follows RevenueCat.
+    /// Persisted so it survives relaunches. Toggled from Settings → Debug tools.
+    var debugProOverride: Bool? = {
+        UserDefaults.standard.object(forKey: debugProKey) as? Bool
+    }() {
+        didSet {
+            if let debugProOverride {
+                UserDefaults.standard.set(debugProOverride, forKey: Self.debugProKey)
+            } else {
+                UserDefaults.standard.removeObject(forKey: Self.debugProKey)
+            }
+        }
+    }
+    #endif
 
     private override init() {
         super.init()
@@ -28,12 +55,12 @@ final class EntitlementStore: NSObject, PurchasesDelegate {
     func signOut() async {
         _ = try? await Purchases.shared.logOut()
         customerInfo = nil
-        isPro = false
+        isEntitled = false
     }
 
     func apply(_ info: CustomerInfo) {
         customerInfo = info
-        isPro = info.entitlements[BillingConfig.entitlementID]?.isActive == true
+        isEntitled = info.entitlements[BillingConfig.entitlementID]?.isActive == true
     }
 
     // MARK: - PurchasesDelegate
