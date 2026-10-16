@@ -18,7 +18,7 @@ struct MealScoreReasonsSection: View {
     }
 
     private func group(_ title: String, _ items: [TableReason]) -> some View {
-        DSSection(title, trailing: items.count == 1 ? "1 reason" : "\(items.count) reasons") {
+        DSSection(title) {
             Card(layout: .list) {
                 ForEach(items) { ListRow(reason: $0).metaLines(nil) }
             }

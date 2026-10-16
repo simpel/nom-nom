@@ -14,6 +14,13 @@ The add affordance is the strip's last tile again (iOS canvas, Oct 2026): a tile
 - No photos and `onAddPhoto`: the add tile alone, labelled `emptyTitle` ("Add a photo").
 - No photos and no add: `sunken` tile, fork-and-knife glyph, "No photo yet".
 
+## Edit mode (from the app)
+Where photos are being added to something (the meal and recipe editors), the strip becomes an editor of PhotoCard `sm` tiles under a Section ("Photos", trailing "Optional"):
+- **Remove** is AppButton `secondary elevated` icon-only (the one 44pt size) on the tile.
+- The first tile carries a "Cover" Badge `elevated sm`; a recipe's page photos are badged "Page N" and cannot be reordered.
+- Add: "Camera" is an AppButton, "Library" a photo picker with an AppButton label. Tapping a tile opens the media viewer (BottomSheet, Media viewer).
+- Reorder through each tile's context menu and accessibility actions (Make cover, Move left, Move right), never drag, which would fight the horizontal scroll.
+
 ## Use
 `NomNom.PhotoStrip` — props are `PhotoStripProps` in `components/index.d.ts`. The track is `.nn-scroller`, the system's one horizontal scroll area: snap-to-tile, contained overscroll, and a thin `line-control` bar that fades in on hover or focus and is absent on touch, where the platform draws its own. Never hide the scrollbar outright — on a pointer device it is the only sign there is more to the right.
 

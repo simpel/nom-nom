@@ -106,7 +106,7 @@ struct RecipePickerSheet: View {
 
             if !matchingRecipes.isEmpty {
                 VStack(alignment: .leading, spacing: DS.Spacing.s2_5) {
-                    SectionHeader(title: "Matching Recipes", trailing: "\(matchingRecipes.count) found")
+                    SectionHeader(title: "Matching Recipes")
                         .padding(.horizontal, DS.Spacing.gutter)
                     MinimalRecipeGrid(recipes: matchingRecipes, onSelect: selectRecipe)
                 }
