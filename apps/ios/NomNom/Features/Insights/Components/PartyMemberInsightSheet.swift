@@ -2,13 +2,14 @@ import SwiftUI
 
 /// One member of a dinner party ("Nom Nom iOS" canvas, MemberSheet), as a BottomSheet:
 /// the PersonHeaderRow ("Member since Mar 2026 · 18 meals rated here"), two compact
-/// ScoreCards (their average here, their taste match), a ProCard "Cooking for Anna"
-/// with the AI tip and recipes they will love, then their highest and lowest here.
+/// ScoreCards (their average here, and with Pro their taste match), a ProCard "Cooking for
+/// Anna" with the AI tip and recipes they will love, then with Pro their highest and lowest here.
 struct PartyMemberInsightSheet: View {
     let memberRef: RaterRef
     let partyID: UUID
 
     @Environment(FoodStore.self) private var store
+    @Environment(EntitlementStore.self) private var entitlements
     @State private var showProfile = false
 
     init(memberRef: RaterRef, partyID: UUID) {
@@ -43,23 +44,29 @@ struct PartyMemberInsightSheet: View {
 
                 HStack(alignment: .top, spacing: DS.Spacing.s3) {
                     ScoreCard(score: average?.score, layout: .compact, title: "Average here")
-                    ScoreCard(
-                        score: tasteMatch.map { Double($0.matchScore) / 100 },
-                        verdict: tasteMatch.map { Self.matchVerdict($0.matchScore) },
-                        layout: .compact,
-                        title: "Taste match",
-                        delta: tasteMatch?.trendDelta
-                    )
+                    // Taste match is an insight, so it is Pro only.
+                    if entitlements.hasProAccess {
+                        ScoreCard(
+                            score: tasteMatch.map { Double($0.matchScore) / 100 },
+                            verdict: tasteMatch.map { Self.matchVerdict($0.matchScore) },
+                            layout: .compact,
+                            title: "Taste match",
+                            delta: tasteMatch?.trendDelta
+                        )
+                    }
                 }
 
                 PartyMemberCookingForSection(memberRef: memberRef, name: name, partyID: partyID)
 
-                PartyMemberPartyRatingsSection(
-                    memberRef: memberRef,
-                    memberName: name,
-                    highest: history.highest,
-                    lowest: history.lowest
-                )
+                // Their highest and lowest meals are derived from their history, so Pro only.
+                if entitlements.hasProAccess {
+                    PartyMemberPartyRatingsSection(
+                        memberRef: memberRef,
+                        memberName: name,
+                        highest: history.highest,
+                        lowest: history.lowest
+                    )
+                }
             }
             .screenTitle(name, displayMode: .inline)
             .sheetCloseToolbar()

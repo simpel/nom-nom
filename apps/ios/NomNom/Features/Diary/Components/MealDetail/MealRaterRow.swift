@@ -1,11 +1,11 @@
 import SwiftUI
 
 /// One person under Meal Detail's "Who rated": a pressable ListRow with Avatar `sm`
-/// and their first name.
+/// and their first name (the viewer's own row adds a small `secondary` "You" Badge).
 ///
-/// - Rated: meta "Chef", "You" or "First rating"; trailing the change vs their usual
+/// - Rated: meta "Chef" or "First rating"; trailing the change vs their usual
 ///   (delta Badge, "As usual" tertiary, or a "New" Badge) beside ScoreValue `xs`.
-/// - Not yet: meta "You", "Not asked yet", "Asked 2 days ago" or "Reminded 2 hr. ago";
+/// - Not yet: meta "Not asked yet", "Asked 2 days ago" or "Reminded 2 hr. ago";
 ///   trailing an Ask / Remind button (`secondary soft`, MealRaterRowAction) for other
 ///   members, a "Rate" button (`primary soft`) for the viewer.
 struct MealRaterRow: View {
@@ -14,8 +14,9 @@ struct MealRaterRow: View {
     let action: () -> Void
 
     @Environment(FoodStore.self) private var store
+    @Environment(EntitlementStore.self) private var entitlements
 
-    private var name: String { rater.isViewer ? "You" : store.firstName(for: rater.ref) }
+    private var name: String { store.firstName(for: rater.ref) }
     private var score: Double? { rater.rating?.score }
     private var isNew: Bool { score != nil && store.usualScore(for: rater.ref, excluding: meal.id) == nil }
 
@@ -23,7 +24,7 @@ struct MealRaterRow: View {
         if score != nil {
             if let createdBy = meal.createdBy, rater.ref == .account(createdBy) { return "Chef" }
             if rater.isViewer { return nil }
-            return isNew ? "First rating" : nil
+            return isNew && entitlements.hasProAccess ? "First rating" : nil
         }
         if rater.isViewer { return nil }
         guard let profile = rater.profile else { return nil }
@@ -38,7 +39,7 @@ struct MealRaterRow: View {
 
     var body: some View {
         ListRow(
-            name,
+            accessibilityTitle: rater.isViewer ? "\(name), you" : name,
             meta: meta,
             leading: .avatar(Avatar(
                 name: store.label(for: rater.ref).name,
@@ -49,7 +50,16 @@ struct MealRaterRow: View {
             trailing: trailing,
             chevron: score == nil && remindProfile == nil && !rater.isViewer,
             action: action
-        )
+        ) {
+            HStack(spacing: DS.Spacing.s2) {
+                Text(name)
+                    .textStyle(.sansMd, tone: nil, weight: .semibold, lines: 1)
+                    .foregroundStyle(DS.Color.textPrimary)
+                if rater.isViewer {
+                    Badge("You", variant: .secondary, size: .sm)
+                }
+            }
+        }
     }
 
     /// Someone else's unrated row gets Ask / Remind; the viewer's own row and
@@ -81,7 +91,10 @@ struct MealRaterRow: View {
 
     @ViewBuilder
     private var change: some View {
-        if isNew {
+        // The change against their usual is an insight, so it is Pro only.
+        if !entitlements.hasProAccess {
+            EmptyView()
+        } else if isNew {
             Badge("New", variant: .secondary, size: .sm)
         } else if let delta = store.changeVsUsual(for: rater.ref, on: meal.id) {
             if delta == 0 {

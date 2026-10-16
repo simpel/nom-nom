@@ -9,6 +9,7 @@ struct RaterScoreSheet: View {
     let rater: RaterRef
 
     @Environment(FoodStore.self) private var store
+    @Environment(EntitlementStore.self) private var entitlements
     @State private var showProfile = false
 
     var body: some View {
@@ -19,7 +20,12 @@ struct RaterScoreSheet: View {
         NavigationStack {
             SheetBody {
                 RaterPersonRow(meal: meal, rater: rater) { showProfile = true }
-                SheetHero(score: target.score, lead: target.lead.text, emphasis: target.lead.emphasis)
+                // "8 above Anna's usual" compares with their history, so it is Pro only.
+                SheetHero(
+                    score: target.score,
+                    lead: entitlements.hasProAccess ? target.lead.text : nil,
+                    emphasis: entitlements.hasProAccess ? target.lead.emphasis : nil
+                )
                 if let note = cooksNote {
                     SectionCard("\(target.possessive) note on this meal", uppercase: false, quote: note)
                 }

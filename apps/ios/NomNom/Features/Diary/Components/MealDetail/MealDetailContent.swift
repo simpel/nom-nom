@@ -25,10 +25,12 @@ struct MealDetailContent: View {
     let actions: MealDetailActions
 
     @Environment(FoodStore.self) private var store
+    @Environment(EntitlementStore.self) private var entitlements
 
     var body: some View {
         let history = store.partyHistory(for: meal)
-        let change = store.scoreChange(forMeal: meal)
+        // The comparison with last time is an insight, so it is Pro only.
+        let change = entitlements.hasProAccess ? store.scoreChange(forMeal: meal) : nil
 
         ScrollView {
             VStack(alignment: .leading, spacing: DS.Spacing.block) {
