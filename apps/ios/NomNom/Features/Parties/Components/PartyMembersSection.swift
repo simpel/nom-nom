@@ -1,8 +1,8 @@
 import SwiftUI
 
 /// The party's members ("Nom Nom iOS" canvas): a "Members" section over one swipeable
-/// list card. Members see an "Add members" row first (opens the invite sheet); each
-/// member row (Avatar, name, "You · 20 rated here", their average score) opens the
+/// list card. Members get "Invite" as the section action (the system share sheet with
+/// the party's link); each member row (Avatar, name, "You · 20 rated here", their average score) opens the
 /// member sheet. Members can swipe another member's row to remove them. Members also see
 /// everyone invited who hasn't joined, last, as inactive PartyInviteRows with Remind.
 struct PartyMembersSection: View {
@@ -13,13 +13,11 @@ struct PartyMembersSection: View {
     @State private var selectedMember: MemberSheetTarget?
 
     private enum Item: Identifiable {
-        case add
         case member(Profile)
         case invite(PartyInvite)
 
         var id: String {
             switch self {
-            case .add: return "add"
             case .member(let profile): return profile.id.uuidString
             case .invite(let invite): return "invite_\(invite.id.uuidString)"
             }
@@ -35,34 +33,37 @@ struct PartyMembersSection: View {
 
     private var items: [Item] {
         let invites = isMember ? store.pendingInvites(forParty: party.id).map(Item.invite) : []
-        return members.map(Item.member) + invites + (isMember ? [.add] : [])
+        return members.map(Item.member) + invites
+    }
+
+    /// "Invite" opens the system share sheet with the party's link; only members get it.
+    private var inviteAction: SectionAction? {
+        guard isMember else { return nil }
+        return SectionAction(
+            share: "Invite",
+            accessibilityLabel: "Invite people to \(party.name)",
+            url: party.webInviteURL,
+            subject: "Join \(party.name) on Nom Nom",
+            message: party.shareMessage
+        )
     }
 
     var body: some View {
         SwipeableListCard(
             title: "Members",
-            caption: "\(members.count)",
+            action: inviteAction,
             data: items,
             leadingIcon: { item in removable(item) != nil ? "trash.fill" : nil },
             leadingColor: { item in removable(item) != nil ? DS.Color.destructive : nil },
             onLeadingAction: { item in memberToRemove = removable(item) }
         ) { item in
             switch item {
-            case .add:
-                    ShareLink(
-                        item: party.webInviteURL,
-                        subject: Text("Join \(party.name) on Nom Nom"),
-                        message: Text(party.shareMessage)
-                    ) {
-                        ListRow("Add members", meta: "Share the invite link", leading: .icon("plus"), chevron: false)
-                    }
-                    .buttonStyle(AppPressableButtonStyle())
-                case .member(let member):
-                    row(for: member)
-                case .invite(let invite):
-                    PartyInviteRow(invite: invite)
-                }
+            case .member(let member):
+                row(for: member)
+            case .invite(let invite):
+                PartyInviteRow(invite: invite)
             }
+        }
         .sheet(item: $selectedMember) { target in
             PartyMemberInsightSheet(memberRef: .account(target.id), partyID: party.id)
         }

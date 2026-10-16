@@ -34,7 +34,7 @@ struct MealScoreBreakdownSheet: View {
     private var memberScores: some View {
         let details = store.verdictDetails(forMeal: meal.id)
         if !details.isEmpty {
-            DSSection("Member scores", trailing: "\(details.count) submitted") {
+            DSSection("Member scores") {
                 Card(layout: .list) {
                     ForEach(details) { detail in
                         let target = MealExplanationTarget(rater: detail.ref, name: detail.name, meal: meal, store: store)

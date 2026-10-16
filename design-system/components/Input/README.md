@@ -11,7 +11,9 @@ Hand-written from `apps/ios/NomNom/Core/Components/Input.swift` as a React rendi
 - Every field: `spacing-11` (44) tall, `radius-xl`, side padding `spacing-3.5`, text `sans-md`. With a `label`: `spacing-14` (56); the label is `sans-xs` `text-secondary` above the text.
 - The border is `border-hairline` (1px) in `line-control`, never a half-pixel and never `line`: a control's boundary has to clear 3:1 (WCAG 1.4.11), and `line` is 1.17:1 on panel.
 
-## One style
+## One style (iOS: borderless, a product call of 4 Oct 2026)
+
+A field draws no border at rest, on focus, read-only or disabled: a bordered grey field read as a different kit from the rest of iOS. A `soft` field is a borderless `sunken` fill; a field inside a card is `plain`. Focus is the label in `primary-text` and the leading icon in `primary`, with no ring. Only a `soft` field in error draws a `border-thick` `destructive` border. `bundle.css` follows this. Where the table and rules below still mention 1px or 2px borders, this section wins (the field boundary is the `sunken` ground, which clears 1.4:1 in light and is the platform's own field fill; the system accepts that miss for fields, because the label above and the placeholder carry the affordance).
 
 There is one field: **`soft`** — a `sunken` ground with a 1px `line` border. No outline-on-white variant: two field styles meant every form had a choice to make and mixed forms looked assembled from two kits.
 

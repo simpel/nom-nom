@@ -1,28 +1,35 @@
 import SwiftUI
 
 /// Section listing meal history on a user profile: thumbnail, name, date and verdict.
+/// On your own profile it offers "Log meal"; on someone else's it has no button.
 struct ProfileMealHistorySection: View {
     let meals: [Meal]
     let raterRef: RaterRef
+    /// `nil` on someone else's profile.
+    var onLogMeal: (() -> Void)?
 
     @Environment(FoodStore.self) private var store
 
     var body: some View {
-        if meals.isEmpty {
-            DSSection("Meal History", trailing: "\(meals.count)") {
-                EmptyState("No meals yet", message: "Meals this person has eaten will show up here.")
-            }
-        } else {
-            DSSection("Meal History", trailing: "\(meals.count)") {
-                Card(layout: .list) {
-                    ForEach(meals) { meal in
-                        NavigationLink {
-                            MealDetailView(mealID: meal.id)
-                        } label: {
-                            row(for: meal)
-                        }
-                        .buttonStyle(ListRowButtonStyle())
+        CollectionSection(
+            "Meal history",
+            count: meals.count,
+            verb: "Log meal",
+            addLabel: "Log a meal",
+            onAdd: onLogMeal,
+            emptyTitle: "No meals yet",
+            emptyMessage: onLogMeal == nil
+                ? "Meals this person has eaten will show up here."
+                : "Meals you log will show up here."
+        ) {
+            Card(layout: .list) {
+                ForEach(meals) { meal in
+                    NavigationLink {
+                        MealDetailView(mealID: meal.id)
+                    } label: {
+                        row(for: meal)
                     }
+                    .buttonStyle(ListRowButtonStyle())
                 }
             }
         }
@@ -48,7 +55,8 @@ struct ProfileMealHistorySection: View {
     NomNomPreview { store in
         ProfileMealHistorySection(
             meals: store.meals,
-            raterRef: .account(store.userID)
+            raterRef: .account(store.userID),
+            onLogMeal: {}
         )
         .padding(DS.Spacing.gutter)
     }

@@ -37,7 +37,6 @@ struct MealsView: View {
                             ForEach(historySections, id: \.title) { section in
                                 SwipeableListCard(
                                     title: section.title,
-                                    caption: section.meals.count == 1 ? "1 meal" : "\(section.meals.count) meals",
                                     data: section.meals,
                                     leadingIcon: { meal in meal.createdBy == store.userID ? "trash.fill" : nil },
                                     leadingColor: { _ in DS.Color.destructive },

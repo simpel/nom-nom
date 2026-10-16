@@ -10,6 +10,8 @@ Defined by the design system. React in `components/bundle.js`, styles in `bundle
 | --- | --- | --- |
 | `size` | `xs` (numeral `serif-xs`, no verdict — list rows) · `sm` (`serif-sm` + `serif-sm`) · `md` (`serif-md` + `serif-sm` — featured compact) · `lg` (`serif-xl` + `serif-sm` — hero and sheet) | `lg` |
 
+| `ink` | `accent` (`primary-text`, default) · `reaction` (the score's `reaction-<step>-text`, sheet heroes only) · `pro` (`pro-text`, a Pro score) | `accent` |
+
 ## The consumer provides
 `score` (0–100, or `null`), optional `verdict` (defaults to the six-step word), `showVerdict`.
 

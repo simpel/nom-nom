@@ -19,7 +19,7 @@ New. It takes the facts and the rotation badge out of the old DetailHeader, wher
 ## Rules
 - **Label** is a SectionHeader (uppercase, `as: 'span'`): TIME, METHOD, SERVES, ROTATION. **Value** is `sans-md` in `text-primary`.
 - **No other colours.** A value is never `primary-text`, a role colour or a reaction colour: Staple is the same ink as 4 servings. A fact that needs colour to be read is a Badge, not a fact.
-- **No icons, no capsules, nothing pressable.** A fact is read, not tapped.
+- **No icons, no capsules.** A fact is read, not tapped, with one exception: an item may carry `onSelect` (the recipe's Cuisine opens that cuisine's recipes). It keeps its look and gets no pressed state or chevron; only the cuisine does this today.
 - **No surface.** Facts draws no Card. Where a surface is wanted, the screen places Facts inside a Card (the recipe screen does, `Card md`). The component never decides that.
 - Label gap `spacing-1`; grid `spacing-5` between rows, `spacing-4` between columns; strip `spacing-4` either side of each hairline.
 - One word or a short value per fact: "15–30 min", "Frying", "4", "Staple". Never a sentence.

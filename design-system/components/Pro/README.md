@@ -9,6 +9,13 @@ One language for everything that needs Nom Nom Pro. Violet appears nowhere else.
 | **ProView** | A whole Pro-only screen or sheet (Insights) | the ground is `pro-soft` (`--bg`, `--sheet`), ProMark above the title, plain `panel` cards on it |
 | **ProGate** | A Pro-only view for someone without Pro | the real layout blurred at 60%, a `panel` card with `shadow-xl`: mark, title, one sentence, ≤4 checked benefits, Unlock with Pro, Not now |
 
+## Entry points and pressable cards (from the app)
+
+- **ProLinkCard** is the pressable card that leads to a Pro screen (Party detail "See insights"): ProCard's ground (`pro-soft`, `radius-3xl`, `shadow-lg`, `spacing-5` padding) holding the ProMark, a `serif-sm` title, a `sans-sm` secondary subtitle and a `pro-text` chevron.
+- **`ProCard action`**: unlocked, the whole card is one button (press `opacity-70`) with the same `pro-text` chevron on the title row; locked, `action` is ignored. Use it when a card is both a preview and the way in (the meal score sheet's "Why it landed at"), so no separate "See the full breakdown" button is needed.
+- **`teaser` is optional.** A block whose title already says what it holds ("Picked for …", "Safe bets for …") omits it and keeps the blurred preview and "Unlock with Pro".
+- **A Pro score** is ScoreCard `variant="pro"`, not a ProCard (see ScoreCard).
+
 ## Rules
 - Locked never means empty: a ProCard shows a teaser and a blurred preview of the real content; a ProGate blurs the real view.
 - One CTA wording: **Unlock with Pro** (`pro` solid, `lg`, full width, sparkles).

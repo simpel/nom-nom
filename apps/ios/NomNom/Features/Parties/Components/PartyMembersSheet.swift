@@ -25,17 +25,6 @@ struct PartyMembersSheet: View {
     var body: some View {
         NavigationStack {
             SheetBody {
-                VStack(spacing: DS.Spacing.s3) {
-                    ShareLink(
-                        item: party.webInviteURL,
-                        subject: Text("Join \(party.name) on Nom Nom"),
-                        message: Text(party.shareMessage)
-                    ) {
-                        AppButtonLabel("Share link", icon: "square.and.arrow.up", appearance: .soft, fullWidth: true)
-                    }
-                    .buttonStyle(AppPressableButtonStyle())
-                }
-
                 membersSection
             }
             .screenTitle("Members", displayMode: .inline)
@@ -80,8 +69,20 @@ struct PartyMembersSheet: View {
 
     // MARK: - Sections
 
+    /// "Invite": the system share sheet with the party's link; members only.
+    private var inviteAction: SectionAction? {
+        guard store.isMember(of: party.id) else { return nil }
+        return SectionAction(
+            share: "Invite",
+            accessibilityLabel: "Invite people to \(party.name)",
+            url: party.webInviteURL,
+            subject: "Join \(party.name) on Nom Nom",
+            message: party.shareMessage
+        )
+    }
+
     private var membersSection: some View {
-        DSSection("Members", trailing: "\(members.count)") {
+        DSSection("Members", action: inviteAction) {
             Card(layout: .list) {
                 ForEach(members) { member in
                     ListRow(

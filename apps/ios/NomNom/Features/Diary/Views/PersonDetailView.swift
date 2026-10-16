@@ -9,6 +9,10 @@ struct PersonDetailView: View {
     @Environment(FoodStore.self) private var store
     @State private var showingEditProfile = false
     @State private var photoError: String?
+    // The create sheets the section actions open; only your own profile has the actions.
+    @State private var showingCreateParty = false
+    @State private var showingCreateRecipe = false
+    @State private var showingLogMeal = false
 
     private var personName: String {
         switch raterRef {
@@ -96,16 +100,21 @@ struct PersonDetailView: View {
 
                 ProfilePartiesSection(
                     parties: parties,
-                    raterRef: raterRef
+                    raterRef: raterRef,
+                    onCreate: isCurrentUser ? { showingCreateParty = true } : nil
                 )
 
                 if case .account = raterRef {
-                    ProfileCreatedRecipesSection(recipes: createdRecipes)
+                    ProfileCreatedRecipesSection(
+                        recipes: createdRecipes,
+                        onCreate: isCurrentUser ? { showingCreateRecipe = true } : nil
+                    )
                 }
 
                 ProfileMealHistorySection(
                     meals: meals,
-                    raterRef: raterRef
+                    raterRef: raterRef,
+                    onLogMeal: isCurrentUser ? { showingLogMeal = true } : nil
                 )
 
                 if isCurrentUser {
@@ -125,6 +134,9 @@ struct PersonDetailView: View {
         .sheet(isPresented: $showingEditProfile) {
             ProfileSheetView()
         }
+        .sheet(isPresented: $showingCreateParty) { CreatePartySheet() }
+        .sheet(isPresented: $showingCreateRecipe) { CreateRecipeSheet() }
+        .sheet(isPresented: $showingLogMeal) { MealEditorView() }
         .alert("Couldn't Save Photo", isPresented: Binding(
             get: { photoError != nil },
             set: { if !$0 { photoError = nil } }

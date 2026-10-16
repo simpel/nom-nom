@@ -9,7 +9,7 @@ struct RecipePhotosCard: View {
 
     var body: some View {
         if !recipe.recipePhotoPaths.isEmpty {
-            SectionCard("Recipe pages", trailing: pageCount) {
+            SectionCard("Recipe pages") {
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing: DS.Spacing.s2_5) {
                         ForEach(Array(recipe.recipePhotoPaths.enumerated()), id: \.element) { index, path in
@@ -39,9 +39,5 @@ struct RecipePhotosCard: View {
                 )
             }
         }
-    }
-
-    private var pageCount: String {
-        recipe.recipePhotoPaths.count == 1 ? "1 page" : "\(recipe.recipePhotoPaths.count) pages"
     }
 }
