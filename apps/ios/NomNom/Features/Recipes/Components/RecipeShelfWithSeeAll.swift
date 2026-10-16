@@ -1,24 +1,16 @@
 import SwiftUI
 
-/// A RecipeShelf whose header ends in a "See all N" link (`sans-xs` `primary-text`)
-/// to the full list — "My recipes" on the Recipes tab.
+/// A RecipeShelf whose header ends in the section action "See all" (a soft capsule, the
+/// same as every section verb) to the full list — "My recipes" on the Recipes tab. The
+/// shelf is hidden while empty.
 struct RecipeShelfWithSeeAll<Destination: View>: View {
     let title: String
     let recipes: [Recipe]
-    var total: Int
     @ViewBuilder let seeAll: () -> Destination
 
     var body: some View {
         if !recipes.isEmpty {
-            VStack(alignment: .leading, spacing: DS.Spacing.s2) {
-                HStack(alignment: .firstTextBaseline) {
-                    SectionHeader(title: title)
-                    NavigationLink(destination: seeAll) {
-                        Text("See all \(total)").textStyle(.sansXs, tone: .accent, numeric: true)
-                    }
-                    .buttonStyle(AppPressableButtonStyle())
-                }
-                .padding(.horizontal, DS.Spacing.sectionInset)
+            DSSection(title, action: SectionAction(link: "See all", accessibilityLabel: "See all \(title)", destination: seeAll)) {
                 RecipeShelf("", recipes: recipes) { RecipeDetailView(recipe: $0) }
             }
         }

@@ -23,7 +23,7 @@ struct PartyMealsSection: View {
                 EmptyState("No meals yet", message: "Meals served to this party will show up here.")
             }
         } else {
-            DSSection("What they\u{2019}re eating", trailing: meals.count == 1 ? "1 meal" : "\(meals.count) meals") {
+            DSSection("What they\u{2019}re eating") {
                 Card(layout: .list) {
                     ForEach(meals.prefix(Self.previewCount)) { meal in
                         NavigationLink {

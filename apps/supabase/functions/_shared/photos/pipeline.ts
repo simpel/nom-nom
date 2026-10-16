@@ -2,6 +2,7 @@
 // authentication, the AI Gateway calls, and the image response.
 
 import { encodeBase64 } from "jsr:@std/encoding@1/base64";
+import { createClient, type SupabaseClient } from "jsr:@supabase/supabase-js@2";
 import type { GenerationLogger } from "../generation-logger.ts";
 import { imageSizeFor } from "./prompts.ts";
 
@@ -135,4 +136,44 @@ export async function generateImage(
     await logger.failure(message);
     return jsonResponse({ error: `Internal error: ${message}` }, 500);
   }
+}
+
+/** True when the request carries the database trigger's webhook secret (checked by `authenticate`). */
+export function isWebhookCall(req: Request): boolean {
+  return Boolean(req.headers.get("x-webhook-secret"));
+}
+
+/**
+ * A person asking for a photo: the JWT must be valid (resolved with getUser, never read from
+ * the body), the row must belong to them and they must have Nom Nom Pro. Null when allowed,
+ * otherwise the response to send.
+ */
+export async function authorizeUserPhoto(
+  req: Request,
+  admin: SupabaseClient | null,
+  target: { table: "recipes" | "meals"; ownerColumn: "owner_id" | "created_by"; id: string | undefined },
+): Promise<Response | null> {
+  const url = Deno.env.get("SUPABASE_URL");
+  const anonKey = Deno.env.get("SUPABASE_ANON_KEY");
+  if (!admin || !url || !anonKey) return jsonResponse({ error: "Server is not configured" }, 500);
+  if (!target.id) return jsonResponse({ error: "An id is required" }, 400);
+
+  const userClient = createClient(url, anonKey, {
+    global: { headers: { Authorization: req.headers.get("Authorization") ?? "" } },
+  });
+  const { data: userData, error: userErr } = await userClient.auth.getUser();
+  if (userErr || !userData.user) return jsonResponse({ error: "Unauthorized" }, 401);
+  const userId = userData.user.id;
+
+  // Postgres returns uuids lower case; iOS sends them upper case.
+  const { data: row } = await admin
+    .from(target.table).select(target.ownerColumn).eq("id", target.id.toLowerCase()).maybeSingle();
+  if (!row) return jsonResponse({ error: "Not found" }, 404);
+  if ((row as Record<string, unknown>)[target.ownerColumn] !== userId) {
+    return jsonResponse({ error: "Only the owner can add photos" }, 403);
+  }
+
+  const { data: pro } = await admin.rpc("has_pro", { p_user_id: userId });
+  if (pro !== true) return jsonResponse({ error: "Nom Nom Pro required" }, 402);
+  return null;
 }

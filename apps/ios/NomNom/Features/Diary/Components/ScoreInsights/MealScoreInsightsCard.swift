@@ -18,13 +18,30 @@ struct MealScoreInsightsCard: View {
                 teaser: "See what in this party\u{2019}s history explains the score: what pulled it down, what to change next time and how it has scored before.",
                 action: { showInsights = true }
             ) {
-                Text(store.scoreInsight(forMeal: meal))
-                    .textStyle(.sansMd, tone: .secondary)
-                    .fixedSize(horizontal: false, vertical: true)
+                VStack(alignment: .leading, spacing: DS.Spacing.s2) {
+                    if let change = changeLine {
+                        Text(change)
+                            .textStyle(.sansMd, tone: .secondary)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                    Text(store.scoreInsight(forMeal: meal))
+                        .textStyle(.sansMd, tone: .secondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
             }
             .sheet(isPresented: $showInsights) {
                 MealScoreInsightsSheet(meal: meal)
             }
         }
+    }
+
+    /// How this score compares with the last time the party had the meal (Pro).
+    private var changeLine: AttributedString? {
+        guard let change = store.scoreChange(forMeal: meal), change.delta != 0 else { return nil }
+        let party = store.partyDisplayName(forMeal: meal)
+        let group = party == "You" ? "you" : party
+        let points = abs(change.delta) == 1 ? "1 point" : "\(abs(change.delta)) points"
+        let emphasis = "\(points) \(change.delta > 0 ? "up" : "down")"
+        return SheetHero.emphasised("\(emphasis) on the last time \(group) had it.", fragment: emphasis)
     }
 }

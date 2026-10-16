@@ -38,6 +38,10 @@ Title and message use the same type steps as the card titles and body copy besid
 | A missing photo | "No photo yet" | — | "Add photo" (`row`) |
 | Nobody has rated | "Nobody has rated this" | when ratings appear | none |
 
+## An empty section hands its action to the EmptyState
+
+A section that is empty and that the viewer can add to does not draw a header action (SectionHeader, "The section action"); its EmptyState carries the same verb as `action`, in the longer form ("Add a recipe"). When the viewer cannot add (someone else's profile), the EmptyState has no `action` and its message says whose it is ("Recipes this person adds will show up here.").
+
 ## Rules
 - **No artwork.** The system defines no illustration, and a photo deck is not a substitute. Art would have to be defined here first.
 - Say what is missing, never that something failed. An error, an offline state and a loading state are not empty states and do not use this component.

@@ -21,6 +21,9 @@ The shape of content that is still on its way: shimmering bones in the layout th
 | `card` | a Card of copy (SectionCard, a ScoreCard's sentence) | a heading (spacing-6, 45%) over `lines` of text (spacing-3), the last at 60% |
 | `text` | copy straight on the ground or inside another card | `lines` of text, the last at 60% |
 | `row` | one ListRow inside a list that is otherwise there | one row |
+| `screen` | a whole detail screen fetched by id (meal, recipe, dinner party) or a tab that has no header data yet | header bones (avatar `spacing-20`, title, date) over a `card` and a `list` Skeleton, `spacing-7` apart on `bg` |
+
+A list that loads more as it scrolls (Parties' "Suggested parties", ten per page) ends in one `card` Skeleton under the last card; its appearance requests the next page and it disappears when a page comes back short. No spinner, since a spinner is only for a button the person pressed.
 
 ## When to use what
 
@@ -29,7 +32,7 @@ The shape of content that is still on its way: shimmering bones in the layout th
 | content whose shape you know (a list, a card, copy) | Skeleton in that shape |
 | work that takes seconds (an AI answer, a sync) | Skeleton + `caption`: "Working out what to change" |
 | an action the person just started | AppButton `loading` (a spinner in the button), never a Skeleton |
-| a whole screen | chrome and ScreenHeader at once, Skeletons for the blocks below; never a lone centred spinner |
+| a whole screen | chrome and ScreenHeader at once, Skeletons for the blocks below; never a lone centred spinner. A screen opened by id has no header data yet: use `layout="screen"` |
 | it failed | the bones give way to what went wrong and one way to try again |
 | it came back empty | the bones give way to an EmptyState |
 

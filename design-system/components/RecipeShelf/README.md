@@ -17,6 +17,7 @@ Replaces the four hand-built shelf variants.
 - Cards are RecipeCard at its own size; the shelf sets no dimensions. A shelf of different-sized cards is not a shelf.
 - A recipe with nowhere to go renders as a plain card, not a link to `#`.
 - An empty shelf is an EmptyState, never an empty track. Pass `emptyState` to say what is missing and what to do.
+- `trailing` may be a link: My recipes puts a `sans-xs` `primary-text` "See all N" there. (SectionHeader says a trailing slot is a figure, never a button; the shelf's README wins.)
 - One shelf per section. Two shelves under one header is two sections.
 
 ## Use

@@ -34,7 +34,7 @@ struct RecipeHistorySection: View {
                 }
             }
 
-            DSSection("Cooked for", trailing: history.count == 1 ? "1 meal" : "\(history.count) meals") {
+            DSSection("Cooked for") {
                 Card(layout: .list) {
                     ForEach(visibleMeals) { meal in
                         row(for: meal)

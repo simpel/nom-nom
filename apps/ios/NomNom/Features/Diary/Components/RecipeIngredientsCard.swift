@@ -32,7 +32,7 @@ struct RecipeIngredientsCard: View {
 
     var body: some View {
         if !validIngredients.isEmpty {
-            DSSection("Ingredients", trailing: "\(validIngredients.count)") {
+            DSSection("Ingredients") {
                 Card(layout: .list) {
                     ListRow("Imperial units", trailing: .toggle(Binding(get: { store.unitSystem.isImperial }, set: { on in Task { await store.setUnitSystem(on ? .imperial : .metric) } })))
                     if serves != nil {

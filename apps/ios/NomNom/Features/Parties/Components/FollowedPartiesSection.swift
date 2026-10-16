@@ -11,7 +11,7 @@ struct FollowedPartiesSection: View {
 
     var body: some View {
         if !followed.isEmpty {
-            DSSection("Parties you follow", trailing: "\(followed.count)") {
+            DSSection("Parties you follow") {
                 VStack(spacing: DS.Spacing.s4) {
                     ForEach(followed) { DinnerPartyCard(party: $0) }
                 }
