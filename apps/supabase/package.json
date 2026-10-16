@@ -11,6 +11,6 @@
     "@food/eslint-config": "workspace:*",
     "@food/typescript-config": "workspace:*",
     "eslint": "^8.57.0",
-    "typescript": "^5.8.2"
+    "typescript": "^7.0.2"
   }
 }
