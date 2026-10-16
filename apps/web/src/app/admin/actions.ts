@@ -2,8 +2,10 @@
 
 import { revalidatePath } from 'next/cache'
 import { headers } from 'next/headers'
+import { requireAdmin } from '@/utils/supabase/admin-auth'
 
 export async function generatePartyInsightAction(partyId: string) {
+  await requireAdmin()
   const host = (await headers()).get('host') || 'localhost:3000'
   const protocol = host.includes('localhost') ? 'http' : 'https'
   const baseUrl = `${protocol}://${host}`
@@ -34,6 +36,7 @@ export async function generatePartyInsightAction(partyId: string) {
 }
 
 export async function generateAllPartiesInsightAction() {
+  await requireAdmin()
   const host = (await headers()).get('host') || 'localhost:3000'
   const protocol = host.includes('localhost') ? 'http' : 'https'
   const baseUrl = `${protocol}://${host}`
@@ -66,6 +69,7 @@ export async function generateAllPartiesInsightAction() {
 }
 
 export async function generateProfileInsightAction(profileId: string) {
+  await requireAdmin()
   const host = (await headers()).get('host') || 'localhost:3000'
   const protocol = host.includes('localhost') ? 'http' : 'https'
   const baseUrl = `${protocol}://${host}`
@@ -93,6 +97,7 @@ export async function generateProfileInsightAction(profileId: string) {
 }
 
 export async function backfillRecipeEmbeddingsAction() {
+  await requireAdmin()
   const host = (await headers()).get('host') || 'localhost:3000'
   const protocol = host.includes('localhost') ? 'http' : 'https'
   const baseUrl = `${protocol}://${host}`
@@ -119,6 +124,7 @@ export async function backfillRecipeEmbeddingsAction() {
 }
 
 export async function backfillHealthScoresAction() {
+  await requireAdmin()
   const host = (await headers()).get('host') || 'localhost:3000'
   const protocol = host.includes('localhost') ? 'http' : 'https'
   const baseUrl = `${protocol}://${host}`
@@ -147,6 +153,7 @@ export async function backfillHealthScoresAction() {
 }
 
 export async function linkTaxonomyAction() {
+  await requireAdmin()
   const host = (await headers()).get('host') || 'localhost:3000'
   const protocol = host.includes('localhost') ? 'http' : 'https'
   const baseUrl = `${protocol}://${host}`
@@ -176,6 +183,7 @@ export async function linkTaxonomyAction() {
 }
 
 export async function generateRecipeHealthScoreAction(recipeId: string) {
+  await requireAdmin()
   const host = (await headers()).get('host') || 'localhost:3000'
   const protocol = host.includes('localhost') ? 'http' : 'https'
   const baseUrl = `${protocol}://${host}`

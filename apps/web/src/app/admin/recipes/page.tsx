@@ -1,15 +1,9 @@
+import { requireAdmin } from '@/utils/supabase/admin-auth'
 import { createClient as createSupabaseClient } from '@supabase/supabase-js'
-import { createClient } from '@/utils/supabase/server'
-import { redirect } from 'next/navigation'
 import RecipesListClient from './RecipesListClient'
 
 export default async function RecipesListPage() {
-  const supabase = await createClient()
-
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) {
-    redirect('/admin/login')
-  }
+  await requireAdmin()
 
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
   const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!

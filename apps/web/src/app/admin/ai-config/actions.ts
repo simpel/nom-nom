@@ -1,6 +1,7 @@
 'use server'
 
 import { createClient } from '@/utils/supabase/server'
+import { getAdminUser } from '@/utils/supabase/admin-auth'
 import { revalidatePath } from 'next/cache'
 import { ALL_FEATURES, DEFAULTS } from './features'
 
@@ -8,6 +9,10 @@ const FEATURE_IDS = new Set(ALL_FEATURES.map(f => f.id))
 const DEFAULT_IDS = new Set<string>(DEFAULTS.map(d => d.id))
 
 export async function updateAiConfig(formData: FormData) {
+  // The app check is for a clear error; the ai_feature_configs RLS policies
+  // (public.is_admin()) are what actually stop a non-admin from writing.
+  if (!(await getAdminUser())) return { success: false, error: 'Admin access required.' }
+
   const supabase = await createClient()
 
   // The form holds `model-<id>` -> model id. An empty feature value means "use the default".

@@ -2974,3 +2974,8 @@ update public.notifications set read_at = now() where read_at is null;
 -- 8. Servings on the seeded recipes (local data only; the column comes from
 -- 20260907210000_add_recipe_serves.sql, so no migration is needed)
 update public.recipes set serves = 4 where serves is null;
+
+-- The dashboard account is an admin (/admin, AI config).
+insert into public.admins (user_id)
+values ('e0000000-0000-0000-0000-000000000001')
+on conflict do nothing;
