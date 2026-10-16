@@ -42,10 +42,6 @@ struct RecipeDetailView: View {
         self._fallbackRecipe = State(initialValue: recipe)
     }
 
-    init(recipeID: UUID, showCloseButton: Bool = false) {
-        self.init(recipeID: recipeID, showCloseButton: showCloseButton)
-    }
-
     var recipe: Recipe? { store.recipe(recipeID) ?? fallbackRecipe }
 
     /// Recipe photos, then recipe pages, without duplicates (all in the recipe bucket).
