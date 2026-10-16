@@ -3,17 +3,12 @@
 // is unavailable, so a photo is still made.
 
 import { chatJson, type GatewayConfig } from "./pipeline.ts";
-
-export interface IngredientInput {
-  quantity?: string;
-  measurement?: string;
-  ingredient?: string;
-}
+import { flattenIngredients, ingredientLine, type IngredientGroup } from "../ingredients.ts";
 
 export interface RecipeBriefInput {
   name?: string;
   cuisine?: string | null;
-  ingredients?: Array<IngredientInput | string>;
+  ingredient_groups?: IngredientGroup[];
   instructions?: string[];
 }
 
@@ -91,14 +86,7 @@ export async function resolveRecipeBrief(
   textModel: string,
   input: RecipeBriefInput,
 ): Promise<RecipeBrief> {
-  const ingredients = (input.ingredients || [])
-    .map((ing) => {
-      if (typeof ing === "string") return ing;
-      const amount = [ing.quantity, ing.measurement].filter(Boolean).join(" ");
-      return amount ? `${amount} ${ing.ingredient || ""}`.trim() : (ing.ingredient || "");
-    })
-    .filter(Boolean)
-    .join(", ");
+  const ingredients = flattenIngredients(input.ingredient_groups).map(ingredientLine).filter(Boolean).join(", ");
   const instructions = (input.instructions || []).filter(Boolean).join(" ");
 
   const userMessage = `Recipe Name: ${input.name || "Untitled Recipe"}

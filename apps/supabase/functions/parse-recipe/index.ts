@@ -27,6 +27,11 @@ interface ParsedIngredient {
   ingredient: string;
 }
 
+interface ParsedIngredientGroup {
+  name: string | null;
+  ingredients: ParsedIngredient[];
+}
+
 interface HealthBreakdown {
   positives: string[];
   considerations: string[];
@@ -43,7 +48,7 @@ interface ParsedRecipe {
   recipe_kind?: string | null;
   recipe_kind_id?: string | null;
   effort: number | null;
-  ingredients: ParsedIngredient[];
+  ingredient_groups: ParsedIngredientGroup[];
   instructions: string[];
   health_score: number | null;
   health_verdict: string | null;
@@ -60,11 +65,16 @@ Extract the recipe into a single JSON object matching this schema:
   "cooking_method": "string or null - Primary cooking method (e.g. 'baking', 'grilling', 'slow_cooking', 'roasting', 'steaming', 'frying', 'sauteing', 'simmering', 'raw_cured', 'smoking'). If none clearly dominates, set to null.",
   "recipe_kind": "string or null - The culinary format/kind of the recipe (e.g. 'stew', 'casserole', 'soup', 'bbq', 'pasta', 'pizza', 'curry', 'salad', 'roast', 'stir_fry', 'sandwich', 'pie', 'tacos', 'risotto'). If ambiguous, set to null.",
   "effort": integer or null (1 for quick/simple <=30m, 2 for medium 30-60m, 3 for elaborate >60m),
-  "ingredients": [
+  "ingredient_groups": [
     {
-      "quantity": "string (e.g. '500', '2', '1/2', or '' if none)",
-      "measurement": "string (e.g. 'g', 'ml', 'tbsp', 'tsp', 'cups', 'pinch', or '' if none)",
-      "ingredient": "string (e.g. 'all-purpose flour', 'garlic, minced')"
+      "name": "string or null (the recipe's own heading for this group, e.g. 'Sauce', 'Salad', 'Dough'; null when the ingredients have no heading)",
+      "ingredients": [
+        {
+          "quantity": "string (e.g. '500', '2', '1/2', or '' if none)",
+          "measurement": "string (e.g. 'g', 'ml', 'tbsp', 'tsp', 'cups', 'pinch', or '' if none)",
+          "ingredient": "string (e.g. 'all-purpose flour', 'garlic, minced')"
+        }
+      ]
     }
   ],
   "instructions": [
@@ -89,6 +99,7 @@ Extract the recipe into a single JSON object matching this schema:
 Classification Guidelines:
 - Cuisine: Make wide umbrella picks. For example: soy sauce/ginger -> 'asian', oregano/feta/olive oil -> 'greek' or 'mediterranean', cumin/chili -> 'mexican', pasta/parmesan -> 'italian', dill/salmon -> 'nordic'. Do not invent crossover or hyphenated cuisines.
 - Health Index: Score based on nutrient density (whole grains, vegetables, lean protein, healthy fats vs. high sodium, sugar, saturated fats) and cooking technique (fresh/steamed/baked vs. deep-fried/excess oil).
+- Ingredient groups: keep the recipe's own sections ("For the sauce", "Salad") as separate groups, in order, with the heading as the name (drop "For the"). A recipe with no sections is exactly one group with name null. Never invent groups.
 - Multiple photos are ONE recipe: return exactly one JSON object, never an array.
 - Return ONLY valid JSON. No conversational intro or markdown outside JSON.`;
 
@@ -98,10 +109,17 @@ const looseString = z.preprocess(
   z.string(),
 );
 
+// The groups in a model reply; a flat "ingredients" list (the older shape) is one unnamed group.
+function ingredientGroupsOf(o: any): unknown[] {
+  if (Array.isArray(o?.ingredient_groups)) return o.ingredient_groups;
+  if (Array.isArray(o?.ingredients) && o.ingredients.length > 0) return [{ name: null, ingredients: o.ingredients }];
+  return [];
+}
+
 function mergeRecipeFragments(items: any[]): Record<string, unknown> {
   const objs = items.filter((i) => i && typeof i === "object" && !Array.isArray(i));
   const merged: Record<string, unknown> = { ...(objs[0] ?? {}) };
-  merged.ingredients = objs.flatMap((o) => (Array.isArray(o.ingredients) ? o.ingredients : []));
+  merged.ingredient_groups = objs.flatMap(ingredientGroupsOf);
   merged.instructions = objs.flatMap((o) => (Array.isArray(o.instructions) ? o.instructions : []));
   for (const o of objs) {
     for (const [k, v] of Object.entries(o)) {
@@ -265,6 +283,8 @@ Deno.serve(async (req) => {
       parsedData = mergeRecipeFragments(parsedData);
     } else if (parsedData && Array.isArray(parsedData.recipes)) {
       parsedData = mergeRecipeFragments(parsedData.recipes);
+    } else if (parsedData && typeof parsedData === "object") {
+      parsedData = { ...parsedData, ingredient_groups: ingredientGroupsOf(parsedData) };
     }
 
     const RecipeSchema = z.object({
@@ -274,11 +294,14 @@ Deno.serve(async (req) => {
       cooking_method: z.string().nullable().optional(),
       recipe_kind: z.string().nullable().optional(),
       effort: z.number().nullable().optional(),
-      ingredients: z.array(z.object({
-        quantity: looseString,
-        measurement: looseString,
-        ingredient: looseString
-      })).default([]),
+      ingredient_groups: z.array(z.object({
+        name: z.string().nullable().optional().transform((n) => n?.trim() || null),
+        ingredients: z.array(z.object({
+          quantity: looseString,
+          measurement: looseString,
+          ingredient: looseString
+        })).default([]),
+      })).default([]).transform((groups) => groups.filter((g) => g.ingredients.length > 0)),
       instructions: z.array(z.string()).default([]),
       health_score: z.number().nullable().optional(),
       health_verdict: z.string().nullable().optional(),

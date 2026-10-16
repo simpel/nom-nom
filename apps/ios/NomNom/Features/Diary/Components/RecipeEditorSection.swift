@@ -9,7 +9,7 @@ struct RecipeEditorSection: View {
     var body: some View {
         RecipeServingsSection(serves: $draft.serves)
 
-        RecipeIngredientsEditorSection(ingredients: $draft.ingredients)
+        RecipeIngredientsEditorSection(groups: $draft.ingredientGroups)
 
         RecipeInstructionsEditorSection(instructions: $draft.instructions)
 

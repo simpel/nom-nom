@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/utils/supabase/server';
 import { createClient as createSupabaseClient } from '@supabase/supabase-js';
+import { flattenIngredients } from '@/lib/ingredients';
 
 export const maxDuration = 300;
 
@@ -25,7 +26,7 @@ export async function POST(request: Request) {
     const recipeId: string | undefined = body.recipe_id;
 
     try {
-        let query = adminSupabase.from('recipes').select('id, ingredients');
+        let query = adminSupabase.from('recipes').select('id, ingredient_groups');
         if (recipeId) query = query.eq('id', recipeId);
 
         const { data: recipes, error } = await query;
@@ -35,7 +36,7 @@ export async function POST(request: Request) {
         }
 
         const withIngredients = recipes.filter(
-            (d) => Array.isArray(d.ingredients) && d.ingredients.length > 0
+            (d) => flattenIngredients(d.ingredient_groups).length > 0
         );
 
         if (withIngredients.length === 0) {

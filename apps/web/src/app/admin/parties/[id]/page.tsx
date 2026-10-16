@@ -62,7 +62,6 @@ export default async function PartyDetailPage({ params }: { params: Promise<{ id
           id,
           name,
           cuisine,
-          ingredients,
           effort,
           health_score
         ),

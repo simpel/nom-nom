@@ -4,6 +4,7 @@ import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import GenerationLogsClient from '@/components/admin/GenerationLogsClient'
 import GenerateHealthScoreButton from '@/components/admin/GenerateHealthScoreButton'
+import { flattenIngredients, type IngredientGroup } from '@/lib/ingredients'
 
 export default async function RecipeDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const supabase = await createClient()
@@ -149,14 +150,21 @@ export default async function RecipeDetailPage({ params }: { params: Promise<{ i
 
         <div className="bg-white p-6 rounded-lg shadow-sm border space-y-4">
           <h2 className="text-xl font-semibold">Ingredients</h2>
-          {recipe.ingredients && recipe.ingredients.length > 0 ? (
-            <ul className="text-sm space-y-1 list-disc list-inside">
-              {recipe.ingredients.map((ing: { quantity?: string; measurement?: string; ingredient: string }, i: number) => (
-                <li key={i}>
-                  {[ing.quantity, ing.measurement].filter(Boolean).join(' ')} {ing.ingredient}
-                </li>
+          {flattenIngredients(recipe.ingredient_groups).length > 0 ? (
+            <div className="space-y-3">
+              {(recipe.ingredient_groups as IngredientGroup[]).map((group, g) => (
+                <div key={g}>
+                  {group.name && <h3 className="text-sm font-semibold">{group.name}</h3>}
+                  <ul className="text-sm space-y-1 list-disc list-inside">
+                    {group.ingredients.map((ing, i) => (
+                      <li key={i}>
+                        {[ing.quantity, ing.measurement].filter(Boolean).join(' ')} {ing.ingredient}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
               ))}
-            </ul>
+            </div>
           ) : (
             <p className="text-sm text-gray-400 italic">No ingredients saved.</p>
           )}
