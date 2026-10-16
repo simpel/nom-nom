@@ -3,11 +3,11 @@ import SwiftUI
 /// Meal Detail's one score card: the hero ScoreValue, what changed since last time, and
 /// how the ratings split as a SegmentedBar `sm` with its inline key, then "3 of 5 rated
 /// so far". The split replaces ScoreCard's progress Bar: the numeral already says
-/// "90", and a second bar under it read as noise (DS-GAPS.md B, "Meal score card").
+/// "90", and a second bar under it read as noise.
 /// Built from ScoreCard's parts (Card `md`, ScoreValue `lg`, the delta line) so it
 /// reads as a ScoreCard. Pressable: opens the score breakdown.
 ///
-/// Unrated (`score` nil, DS-GAPS.md B, "Meal score card, unrated"): "No score yet"
+/// Unrated (`score` nil, ScoreCard README, "the unrated state"): "No score yet"
 /// `serif-sm` over "0 of 4 have rated", and a "Remind" AppButton `sm` on the right when
 /// `onRemind` is set (`secondary soft`, like every Remind). Not pressable: there is no
 /// breakdown yet.

@@ -48,7 +48,7 @@ struct TasteScoreSelector: View {
         let isSelected = selection == reaction
         let glyph = Self.glyph(for: reaction)
         return Button {
-            // README: "Spring 0.25 / 0.75." No motion token is a spring (DS-GAPS.md).
+            // README: "Spring 0.25 / 0.75." No motion token is a spring.
             let animation: Animation? = reduceMotion ? nil : .spring(response: 0.25, dampingFraction: 0.75)
             withAnimation(animation) {
                 selection = isSelected ? nil : reaction
@@ -71,7 +71,7 @@ struct TasteScoreSelector: View {
             .overlay {
                 if isSelected {
                     // README: "a 1.5px fill ring". No 1.5px width exists; `border-thick`
-                    // is the token for a "selected ring" (DS-GAPS.md).
+                    // is the token for a "selected ring".
                     Circle()
                         .strokeBorder(reaction.fill, lineWidth: DS.BorderWidth.thick)
                         .allowsHitTesting(false)

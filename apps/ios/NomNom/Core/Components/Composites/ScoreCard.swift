@@ -39,7 +39,7 @@ struct ScoreCard: View {
     var count: String?
     var caption: String?
     var isLoading: Bool
-    /// A household score's bar split by rater: blocks sum to the score (DS-GAPS A).
+    /// A household score's bar split by rater: blocks sum to the score.
     var barSegments: [BarSegment]?
     var action: (() -> Void)?
 
@@ -100,7 +100,7 @@ struct ScoreCard: View {
                 ScoreCardDeltaLine(delta: delta, text: deltaText, reference: deltaReference)
             }
 
-            // Bar README: "Ground is `track`" (no featured tint, DS-GAPS.md R1b).
+            // Bar README: "Ground is `track`" (no featured tint).
             scoreBar
                 // ScoreValue already speaks the score.
                 .accessibilityHidden(true)

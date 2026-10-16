@@ -32,11 +32,11 @@ enum ScoreValueSize: Equatable, CaseIterable {
 }
 
 /// What inks the numeral. `accent` (`primary-text`) everywhere except the sheet hero,
-/// which takes its reaction step's `-text` ink (DS-GAPS B, "SheetHero reaction ink").
+/// which takes its reaction step's `-text` ink.
 enum ScoreValueInk: Equatable {
     case accent
     case reaction
-    /// `pro-text`: the health score, a Pro feature (DS-GAPS A, "ProScoreCard").
+    /// `pro-text`: the health score, a Pro feature.
     case pro
 }
 

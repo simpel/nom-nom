@@ -6,7 +6,7 @@ import SwiftUI
 /// the title `sans-sm` semibold over "Camera or library" `sans-sm` tertiary. The whole
 /// tile is the button. With no photos it is the only tile, labelled `emptyTitle`.
 /// Where the Add photo sheet also offers AI, a `pro soft sm` "AI" Badge leads the
-/// sub-line (DS-GAPS.md, "Add photo sheet").
+/// sub-line.
 struct PhotoStripAddTile: View {
     var title: String = "Add photo"
     var offersAI = false
@@ -39,10 +39,10 @@ struct PhotoStripAddTile: View {
                 height: format.height(longEdge: PhotoCardSize.lg.longEdge)
             )
             .overlay {
-                // The dash length is unspecified (DS-GAPS.md).
+                // The dash length is unspecified.
                 shape.strokeBorder(
                     DS.Color.lineControl,
-                    style: StrokeStyle(lineWidth: DS.BorderWidth.thick, dash: [DS.Spacing.s1, DS.Spacing.s1])
+                    style: StrokeStyle(lineWidth: DS.BorderWidth.thick, dash: [DS.Dash.length, DS.Dash.length])
                 )
             }
             .contentShape(shape)

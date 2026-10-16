@@ -28,7 +28,7 @@ struct InsightsDashboardView: View {
                 VStack(alignment: .leading, spacing: DS.Spacing.block) {
                     ProMark()
 
-                    EditorialTextView(insightSummary: insights?.summarySentence)
+                    EditorialText(insightSummary: insights?.summarySentence)
 
                     PartyTasteMatchCard(
                         matches: partyTasteMatches,

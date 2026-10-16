@@ -99,7 +99,7 @@ struct SectionHeader: View {
 
             if let trailing {
                 // The README does not name the figure's step; it shares the label's
-                // `sans-xs` line (DS-GAPS.md).
+                // `sans-xs` line.
                 Text(trailing)
                     .textStyle(.sansXs, tone: nil, numeric: true, lines: 1)
                     .foregroundStyle(trailingColor)

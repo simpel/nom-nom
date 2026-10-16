@@ -38,7 +38,7 @@ struct Avatar: View {
     var size: AvatarSize
     var decorative: Bool
     /// The photo is still being made (an AI cover): the Skeleton bone and sweep stand in,
-    /// as PhotoCard does it, so the fallback doesn't flash first (DS-GAPS.md, "Avatar loading").
+    /// as PhotoCard does it, so the fallback doesn't flash first.
     var isLoading = false
 
     @State private var imageData: Data?
@@ -130,7 +130,7 @@ struct Avatar: View {
         .frame(width: size.diameter, height: size.diameter)
         .clipShape(Circle())
         // README: "0.5px `line` ring at 30%". 0.5px has no token; `.dsHairline` draws
-        // `border-hairline` (1pt) `line` at `opacity-30` (DS-GAPS.md, "Hairline width").
+        // `border-hairline` (1pt) `line` at `opacity-30`.
         .dsHairline(radius: DS.Radius.full)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(name)

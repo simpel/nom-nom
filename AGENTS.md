@@ -12,8 +12,8 @@ Nom Nom has its own design system. It is the spec for every pixel in the iOS app
 - **What to read, in order**:
   1. `design-system/README.md`: voice, colour roles, scales, typography, imagery, composition rules.
   2. `design-system/components/<Name>/README.md` for every component you touch or compose. Read it before writing the Swift.
-  3. `apps/ios/NomNom/Core/Design/README.md` (how tokens reach Swift) and `Core/Design/DS-GAPS.md` (known gaps and the calls already taken).
-- **Precedence when the spec disagrees with itself**: component README > root README > `bundle.css` > `index.d.ts` / `api/`. Log every such call in `DS-GAPS.md` section B.
+  3. `apps/ios/NomNom/Core/Design/README.md` (how tokens reach Swift) and its "Platform notes" (the few values iOS has to draw that the spec leaves open).
+- **Precedence when the spec disagrees with itself**: component README > root README > `bundle.css` > `index.d.ts` / `api/`. Do not work around it in Swift: fix the README in the artifact so spec and app agree.
 - **The Swift side**: each DS component has one Swift counterpart in `Core/Components/` with the same name (`ListRow` ↔ `ListRow.swift`, `BottomSheet` ↔ `SheetBody` / `SheetCard` / `SheetHero` / `.dsSheet()`, `Section` ↔ `DSSection`, `Toggle` ↔ `AppToggle`, `Text` ↔ `.textStyle(...)`). Use it; never build a second version.
 
 ### Building UI: the lookup
@@ -21,26 +21,26 @@ Nom Nom has its own design system. It is the spec for every pixel in the iOS app
 Before writing any view, card, row, sheet or control:
 
 1. **Find the DS component.** `ls design-system/components/`. If one fits, use its Swift counterpart with the axes its README defines. Do not add props, variants or sizes the README doesn't name.
-2. **Compose before inventing.** If no single component fits, build the view from DS components (Card + ListRow + Badge, …). A feature view built only from DS components and tokens needs no gap entry.
-3. **No equivalent? Add it to the design system.** The DS is editable: if the UI needs a pattern it does not define (a new visual shape, control, state or layout rule), update the artifact first (component README, `preview.html`, `components/bundle.js` + `bundle.css`, `components/index.d.ts`, following its `SKILL.md`; read the live files right before writing), re-vendor, bump `VERSION`, then build the Swift counterpart. Only when the artifact change cannot land in this PR, fall back to a flagged gap:
-   - Shared across features → `Core/Components/Interim/<Name>.swift`, first line `// DS-GAP: pending design system — see Core/Design/DS-GAPS.md`. One feature → that feature's `Components/`.
-   - Build it only from DS primitives and tokens.
-   - Add it to `DS-GAPS.md` section A with what it covers and **what the DS needs to decide**.
-   - **Tell the user in your reply**: name the component, why no DS component fits, and the DS-GAPS entry you added. Never add an unflagged gap.
-4. **A value the DS doesn't give** → `DS-GAPS.md` section C, plus `// ds-lint:allow <reason>` on the line.
+2. **Compose before inventing.** If no single component fits, build the view from DS components (Card + ListRow + Badge, …). Most features are exactly this.
+3. **No equivalent? Add it to the design system, then build it.** If the UI needs a pattern the DS does not define (a new component, variant, state or layout rule), the design system gets it first. There is no local exception list and no interim folder:
+   - Update the artifact (https://claude.ai/artifact/4jeEJ91V5eRxpDn8NtqNgK) following its `SKILL.md`: the component README (what it is built from, what the consumer provides, rules), a `preview.html`, the reference implementation in `components/bundle.js` + `bundle.css`, and the props in `components/index.d.ts`. Read the live files right before writing: other people edit it too.
+   - Re-vendor into `design-system/`, bump `VERSION`, regenerate tokens (`Core/Design/README.md` → "Updating the design system").
+   - Build the Swift counterpart in `Core/Components/<layer>/` under the same name, from DS primitives and tokens only.
+   - **Tell the user in your reply**: the component you added to the design system, and why nothing existing fit.
+4. **A value the DS doesn't give** → add a token to the artifact's `tokens.json` and regenerate. A value that exists only because iOS draws it (a system sheet's dimming, a spring) goes in `Core/Design/README.md` → "Platform notes", plus `// ds-lint:allow <reason>` on the line.
 
 ### Checks (run after any UI change)
 
 ```bash
 scripts/ds-lint.sh        # invented values (sizes, colours, radii, opacities…)
-scripts/ds-coverage.sh    # components with no DS equivalent and no DS-GAPS entry
+scripts/ds-coverage.sh    # components with no design-system equivalent
 ```
 
-Both must be clean. `ds-coverage.sh` errors on any `Core/Components` file that maps to no `design-system/components/<Name>` and has no `DS-GAP` header or `DS-GAPS.md` entry (`Foundations/` and `*Gallery.swift` are exempt). It warns on any feature view that calls no DS component. Fix the cause or add the gap entry; do not just silence it.
+Both must be clean. `ds-coverage.sh` errors on any `Core/Components` file that maps to no `design-system/components/<Name>` (`Foundations/` and `*Gallery.swift` are exempt; the script's `ALIASES` list maps a Swift name onto the DS component whose README covers it, e.g. `NoteEditor` onto `NoteField`). It warns on any feature view that calls no DS component (`// ds-coverage: delegates` for a view that only dispatches, `// ds-coverage: platform` for a wrapper around a system control). Fix the cause, usually by adding the pattern to the design system; do not just silence it.
 
 ### When the design system is updated
 
-Follow `Core/Design/README.md` → "Updating the design system": re-vendor, bump `VERSION`, regenerate tokens, run both checks, re-read changed component READMEs against `Core/Components`, then move closed gaps in `DS-GAPS.md` from A to D.
+Follow `Core/Design/README.md` → "Updating the design system": re-vendor, bump `VERSION`, regenerate tokens, run both checks, re-read changed component READMEs against `Core/Components`.
 
 ---
 
@@ -56,7 +56,7 @@ design-system/          # Vendored snapshot of the design system artifact (see V
 scripts/
 ├── ds-tokens-swift.py  # tokens.json -> apps/ios/NomNom/Core/Design/Generated/DSTokens.generated.swift
 ├── ds-lint.sh          # Fails on invented values in Core/ and Features/. Must be clean.
-└── ds-coverage.sh      # Fails on Core components with no DS equivalent and no DS-GAPS entry. Must be clean.
+└── ds-coverage.sh      # Fails on Core components with no design-system equivalent. Must be clean.
 apps/
 ├── ios/NomNom/         # SwiftUI app
 │   ├── App/            # App lifecycle, root navigation (RootTabView, RootView, NomNomApp)
@@ -76,9 +76,7 @@ apps/
 │   │   │   │                  PartyCard, SegmentedBar, ValueStepper, LabeledPhotoCard,
 │   │   │   │                  TasteScoreSelector, ProMark/ProCard/ProGate/ProView (Pro),
 │   │   │   │                  SheetBody/SheetCard/SheetHero (BottomSheet)
-│   │   │   └── Interim/     # Patterns the DS does not cover yet (TrendChart, MediaViewerSheet,
-│   │   │                      form blocks). Each is listed in Core/Design/DS-GAPS.md
-│   │   ├── Design/     # DS+*.swift token aliases, Generated/ (never hand-edit), README.md, DS-GAPS.md
+│   │   ├── Design/     # DS+*.swift token aliases, Generated/ (never hand-edit), README.md (incl. platform notes)
 │   │   ├── Extensions/ # Foundation & SwiftUI extensions, sheet/navigation modifiers (.editorSheet)
 │   │   ├── Forms/      # The editor model: SheetForm protocol + FormSession (see §5)
 │   │   ├── Fonts/      # Bundled Newsreader cuts (registered via INFOPLIST_KEY_UIAppFonts)
@@ -121,7 +119,7 @@ To keep the codebase maintainable and readable:
    - No font size, spacing, colour, radius, shadow, opacity, border width, duration or dimension is invented. Every value is a `DS.*` token or a `.textStyle(...)` step.
    - Tokens are generated from `design-system/tokens.json` by `scripts/ds-tokens-swift.py` into `Core/Design/Generated/`. **Never hand-edit `Generated/`** or the vendored `design-system/` snapshot (change the artifact); `Core/Design/DS+*.swift` only alias generated values. See `Core/Design/README.md`.
    - `scripts/ds-lint.sh` must be clean. A literal that has to stay ends in `// ds-lint:allow <reason>` quoting the README it came from.
-   - Where the spec contradicts itself, the component README wins over older root-README prose; log every such call in `Core/Design/DS-GAPS.md`.
+   - Where the spec contradicts itself, the component README wins over older root-README prose; fix the README in the artifact.
 
 ---
 
@@ -135,7 +133,7 @@ When creating or moving a file, use this decision tree:
 | **Feature Section / Card / Sheet** | Used within one feature | `NomNom/Features/<Feature>/Components/<SectionName>.swift` |
 | **Feature Logic / Scoring** | Non-UI algorithm or state engine | `NomNom/Features/<Feature>/Engine/` or `Models/` |
 | **Design-system component** | Has a README in `design-system/components/` | `NomNom/Core/Components/<Foundations\|Primitives\|Layout\|Composites>/<Name>.swift` |
-| **Shared pattern the DS lacks** | Used or usable across $\ge 2$ features | `NomNom/Core/Components/Interim/<Name>.swift` + `Core/Design/DS-GAPS.md` entry |
+| **Pattern the DS lacks** | Used or usable across $\ge 2$ features | Add it to the design system first, then `NomNom/Core/Components/<layer>/<Name>.swift` (same name as the DS component) |
 | **Design token alias** | A value from `tokens.json` | `NomNom/Core/Design/DS+<Family>.swift` (generated values in `Generated/`, never hand-edited) |
 | **Extension / Utility** | General type extensions | `NomNom/Core/Extensions/<Type>+<Functionality>.swift` |
 | **Data Entity / Value Type** | App-wide data model | `NomNom/Domain/<ModelName>.swift` |
@@ -235,7 +233,7 @@ To prevent duplication and ensure high consistency:
 
 2. **Centralized Screen Navigation & Headers**:
    - Always use `.screenTitle(_ title: String, displayMode: NavigationBarItem.TitleDisplayMode = .large)` for screen/sheet titles.
-   - Every screen and sheet opens with **one** `ScreenHeader(_:eyebrow:date:summary:avatar:avatarEdit:role:actions:)` (`design-system/components/ScreenHeader/README.md`). An editable avatar (camera badge, tap to take or pick a photo) is `avatarEdit: ScreenHeaderAvatarEdit(...)`, never a hand-built photo picker beside the header (DS-GAPS.md, "ScreenHeader avatar edit mode"). It is centred only by an `avatar`, `role: .tabRoot` (Meals, Recipes, Parties, which also carry a one-sentence summary) or `role: .moment` (sign-in, onboarding, the Pro paywall); otherwise leading. The eyebrow is ONE item (a category or the parent it lives in, never a date, product or flow name); dates go in `date:`; actions are at most two `ScreenHeaderAction`s, `md`, label only, on one row. There is no meta, facts, badges, align or size.
+   - Every screen and sheet opens with **one** `ScreenHeader(_:eyebrow:date:summary:avatar:avatarEdit:role:actions:)` (`design-system/components/ScreenHeader/README.md`). An editable avatar (camera badge, tap to take or pick a photo) is `avatarEdit: ScreenHeaderAvatarEdit(...)`, never a hand-built photo picker beside the header (Avatar README, "Edit mode"). It is centred only by an `avatar`, `role: .tabRoot` (Meals, Recipes, Parties, which also carry a one-sentence summary) or `role: .moment` (sign-in, onboarding, the Pro paywall); otherwise leading. The eyebrow is ONE item (a category or the parent it lives in, never a date, product or flow name); dates go in `date:`; actions are at most two `ScreenHeaderAction`s, `md`, label only, on one row. There is no meta, facts, badges, align or size.
    - Small facts about the subject (time, method, servings, rotation) are `Facts(_:layout:)` (`.grid` / `.strip`), `text-primary` only; wrap it in a `Card` where the screen wants a surface.
    - **Screen anatomy** (root README): chrome · ScreenHeader · PhotoStrip · Facts · primary content · sections · destructive and account actions, `DS.Spacing.block` apart. Photos never sit above the header.
    - Text is set only with `.textStyle(_:tone:weight:italic:numeric:lines:align:)` (`serifXs…serifXl`, `sansXs…sansXl`; weight `.semibold` is opt-in). Never `.font(.system(size:))`, a font name or a raw size.
@@ -249,9 +247,7 @@ To prevent duplication and ensure high consistency:
    - **One list, never split by state.** A set of the same kind of thing (members, raters, invitees, notifications) is ONE `Card(layout: .list)` under ONE section header. Never split it into "Rated / Not yet", "Unread / Read", "Active / Pending" or any other state-keyed sections, cards or sub-headers. State shows on the row: a trailing score, Badge or AppButton (Ask, Remind, Rate), the unread dot, a meta line. Order the one list by a stable key (people alphabetically by the name shown, time-based items newest first), never by state. Different kinds of thing (Members vs Profiles without an account, Your parties vs Suggested parties) may still be separate sections. A header count may report state ("5 of 6").
    - Each component follows its README in `design-system/components/<Name>/README.md`. Read it before changing the component.
 
-4. **A pattern the DS lacks goes in `Core/Components/Interim/` + `DS-GAPS.md`; never hand-roll it**:
-   - Build the interim component only from DS primitives and tokens, start the file with a `// DS-GAP: pending design system` header, and add an entry to `Core/Design/DS-GAPS.md` (section "Open gaps").
-   - Today: `TrendChart`, `MediaViewerSheet`, `NameFieldsCard`, `PartyFormFields`, `VisibilityToggleCard`, `AccountActionsSection`, `PageMenu`, `ProLinkCard`, `PersonHeaderRow`, `NoteField` / `NoteEditorSheet`.
+4. **A pattern the DS lacks goes into the design system, never hand-rolled in Swift** (§0, "No equivalent?"). The DS has components for the less common patterns too: `ChoiceTile`, `TagToggle`, `NoteField` / `NoteEditor`, `PersonHeaderRow`, `ProLinkCard`, `PageMenu`, `TrendChart`, `MediaViewer`, `FieldGroup` / `ToggleCard` / `AccountActions`, `CodeField`, `DismissibleNotice`, `BrandMark`, `EditorialText`. Check `ls design-system/components/` before building anything.
    - **Multi-line text in a form is always `NoteField`** (a row that opens `NoteEditorSheet`, like Apple Maps' "Add a Note"); never an inline `TextArea`. Fields have no border: `soft` (borderless fill) standalone, `plain` inside a card.
 
 ---
@@ -360,8 +356,8 @@ Only these specific system-level APIs are exempt from `AppButton`:
 - [ ] Does every screen and sheet open with one `ScreenHeader` (no hand-built title stacks), follow the screen anatomy order (header before photos), and use `.screenTitle(...)` for navigation titles?
 - [ ] Did you read `design-system/components/<Name>/README.md` for every component you touched or composed?
 - [ ] Does every value come from a `DS.*` token or `.textStyle(...)`, and is `scripts/ds-lint.sh` clean?
-- [ ] Is `scripts/ds-coverage.sh` clean? Is every new pattern with no DS equivalent in `DS-GAPS.md`, and did you name it to the user?
-- [ ] Is the view composed from `Core/Components` (Card, ListRow, EmptyState, …)? Is a pattern the DS lacks in `Interim/` with a `DS-GAPS.md` entry, not hand-rolled?
+- [ ] Is `scripts/ds-coverage.sh` clean? Did a pattern with no DS equivalent go into the design system first (artifact updated, re-vendored), and did you name it to the user?
+- [ ] Is the view composed from `Core/Components` (Card, ListRow, EmptyState, …)? Is a pattern the DS lacks added to the design system, not hand-rolled?
 - [ ] Is `Core/Design/Generated/` untouched (regenerated with `scripts/ds-tokens-swift.py` only)?
 - [ ] Do modal sheets use `.dsSheet()`, `SheetBody` and one of the sheet toolbar modifiers (close on `.topBarLeading`, primary action on `.topBarTrailing`)?
 - [ ] Is every sheet with an edit state a `FormSession` behind `.editorSheet`, with no hand-written save task, error alert or dismiss gesture?

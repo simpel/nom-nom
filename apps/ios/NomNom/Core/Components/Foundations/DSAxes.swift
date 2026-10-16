@@ -38,7 +38,7 @@ enum DSVariant: Equatable {
     /// Border colour for the `outline` appearance. README "Colour": "A line that
     /// carries meaning is `line-control`, not `line-strong`. Outline buttons … hold at
     /// least 3:1" — so secondary uses `line-control` (bundle.css `--role-border`),
-    /// not the AppButton README's older "`line-strong` for secondary" (DS-GAPS.md).
+    /// not the AppButton README's older "`line-strong` for secondary".
     var outlineBorder: Color {
         self == .secondary ? DS.Color.lineControl : role.fill
     }
@@ -65,7 +65,7 @@ enum DSAppearance: Equatable {
     /// Border width of the `outline` appearance: `border-hairline`, as bundle.css
     /// draws it (`--bw: var(--border-hairline)`). The AppButton README's "1.5px" has
     /// no token and README "Scales" names hairline and thick as "the only two widths
-    /// the system draws" (DS-GAPS.md).
+    /// the system draws".
     static let outlineBorderWidth: CGFloat = DS.BorderWidth.hairline
 }
 

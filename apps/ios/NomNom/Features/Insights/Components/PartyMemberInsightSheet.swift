@@ -77,7 +77,7 @@ struct PartyMemberInsightSheet: View {
         .dsSheet()
     }
 
-    /// How close their taste runs to the party's (DS-GAPS.md, "Taste match verdicts").
+    /// How close their taste runs to the party's.
     static func matchVerdict(_ score: Int) -> String {
         switch score {
         case 85...: return "Close"

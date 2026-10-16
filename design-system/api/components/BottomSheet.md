@@ -19,6 +19,7 @@ A sheet over the screen for detail on demand — here, why one person scored a m
 
 | prop | type | note |
 | --- | --- | --- |
+| `titleAs` | `string` | The heading element for the title, so a nested block does not skip a level. @default 'h2' |
 | `title` * | `string` |  |
 | `onClose` | `() => void` |  |
 | `score` | `number` | Hero numeral; verdict defaults to the score's. |

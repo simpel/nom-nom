@@ -19,6 +19,7 @@ A tappable card linking a meal to its recipe: a portrait thumbnail, "RECIPE" lab
 
 | prop | type | note |
 | --- | --- | --- |
+| `alt` | `string` | Alt text for the thumbnail. |
 | `format` | `'square' \| 'portrait' \| 'landscape'` | The thumbnail's PhotoCard format. @default 'portrait' |
 | `name` * | `string` |  |
 | `photo` | `string` |  |

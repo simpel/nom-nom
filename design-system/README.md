@@ -207,6 +207,7 @@ Every component is made of the ones below it; none writes its own font, surface,
 
 - **Horizontal scrollers** are one thing everywhere: `.nn-scroller`. Tiles snap, overscroll is contained, and the bar is a thin `line-control` thumb that fades in on hover or focus — hidden on touch, where the platform draws its own. A row that bleeds off the right edge still needs a scrollbar on a pointer device; it is the only sign there is more to see.
 - **A fact is not a status.** Facts about the subject — a duration, a method, servings, the rotation goal — are the Facts component: a label over a value, all in `text-primary`, never a row of chips and never coloured. Badge is for the few labels a thing carries in a list that could change and that you would want to spot at a glance: Pro, Archived, a verdict. A chart's legend key is neither — it is a swatch in the series colour and a label.
+- **One list, never split by state.** A set of the same kind of thing (members, raters, invitees, notifications) is one `Card layout="list"` under one header. Never split it into "Rated / Not yet", "Unread / Read", "Active / Pending" or any other state-keyed sections, cards or sub-headers: state shows on the row (a score, a Badge, a button, the unread dot, a meta line) and the order is a stable key (people alphabetical by the name shown, time-based items newest first), never the state. The header may report the split ("5 of 6"). Different kinds of thing (Members and Profiles without an account, Your parties and Suggested parties) are still separate sections. The viewer is in the list like anyone else, shown by their real name with a small "You" Badge.
 - **Lists** are one shape everywhere: `Card layout="list"` holding ListRow. The row's leading and trailing slots are what differ — an Avatar and a ScoreValue in a leaderboard, a Toggle in settings, Resend and a revoke ✕ on an invite. A list that has nothing to show is replaced by EmptyState, never by an empty Card.
 - **Screen anatomy.** Every screen and sheet composes in this order, top to bottom, on `bg` (or `sheet`) with a `spacing-4` gutter and `spacing-7` between blocks. A slot a screen doesn't need is skipped; the order never changes.
   1. **Chrome** — back and more (AppButton `elevated iconOnly`), or a sheet's close and confirm. Never part of the header, never inside content.
@@ -234,11 +235,13 @@ The app is the source of truth, and these patterns were drawn there first. Each 
 - **Pro**: ProLinkCard, `ProCard action`, optional teaser. **Facts** `onSelect`. **Skeleton** `screen` and the paged-list foot. **PhotoStrip** edit mode.
 - **AppButton**: top-bar controls, the selected choice pill (TagToggle). **TextArea**: the note row, the note editor sheet and its format bar. **Input**: borderless on iOS.
 - New: **ChoiceTile**, **TrendChart**, **PageMenu**.
-- Product calls that override older prose here (one score card, no photo above the header, no Recipes header action, the meal header's avatar) are in the component READMEs above and in the app's `DS-GAPS.md`, section B.
+- Product calls that override older prose here (one score card, no photo above the header, no Recipes header action, the meal header's avatar, one list never split by state) are written into the component READMEs above. The app keeps no separate gap list: a pattern the system lacks is added here first, then built.
 
 ### Designed from the app's gaps
 
-The items the app had listed as undefined are now defined here: the unit system (UnitToggle, `convertAmount`), the form blocks, the code field, the paywall package card, numbered steps and the checkable ingredient list, the brand mark, the select row, the top-bar unread mark and active state (BarButton), swipe rows, editorial text and the scanner overlay. The app can retire the matching `Core/Components/Interim/` files once it adopts these, and move their `DS-GAPS.md` entries to section D.
+The items the app had listed as undefined are now defined here: the unit system (UnitToggle, `convertAmount`), the form blocks, the code field, the paywall package card, numbered steps and the checkable ingredient list, the brand mark, the select row, the top-bar unread mark and active state (BarButton), swipe rows, editorial text and the scanner overlay. The app has adopted them and retired its interim components and its gap list.
+
+Added later (Oct 2026): **DismissibleNotice** (an inline, closable message in the `warning` role); the **Add photo sheet**, the generating tile and the pending AI tile (PhotoStrip); **Avatar** loading; the **one list, never split by state** rule (root README, ListRow, RatingList, whose Who rated is now one alphabetical list with the viewer marked by a "You" Badge).
 
 ### Still open
 

@@ -1,4 +1,3 @@
-// DS-GAP: pending design system — see Core/Design/DS-GAPS.md
 import Foundation
 
 /// One photo in a PhotoStripEditor: a stable id (for animation) and its PhotoCard source.

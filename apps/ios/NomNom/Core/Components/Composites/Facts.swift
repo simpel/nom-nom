@@ -24,7 +24,7 @@ enum FactsLayout: Equatable { case grid, strip }
 struct Facts: View {
     let items: [Fact]
     var layout: FactsLayout
-    /// Makes every fact a silent button (no pressed look). DS-GAPS.md A, "Facts onSelect".
+    /// Makes every fact a silent button (no pressed look). Facts README, `onSelect`.
     var onSelect: ((Fact) -> Void)?
 
     init(_ items: [Fact], layout: FactsLayout = .grid, onSelect: ((Fact) -> Void)? = nil) {

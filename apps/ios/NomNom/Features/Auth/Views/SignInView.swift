@@ -11,7 +11,7 @@ struct SignInView: View {
                 Spacer()
 
                 VStack(spacing: DS.Spacing.s5) {
-                    AppIconMark()
+                    BrandMark()
 
                     // The sign-in buttons stay at the bottom: Sign in with Apple is
                     // Apple's own control, not an AppButton the header could build.

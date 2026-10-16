@@ -1,4 +1,3 @@
-// DS-GAP: pending design system — see Core/Design/DS-GAPS.md
 import SwiftUI
 
 /// PhotoStrip's edit mode, for photo drafts in editors: PhotoCard `sm` tiles that

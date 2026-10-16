@@ -25,7 +25,7 @@ A Card whose label sits inside it. One shape — Card + Eyebrow + optional quote
 | --- | --- | --- |
 | `title` | `string` | The Eyebrow inside the card. |
 | `trailing` | `unknown` | One figure beside the label — a count, a date. |
-| `trailingVariant` | `'secondary' \| 'primary'` |  |
+| `trailingTone` | `'tertiary' \| 'accent'` |  |
 | `uppercase` | `boolean` | false for a possessive label ("Joel's note"). @default true |
 | `icon` | `IconName` |  |
 | `variant` | `'primary'` | 'primary' tints the card and turns the label primary-text semibold. |

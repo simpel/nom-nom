@@ -19,7 +19,7 @@ Core/Fonts/*.ttf           ──┘                                        │
 ```
 
 - `design-system/` (repo root) is a vendored snapshot of the artifact named in
-  `design-system/VERSION`. Never hand-edit it.
+  `design-system/VERSION`. Never hand-edit it: change the artifact, then re-vendor.
 - `Generated/DSTokens.generated.swift` is written by the generator. Never hand-edit it.
   The generator also reads the README "Dynamic Type" table (step to iOS text style) and
   the PostScript names of the bundled Newsreader cuts.
@@ -30,12 +30,38 @@ Core/Fonts/*.ttf           ──┘                                        │
 
 ## Updating the design system
 
-1. Download the artifact's `project/` files into `design-system/` and bump `VERSION`.
+0. To change the system, edit the artifact first (https://claude.ai/artifact/4jeEJ91V5eRxpDn8NtqNgK, files under `project/`; its `SKILL.md` lists the file shapes). Read the live files right before writing: other people edit it too.
+1. Download the artifact's `project/` files into `design-system/` (skip the generated `manifest.json` and `preview.html` files) and set `VERSION` to the artifact's version.
 2. Run `python3 scripts/ds-tokens-swift.py`. The output is deterministic. An unknown token
    family or an unresolvable alias fails the run; it is never guessed.
 3. Build, then run `scripts/ds-lint.sh`. Fix renamed or removed tokens at the call sites.
 4. Re-read the changed `design-system/components/*/README.md` files against
-   `Core/Components`, and log every contradiction you resolve in `DS-GAPS.md`.
+   `Core/Components`. A contradiction is fixed in the artifact's README, not worked around in Swift.
+
+## Platform notes
+
+Values iOS has to draw that the spec leaves open. Each is a call, not a gap: the spec is
+right and the platform just has no token for it.
+
+| README text | iOS draws |
+| --- | --- |
+| BottomSheet: "`scrim` behind" | The system sheet dimming (SwiftUI exposes no colour) |
+| BottomSheet grabber | `radius-sm`, `spacing-2` from the top; the system indicator's VoiceOver resize action is lost |
+| TasteScoreSelector: "a 1.5px fill ring" | `border-thick` (tokens.json: "selected ring") |
+| TasteScoreSelector: "Spring 0.25 / 0.75" and the root "Selection springs" | The README values, quoted in code; `.spring(duration: duration-layout)` for selections |
+| Toggle: "Pressing scales the knob" | `duration-state` for slide and scale |
+| PhotoCard: "`portrait` and `landscape` are both 3:4" | `shortEdgeRatio = 3/4` (`ds-lint:allow`); xs portrait 60 and lg portrait 216 fall off the spacing scale |
+| PhotoScrim / "Imagery": `stone-1000` at 72%, clear at 32% | The quoted values (`ds-lint:allow`) |
+| Photo overlays (white on photo) | `stone-0`, the ramp step under the `stone-1000` scrim |
+| Input: "an alert glyph" | `exclamationmark.circle` at `sans-xs` |
+| AppButton loading: spinner 1em | `ProgressView` `.mini` (xs, sm) / `.small` (md, lg) |
+| ProCard locked preview cap | `spacing-28` |
+| Bar chart index past `chart-series7` | `primary` ("A block with no `reaction` or `color` is `primary`") |
+| RatingList row value: no step | `serif-xs` tabular (SegmentedBar rows), `sans-sm` in the general shape |
+| Hover, focus ring with offset | Pointer-only rules; not drawn on iOS |
+| Navigation bar title | `sans-lg` semibold inline (Typography: "sheet and reason titles"); the system draws the bar |
+| Top-bar controls | A system toolbar button on the white glass circle via `.barItemStyle()` (BarButton README) |
+| Sheet detents | `.dsSheet(detents:)`; a fitted sheet (Add photo) sizes to its content |
 
 ## Token names
 

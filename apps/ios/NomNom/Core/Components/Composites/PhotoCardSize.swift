@@ -60,7 +60,7 @@ enum PhotoCardFormat: Equatable, CaseIterable {
     case landscape
 
     /// README: "`portrait` and `landscape` are both **3:4**, so the short edge is three
-    /// quarters of it." The ratio has no token (DS-GAPS.md: xs portrait 60 and lg
+    /// quarters of it." The ratio has no token (xs portrait 60 and lg
     /// portrait 216 are off the spacing scale).
     static let shortEdgeRatio: CGFloat = 3.0 / 4.0 // ds-lint:allow README "both 3:4"
 

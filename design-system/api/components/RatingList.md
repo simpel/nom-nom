@@ -29,7 +29,7 @@ The one "section header + meter + list of rows" block. Pass `raters` for the mea
 | `rows` | `RatingListRow[]` | The general shape. Takes precedence over `raters`. |
 | `rated` | `number` |  |
 | `total` | `number` |  |
-| `bar` | `unknown` | Replaces the default ProgressBar above the card — SegmentedBar passes its own track here. |
+| `bar` | `unknown` | Replaces the default Bar above the card — SegmentedBar passes its own here. |
 
 ### RatingListRow
 
