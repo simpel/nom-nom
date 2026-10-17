@@ -469,6 +469,19 @@ verify_jwt = false
 [functions.canonicalize-ingredients]
 verify_jwt = false
 
+# Called only by the recipes embedding database trigger over pg_net, which carries
+# no JWT — authenticates via the x-webhook-secret header instead. Left at the
+# default `verify_jwt = true` the platform would reject every trigger call with a 401.
+[functions.embed-recipe]
+verify_jwt = false
+
+# Called only by RevenueCat's webhook, which carries no Supabase JWT — it authenticates
+# with the Authorization header set in the RevenueCat dashboard, which the function checks
+# against the REVENUECAT_WEBHOOK_AUTH secret. Left at the default `verify_jwt = true` the
+# platform would reject every call with a 401 before that check ever ran.
+[functions.revenuecat-webhook]
+verify_jwt = false
+
 
 # Called by a signed-in user to get AI recipe recommendations tailored to a dinner party.
 [functions.recommend-party-recipes]

@@ -109,6 +109,7 @@ struct RecipeDetailView: View {
                 CookModeView(recipe: recipe) { showMealEditor = true }
             }
         }
+        .keepsScreenOn()
     }
 
     private func content(for recipe: Recipe) -> some View {
