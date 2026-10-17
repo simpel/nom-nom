@@ -27,7 +27,7 @@ const SYSTEM_PROMPT = `You prepare recipes for a step-by-step cook mode.
 
 For every numbered instruction step, return:
 - "minutes": the time the cook waits on in that step (roasting, simmering, resting, marinating, boiling pasta). An integer, or null when the step is hands-on with no wait. Use the time the step states; if it gives a range, use the upper bound; if it says "until golden" with no time, estimate a typical integer.
-- "ingredients": the indexes (0-based, the numbers in the ingredient list; group headings like "Sauce:" are not numbered) of the ingredients first added or used in that step. An ingredient may appear in more than one step only if it is split across them (e.g. oil used twice). Never invent indexes.
+- "ingredients": the indexes (0-based, the numbers in the ingredient list; group headings like "Sauce:" are not numbered) of the ingredients first added or used in that step. An ingredient may appear in more than one step only if it is split across them (e.g. oil used twice). When a step refers to ingredients without naming them ("add the spices", "the remaining ingredients", "the dressing ingredients"), list each ingredient it means. Every ingredient is used in at least one step. A step that uses none (preheating the oven, resting, serving) gets []. Never invent indexes.
 
 Return exactly one entry per instruction step, in order, as:
 { "steps": [ { "minutes": 20, "ingredients": [0, 4] }, { "minutes": null, "ingredients": [] } ] }

@@ -5,7 +5,8 @@ import SwiftUI
 /// `sm` scales every amount (QuantityScaler; free-text amounts stay as written). Each
 /// ingredient is a ListRow `sm`: the name (it wraps) and the amount, semibold, as its
 /// tabular value. The "Imperial units" toggle is the person's `UnitSystem` (saved on
-/// their profile); amounts go through MeasurementConverter.
+/// their profile); amounts go through MeasurementConverter. "Keep screen on" is the
+/// device's KeepScreenOn setting, the same toggle cook mode shows.
 ///
 /// Grouped recipes ("Sauce", "Salad") keep the settings rows and the first group when
 /// it has no name in the "Ingredients" card, then give every named group its own
@@ -16,6 +17,7 @@ struct RecipeIngredientsCard: View {
     var serves: Int?
 
     @State private var servings: Int
+    @AppStorage(KeepScreenOn.storageKey) private var keepScreenOn = true
     @Environment(FoodStore.self) private var store
 
     init(groups: [IngredientGroup], serves: Int? = nil) {
@@ -44,6 +46,7 @@ struct RecipeIngredientsCard: View {
                 DSSection("Ingredients") {
                     Card(layout: .list) {
                         ListRow("Imperial units", trailing: .toggle(Binding(get: { store.unitSystem.isImperial }, set: { on in Task { await store.setUnitSystem(on ? .imperial : .metric) } })))
+                        ListRow("Keep screen on", meta: "The screen won't dim while you cook", trailing: .toggle($keepScreenOn))
                         if serves != nil {
                             ListRow(
                                 "Servings",

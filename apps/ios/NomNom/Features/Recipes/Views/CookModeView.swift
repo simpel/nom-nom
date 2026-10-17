@@ -3,8 +3,8 @@ import SwiftUI
 /// Cook mode ("Nom Nom iOS" canvas, CookMode): a full-screen walk through the recipe,
 /// one step at a time. Close and the recipe name on top; "Step 3 of 5" with "About
 /// 25 min left" over a Bar `sm`; the step (CookModeStepView); Back / Next at the
-/// bottom, and on the last step "Log this meal" and "Back to step 4". The screen stays
-/// awake while it is open.
+/// bottom, and on the last step "Create a meal". Pinned to the bottom on every step,
+/// the "Keep screen on" toggle (KeepScreenOn), so the screen never dims mid-recipe.
 struct CookModeView: View {
     let recipe: Recipe
     let onLogMeal: () -> Void
@@ -14,6 +14,7 @@ struct CookModeView: View {
 
     @State private var index = 0
     @State private var timer = CookModeTimer()
+    @AppStorage(KeepScreenOn.storageKey) private var keepScreenOn = true
 
     private var steps: [String] { recipe.instructions }
     private var isLast: Bool { index == steps.count - 1 }
@@ -42,24 +43,12 @@ struct CookModeView: View {
                                 .padding(.horizontal, DS.Spacing.gutter)
                                 .padding(.vertical, DS.Spacing.s7)
                         }
-                        .safeAreaInset(edge: .bottom) {
-                            if i == steps.count - 1 {
-                                VStack(spacing: 0) {
-                                    AppButton("Create a meal", size: .lg, fullWidth: true) {
-                                        dismiss()
-                                        onLogMeal()
-                                    }
-                                    .padding(.horizontal, DS.Spacing.gutter)
-                                    .padding(.vertical, DS.Spacing.s4)
-                                }
-                                .background(.regularMaterial)
-                            }
-                        }
                         .tag(i)
                     }
                 }
                 .tabViewStyle(.page(indexDisplayMode: .never))
             }
+            .safeAreaInset(edge: .bottom) { bottomBar }
             .background(DS.Color.bg)
             .screenTitle(recipe.name, displayMode: .inline)
             .toolbar {
@@ -90,10 +79,25 @@ struct CookModeView: View {
                 }
             }
         }
-        .onAppear { UIApplication.shared.isIdleTimerDisabled = true }
-        .onDisappear {
-            UIApplication.shared.isIdleTimerDisabled = false
+        .keepsScreenOn()
+    }
+
+    /// "Create a meal" on the last step, over the "Keep screen on" toggle on every step.
+    private var bottomBar: some View {
+        VStack(spacing: DS.Spacing.s4) {
+            if isLast {
+                AppButton("Create a meal", size: .lg, fullWidth: true) {
+                    dismiss()
+                    onLogMeal()
+                }
+            }
+            Card(layout: .list) {
+                ListRow("Keep screen on", meta: "The screen won't dim while you cook", trailing: .toggle($keepScreenOn))
+            }
         }
+        .padding(.horizontal, DS.Spacing.gutter)
+        .padding(.vertical, DS.Spacing.s4)
+        .background(.regularMaterial)
     }
 
     private func move(_ delta: Int) {
