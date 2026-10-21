@@ -307,6 +307,8 @@ Only these specific system-level APIs are exempt from `AppButton`:
   - Seed test data exists exclusively for local development in the Docker container (`supabase_db_food`).
   - Production / remote databases must ONLY receive safe schema migrations (`supabase db push` or clean migration scripts), NEVER test seeds or wipe scripts.
 
+- **Every new table in `public` gets its grants in the same migration.** Supabase no longer grants Data API access to new tables (from 2026-10-30). Grant `authenticated` exactly what its RLS policies allow, `service_role` everything, `anon` nothing (the baseline keeps `anon` locked down).
+
 - **Automated Local Seed Script (`./scripts/seed.sh`)**:
   - **Do NOT manually engineer or split seed queries.**
   - To apply pending migrations and reseed local test data at any time, run:
