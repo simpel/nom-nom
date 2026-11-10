@@ -11,7 +11,7 @@
   },
   "dependencies": {
     "@base-ui/react": "^1.9.0",
-    "@hookform/resolvers": "^5.9.2",
+    "@hookform/resolvers": "^7.0.1",
     "@number-flow/react": "^0.6.2",
     "@supabase/ssr": "^0.12.7",
     "@supabase/supabase-js": "^2.117.3",
@@ -37,7 +37,7 @@
     "@types/node": "^26.6.6",
     "@types/react": "^19.0.10",
     "@types/react-dom": "^19.0.4",
-    "eslint": "^9.39.5",
+    "eslint": "^10.14.0",
     "eslint-config-next": "^16.4.3",
     "tailwindcss": "^4.3.3",
     "typescript": "^7.0.2"
