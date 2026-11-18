@@ -3,10 +3,10 @@
   "version": "1.0.0",
   "private": true,
   "dependencies": {
-    "@typescript-eslint/eslint-plugin": "^8.72.0",
-    "@typescript-eslint/parser": "^8.72.0",
-    "eslint": "^10.14.0",
-    "eslint-config-next": "16.4.5",
+    "@typescript-eslint/eslint-plugin": "^8.72.2",
+    "@typescript-eslint/parser": "^8.72.2",
+    "eslint": "^10.15.0",
+    "eslint-config-next": "16.4.6",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-react": "^7.34.1"
   }
