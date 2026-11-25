@@ -15,7 +15,7 @@
     "@number-flow/react": "^0.6.2",
     "@supabase/ssr": "^0.12.7",
     "@supabase/supabase-js": "^2.119.2",
-    "@xyflow/react": "^12.12.1",
+    "@xyflow/react": "^13.0.2",
     "class-variance-authority": "^0.7.1",
     "cn": "^0.5.2",
     "lucide-react": "^1.77.0",
